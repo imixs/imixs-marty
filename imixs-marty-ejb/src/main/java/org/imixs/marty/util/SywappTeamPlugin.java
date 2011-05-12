@@ -1,4 +1,4 @@
-package org.imixs.sywapps.util;
+package org.imixs.marty.util;
 
 import java.util.List;
 import java.util.Vector;
@@ -6,7 +6,7 @@ import java.util.Vector;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 
-import org.imixs.sywapps.business.ProjectService;
+import org.imixs.marty.business.ProjectService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;

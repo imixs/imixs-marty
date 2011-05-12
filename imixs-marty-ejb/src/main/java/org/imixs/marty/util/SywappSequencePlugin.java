@@ -1,11 +1,11 @@
-package org.imixs.sywapps.util;
+package org.imixs.marty.util;
 
 import javax.mail.internet.AddressException;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 
-import org.imixs.sywapps.business.SequenceService;
-import org.imixs.sywapps.business.SequenceServiceBean;
+import org.imixs.marty.business.SequenceService;
+import org.imixs.marty.business.SequenceServiceBean;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;

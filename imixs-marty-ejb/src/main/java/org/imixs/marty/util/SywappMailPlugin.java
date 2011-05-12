@@ -1,4 +1,4 @@
-package org.imixs.sywapps.util;
+package org.imixs.marty.util;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -6,7 +6,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.imixs.sywapps.business.ProfileService;
+import org.imixs.marty.business.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
