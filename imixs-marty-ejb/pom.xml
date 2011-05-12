@@ -10,6 +10,7 @@
 	<name>imixs-marty-ejb</name>
 
 
+	<description> </description>
 	<build>
 		<plugins>
 			<!-- use JDK 1.5 settings for compiling -->
