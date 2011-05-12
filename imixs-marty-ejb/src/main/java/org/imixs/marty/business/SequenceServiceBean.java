@@ -21,7 +21,7 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.sywapps.business;
+package org.imixs.marty.business;
 
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;

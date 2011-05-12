@@ -21,7 +21,7 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.sywapps.business;
+package org.imixs.marty.business;
 
 import java.util.Collection;
 import java.util.Vector;

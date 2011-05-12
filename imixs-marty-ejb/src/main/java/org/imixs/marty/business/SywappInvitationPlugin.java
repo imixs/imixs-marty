@@ -1,4 +1,4 @@
-package org.imixs.sywapps.business;
+package org.imixs.marty.business;
 
 import javax.mail.internet.AddressException;
 import javax.naming.Context;
