@@ -1,0 +1,62 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<artifactId>imixs-marty</artifactId>
+		<groupId>org.imixs.marty</groupId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>imixs-marty-web</artifactId>
+	<packaging>war</packaging>
+	<name>imixs-marty-web</name>
+
+	<build>
+		<plugins>
+			<!-- use JDK 1.5 settings for compiling -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+
+		<!-- RichFaces -->
+		<!-- RichFaces required additional jars -->
+		<dependency>
+			<groupId>org.richfaces.ui</groupId>
+			<artifactId>richfaces-ui</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+	      <groupId>org.richfaces.framework</groupId>
+	      <artifactId>richfaces-impl</artifactId>
+	      <scope>provided</scope>
+		</dependency>
+		
+		<!-- Imixs  -->
+		<dependency>
+			<groupId>org.imixs.sywapps</groupId>
+			<artifactId>imixs-sywapps-util</artifactId>
+			<version>1.0.9-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.imixs.workflow</groupId>
+			<artifactId>imixs-workflow-jee</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.imixs.workflow</groupId>
+			<artifactId>imixs-workflow-jsf</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+
+	</dependencies>
+</project>
