@@ -1,0 +1,34 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jstl/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:a4j="http://richfaces.org/a4j"
+	xmlns:rich="http://richfaces.org/rich"
+	template="/layout/template.xhtml">
+
+	<ui:define name="content">
+		<f:view>
+			<f:loadBundle basename="bundle.notes" var="messages" />
+
+			<h:form id="news_form">
+
+				<h2><h:outputText value="#{messages.title_notes}" /></h2>
+
+				<div class="sywapp-view">
+				
+					<ui:include src="/pages/sub_invitations.xhtml" />
+				
+					<ui:include src="/pages/sub_projectnotes.xhtml" />
+				
+					<ui:include src="/pages/sub_news.xhtml" />
+				
+				
+				</div>
+			</h:form>
+		</f:view>
+	</ui:define>
+
+
+</ui:composition>
+

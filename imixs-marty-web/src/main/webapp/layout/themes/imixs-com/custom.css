@@ -1,0 +1,218 @@
+/* Hauptfarbe FFCC00 */
+body {
+	color: #30332E;
+	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-size: 13px;
+	margin: 0 auto;
+	min-width: 41em;
+	padding: 1em;
+	width: 980px;
+}
+
+/* 615748 */
+h1,h2,h3,h4 {
+	color: #30332E;
+}
+
+a, a:VISITED, a:ACTIVE {
+ color: #508AB5;	
+}
+
+
+#sywapp-servicenav {
+	xwidth: 980px;
+	text-align: left;
+	font-size: 12px;
+	background: #FFCC00;
+	border: 0px;
+	margin: 0em 0em 0em 0em;
+	
+	padding: 2px 0px;
+	border-bottom: 1px solid #FFFFFF;
+	border-top: 1px solid #FFFFFF;
+	color: #FFF;
+}
+
+#sywapp-servicenav li {
+	margin: 0px;
+}
+
+
+#sywapp-servicenav a:VISITED,#sywapp-servicenav a {
+	font-size: 12px;
+	
+	color:#FFFFFF;
+	font-weight:normal;
+	padding:2px 8px;
+	text-decoration:none;
+}
+
+#sywapp-topnav {
+	
+}
+
+#sywapp-sidebar {
+	
+ margin-right:5px;	
+ width: 170px;;
+ 
+}
+
+#sywapp-content {
+ width: 780px;
+ margin: 10px 0;
+}
+#sywapp-footer {
+	border-top: 1px solid #FFCC00;
+	xwidth: 980px;
+}
+
+
+
+
+#sywapp-branding {
+	background-image: url("logo.gif");
+	background-repeat: no-repeat;
+	background-position: 8px 8px;
+	height: 60px;
+	background-color: #FFCC00;
+}
+
+.sywapp-menubar { /* FFFFFF 93DBF1 */
+	background: #FFCC00;
+	border: 0px;
+	border-bottom: 1px solid #FFFFFF;
+	border-top: 1px solid #FFFFFF;
+}
+
+/* DropDown Menu Label  aufgeklappt */
+.sywapp-menubar .rich-ddmenu-label-select {
+	background: #FFF;
+	border-color: #FFF;
+	color: #30332E;
+}
+
+/* DropDown Menu Label  normal */
+.sywapp-menubar .rich-ddmenu-label-unselect {
+	background: #FFCC00;
+	border-color: #FFCC00;
+	color:#FFFFFF;
+}
+
+/* DropDown Menu Item */
+.sywapp-menubar .rich-menu-item {
+	background: #FFCC00;
+	border-color: #FFCC00;
+}
+
+.sywapp-menubar .rich-menu-item-label {
+	color: #30332E;
+	font-weight: normal;
+}
+
+.sywapp-menubar .rich-menu-item-hover {
+	background: #FFF;
+	border-color: #FFF;
+	color: #30332E;
+	font-weight: normal;
+}
+
+.sywapp-menubar .rich-menu-list-border {
+	border-color: #FFCC00;
+}
+
+/* 
+ * Die Klasse viewentry wird für die Darstellung von Views verwendet.
+ * die Klasse wird als RowClass im element rich:dataList  verwendet
+ * font-size: 0.8em
+ */
+.sywapp-viewentry {
+	xxborder-top: 1px solid #000;
+	margin-bottom: 20px;
+}
+
+.sywapp-viewentry:HOVER {
+	background: #F3F3F3;
+	xborder-top: 1px solid #7A7F87;
+}
+
+.sywapp-viewentry-nav li:HOVER,.sywapp-viewentry-nav a:HOVER {
+	font-size: 11px;
+	background: #FFCC00;
+	color: #30332E;
+}
+
+.sywapp-viewentry-details {
+	border-top: 1px solid silver;
+}
+
+/*
+ * RichPanel für Masken Abschnitte 
+ */
+.rich-panel {
+	margin: 0em 0em 0em 1em;
+	padding: 0em;
+	border: 0px;
+}
+
+.rich-panel-header {
+	font-size: 14px;
+	/* 1.2em */
+	background: #FFF;
+	font-weight: bold;
+	color: #30332E;
+	padding: 0.5em 0em 0.5em 0em;
+	margin: 0em;
+	border: 0px;
+	border-bottom: 1px solid #FFCC00;
+}
+
+/* 111 */
+.rich-panel-body {
+	color: #333;
+	margin: 0.5em 0em 0em 0em;
+	padding: 0.5em 0em 1.5em 0em;
+	border: 0px solid #FFCC00;
+	background: #FFF;
+}
+
+/* Tab Panels */ /* Customize RichtTabs */
+.rich-tab-inactive {
+	cursor: pointer;
+}
+
+.rich-tabpanel-content {
+	padding: 10px;
+	border-width: 1px 1px 1px 1px;
+	background-color: transparent;
+}
+
+.rich-tab-active {
+	background-image: none;
+	background: #FFCC00;
+	color: #FFFFFF;
+	border: 1px;
+}
+
+.rich-tab-inactive {
+	background-image: none;
+	background: #ECECEC;
+	color: #000000;
+	border: 1px;
+}
+
+.rich-tabhdr-side-border {
+	border: 1px;
+	background-image: none;
+}
+
+.rich-tabhdr-side-cell {
+	border: 1px;
+	background-image: none;
+}
+
+
+.rich-datalist {
+margin:0;
+padding:0;
+}

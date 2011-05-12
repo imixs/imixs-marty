@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faces-config xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_1_2.xsd"
+	version="1.2">
+
+	<!--
+		Faclets ViewHandler
+		com.imixs.shareyourwork.apps.web.util.CustomLocaleViewHandler
+	-->
+	<application>
+		<view-handler>com.sun.facelets.FaceletViewHandler</view-handler>
+		<view-handler>org.ajax4jsf.application.AjaxViewHandler</view-handler>
+		<locale-config>
+			<default-locale>en</default-locale>
+			<supported-locale>de</supported-locale>
+			<supported-locale>en</supported-locale>
+		</locale-config>
+		<message-bundle>bundle.global</message-bundle>
+	</application>
+	<managed-bean>
+		<managed-bean-name>projectMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.web.project.ProjectMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<managed-bean-name>projectlistMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.web.project.ProjectlistMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<managed-bean-name>worklistMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.web.workitem.WorklistMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<managed-bean-name>workitemMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.web.workitem.WorkitemMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<managed-bean-name>workitemBlobMB</managed-bean-name>
+		<managed-bean-class>org.imixs.workflow.jee.jsf.util.BLOBWorkitemController</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>IsUserInRole</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.util.SecurityHashMap</managed-bean-class>
+		<managed-bean-scope>none</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<managed-bean-name>profileMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.web.profile.ProfileMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<managed-bean-name>modelMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.model.ModelMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>	
+	<managed-bean>
+		<managed-bean-name>myProfileMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.web.profile.MyProfileMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>		
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>newsMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.web.news.NewsMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>urlControllerMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.web.util.URLControllerMB						    
+		</managed-bean-class>
+		<managed-bean-scope>request</managed-bean-scope>
+		<managed-property>
+			<property-name>project</property-name>
+			<value>#{param.project}</value>
+		</managed-property>
+		<managed-property>
+			<property-name>process</property-name>
+			<value>#{param.process}</value>
+		</managed-property>
+		<managed-property>
+			<property-name>workitem</property-name>
+			<value>#{param.workitem}</value>
+		</managed-property>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>loginMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.util.LoginMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>openidMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.util.OpenidMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>errorMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.util.ErrorMB</managed-bean-class>
+		<managed-bean-scope>request</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<managed-bean-name>nameLookupMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.web.profile.NameLookupMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<managed-bean-name>projectNotesMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.web.project.ProjectNotesMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>configMB</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.web.util.ConfigMB</managed-bean-class>
+		<managed-bean-scope>application</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>fileUploadBean</managed-bean-name>
+		<managed-bean-class>org.imixs.sywapps.web.util.FileUploadBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>systemSetupMB</managed-bean-name>
+		<managed-bean-class>
+			org.imixs.sywapps.web.util.SystemSetupMB
+		</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	
+	
+	
+	
+	<!--
+		**************************************** * Converters
+		****************************************
+	-->
+	<converter>
+		<display-name>imixs.VectorConverter</display-name>
+		<converter-id>imixs.VectorConverter</converter-id>
+		<converter-class>org.imixs.sywapps.util.VectorConverter</converter-class>
+	</converter>
+	<converter>
+		<display-name>imixs.VectorIntegerConverter</display-name>
+		<converter-id>imixs.VectorIntegerConverter</converter-id>
+		<converter-class>org.imixs.sywapps.util.VectorIntegerConverter</converter-class>
+	</converter>
+	<!--
+		**************************************** * Validators
+		****************************************
+	-->
+	<validator>
+        <validator-id>imixs.EmailValidator</validator-id>
+        <validator-class>org.imixs.sywapps.util.EmailValidator</validator-class>
+    </validator>
+	
+	
+	
+	
+	<navigation-rule>
+
+		<navigation-case>
+			<from-outcome>home</from-outcome>
+			<to-view-id>/index.xhtml</to-view-id>
+			<redirect />
+		</navigation-case>
+
+		<navigation-case>
+			<from-outcome>public_header</from-outcome>
+			<to-view-id>/public_header.xhtml</to-view-id>
+			<redirect />
+		</navigation-case>
+
+		<navigation-case>
+			<from-outcome>logout</from-outcome>
+			<to-view-id>/logout.xhtml</to-view-id>
+		</navigation-case>
+
+		<navigation-case>
+			<from-outcome>notes</from-outcome>
+			<to-view-id>/pages/notes.xhtml</to-view-id>
+			<redirect />
+		</navigation-case>
+		
+		<navigation-case>
+			<from-outcome>welcome</from-outcome>
+			<to-view-id>/pages/welcome.xhtml</to-view-id>
+			<redirect />
+		</navigation-case>
+
+
+		<!-- **** Help ***** -->
+		<navigation-case>
+			<from-outcome>help1</from-outcome>
+			<to-view-id>/help/help1.xhtml</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>help2</from-outcome>
+			<to-view-id>/help/help2.xhtml</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>help3</from-outcome>
+			<to-view-id>/help/help3.xhtml</to-view-id>
+		</navigation-case>
+
+
+
+
+		<!-- ***** MyProjects ****** -->
+		<navigation-case>
+			<from-outcome>create_new_project</from-outcome>
+			<to-view-id>/pages/projects/project.xhtml</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>open_project</from-outcome>
+			<to-view-id>/pages/projects/project.xhtml</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>open_my_projects</from-outcome>
+			<to-view-id>/pages/projects/myprojects.xhtml</to-view-id>
+		</navigation-case>
+
+		<navigation-case>
+			<from-outcome>send_note</from-outcome>
+			<to-view-id>/pages/projects/projectnote.xhtml</to-view-id>
+		</navigation-case>
+
+
+		<!-- ***** MyWorklist ****** -->
+		<navigation-case>
+			<from-outcome>open_worklist</from-outcome>
+			<to-view-id>/pages/workitems/worklist.xhtml</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>open_workitem</from-outcome>
+			<to-view-id>/pages/workitems/workitem.xhtml</to-view-id>
+		</navigation-case>
+
+
+		<!-- ***** MyProfile ****** -->
+		<navigation-case>
+			<from-outcome>open_profile</from-outcome>
+			<to-view-id>/pages/profile/profile.xhtml</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>open_my_profile</from-outcome>
+			<to-view-id>/pages/profile/myprofile.xhtml</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>open_my_settings</from-outcome>
+			<to-view-id>/pages/profile/settings.xhtml</to-view-id>
+		</navigation-case>
+
+
+
+
+
+		<navigation-case>
+			<from-outcome>move_to_project</from-outcome>
+			<to-view-id>/pages/workitems/move_to_project.xhtml</to-view-id>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>change_process</from-outcome>
+			<to-view-id>/pages/workitems/change_process.xhtml</to-view-id>
+		</navigation-case>
+
+		<navigation-case>
+			<from-outcome>start_process</from-outcome>
+			<to-view-id>/pages/workitems/startprocess.xhtml</to-view-id>
+		</navigation-case>
+
+		<!-- Admin -->
+		<navigation-case>
+			<from-outcome>show_systeminit</from-outcome>
+			<to-view-id>/pages/admin/systemcheck.xhtml
+			</to-view-id>
+			<redirect/>
+		</navigation-case>
+
+
+		<!--
+			***** Drag and Drop Events with redirect tag to work in IE ******
+		-->
+		<navigation-case>
+			<from-outcome>dropaction_show_myprojects</from-outcome>
+			<to-view-id>/pages/projects/myprojects.xhtml</to-view-id>
+			<redirect />
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>dropaction_show_worklist</from-outcome>
+			<to-view-id>/pages/workitems/worklist.xhtml</to-view-id>
+			<redirect />
+		</navigation-case>
+
+
+	</navigation-rule>
+</faces-config>

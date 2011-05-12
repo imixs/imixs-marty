@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns:jsp="http://java.sun.com/JSP/Page"
+	xmlns:c="http://java.sun.com/jstl/core"
+	xmlns:h="http://java.sun.com/jsf/html">
+
+<head>
+<!-- This page is the startup page for shareYourWork. 
+	The page determines the current user status (anonymous or authenticated) and tests
+	with URLControllerMB if a project is preselected. 
+
+	Depending of the result of this tests the start.xhtml page redirects the user to
+	
+	URL=openidlogin.xhtml  (anonymous user)
+	URL=pages/notes.xhtml  (authtenticated user)
+	URL=pages/workitems/worklist.xhtml (project selected)
+
+	the redirect in meta tag is necessary for facelets applications 
+
+ 	
+ -->
+
+<!-- This line of code is important necessary to trigger the URLControlerMB which
+		 is responsible for uri params like the param 'project'
+ 	     Project=#{urlControllerMB.project} -->
+
+ 
+ 
+	<c:choose>
+		<!--  Singed in user -->
+		<c:when test="#{! loginMB.authenticated}"> 
+			<meta http-equiv="refresh" content="0; URL=pages/notes.jsf" />
+		</c:when>
+		<c:otherwise>
+			<c:choose>
+				<!-- preselected project? -->
+				<c:when test="#{(!empty urlControllerMB.project) or (!empty urlControllerMB.workitem)}">
+					<!--  preselected start process? -->
+					<c:choose>
+						<!-- preselected selected project -->
+						<c:when test="#{(!empty urlControllerMB.process) or (!empty urlControllerMB.workitem)}">
+							<meta http-equiv="refresh" content="0; URL=#{facesContext.externalContext.requestContextPath}/pages/workitems/workitem.jsf" />
+						</c:when>	
+						<c:otherwise>	
+							<meta http-equiv="refresh" content="0; URL=#{facesContext.externalContext.requestContextPath}/pages/workitems/worklist.jsf" />
+						</c:otherwise>
+					</c:choose>
+ 				</c:when>
+				<c:otherwise>
+					<meta http-equiv="refresh" content="0; URL=#{facesContext.externalContext.requestContextPath}/pages/notes.jsf" />
+				</c:otherwise>
+			</c:choose>
+		</c:otherwise>
+	</c:choose>
+
+</head>
+<body>
+
+</body>
+</html>

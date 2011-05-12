@@ -1,0 +1,229 @@
+<f:subview xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jstl/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:a4j="http://richfaces.org/a4j"
+	xmlns:rich="http://richfaces.org/rich" id="worklist_header_id">
+
+<rich:dragIndicator id="indicator" />
+
+<style>
+	.rich-tree-node-highlighted, .rich-tree-node-selected, .rich-tree-node {
+		color: inherit;
+		text-decoration: none;
+		border:0px;
+		padding-left: 4px;
+	}
+	
+	.rich-tree-node-icon {
+	 	display: none;
+	}
+	
+	
+</style>
+
+
+	<c:choose>
+		<c:when test="#{empty projectMB.item['txtname']}">
+			<h2><h:outputText value="#{worklistMB.viewTitle}" /></h2>
+		</c:when>
+		<c:otherwise>
+
+
+			<h2><h:outputText value="#{projectMB.item['txtname']}: " /> <h:outputText
+				value="#{worklistMB.viewTitle}" /></h2>
+
+			
+			<!-- **** Navigation Panel ***** -->
+			<a4j:outputPanel layout="block" styleClass="sywapp-viewentry">
+				<h:outputText value="#{projectMB.item['txtdescription']}" />
+				<br />
+				<h:outputText value="#{projectMB.item['$modified']}">
+					<f:convertDateTime type="both" dateStyle="medium" />
+				</h:outputText>
+				<h:outputText
+					value=" #{global.by} #{nameLookupMB.userName[projectMB.item['namCurrentEditor']]}" />
+
+
+				<!-- *** Subprojects *** -->
+				<ul class="sywapp-viewentry-nav">
+					<rich:tree ajaxKeys="#{null}" value="#{projectMB.projectTree}"
+								var="node"  switchType="ajax"
+								immediate="true" 
+								nodeFace="#{node.item['project_node_type']}"
+								ajaxSubmitSelection="false">
+								
+								
+						<!-- #### Root Node ##### -->
+						 <rich:treeNode type="0">
+						        
+						     <f:facet name="iconCollapsed">
+			                    <h:graphicImage url="/layout/icons/project_tree_expand.gif"
+								style="margin-top: 3px;margin-left:3px" alt="-"/>
+			                </f:facet>      
+			                <f:facet name="iconExpanded">
+			                    <h:graphicImage url="/layout/icons/project_tree_collapse.gif"
+								style="margin-top: 3px;margin-left:3px" alt="+"/>
+			                </f:facet>
+		        			<li>				
+			        			
+									<h:outputText value="#{global.sub_projects}"/>
+											
+					        </li>						
+		        			
+		        			<li>				
+      							<h:commandLink rendered="#{ (projectMB.item['$isAuthor']) and (!empty myProfileMB.item['keyOrderType']) and (!myProfileMB.item['keyOrderType'] > '0')}"
+									actionListener="#{projectMB.doCreateSubproject}"
+									action="open_project">
+									<h:outputText value="#{messages.create_subproject}"/>
+								</h:commandLink>
+							</li>
+							
+							<li>
+								<h:commandLink rendered="#{! empty projectMB.item['$uniqueIdRef']}"
+										actionListener="#{projectMB.doSwitchToMainProject}"
+										action="open_worklist">
+										<h:outputText value="#{messages.switch_to_mainproject}"/>
+								</h:commandLink>
+							</li>
+ 						</rich:treeNode>
+ 								 
+ 						<!-- #### SubProject Node ##### -->   								 
+ 						<rich:treeNode type="1">
+			        		<f:facet name="iconCollapsed">
+			                    <h:graphicImage url="/layout/icons/project_tree_expand.gif"
+								style="margin-top: 3px;margin-left:3px" alt="-"/>
+			                </f:facet>      
+			                <f:facet name="iconExpanded">
+			                    <h:graphicImage url="/layout/icons/project_tree_collapse.gif"
+								style="margin-top: 3px;margin-left:3px" alt="+"/>
+			                </f:facet>
+			        	
+			        		<li>	
+			        			<a4j:outputPanel>
+			        				<rich:dragSupport dragIndicator=":indicator" dragType="project"
+											dragValue="#{node.item['$uniqueid']}">
+											<rich:dndParam name="label" value="#{node.item['txtname']}" />
+									</rich:dragSupport>
+			        				<h:commandLink actionListener="#{projectlistMB.doSwitchToProject}"
+										action="open_worklist">
+										<h:outputText value="#{node.item['txtname']}"/>
+									</h:commandLink>	
+								</a4j:outputPanel>			
+						  	</li>      							
+ 						</rich:treeNode>
+					</rich:tree>
+				
+				</ul>
+				
+				
+				<!-- *** Process List *** -->
+				<a4j:outputPanel id="infoBlock2" layout="block" >
+					<a4j:outputPanel layout="block"
+						rendered="#{projectMB.item['a4j:showProcessList']}"
+						styleClass="sywapp-viewentry-details">
+							<h3><h:outputText value="#{messages.start_new_process}" /> <a4j:commandLink
+								reRender="infoBlock2"
+								actionListener="#{projectMB.doToggleProcessList}"
+								value="#{global.close}"
+								style="font-size:10px; font-weight:normal;margin-left:10px;text-transform:uppercase;">
+							</a4j:commandLink></h3>		
+
+						<ul style="margin-top:0px;">
+							<ui:repeat
+								value="#{projectlistMB.processList[projectMB.item['$uniqueid']]}"
+								var="process">
+								<li><h:commandLink action="open_workitem"
+									actionListener="#{workitemMB.doCreateWorkitem}"
+									value="#{process.item['txtworkflowgroup']}">
+									<f:param name="id" value="#{process.item['$modelversion']}|#{process.item['numprocessid']}" />
+								    </h:commandLink>
+									<a4j:outputPanel layout="block">									
+										<h:outputText value="#{process.item['rtfdescription']}"
+											escape="false" />
+									</a4j:outputPanel>
+								</li>
+							</ui:repeat>
+						</ul>
+					</a4j:outputPanel>
+				</a4j:outputPanel>
+
+
+				<!-- *** Search Filter *** -->
+				<a4j:outputPanel id="infoBlock3" layout="block">
+					<a4j:outputPanel layout="block"
+						rendered="#{projectMB.item['a4j:showSearchFilter']}"
+						styleClass="sywapp-viewentry-details">						
+
+						<h3><h:outputText value="#{messages.search_filter}" /> <a4j:commandLink
+								reRender="infoBlock3"
+								actionListener="#{projectMB.doToggleSearchFilter}"
+								value="#{global.close}"
+								style="font-size:10px; font-weight:normal;margin-left:10px;text-transform:uppercase;">
+							</a4j:commandLink></h3>	
+
+						<dl>
+							<dd>
+								<h:selectOneMenu id="process_filter"
+								 value="#{worklistMB.processFilter}">
+								<f:selectItem itemLabel="#{messages.search_all}" itemValue="" />
+								 
+								<c:forEach items="#{projectlistMB.processList[projectMB.item['$uniqueid']]}" var="process">
+								  <f:selectItem
+								   itemValue="#{process.item['txtworkflowgroup']}"
+									itemLabel="#{process.item['txtworkflowgroup']}" />
+								</c:forEach>
+								
+								 <a4j:support event="onchange" reRender="worklist_id"
+								 	actionListener="#{worklistMB.doReset}" 
+								 	 />
+								</h:selectOneMenu>
+							</dd>
+						</dl> 
+					</a4j:outputPanel>
+				</a4j:outputPanel>
+
+
+
+
+				<!-- *** Sub Navigation *** -->
+				<ul class="sywapp-viewentry-nav">
+					<li><h:commandLink actionListener="#{projectlistMB.doReset}"
+						action="open_my_projects">
+						<h:outputText value="#{global.close}" />
+					</h:commandLink></li>
+					
+					<li><a4j:commandLink id="toggle_search_filter_id"
+						value="#{global.search}"
+						reRender="infoBlock2,infoBlock3,toggle_search_filter_id"
+						rendered="#{(! empty projectMB.item['txtname'])   and (! empty projectlistMB.processList[projectMB.item['$uniqueid']])}" 
+						actionListener="#{projectMB.doToggleSearchFilter}">
+					</a4j:commandLink></li>
+					
+				
+ 
+					<li><a4j:commandLink id="toggle_start_process_id"
+						value="#{(projectMB.item['a4j:showProcessList'])?(messages.hide_processlist):(messages.start_new_process)}"
+						reRender="infoBlock2,infoBlock3,toggle_start_process_id"
+						rendered="#{(! empty projectMB.item['txtname'])   and (! empty projectlistMB.processList[projectMB.item['$uniqueid']])}" 
+						actionListener="#{projectMB.doToggleProcessList}">
+					</a4j:commandLink></li>
+
+					<li><h:commandLink action="send_note"
+					    actionListener="#{projectNotesMB.doCreate}"
+						rendered="#{projectMB.member}">
+						<h:outputText value="#{messages.send_note}" />
+					</h:commandLink></li>
+
+					<li><h:commandLink action="open_project"
+						rendered="#{projectMB.item['$isAuthor']}">
+						<h:outputText value="#{messages.open_project}" />
+					</h:commandLink></li>
+
+				</ul>
+			</a4j:outputPanel>
+		</c:otherwise>
+	</c:choose>
+
+</f:subview>
