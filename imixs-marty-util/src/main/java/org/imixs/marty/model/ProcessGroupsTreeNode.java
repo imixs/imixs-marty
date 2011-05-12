@@ -1,11 +1,11 @@
-package org.imixs.sywapps.model;
+package org.imixs.marty.model;
 
 import java.util.Iterator;
 import java.util.List;
 
 import javax.faces.context.FacesContext;
 
-import org.imixs.sywapps.web.project.ProjectMB;
+import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.workflow.ItemCollection;
 import org.richfaces.model.TreeNodeImpl;
 

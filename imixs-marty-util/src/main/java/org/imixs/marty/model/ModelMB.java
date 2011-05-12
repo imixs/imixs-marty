@@ -21,7 +21,7 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.sywapps.model;
+package org.imixs.marty.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,8 +37,8 @@ import javax.ejb.EJB;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 
-import org.imixs.sywapps.util.SelectItemComparator;
-import org.imixs.sywapps.web.profile.MyProfileMB;
+import org.imixs.marty.util.SelectItemComparator;
+import org.imixs.marty.web.profile.MyProfileMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.ModelService;
 

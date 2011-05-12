@@ -21,7 +21,7 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.sywapps.util;
+package org.imixs.marty.util;
 
 import java.util.ListIterator;
 import java.util.Vector;

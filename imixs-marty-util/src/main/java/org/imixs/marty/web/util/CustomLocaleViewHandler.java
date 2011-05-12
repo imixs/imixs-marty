@@ -1,4 +1,4 @@
-package org.imixs.sywapps.web.util;
+package org.imixs.marty.web.util;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -8,7 +8,7 @@ import javax.faces.application.ViewHandler;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 
-import org.imixs.sywapps.web.profile.MyProfileMB;
+import org.imixs.marty.web.profile.MyProfileMB;
 
 
 public class CustomLocaleViewHandler extends ViewHandler {

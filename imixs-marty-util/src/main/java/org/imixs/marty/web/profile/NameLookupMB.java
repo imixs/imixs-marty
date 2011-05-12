@@ -1,4 +1,4 @@
-package org.imixs.sywapps.web.profile;
+package org.imixs.marty.web.profile;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -7,8 +7,8 @@ import java.util.Set;
 
 import javax.ejb.EJB;
 
+import org.imixs.marty.util.Cache;
 import org.imixs.sywapps.business.ProfileService;
-import org.imixs.sywapps.util.Cache;
 import org.imixs.workflow.ItemCollection;
 
 /**

@@ -21,7 +21,7 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.sywapps.web.workitem;
+package org.imixs.marty.web.workitem;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,15 +34,13 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
-import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.event.ValueChangeEvent;
 
-import org.imixs.sywapps.util.LoginMB;
-import org.imixs.sywapps.web.project.ProjectMB;
-import org.imixs.sywapps.web.project.ProjectlistMB;
-import org.imixs.sywapps.web.util.ConfigMB;
+import org.imixs.marty.util.LoginMB;
+import org.imixs.marty.web.project.ProjectMB;
+import org.imixs.marty.web.util.ConfigMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.util.ItemCollectionAdapter;
 

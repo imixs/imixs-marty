@@ -21,7 +21,7 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.sywapps.web.profile;
+package org.imixs.marty.web.profile;
 
 import java.util.ArrayList;
 import java.util.List;

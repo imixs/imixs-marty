@@ -21,7 +21,7 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.sywapps.web.project;
+package org.imixs.marty.web.project;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,14 +44,14 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
 
+import org.imixs.marty.model.ModelData;
+import org.imixs.marty.web.profile.MyProfileMB;
+import org.imixs.marty.web.profile.NameLookupMB;
+import org.imixs.marty.web.util.ConfigMB;
+import org.imixs.marty.web.workitem.WorkitemMB;
+import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.sywapps.business.ProfileService;
 import org.imixs.sywapps.business.ProjectService;
-import org.imixs.sywapps.model.ModelData;
-import org.imixs.sywapps.web.profile.MyProfileMB;
-import org.imixs.sywapps.web.profile.NameLookupMB;
-import org.imixs.sywapps.web.util.ConfigMB;
-import org.imixs.sywapps.web.workitem.WorkitemMB;
-import org.imixs.sywapps.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.jsf.util.AbstractWorkflowController;
 import org.imixs.workflow.util.ItemCollectionAdapter;

@@ -21,7 +21,7 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.sywapps.web.workitem;
+package org.imixs.marty.web.workitem;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,7 +35,6 @@ import java.util.StringTokenizer;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.component.UIParameter;
@@ -44,12 +43,12 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 
+import org.imixs.marty.web.profile.NameLookupMB;
+import org.imixs.marty.web.project.ProjectMB;
+import org.imixs.marty.web.util.ConfigMB;
+import org.imixs.marty.web.util.FileUploadBean;
 import org.imixs.sywapps.business.ProjectService;
 import org.imixs.sywapps.business.WorkitemServiceBean;
-import org.imixs.sywapps.web.profile.NameLookupMB;
-import org.imixs.sywapps.web.project.ProjectMB;
-import org.imixs.sywapps.web.util.ConfigMB;
-import org.imixs.sywapps.web.util.FileUploadBean;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.jsf.util.AbstractWorkflowController;
 import org.imixs.workflow.jee.jsf.util.BLOBWorkitemController;

@@ -21,21 +21,19 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.sywapps.web.util;
+package org.imixs.marty.web.util;
 
 import javax.ejb.EJB;
-import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import javax.faces.event.ActionEvent;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.imixs.marty.web.project.ProjectMB;
+import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.sywapps.business.ProfileService;
 import org.imixs.sywapps.business.ProjectService;
-import org.imixs.sywapps.web.project.ProjectMB;
-import org.imixs.sywapps.web.workitem.WorkitemMB;
 import org.imixs.workflow.ItemCollection;
 
 /**

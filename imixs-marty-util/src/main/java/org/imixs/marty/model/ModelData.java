@@ -1,4 +1,4 @@
-package org.imixs.sywapps.model;
+package org.imixs.marty.model;
 
 import java.util.StringTokenizer;
 

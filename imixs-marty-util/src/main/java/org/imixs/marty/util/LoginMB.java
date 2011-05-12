@@ -1,4 +1,4 @@
-package org.imixs.sywapps.util;
+package org.imixs.marty.util;
 
 import java.util.ArrayList;
 import java.util.Collections;

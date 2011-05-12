@@ -21,7 +21,7 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.sywapps.web.news;
+package org.imixs.marty.web.news;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.ejb.EJB;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.component.UIParameter;
@@ -38,10 +37,8 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 
-import org.imixs.sywapps.model.ModelVersionHandler;
-import org.imixs.sywapps.web.profile.MyProfileMB;
+import org.imixs.marty.model.ModelVersionHandler;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.ejb.ModelService;
 import org.imixs.workflow.jee.jsf.util.AbstractWorkflowController;
 import org.imixs.workflow.util.ItemCollectionAdapter;
 

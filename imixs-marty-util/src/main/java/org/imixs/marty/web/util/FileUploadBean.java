@@ -1,4 +1,4 @@
-package org.imixs.sywapps.web.util;
+package org.imixs.marty.web.util;
 
 import java.util.ArrayList;
 import java.util.Iterator;

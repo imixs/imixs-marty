@@ -21,7 +21,7 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.sywapps.web.profile;
+package org.imixs.marty.web.profile;
 
 import java.text.Collator;
 import java.util.ArrayList;
@@ -47,13 +47,13 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.validator.ValidatorException;
 
+import org.imixs.marty.model.ModelVersionHandler;
+import org.imixs.marty.util.LoginMB;
+import org.imixs.marty.web.project.ProjectMB;
+import org.imixs.marty.web.util.ConfigMB;
+import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.sywapps.business.ProfileService;
 import org.imixs.sywapps.business.ProjectService;
-import org.imixs.sywapps.model.ModelVersionHandler;
-import org.imixs.sywapps.util.LoginMB;
-import org.imixs.sywapps.web.project.ProjectMB;
-import org.imixs.sywapps.web.util.ConfigMB;
-import org.imixs.sywapps.web.workitem.WorkitemMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.jsf.util.AbstractWorkflowController;
 import org.imixs.workflow.util.ItemCollectionAdapter;

@@ -1,4 +1,4 @@
-package org.imixs.sywapps.web.workitem;
+package org.imixs.marty.web.workitem;
 
 /**
  * This Class is provided as a property of the WorkitemMB to provide informations about EditorSections 
