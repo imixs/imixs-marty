@@ -69,7 +69,7 @@ public class WorklistMB {
 
 	java.util.EventObject eo;
 	@EJB
-	org.imixs.sywapps.business.WorkitemService workitemService;
+	org.imixs.marty.business.WorkitemService workitemService;
 
 	/* Backing Beans */
 	private WorkitemMB workitemBean = null;

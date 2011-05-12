@@ -40,7 +40,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.validator.ValidatorException;
 
-import org.imixs.sywapps.business.ProfileService;
+import org.imixs.marty.business.ProfileService;
 import org.imixs.workflow.jee.jsf.util.AbstractWorkflowController;
 import org.imixs.workflow.util.ItemCollectionAdapter;
 

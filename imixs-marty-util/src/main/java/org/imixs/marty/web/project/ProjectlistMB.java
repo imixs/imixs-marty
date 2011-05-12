@@ -39,11 +39,11 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
 
+import org.imixs.marty.business.ProjectService;
 import org.imixs.marty.web.profile.MyProfileMB;
 import org.imixs.marty.web.util.ConfigMB;
 import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.marty.web.workitem.WorklistMB;
-import org.imixs.sywapps.business.ProjectService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.ModelService;

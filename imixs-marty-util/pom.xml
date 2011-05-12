@@ -45,9 +45,9 @@
 		</dependency>
 		<!-- Imixs  -->
 		<dependency>
-			<groupId>org.imixs.sywapps</groupId>
-			<artifactId>imixs-sywapps-ejb</artifactId>
-			<version>1.0.9-SNAPSHOT</version>
+			<groupId>org.imixs.marty</groupId>
+			<artifactId>imixs-marty-ejb</artifactId>
+			<version>${project.version}</version>
 			<scope>provided</scope>
 			<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
 		</dependency>

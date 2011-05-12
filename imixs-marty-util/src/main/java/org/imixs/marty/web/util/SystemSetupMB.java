@@ -14,8 +14,7 @@ import javax.faces.event.ActionEvent;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
-import org.imixs.sywapps.business.ConfigService;
-
+import org.imixs.marty.business.ConfigService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.jpa.EntityIndex;
 import org.imixs.workflow.xml.EntityCollection;

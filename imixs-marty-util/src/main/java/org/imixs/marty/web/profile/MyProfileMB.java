@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Imixs IX Workflow Technology
+d *  Imixs IX Workflow Technology
  *  Copyright (C) 2003, 2008 Imixs Software Solutions GmbH,  
  *  http://www.imixs.com
  *  
@@ -47,13 +47,13 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.validator.ValidatorException;
 
+import org.imixs.marty.business.ProfileService;
+import org.imixs.marty.business.ProjectService;
 import org.imixs.marty.model.ModelVersionHandler;
 import org.imixs.marty.util.LoginMB;
 import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.util.ConfigMB;
 import org.imixs.marty.web.workitem.WorkitemMB;
-import org.imixs.sywapps.business.ProfileService;
-import org.imixs.sywapps.business.ProjectService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.jsf.util.AbstractWorkflowController;
 import org.imixs.workflow.util.ItemCollectionAdapter;
@@ -100,7 +100,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 	/* WorkItem Services */
 	@EJB
-	private org.imixs.sywapps.business.WorkitemService workitemService;
+	private org.imixs.marty.business.WorkitemService workitemService;
 
 	public final static int MAX_PRIMARY_ENTRIES = 5;
 	public final static int START_PROFILE_PROCESS_ID = 200;

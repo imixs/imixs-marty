@@ -20,22 +20,22 @@
 	</application>
 	<managed-bean>
 		<managed-bean-name>projectMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.web.project.ProjectMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.web.project.ProjectMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 	<managed-bean>
 		<managed-bean-name>projectlistMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.web.project.ProjectlistMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.web.project.ProjectlistMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 	<managed-bean>
 		<managed-bean-name>worklistMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.web.workitem.WorklistMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.web.workitem.WorklistMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 	<managed-bean>
 		<managed-bean-name>workitemMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.web.workitem.WorkitemMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.web.workitem.WorkitemMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 	<managed-bean>
@@ -46,34 +46,34 @@
 	
 	<managed-bean>
 		<managed-bean-name>IsUserInRole</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.util.SecurityHashMap</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.util.SecurityHashMap</managed-bean-class>
 		<managed-bean-scope>none</managed-bean-scope>
 	</managed-bean>
 	<managed-bean>
 		<managed-bean-name>profileMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.web.profile.ProfileMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.web.profile.ProfileMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 	<managed-bean>
 		<managed-bean-name>modelMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.model.ModelMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.model.ModelMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>	
 	<managed-bean>
 		<managed-bean-name>myProfileMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.web.profile.MyProfileMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.web.profile.MyProfileMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>		
 	</managed-bean>
 	
 	<managed-bean>
 		<managed-bean-name>newsMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.web.news.NewsMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.web.news.NewsMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 
 	<managed-bean>
 		<managed-bean-name>urlControllerMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.web.util.URLControllerMB						    
+		<managed-bean-class>org.imixs.marty.web.util.URLControllerMB						    
 		</managed-bean-class>
 		<managed-bean-scope>request</managed-bean-scope>
 		<managed-property>
@@ -92,48 +92,48 @@
 	
 	<managed-bean>
 		<managed-bean-name>loginMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.util.LoginMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.util.LoginMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 
 	<managed-bean>
 		<managed-bean-name>openidMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.util.OpenidMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.util.OpenidMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 
 	<managed-bean>
 		<managed-bean-name>errorMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.util.ErrorMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.util.ErrorMB</managed-bean-class>
 		<managed-bean-scope>request</managed-bean-scope>
 	</managed-bean>
 	<managed-bean>
 		<managed-bean-name>nameLookupMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.web.profile.NameLookupMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.web.profile.NameLookupMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 	<managed-bean>
 		<managed-bean-name>projectNotesMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.web.project.ProjectNotesMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.web.project.ProjectNotesMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 	
 	<managed-bean>
 		<managed-bean-name>configMB</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.web.util.ConfigMB</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.web.util.ConfigMB</managed-bean-class>
 		<managed-bean-scope>application</managed-bean-scope>
 	</managed-bean>
 	
 	<managed-bean>
 		<managed-bean-name>fileUploadBean</managed-bean-name>
-		<managed-bean-class>org.imixs.sywapps.web.util.FileUploadBean</managed-bean-class>
+		<managed-bean-class>org.imixs.marty.web.util.FileUploadBean</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 	
 	<managed-bean>
 		<managed-bean-name>systemSetupMB</managed-bean-name>
 		<managed-bean-class>
-			org.imixs.sywapps.web.util.SystemSetupMB
+			org.imixs.marty.web.util.SystemSetupMB
 		</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
@@ -149,12 +149,12 @@
 	<converter>
 		<display-name>imixs.VectorConverter</display-name>
 		<converter-id>imixs.VectorConverter</converter-id>
-		<converter-class>org.imixs.sywapps.util.VectorConverter</converter-class>
+		<converter-class>org.imixs.marty.util.VectorConverter</converter-class>
 	</converter>
 	<converter>
 		<display-name>imixs.VectorIntegerConverter</display-name>
 		<converter-id>imixs.VectorIntegerConverter</converter-id>
-		<converter-class>org.imixs.sywapps.util.VectorIntegerConverter</converter-class>
+		<converter-class>org.imixs.marty.util.VectorIntegerConverter</converter-class>
 	</converter>
 	<!--
 		**************************************** * Validators
@@ -162,7 +162,7 @@
 	-->
 	<validator>
         <validator-id>imixs.EmailValidator</validator-id>
-        <validator-class>org.imixs.sywapps.util.EmailValidator</validator-class>
+        <validator-class>org.imixs.marty.util.EmailValidator</validator-class>
     </validator>
 	
 	

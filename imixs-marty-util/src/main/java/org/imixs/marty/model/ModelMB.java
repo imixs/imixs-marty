@@ -64,7 +64,7 @@ import org.imixs.workflow.jee.ejb.ModelService;
  * MyProfileMB is different from this format and was used in earlier versions of
  * ShareYourWork. We hope that we can drop the ModelVersionHandler sometimes....
  * 
- * @see org.imixs.sywapps.web.profile.MyProfileMB
+ * @see org.imixs.marty.web.profile.MyProfileMB
  * @author rsoika
  * 
  */

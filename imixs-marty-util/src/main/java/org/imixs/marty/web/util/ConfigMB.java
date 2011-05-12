@@ -6,7 +6,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.event.ActionEvent;
 
-import org.imixs.sywapps.business.ConfigService;
+import org.imixs.marty.business.ConfigService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.util.ItemCollectionAdapter;
 

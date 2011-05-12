@@ -7,8 +7,8 @@ import java.util.Set;
 
 import javax.ejb.EJB;
 
+import org.imixs.marty.business.ProfileService;
 import org.imixs.marty.util.Cache;
-import org.imixs.sywapps.business.ProfileService;
 import org.imixs.workflow.ItemCollection;
 
 /**

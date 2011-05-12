@@ -43,12 +43,12 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 
+import org.imixs.marty.business.ProjectService;
+import org.imixs.marty.business.WorkitemServiceBean;
 import org.imixs.marty.web.profile.NameLookupMB;
 import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.util.ConfigMB;
 import org.imixs.marty.web.util.FileUploadBean;
-import org.imixs.sywapps.business.ProjectService;
-import org.imixs.sywapps.business.WorkitemServiceBean;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.jsf.util.AbstractWorkflowController;
 import org.imixs.workflow.jee.jsf.util.BLOBWorkitemController;
@@ -79,7 +79,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 	/* WorkItem Services */
 	@EJB
-	private org.imixs.sywapps.business.WorkitemService workitemService;
+	private org.imixs.marty.business.WorkitemService workitemService;
 
 	/* Porject Service */
 	@EJB

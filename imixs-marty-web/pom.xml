@@ -41,9 +41,9 @@
 		
 		<!-- Imixs  -->
 		<dependency>
-			<groupId>org.imixs.sywapps</groupId>
-			<artifactId>imixs-sywapps-util</artifactId>
-			<version>1.0.9-SNAPSHOT</version>
+			<groupId>org.imixs.marty</groupId>
+			<artifactId>imixs-marty-util</artifactId>
+			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
