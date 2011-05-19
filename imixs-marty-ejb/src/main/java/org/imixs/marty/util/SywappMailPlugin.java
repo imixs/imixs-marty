@@ -74,6 +74,11 @@ public class SywappMailPlugin extends MailPlugin {
 		// try to get email from syw profile
 		try {
 			aAddr = fetchEmail(aAddr);
+			if (aAddr.indexOf('@') == -1) {
+				System.out.println("[SywAppMailPlugin] smtp mail address for '" + aAddr
+						+ "' could not be resolved!");
+				return null;
+			}
 		} catch (NamingException e) {
 			// no valid email was found!
 			System.out.println("[SywAppMailPlugin] mail for '" + aAddr
