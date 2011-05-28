@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -26,6 +27,8 @@ import org.imixs.workflow.xml.XMLItemCollectionAdapter;
  * config parms like the current historylength. The parameters are stored in a
  * configuration entity.
  * 
+ * The bean also provides a method to import entity data from a xml structure.
+ * 
  * @author rsoika
  * 
  */
@@ -43,6 +46,9 @@ public class SystemSetupMB {
 	@EJB
 	org.imixs.workflow.jee.ejb.ModelService modelService;
 
+	private static Logger logger = Logger.getLogger("org.imixs.workflow");
+
+	
 	public SystemSetupMB() {
 		super();
 	}
@@ -72,7 +78,7 @@ public class SystemSetupMB {
 	 * @throws Exception
 	 */
 	public void doSetup(ActionEvent event) throws Exception {
-		System.out.println("Imixs Office Workflow : starting System Setup...");
+		logger.info("Imixs Office Workflow : starting System Setup...");
 		// model
 		epm.addIndex("numprocessid", EntityIndex.TYP_INT);
 		epm.addIndex("numactivityid", EntityIndex.TYP_INT);
@@ -108,8 +114,7 @@ public class SystemSetupMB {
 
 		setupOk = true;
 
-		System.out
-				.println("Imixs Office Workflow : starting System Setup completed!");
+		logger.info("Imixs Office Workflow : starting System Setup completed!");
 
 	}
 
@@ -123,7 +128,7 @@ public class SystemSetupMB {
 	 */
 	public void loadDefaultModels() {
 		
-		System.out.println(" check default Models..");
+		logger.info(" check for default models...");
 		try {
 			List<String> col = modelService.getAllModelVersions();
 			// check if system model is available
@@ -134,20 +139,21 @@ public class SystemSetupMB {
 
 				if ("system".equals(sModelDomain)) {
 
-					System.out.println("System model found!");
+					logger.info("System model allready instaled - skip loading default models");
 					return;
 
 				}
 			}
 
-			System.out.println(" Loading default Models..");
+			logger.info(" Loading default Models..");
 
 			ResourceBundle r = ResourceBundle.getBundle("configuration.model");
-
+			if (r==null)
+				logger.warning("SystemSetup: no configuration/model.properties file found!");
 			Enumeration<String> enkeys = r.getKeys();
 			while (enkeys.hasMoreElements()) {
 				String sKey = enkeys.nextElement();
-
+				logger.info(" loading default Model: " + sKey);
 				// try to load this model
 				String filePath = r.getString(sKey);
 
@@ -167,23 +173,24 @@ public class SystemSetupMB {
 				bos.flush();
 				byte[] result = bos.toByteArray();
 
-				this.importXmlModelFile(result);
+				this.importXmlEntityData(result);
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			logger.warning("SystemSetup: unable to load default models - please check configuration/model.properties file!");
 			e.printStackTrace();
 		}
 
 	}
 
 	/**
-	 * this method imports an xml model stream. This is used to provide model
-	 * uploads or during the system setup
+	 * this method imports an xml entity data stream. This is used to provide model
+	 * uploads during the system setup.
+	 * The method can also import general entity data like project data.
 	 * 
 	 * @param event
 	 * @throws Exception
 	 */
-	public void importXmlModelFile(byte[] filestream) throws Exception {
+	public void importXmlEntityData(byte[] filestream) throws Exception {
 		if (filestream == null)
 			return;
 		try {
