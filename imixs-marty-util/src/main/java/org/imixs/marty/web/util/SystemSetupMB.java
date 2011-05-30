@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -48,7 +49,6 @@ public class SystemSetupMB {
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
-	
 	public SystemSetupMB() {
 		super();
 	}
@@ -127,7 +127,7 @@ public class SystemSetupMB {
 	 * @return
 	 */
 	public void loadDefaultModels() {
-		
+
 		logger.info(" check for default models...");
 		try {
 			List<String> col = modelService.getAllModelVersions();
@@ -148,12 +148,12 @@ public class SystemSetupMB {
 			logger.info(" Loading default Models..");
 
 			ResourceBundle r = ResourceBundle.getBundle("configuration.model");
-			if (r==null)
+			if (r == null)
 				logger.warning("SystemSetup: no configuration/model.properties file found!");
 			Enumeration<String> enkeys = r.getKeys();
 			while (enkeys.hasMoreElements()) {
 				String sKey = enkeys.nextElement();
-				logger.info(" loading default Model: " + sKey);
+				logger.info(" loading Model: " + sKey);
 				// try to load this model
 				String filePath = r.getString(sKey);
 
@@ -183,19 +183,24 @@ public class SystemSetupMB {
 	}
 
 	/**
-	 * this method imports an xml entity data stream. This is used to provide model
-	 * uploads during the system setup.
-	 * The method can also import general entity data like project data.
+	 * this method imports an xml entity data stream. This is used to provide
+	 * model uploads during the system setup. The method can also import general
+	 * entity data like project data.
 	 * 
 	 * @param event
 	 * @throws Exception
 	 */
 	public void importXmlEntityData(byte[] filestream) throws Exception {
+		XMLItemCollection entity;
+		ItemCollection itemCollection;
+		String sModelVersion = null;
+		
+		
 		if (filestream == null)
 			return;
 		try {
 			EntityCollection ecol = null;
-
+			logger.info("import EntityData from file....");
 			JAXBContext context = JAXBContext
 					.newInstance(EntityCollection.class);
 			Unmarshaller m = context.createUnmarshaller();
@@ -203,44 +208,54 @@ public class SystemSetupMB {
 			ByteArrayInputStream input = new ByteArrayInputStream(filestream);
 			Object jaxbObject = m.unmarshal(input);
 			if (jaxbObject == null) {
-				throw new Exception("WARNING - no xml model file!");
+				throw new Exception("WARNING - wrong xml file format - unable to import!");
 			}
 
 			ecol = (EntityCollection) jaxbObject;
 
-			XMLItemCollection entity;
-			ItemCollection itemCollection;
+			
 
-			String sModelVersion = null;
-
+			// import entities....
 			if (ecol.getEntity().length > 0) {
-				/*
-				 * first we need get model version from first entity
-				 */
-				entity = ecol.getEntity()[0];
-				itemCollection = XMLItemCollectionAdapter
-						.getItemCollection(entity);
-				sModelVersion = itemCollection
-						.getItemValueString("$ModelVersion");
+				
+				Vector<String> vModelVersions = new Vector<String>();
+				// first iterrate over all enttity and find if model entries are
+				// included
+				for (XMLItemCollection aentity : ecol.getEntity()) {
+					itemCollection = XMLItemCollectionAdapter
+							.getItemCollection(aentity);
+					// test if this is a model entry
+					// (type=WorkflowEnvironmentEntity)
+					if ("WorkflowEnvironmentEntity".equals(itemCollection
+							.getItemValueString("type"))
+							&& "environment.profile".equals(itemCollection
+									.getItemValueString("txtName"))) {
 
-				/*
-				 * now we need to delete the old model if available.
-				 */
+						sModelVersion = itemCollection
+								.getItemValueString("$ModelVersion");
+						if (vModelVersions.indexOf(sModelVersion) == -1)
+							vModelVersions.add(sModelVersion);
+					}
+				}
+				// now remove old model entries....
+				for (String aModelVersion : vModelVersions) {
+					logger.info(" Removing old Model Version: " + aModelVersion);
+					modelService.removeModelVersion(aModelVersion);
 
-				if (!"".equals(sModelVersion))
-					modelService.removeModelVersion(sModelVersion);
+				}
 
+				logger.info(" Starting import...");
 				// save new entities into database and update modelversion.....
 				for (int i = 0; i < ecol.getEntity().length; i++) {
 					entity = ecol.getEntity()[i];
 					itemCollection = XMLItemCollectionAdapter
 							.getItemCollection(entity);
-					// update model version
-					itemCollection.replaceItemValue("$modelVersion",
-							sModelVersion);
 					// save entity
 					entityService.save(itemCollection);
 				}
+
+				logger.info(ecol.getEntity().length
+						+ " Entities sucessfully imported");
 			}
 
 		} catch (Exception e) {

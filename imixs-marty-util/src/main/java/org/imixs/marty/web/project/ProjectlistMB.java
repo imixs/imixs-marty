@@ -713,11 +713,12 @@ public class ProjectlistMB {
 	 * resets the current ProcessList cache. this Method is called by process.
 	 * The Process Cache is now invalid for other user sessions! Maybe this
 	 * could be a problem if a team is online changing the process list. For
-	 * other users in this case a logut is necessary
+	 * other users in this case a logout is necessary
 	 * 
 	 * @throws Exception
 	 */
 	public void resetProcessList() throws Exception {
+		startProjects = null;
 		startProcessList = new StartProcessCache();
 		subProcessList = new SubProcessCache();
 
