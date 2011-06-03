@@ -32,6 +32,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -68,6 +69,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	private NameLookupMB nameLookupMB = null;
 	private BLOBWorkitemController workitemLobMB = null;
 	private FileUploadBean fileUploadMB = null;
+	private MicroBlogMB microBlogMB = null;
 
 	/* Child Process */
 	protected ItemCollection childWorkitemItemCollection = null;
@@ -98,18 +100,22 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 */
 	public ProjectMB getProjectBean() {
 		if (projectBean == null)
-			projectBean = (ProjectMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			projectBean = (ProjectMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "projectMB");
 		return projectBean;
 	}
 
 	private ConfigMB getConfigBean() {
 		if (configMB == null)
-			configMB = (ConfigMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			configMB = (ConfigMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "configMB");
 		return configMB;
 	}
@@ -121,9 +127,11 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 */
 	public WorklistMB getWorklistBean() {
 		if (worklistBean == null)
-			worklistBean = (WorklistMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			worklistBean = (WorklistMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "worklistMB");
 		return worklistBean;
 	}
@@ -135,9 +143,11 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 */
 	public NameLookupMB getNameLookupBean() {
 		if (nameLookupMB == null)
-			nameLookupMB = (NameLookupMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			nameLookupMB = (NameLookupMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "nameLookupMB");
 		return nameLookupMB;
 	}
@@ -150,21 +160,37 @@ public class WorkitemMB extends AbstractWorkflowController {
 	public BLOBWorkitemController getWorkitemBlobBean() {
 		if (workitemLobMB == null)
 			workitemLobMB = (BLOBWorkitemController) FacesContext
-					.getCurrentInstance().getApplication().getELResolver()
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
 					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "workitemBlobMB");
-
 		return workitemLobMB;
 
 	}
 
 	private FileUploadBean getFileUploadMB() {
 		if (fileUploadMB == null)
-			fileUploadMB = (FileUploadBean) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			fileUploadMB = (FileUploadBean) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "fileUploadBean");
 		return fileUploadMB;
+	}
+
+	public MicroBlogMB getMicroBlogBean() {
+		if (microBlogMB == null)
+			microBlogMB = (MicroBlogMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
+							null, "microBlogMB");
+
+		return microBlogMB;
+
 	}
 
 	/**
@@ -287,13 +313,24 @@ public class WorkitemMB extends AbstractWorkflowController {
 		childs = null;
 		this.setChildWorkitem(null);
 
-		// load lobWorkItem if uniqueid changed since last update
 		try {
+			// load lobWorkItem if uniqueid changed since last update
 			if (!workitemItemCollection.getItemValueString("$UniqueID").equals(
 					this.getWorkitemBlobBean().getWorkitem()
 							.getItemValueString("$UniqueIDRef"))) {
 				this.getWorkitemBlobBean().load(workitemItemCollection);
 				this.getFileUploadMB().reset();
+			}
+
+			// load microBlog Workitem if uniqueid changed since last update
+			if (getConfigBean().getWorkitem().getItemValueBoolean(
+					"enableMicroBlogging")) {
+				if (!workitemItemCollection.getItemValueString("$UniqueID")
+						.equals(this.getMicroBlogBean().getWorkitem()
+								.getItemValueString("$UniqueIDRef"))) {
+					this.getMicroBlogBean().load(workitemItemCollection);
+
+				}
 			}
 
 		} catch (Exception e) {
@@ -358,23 +395,23 @@ public class WorkitemMB extends AbstractWorkflowController {
 			}
 		}
 		doCreateWorkitem(processEntityIdentifier, projectIdentifier);
-		
+
 	}
 
-	
 	/**
 	 * @see doCreateWorkitem(ActionEvent event)
 	 * @param processEntityIdentifier
 	 * @param projectIdentifier
 	 * @throws Exception
 	 */
-	public void doCreateWorkitem(String processEntityIdentifier,String projectIdentifier) throws Exception {
+	public void doCreateWorkitem(String processEntityIdentifier,
+			String projectIdentifier) throws Exception {
 		this.getWorkitemBlobBean().clear();
 		if (processEntityIdentifier != null
 				&& !"".equals(processEntityIdentifier)) {
 
 			// if a project was refred switch to this project
-			if (projectIdentifier!=null && !"".equals(projectIdentifier)) {
+			if (projectIdentifier != null && !"".equals(projectIdentifier)) {
 				ItemCollection currentProject = this.getProjectBean()
 						.getEntityService().load(projectIdentifier);
 				getProjectBean().setWorkitem(currentProject);
@@ -402,10 +439,6 @@ public class WorkitemMB extends AbstractWorkflowController {
 		}
 	}
 
-	
-	
-	
-	
 	/**
 	 * processes the current workitem. The method expects an parameter "id" with
 	 * the activity ID which should be processed
@@ -424,6 +457,9 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * a process action. To Change the behavior of the worklist displayed after
 	 * this method a bean should register as a workitemListener and implement
 	 * the method onWorkitemProcessCompleted
+	 * 
+	 * Additional the method also calls the save method for the BlobWorkitemMB
+	 * and the MicroBlogMB
 	 * 
 	 * @param event
 	 * @return
@@ -451,10 +487,12 @@ public class WorkitemMB extends AbstractWorkflowController {
 		workitemItemCollection.getAllItems().remove("a4j:showdetails");
 
 		// set max History & log length
-		workitemItemCollection.replaceItemValue("numworkflowHistoryLength",
+		workitemItemCollection.replaceItemValue(
+				"numworkflowHistoryLength",
 				getConfigBean().getWorkitem().getItemValueInteger(
 						"MaxWorkitemHistoryLength"));
-		workitemItemCollection.replaceItemValue("numworkflowLogLength",
+		workitemItemCollection.replaceItemValue(
+				"numworkflowLogLength",
 				getConfigBean().getWorkitem().getItemValueInteger(
 						"MaxWorkitemHistoryLength"));
 
@@ -467,10 +505,24 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 		workitemItemCollection = workitemService
 				.processWorkItem(workitemItemCollection);
-		// save attachments.
+
+		// save attachments stored in WorkitemBlobMB
 		getWorkitemBlobBean().save(workitemItemCollection);
 		getFileUploadMB().reset();
 
+		// save micorBlogMB
+		if (getConfigBean().getWorkitem().getItemValueBoolean(
+				"enableMicroBlogging")) {
+			getMicroBlogBean().update(workitemItemCollection);
+			// add the last workflow history entry
+			Vector vList=workitemItemCollection.getItemValue("txtworkflowhistorylog");
+			getMicroBlogBean().doCreateBlogEntry(null);
+			getMicroBlogBean().getBlogEntry().replaceItemValue("txtComment",vList.elementAt(0));
+			// add and save the microblog
+			getMicroBlogBean().doAddEntry(null);
+			
+		}
+		
 		// update workitemcollection and reset childs
 		this.setWorkitem(workitemItemCollection);
 		// inform Listeners...
@@ -562,8 +614,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 					.substring(processEntityIdentifier.indexOf('|') + 1);
 
 			childWorkitemItemCollection = workitemService.createWorkItem(
-					workitemItemCollection, sProcessModelVersion, Integer
-							.parseInt(sProcessID));
+					workitemItemCollection, sProcessModelVersion,
+					Integer.parseInt(sProcessID));
 
 			this.setChildWorkitem(childWorkitemItemCollection);
 
@@ -628,7 +680,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 		childWorkitemItemCollection.replaceItemValue(
 				"numworkflowHistoryLength", getConfigBean().getWorkitem()
 						.getItemValueInteger("MaxWorkitemHistoryLength"));
-		childWorkitemItemCollection.replaceItemValue("numworkflowLogLength",
+		childWorkitemItemCollection.replaceItemValue(
+				"numworkflowLogLength",
 				getConfigBean().getWorkitem().getItemValueInteger(
 						"MaxWorkitemHistoryLength"));
 
@@ -765,9 +818,6 @@ public class WorkitemMB extends AbstractWorkflowController {
 		getWorklistBean().doReset(event);
 	}
 
-	
-	
-	
 	/**
 	 * moves a workitem into the archive by changing the attribute type to
 	 * 'workitemarchive'
@@ -781,10 +831,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 		if (workitemItemCollection != null) {
 
 			// remove a4j: attributes generated inside the viewentries by the UI
-			workitemItemCollection.getAllItems().remove(
-					"a4j:showhistory");
-			workitemItemCollection.getAllItems().remove(
-					"a4j:showdetails");
+			workitemItemCollection.getAllItems().remove("a4j:showhistory");
+			workitemItemCollection.getAllItems().remove("a4j:showdetails");
 
 			workitemService.moveIntoArchive(workitemItemCollection);
 			this.getWorklistBean().doRefresh(event);
@@ -803,14 +851,12 @@ public class WorkitemMB extends AbstractWorkflowController {
 		if (workitemItemCollection != null) {
 
 			// remove a4j: attributes generated inside the viewentries by the UI
-			workitemItemCollection.getAllItems().remove(
-					"a4j:showhistory");
-			workitemItemCollection.getAllItems().remove(
-					"a4j:showdetails");
+			workitemItemCollection.getAllItems().remove("a4j:showhistory");
+			workitemItemCollection.getAllItems().remove("a4j:showdetails");
 
 			workitemService.moveIntoDeletions(workitemItemCollection);
 			this.getWorklistBean().doRefresh(event);
-			
+
 		}
 	}
 
@@ -826,10 +872,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 		if (workitemItemCollection != null) {
 
 			// remove a4j: attributes generated inside the viewentries by the UI
-			workitemItemCollection.getAllItems().remove(
-					"a4j:showhistory");
-			workitemItemCollection.getAllItems().remove(
-					"a4j:showdetails");
+			workitemItemCollection.getAllItems().remove("a4j:showhistory");
+			workitemItemCollection.getAllItems().remove("a4j:showdetails");
 
 			workitemService.restoreFromArchive(workitemItemCollection);
 
@@ -848,21 +892,14 @@ public class WorkitemMB extends AbstractWorkflowController {
 	public void doRestoreFromDeletions(ActionEvent event) throws Exception {
 		if (workitemItemCollection != null) {
 			// remove a4j: attributes generated inside the viewentries by the UI
-			workitemItemCollection.getAllItems().remove(
-					"a4j:showhistory");
-			workitemItemCollection.getAllItems().remove(
-					"a4j:showdetails");
+			workitemItemCollection.getAllItems().remove("a4j:showhistory");
+			workitemItemCollection.getAllItems().remove("a4j:showdetails");
 			workitemService.restoreFromDeletions(workitemItemCollection);
 
 			this.getWorklistBean().doRefresh(event);
 		}
 	}
 
-
-	
-	
-	
-	
 	/**
 	 * This method changes the current $ProcessID of the actual workitem. But
 	 * did not (!) save the workitem!
@@ -1005,8 +1042,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 			int iPID = this.workitemItemCollection
 					.getItemValueInteger("$ProcessID");
 
-			ItemCollection processEntity = this.getModelService().getProcessEntityByVersion(iPID,
-							sModelVersion);
+			ItemCollection processEntity = this.getModelService()
+					.getProcessEntityByVersion(iPID, sModelVersion);
 			if (processEntity != null)
 				return processEntity.getItemValueString("rtfdescription");
 		} catch (Exception e) {
@@ -1017,7 +1054,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		return "";
 
 	}
-	
+
 	/**
 	 * returns a report name provided by teh WorklfowProperty
 	 * 'txtworkflowresultmessage'. The report must be defined by the präfix the

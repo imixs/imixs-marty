@@ -86,12 +86,24 @@ public class MicroBlogMB {
 	}
 
 	/**
-	 * returns the ItemCollection for the curren BlobWorkitem object.
-	 * 
+	 * returns the ItemCollection for the current BlogEntry.
 	 * @return
 	 */
 	public ItemCollection getWorkitem() {
 		return blogEntry;
+	}
+
+	
+	/**
+	 * returns the ItemCollection for the current BlogWorkitem object.
+	 * 
+	 * @return
+	 */
+	public ItemCollection getBlogWorkitem() {
+		if (blogWorkitem==null) {
+			blogWorkitem=new ItemCollection();
+		}
+		return blogWorkitem;
 	}
 
 	/**
@@ -104,12 +116,40 @@ public class MicroBlogMB {
 
 	/**
 	 * This method updates the $uniqueIDRef property and the read- and write
-	 * access. Finally the method saves the current BlogWorkitem. Therefore the
-	 * method copies the read- and write access list from the given parent
+	 * access. The method copies the readaccess list from the given parent
 	 * workitem into the BlogWorkitem before save.
+	 * <p>
+	 * The method did not save the blogWorkitem. You can call the method save()
+	 * to save teh worktiem
+	 * <p>
 	 * 
-	 * So this method should be called after a WorkflowProcessing step to update
-	 * the read- and write access identically to a valid parentWorkitem
+	 * @throws Exception
+	 */
+	public void update(ItemCollection parentWorkitem) throws Exception {
+
+		if (parentWorkitem != null) {
+			// verify if a uniqueid is still defined. If not return without
+			// saving!
+			if ("".equals(parentWorkitem.getItemValueString("$uniqueID")))
+				return;
+
+			// Update Read access list from parent workitem
+			Vector vAccess = parentWorkitem.getItemValue("$ReadAccess");
+			getBlogWorkitem().replaceItemValue("$ReadAccess", vAccess);
+
+			// Update the Write access to static
+			// 'org.imixs.ACCESSLEVEL.AUTHORACCESS'
+			getBlogWorkitem().replaceItemValue("$WriteAccess",
+					"org.imixs.ACCESSLEVEL.AUTHORACCESS");
+
+			getBlogWorkitem().replaceItemValue("$uniqueidRef",
+					parentWorkitem.getItemValueString("$uniqueID"));
+			getBlogWorkitem().replaceItemValue("type", TYPE);
+		}
+	}
+
+	/**
+	 * This method updates and saves the blogWorkitem.
 	 * <p>
 	 * The method did not save the blogWorkitem if the parent workitem has no
 	 * $unqiueID!
@@ -118,34 +158,25 @@ public class MicroBlogMB {
 	 * @throws Exception
 	 */
 	public void save(ItemCollection parentWorkitem) throws Exception {
-
-		if (blogWorkitem != null && parentWorkitem != null) {
-
-			// verify if a uniqueid is still defined. If not return without
-			// saving!
-			if ("".equals(parentWorkitem.getItemValueString("$uniqueID")))
-				return;
-
-			// Update Read access list from parent workitem
-			Vector vAccess = parentWorkitem.getItemValue("$ReadAccess");
-			blogWorkitem.replaceItemValue("$ReadAccess", vAccess);
-
-			// Update the Write access to static
-			// 'org.imixs.ACCESSLEVEL.AUTHORACCESS'
-			blogWorkitem.replaceItemValue("$WriteAccess",
-					"org.imixs.ACCESSLEVEL.AUTHORACCESS");
-
-			blogWorkitem.replaceItemValue("$uniqueidRef",
-					parentWorkitem.getItemValueString("$uniqueID"));
-			blogWorkitem.replaceItemValue("type", TYPE);
-			// Update blogWorkitem
-			blogWorkitem = entityService.save(blogWorkitem);
-			// update adapter
-			setWorkitem(blogWorkitem);
-
+		if ( parentWorkitem != null) {
+			update(parentWorkitem);
+			// save blogWorkitem
+			save();
 		}
 	}
-
+	
+	/**
+	 * This method saves the blogWorkitem if the $uniqueidRef is set.
+	
+	 * 
+	 * @throws Exception
+	 */
+	private void save() throws Exception {
+		if (!"".equals(getBlogWorkitem().getItemValueString("$UniqueIDRef"))) {
+			blogWorkitem = entityService.save(getBlogWorkitem());
+		}
+	}
+	
 	/**
 	 * Loads the BlobWorkitem of a given parent Workitem. The BlobWorkitem is
 	 * identified by the $unqiueidRef. If no BlobWorkitem still exists the
@@ -194,9 +225,10 @@ public class MicroBlogMB {
 	 * The BlogEntry will be automatically cleared by this method.
 	 */
 	public void doAddEntry(ActionEvent event) {
+		
 		// take comment and append it to txtCommentList
 		try {
-			Vector<Map> vCommentList = blogWorkitem
+			Vector<Map> vCommentList = getBlogWorkitem()
 					.getItemValue("txtMicroBlog");
 
 			// add date and modifier
@@ -209,14 +241,10 @@ public class MicroBlogMB {
 			blogEntry.replaceItemValue("nameditor", remoteUser);
 			vCommentList.add(0, blogEntry.getAllItems());
 
-			blogWorkitem.replaceItemValue("txtMicroBlog", vCommentList);
+			getBlogWorkitem().replaceItemValue("txtMicroBlog", vCommentList);
 
 			// save workitem if $uniqueidRef is availalbe
-			if (!"".equals(blogWorkitem.getItemValueString("$UniqueIDRef"))) {
-				blogWorkitem = entityService.save(blogWorkitem);
-				// update adapter
-				setWorkitem(blogWorkitem);
-			}
+			save();
 
 			// clear last comment
 			doCreateBlogEntry(event);
@@ -225,6 +253,8 @@ public class MicroBlogMB {
 			// unable to copy comment
 			e.printStackTrace();
 		}
+		
+		
 	}
 
 	/**
@@ -237,7 +267,7 @@ public class MicroBlogMB {
 	public void doFollow(ActionEvent event) {
 		// take comment and append it to txtCommentList
 		try {
-			Vector<String> vownerList = blogWorkitem.getItemValue("namOwner");
+			Vector<String> vownerList = getBlogWorkitem().getItemValue("namOwner");
 
 			// add user?
 			FacesContext context = FacesContext.getCurrentInstance();
@@ -246,14 +276,10 @@ public class MicroBlogMB {
 			if (vownerList.indexOf(remoteUser) == -1) {
 				vownerList.add(remoteUser);
 
-				blogWorkitem.replaceItemValue("namOwner", vownerList);
+				getBlogWorkitem().replaceItemValue("namOwner", vownerList);
 
 				// save workitem if $uniqueidRef is available
-				if (!"".equals(blogWorkitem.getItemValueString("$UniqueIDRef"))) {
-					blogWorkitem = entityService.save(blogWorkitem);
-					// update adapter
-					setWorkitem(blogWorkitem);
-				}
+				save();
 			}
 		} catch (Exception e) {
 			// unable to copy comment
@@ -281,11 +307,7 @@ public class MicroBlogMB {
 				vownerList.remove(remoteUser);
 				blogWorkitem.replaceItemValue("namOwner", vownerList);
 				// save workitem if $uniqueidRef is available
-				if (!"".equals(blogWorkitem.getItemValueString("$UniqueIDRef"))) {
-					blogWorkitem = entityService.save(blogWorkitem);
-					// update adapter
-					setWorkitem(blogWorkitem);
-				}
+				save();
 			}
 		} catch (Exception e) {
 			// unable to copy comment

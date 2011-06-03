@@ -43,6 +43,11 @@
 		<managed-bean-class>org.imixs.workflow.jee.jsf.util.BLOBWorkitemController</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
+	<managed-bean>
+		<managed-bean-name>microBlogMB</managed-bean-name>
+		<managed-bean-class>org.imixs.marty.web.workitem.MicroBlogMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
 	
 	<managed-bean>
 		<managed-bean-name>IsUserInRole</managed-bean-name>
