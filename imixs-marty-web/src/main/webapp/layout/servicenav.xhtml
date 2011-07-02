@@ -18,7 +18,7 @@
 					<!--  Singed in user -->
 					<c:when test="#{loginMB.authenticated}">
 						<li><b><h:outputText
-							value="#{global.signed_in}: #{myProfileMB.item['txtUserName']}" /></b>
+							value="#{global.signed_in}: #{myProfileMB.workitem.item['txtUserName']}" /></b>
 						<a
 							href="#{facesContext.externalContext.requestContextPath}/logout.jsp">
 						<h:outputText value="#{global.sign_out}" /></a></li>

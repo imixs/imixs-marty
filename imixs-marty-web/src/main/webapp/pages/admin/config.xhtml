@@ -35,7 +35,7 @@
 								</dt>
 								<dd>
 									<h:inputText style="width: 20em;" required="true"
-										value="#{configMB.item['defaultworklistview']}">
+										value="#{configMB.workitem.item['defaultworklistview']}">
 									</h:inputText>
 
 									<br />
@@ -64,7 +64,7 @@
 								</dt>
 								<dd>
 									<h:inputText style="width: 5em;" required="true"
-										value="#{configMB.item['maxviewentriesperpage']}">
+										value="#{configMB.workitem.item['maxviewentriesperpage']}">
 									</h:inputText>
 								</dd>
 
@@ -74,7 +74,7 @@
 								</dt>
 								<dd>
 									<h:inputText style="width: 5em;" required="true"
-										value="#{configMB.item['sortorder']}">
+										value="#{configMB.workitem.item['sortorder']}">
 									</h:inputText>
 								</dd>
 
@@ -84,7 +84,7 @@
 								</dt>
 								<dd>
 									<h:inputText style="width: 5em;" required="true"
-										value="#{configMB.item['sortby']}">
+										value="#{configMB.workitem.item['sortby']}">
 									</h:inputText>
 								</dd>
 
@@ -97,7 +97,7 @@
 									<h:inputTextarea required="false"
 										converter="imixs.VectorConverter"
 										style="height: 7em; width: 20em;"
-										value="#{configMB.itemList['defaultprojectprocesslist']}">
+										value="#{configMB.workitem.itemList['defaultprojectprocesslist']}">
 									</h:inputTextarea>
 								</dd>
 
@@ -120,7 +120,7 @@
 								</dt>
 								<dd>
 									<h:inputText style="width: 20em;" required="true"
-										value="#{configMB.item['maxProjectHistoryLength']}">
+										value="#{configMB.workitem.item['maxProjectHistoryLength']}">
 									</h:inputText>
 								</dd>
 
@@ -130,7 +130,7 @@
 								</dt>
 								<dd>
 									<h:inputText style="width: 20em;" required="true"
-										value="#{configMB.item['maxProfileHistoryLength']}">
+										value="#{configMB.workitem.item['maxProfileHistoryLength']}">
 									</h:inputText>
 								</dd>
 
@@ -140,7 +140,7 @@
 								</dt>
 								<dd>
 									<h:inputText style="width: 20em;" required="true"
-										value="#{configMB.item['maxWorkitemHistoryLength']}">
+										value="#{configMB.workitem.item['maxWorkitemHistoryLength']}">
 									</h:inputText>
 								</dd>
 
@@ -151,7 +151,7 @@
 								</dt>
 								<dd>
 									<h:selectBooleanCheckbox
-										value="#{configMB.item['enableMicroBlogging']}"
+										value="#{configMB.workitem.item['enableMicroBlogging']}"
 										title="enable/disable" />
 								</dd>
 

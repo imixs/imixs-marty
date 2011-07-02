@@ -19,19 +19,19 @@
 				<rich:panel>
 					<f:facet name="header">
 						<h:outputText
-							value="#{profileMB.item['txtFirstName']} #{profileMB.item['txtLastName']}" />
+							value="#{profileMB.workitem.item['txtFirstName']} #{profileMB.workitem.item['txtLastName']}" />
 					</f:facet>
 
 					<dl>
 						<dt><h:outputLabel value="#{messages.email}">
 
 						</h:outputLabel></dt>
-						<dd><h:outputText value="#{profileMB.item['txtEmail']}">
+						<dd><h:outputText value="#{profileMB.workitem.item['txtEmail']}">
 						</h:outputText></dd>
 						<dt><h:outputLabel for="website_id"
 							value="#{messages.website}">
 						</h:outputLabel></dt>
-						<dd><h:outputText value="#{profileMB.item['txtWebSite']}">
+						<dd><h:outputText value="#{profileMB.workitem.item['txtWebSite']}">
 						</h:outputText></dd>
 
 
@@ -43,7 +43,7 @@
 						<h:outputText value="#{messages.aboutme}" />
 					</f:facet>
 
-					<h:outputText value="#{profileMB.item['txtAboutMe']}" escape="false" />
+					<h:outputText value="#{profileMB.workitem.item['txtAboutMe']}" escape="false" />
 
 				</rich:panel>
 

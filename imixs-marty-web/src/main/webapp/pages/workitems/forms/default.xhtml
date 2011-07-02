@@ -9,11 +9,11 @@
 	<rich:panel>
 		<f:facet name="header">
 			<h:outputText
-				value="#{messages.workitem}: #{workitemMB.item['txtWorkflowStatus']}" />
+				value="#{messages.workitem}: #{workitemMB.workitem.item['txtWorkflowStatus']}" />
 		</f:facet>
 		<!-- Title -->
 		<p><h:outputLabel for="titel_id" value="#{messages.subject}" /> <br />
-		<h:inputText value="#{workitemMB.item['txtsubject']}"
+		<h:inputText value="#{workitemMB.workitem.item['txtsubject']}"
 			style="width: 95%" id="titel_id" required="true"></h:inputText> <h:message
 			style="color: red" for="titel_id" showSummary="true"
 			showDetail="false" /></p>
@@ -23,11 +23,11 @@
 		<h:outputLabel for="datum_id" value="#{messages.duedate}: " />
 		<br />
 
-		<rich:calendar id="datum_id" value="#{workitemMB.item['datstart']}" />
+		<rich:calendar id="datum_id" value="#{workitemMB.workitem.item['datstart']}" />
 		<br />		
 
 		<rich:editor id="details_id"  theme="advanced" 
-			plugins="fullscreen" value="#{workitemMB.item['htmldetail']}">
+			plugins="fullscreen" value="#{workitemMB.workitem.item['htmldetail']}">
 			<f:param name="theme_advanced_buttons1"
 				value="fullscreen,undo,redo,cleanup,|,formatselect,bold,italic,underline,|,justifyleft,justifycenter,justifyright,justifyfull,bullist,numlist,insertdate,inserttime,hr,outdent,indent,|,link,unlink" />
 			<f:param name="theme_advanced_buttons2" value="" />

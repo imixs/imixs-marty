@@ -33,7 +33,7 @@
 
 
 						<dd><h:selectOneMenu id="locale_id" layout="pageDirection"
-							value="#{myProfileMB.item['txtLocale']}">
+							value="#{myProfileMB.workitem.item['txtLocale']}">
 							<f:selectItems value="#{loginMB.localeSelection}" />
 						</h:selectOneMenu></dd>
 
@@ -45,7 +45,7 @@
 								showSummary="true" showDetail="false" />
 						</h:outputLabel></dt>
 						<dd><h:inputText style="width: 20em;" required="true"
-							value="#{myProfileMB.item['txtFirstName']}" id="firstname_id">
+							value="#{myProfileMB.workitem.item['txtFirstName']}" id="firstname_id">
 						</h:inputText></dd>
 
 
@@ -55,7 +55,7 @@
 								showSummary="true" showDetail="false" />
 						</h:outputLabel></dt>
 						<dd><h:inputText style="width: 20em;" required="true"
-							value="#{myProfileMB.item['txtLastName']}" id="lastname_id">
+							value="#{myProfileMB.workitem.item['txtLastName']}" id="lastname_id">
 						</h:inputText></dd>
 
 
@@ -64,7 +64,7 @@
 							value="#{messages.displayname}">
 						</h:outputLabel></dt>
 						<dd><h:inputText style="width: 20em;" required="true"
-							value="#{myProfileMB.item['txtUserName']}" id="displayname_id">
+							value="#{myProfileMB.workitem.item['txtUserName']}" id="displayname_id">
 						</h:inputText> <rich:spacer width="8" /> <h:outputText
 							value="#{messages.displayname_help}" /> <br />
 
@@ -80,7 +80,7 @@
 								showDetail="false" />
 						</h:outputLabel></dt>
 						<dd><h:inputText style="width: 20em;" required="true"
-							value="#{myProfileMB.item['txtEmail']}" id="email_id">
+							value="#{myProfileMB.workitem.item['txtEmail']}" id="email_id">
 						</h:inputText></dd>
 
 
@@ -89,7 +89,7 @@
 								showDetail="false" />
 						</h:outputLabel></dt>
 						<dd><h:inputText style="width: 20em;" required="false"
-							value="#{myProfileMB.item['txtPhone1']}" id="phone1_id">
+							value="#{myProfileMB.workitem.item['txtPhone1']}" id="phone1_id">
 						</h:inputText></dd>
 
 
@@ -98,7 +98,7 @@
 								showDetail="false" />
 						</h:outputLabel></dt>
 						<dd><h:inputText style="width: 20em;" required="false"
-							value="#{myProfileMB.item['txtPhone2']}" id="phone2_id">
+							value="#{myProfileMB.workitem.item['txtPhone2']}" id="phone2_id">
 						</h:inputText></dd>
 
 
@@ -110,7 +110,7 @@
 								showDetail="false" />
 						</h:outputLabel></dt>
 						<dd><h:inputText style="width: 20em;" required="false"
-							value="#{myProfileMB.item['txtCompany']}" id="company_id">
+							value="#{myProfileMB.workitem.item['txtCompany']}" id="company_id">
 						</h:inputText></dd>
 
 
@@ -120,7 +120,7 @@
 								showDetail="false" />
 						</h:outputLabel></dt>
 						<dd><h:inputText style="width: 20em;" required="false"
-							value="#{myProfileMB.item['txtaddress']}" id="address_id">
+							value="#{myProfileMB.workitem.item['txtaddress']}" id="address_id">
 						</h:inputText></dd>
 
 
@@ -131,9 +131,9 @@
 								showDetail="false" />
 						</h:outputLabel></dt>
 						<dd><h:inputText style="width:4em;" required="false"
-							value="#{myProfileMB.item['txtzip']}" id="zip_id">
+							value="#{myProfileMB.workitem.item['txtzip']}" id="zip_id">
 						</h:inputText> <rich:spacer width="8" /> <h:inputText style="width:15em;"
-							required="false" value="#{myProfileMB.item['txtcity']}">
+							required="false" value="#{myProfileMB.workitem.item['txtcity']}">
 						</h:inputText></dd>
 
 
@@ -144,7 +144,7 @@
 								showDetail="false" />
 						</h:outputLabel></dt>
 						<dd><h:inputText style="width: 20em;" required="false"
-							value="#{myProfileMB.item['txtcountry']}" id="country_id">
+							value="#{myProfileMB.workitem.item['txtcountry']}" id="country_id">
 						</h:inputText></dd>
 
 
@@ -154,7 +154,7 @@
 								showDetail="false" />
 						</h:outputLabel></dt>
 						<dd><h:inputText style="width: 20em;" required="false"
-							value="#{myProfileMB.item['txtstate']}" id="state_id">
+							value="#{myProfileMB.workitem.item['txtstate']}" id="state_id">
 						</h:inputText></dd>
 
 
@@ -172,7 +172,7 @@
 					</f:facet>
 					<ui:include src="/pages/_util/simple_editor.xhtml" />
 					<h:inputTextarea required="false"
-						value="#{myProfileMB.item['txtAboutMe']}" id="about_id"
+						value="#{myProfileMB.workitem.item['txtAboutMe']}" id="about_id"
 						style="height: 10em; width:100%">
 					</h:inputTextarea>
 
@@ -182,7 +182,7 @@
 							value="#{messages.website}">
 						</h:outputLabel></dt>
 						<dd><h:inputText style="width:100%;" required="false"
-							value="#{myProfileMB.item['txtWebSite']}" id="website_id">
+							value="#{myProfileMB.workitem.item['txtWebSite']}" id="website_id">
 						</h:inputText></dd>
 					</dl>
 					</rich:panel>

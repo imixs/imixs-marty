@@ -16,29 +16,29 @@
 
 			<h:form>
 
-				<h2><h:outputText value="#{projectMB.item['txtname']}: " /> <h:outputText
-					value="#{workitemMB.item['txtworkflowgroup']}" /></h2>
+				<h2><h:outputText value="#{projectMB.workitem.item['txtname']}: " /> <h:outputText
+					value="#{workitemMB.workitem.item['txtworkflowgroup']}" /></h2>
 
 
 				<!-- ### current Workflow ##### -->
 				<rich:panel>
 					<f:facet name="header">
-						<h:outputText value="#{workitemMB.item['txtWorkflowSummary']}" />
+						<h:outputText value="#{workitemMB.workitem.item['txtWorkflowSummary']}" />
 					</f:facet>
 					<dl>
 						<dd><h:outputText value="#{global.created}: " /> <h:outputText
-							value="#{workitemMB.item['$created']}">
+							value="#{workitemMB.workitem.item['$created']}">
 							<f:convertDateTime type="both" dateStyle="short"
 								pattern="dd.MMM.yy HH:mm:ss" />
 						</h:outputText> <h:outputText
-							value=" #{global.by} #{nameLookupMB.userName[workitemMB.item['namCreator']]}" /></dd>
+							value=" #{global.by} #{nameLookupMB.userName[workitemMB.workitem.item['namCreator']]}" /></dd>
 
 						<dd><h:outputText value="#{global.modified}: " /> <h:outputText
-							value="#{workitemMB.item['$modified']}">
+							value="#{workitemMB.workitem.item['$modified']}">
 							<f:convertDateTime type="both" dateStyle="short"
 								pattern="dd.MMM.yy HH:mm:ss" />
 						</h:outputText> 
-						<h:outputText value=" by #{nameLookupMB.userName[workitemMB.item['namCurrentEditor']]}" />
+						<h:outputText value=" by #{nameLookupMB.userName[workitemMB.workitem.item['namCurrentEditor']]}" />
 						</dd>
 						
 					</dl>
@@ -57,9 +57,9 @@
 							value="#{messages.change_process_selection}" /></dt>
 
 						<dd><h:selectOneListbox
-							value="#{workitemMB.item['txtNewStratProcessEntity']}">
+							value="#{workitemMB.workitem.item['txtNewStratProcessEntity']}">
 							<c:forEach
-								items="#{projectlistMB.processList[projectMB.item['$uniqueid']]}"
+								items="#{projectlistMB.processList[projectMB.workitem.item['$uniqueid']]}"
 								var="process">
 								<f:selectItem
 									itemLabel="#{process.item['txtworkflowgroup']}"

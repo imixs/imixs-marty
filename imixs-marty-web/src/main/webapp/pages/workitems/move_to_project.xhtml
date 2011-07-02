@@ -14,37 +14,37 @@
 
 			<h:form>
 
-				<h2><h:outputText value="#{projectMB.item['txtname']}: " /> <h:outputText
-					value="#{workitemMB.item['txtworkflowgroup']}" /></h2>
+				<h2><h:outputText value="#{projectMB.workitem.item['txtname']}: " /> <h:outputText
+					value="#{workitemMB.workitem.item['txtworkflowgroup']}" /></h2>
 
 
 				<!-- ### current Workflow ##### -->
 				<rich:panel>
 					<f:facet name="header">
-						<h:outputText value="#{workitemMB.item['txtsubject']}" />
+						<h:outputText value="#{workitemMB.workitem.item['txtsubject']}" />
 					</f:facet>
 					<dl>
 						<dt><h:outputText value="#{global.created}: " /> <h:outputText
-							value="#{workitemMB.item['$created']}">
+							value="#{workitemMB.workitem.item['$created']}">
 							<f:convertDateTime type="both" dateStyle="short"
 								pattern="dd.MMM.yy HH:mm:ss" />
 						</h:outputText> <h:outputText
-							value=" #{global.by} #{workitemMB.item['namCreator']}" /></dt>
+							value=" #{global.by} #{workitemMB.workitem.item['namCreator']}" /></dt>
 
 						<dt><h:outputText value="#{global.modified}: " /> <h:outputText
-							value="#{workitemMB.item['$modified']}">
+							value="#{workitemMB.workitem.item['$modified']}">
 							<f:convertDateTime type="both" dateStyle="short"
 								pattern="dd.MMM.yy HH:mm:ss" />
-						</h:outputText> <h:outputText value=" by #{workitemMB.item['namCurrentEditor']}" />
+						</h:outputText> <h:outputText value=" by #{workitemMB.workitem.item['namCurrentEditor']}" />
 						</dt>
 						<dt><h:outputText
-							value="#{workitemMB.item['txtWorkflowAbstract']}"
-							rendered="#{! empty workitemMB.item['txtWorkflowAbstract']}" />
+							value="#{workitemMB.workitem.item['txtWorkflowAbstract']}"
+							rendered="#{! empty workitemMB.workitem.item['txtWorkflowAbstract']}" />
 
 						</dt>
 
 						<dt><h:outputText
-							value="#{messages.current_project}: #{projectMB.item['txtname']}" /></dt>
+							value="#{messages.current_project}: #{projectMB.workitem.item['txtname']}" /></dt>
 
 					</dl>
 
@@ -61,7 +61,7 @@
 						<dt><h:outputText value="#{global.my_projects}" /></dt>
 
 						<dd><h:selectOneListbox
-							value="#{workitemMB.item['$uniqueidRef']}">
+							value="#{workitemMB.workitem.item['$uniqueidRef']}">
 							<f:selectItems value="#{projectlistMB.myProjectSelection}" />
 
 						</h:selectOneListbox></dd>

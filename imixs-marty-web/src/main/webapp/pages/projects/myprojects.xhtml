@@ -135,7 +135,7 @@
 						</h:commandLink></li>
 
 
-						<li><h:commandLink rendered="#{ (myproject.item['$isAuthor']) and (!empty myProfileMB.item['keyOrderType']) and (!myProfileMB.item['keyOrderType'] > '0')}"
+						<li><h:commandLink rendered="#{ (myproject.item['$isAuthor']) and (!empty myProfileMB.workitem.item['keyOrderType']) and (!myProfileMB.workitem.item['keyOrderType'] > '0')}"
 							actionListener="#{projectlistMB.doCreateSubproject}"
 							action="open_project">
 							<h:outputText value="#{messages.create_subproject}"/>
