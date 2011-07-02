@@ -23,9 +23,21 @@
  *******************************************************************************/
 package org.imixs.marty.business;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.ejb.LocalBean;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateless;
+
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.jpa.EntityIndex;
 
 /**
  * Manik is a subproject of the IX JEE Workflow Server Project. This Project
@@ -52,9 +64,10 @@ import org.imixs.workflow.ItemCollection;
  * component.
  * 
  * 
- * Config Service ================== This Service Facade encapsulates a
- * configuration service business object A config object is represented by a
- * ItemCollection with the following Attributes:
+ * Config Service<br>
+ * This Service Facade encapsulates a configuration service business object A
+ * config object is represented by a ItemCollection with the following
+ * Attributes:
  * 
  * 
  * txtName - Name of the configuration (required)
@@ -67,10 +80,85 @@ import org.imixs.workflow.ItemCollection;
  * 
  */
 
-public interface ConfigService {
+@DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
+		"org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
+		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
+@RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS",
+		"org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
+		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
+@Stateless
+@LocalBean
+public class ConfigService  {
 
-	
-	
+	@Resource
+	SessionContext ctx;
+
+	@EJB
+	org.imixs.workflow.jee.ejb.EntityService entityService;
+
+	// Workflow Manager
+	@EJB
+	org.imixs.workflow.jee.ejb.WorkflowService wm;
+	ItemCollection workItem = null;
+
+	final String TYPE = "configuration";
+
+	@PostConstruct
+	private void init_index() throws Exception {
+		entityService.addIndex("txtname", EntityIndex.TYP_TEXT);
+		entityService.addIndex("namteam", EntityIndex.TYP_TEXT);
+	}
+
+	/**
+	 * creates a new configuration object for a specified name
+	 * 
+	 * @return
+	 */
+	public ItemCollection createConfiguration(String name) throws Exception {
+		ItemCollection aworkitem = new ItemCollection();
+		aworkitem.replaceItemValue("type", TYPE);
+		aworkitem.replaceItemValue("txtname", name);
+		return aworkitem;
+	}
+
+	/**
+	 * This method deletes an existing Configuration.
+	 * 
+	 * @param aconfig
+	 */
+	public void deleteConfiguration(ItemCollection aconfig) throws Exception {
+		entityService.remove(aconfig);
+	}
+
+	/**
+	 * This method returns a config ItemCollection for a specified name. If no
+	 * configuration is found for this name the Method creates an empty
+	 * configuration object.
+	 * 
+	 * @param name
+	 *            in attribute txtname
+	 */
+	public ItemCollection loadConfiguration(String name) {
+		String sQuery = "SELECT config FROM Entity AS config "
+				+ " JOIN config.textItems AS t2" + " WHERE config.type = '"
+				+ TYPE + "'" + " AND t2.itemName = 'txtname'"
+				+ " AND t2.itemValue = '" + name + "'"
+				+ " ORDER BY t2.itemValue asc";
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, 1);
+
+		if (col.size() > 0) {
+			ItemCollection aworkitem = col.iterator().next();
+			return aworkitem;
+		}
+		return null;
+
+	}
+
 	/**
 	 * This method process a config object using the Imixs WorkflowManager
 	 * 
@@ -79,32 +167,23 @@ public interface ConfigService {
 	 * @param activityID
 	 *            activity ID the issue should be processed
 	 */
-	public ItemCollection processConfiguration(ItemCollection aconfig,
-			int activityID) throws Exception;
+	public ItemCollection processConfiguration(ItemCollection aorgunit,
+			int activityid) throws Exception {
 
-	/**
-	 * creates a new configuration object for a specified name
-	 * 
-	 * @return
-	 */
-	public ItemCollection createConfiguration(String name) throws Exception;
+		validateConfiguration(aorgunit);
+		int iProcessID = aorgunit.getItemValueInteger("$processID");
+		String sUniversalID = aorgunit.getItemValueString("$uniqueid");
 
-	/**
-	 * This method deletes an existing project.
-	 * 
-	 * @param aTeamName
-	 */
-	public void deleteConfiguration(ItemCollection aProject) throws Exception;
+		String sCreator = aorgunit.getItemValueString("namcreator");
 
-	/**
-	 * This method loads an configuration object with a spcified name. If no
-	 * Configuraiton object exists with this name the method returns null
-	 * 
-	 * @param name
-	 *            in attribute txtname
-	 * @return
-	 */
-	public ItemCollection loadConfiguration(String aname);
+		workItem = aorgunit;
+		workItem.replaceItemValue("$ActivityID", activityid);
+
+		// Process workitem...
+		ItemCollection result = wm.processWorkItem(workItem);
+		return result;
+
+	}
 
 	/**
 	 * Returns a list of all configuration objects
@@ -113,6 +192,35 @@ public interface ConfigService {
 	 * @param count
 	 * @return
 	 */
-	public List<ItemCollection> findAllConfigurations(int row, int count);
+	public List<ItemCollection> findAllConfigurations(int row, int count) {
+		ArrayList<ItemCollection> configList = new ArrayList<ItemCollection>();
+		String sQuery = "SELECT orgunit FROM Entity AS orgunit "
+				+ " JOIN orgunit.textItems AS t2" + " WHERE orgunit.type = '"
+				+ TYPE + "'" + " AND t2.itemName = 'txtname'"
+				+ " ORDER BY t2.itemValue asc";
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				row, count);
+
+		for (ItemCollection aworkitem : col) {
+			configList.add(aworkitem);
+		}
+		return configList;
+	}
+
+	/**
+	 * This method validates if the attributes supported to a map are
+	 * corresponding to the team structure
+	 */
+	private void validateConfiguration(ItemCollection aproject)
+			throws Exception {
+		boolean bvalid = true;
+
+		if (!aproject.hasItem("txtname"))
+			bvalid = false;
+		if (!bvalid)
+			throw new Exception(
+					"ConfigServiceBean - invalid project object! Attribute 'txtname' not found");
+
+	}
 
 }

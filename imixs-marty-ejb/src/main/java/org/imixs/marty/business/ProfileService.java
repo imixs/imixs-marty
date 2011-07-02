@@ -23,7 +23,17 @@
  *******************************************************************************/
 package org.imixs.marty.business;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+
+import javax.annotation.Resource;
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.ejb.LocalBean;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateless;
 
 import org.imixs.workflow.ItemCollection;
 
@@ -44,31 +54,190 @@ import org.imixs.workflow.ItemCollection;
  * @version 0.0.2
  * @author rsoika
  * 
+ * 
  */
 
-public interface ProfileService {
+@DeclareRoles( { "org.imixs.ACCESSLEVEL.NOACCESS",
+		"org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
+		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
+@RolesAllowed( { "org.imixs.ACCESSLEVEL.NOACCESS",
+		"org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
+		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
+@Stateless
+@LocalBean
+public class ProfileService  {
+
+	@Resource
+	SessionContext ctx;
+
+	@EJB
+	org.imixs.workflow.jee.ejb.EntityService entityService;
+
+	// Workflow Manager
+	@EJB
+	org.imixs.workflow.jee.ejb.WorkflowService wm;
+	ItemCollection workItem = null;
+
 
 	/**
 	 * This method create an empty profile object The current username will be
 	 * Automatically assigned to the field txtname
 	 * 
 	 */
-	public ItemCollection createProfile() throws Exception;
+	public ItemCollection createProfile() throws Exception {
+		workItem = new ItemCollection();
+		workItem.replaceItemValue("type", "profile");
+
+		String aname = ctx.getCallerPrincipal().getName();
+		workItem.replaceItemValue("txtName", aname);
+		return workItem;
+	}
 
 	/**
 	 * This method create an empty Profile object with the defined initial
 	 * $processID The current username will be automatically assigned to the
 	 * field txtname
 	 */
-	public ItemCollection createProfile(int initialProcessID) throws Exception;
+	public ItemCollection createProfile(int initialProcessID) throws Exception {
+		workItem = createProfile();
+		workItem.replaceItemValue("$processID", new Integer(initialProcessID));
+		return workItem;
+	}
 
 	/**
 	 * This method create an empty profile object for a specific user name with
 	 * the defined initial $processID The username will be automatically
 	 * assigned to the field txtname
 	 */
-	public ItemCollection createProfile(int initialProcessID, String aUser)
-			throws Exception;
+	public ItemCollection createProfile(int initialProcessID, String aName)
+			throws Exception {
+		workItem = createProfile(initialProcessID);
+		workItem.replaceItemValue("txtName", aName);
+		return workItem;
+	}
+
+	/**
+	 * Deletes a team from the Team list
+	 */
+	public void deleteProfile(ItemCollection aproject) throws Exception {
+		entityService.remove(aproject);
+	}
+
+	/**
+	 * This method returns a profile ItemCollection for a specified id The
+	 * method returns null if no Profile for this name was found
+	 * 
+	 * @param id
+	 * @return
+	 */
+	public ItemCollection findProfile(String id) {
+		return entityService.load(id);
+	}
+
+	/**
+	 * This method returns a profile ItemCollection for a specified account name.
+	 * if no name is supported the remote user name will by used to find the
+	 * profile The method returns null if no Profile for this name was found
+	 * 
+	 * @param aname
+	 * @return
+	 */
+	public ItemCollection findProfileByName(String aname) {
+
+		if (aname == null)
+			aname = ctx.getCallerPrincipal().getName();
+
+		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+				+ " JOIN profile.textItems AS t2"
+				+ " WHERE  profile.type= 'profile' "
+				+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
+				+ aname + "' ";
+
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, 1);
+
+		if (col.size() > 0) {
+			ItemCollection aworkitem = col.iterator().next();
+			return aworkitem;
+		}
+		return null;
+
+	}
+
+	/**
+	 * This method returns a profile ItemCollection for a specified username.
+	 * The username is mapped to a technical name inside a profile. The method
+	 * returns null if no Profile for this name was found
+	 * 
+	 * @param aname
+	 * @return
+	 */
+	public ItemCollection findProfileByUserName(String aname) {
+		if (aname == null)
+			aname = ctx.getCallerPrincipal().getName();
+
+		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+				+ " JOIN profile.textItems AS t2"
+				+ " WHERE  profile.type= 'profile' "
+				+ " AND t2.itemName = 'txtusername' " + " AND t2.itemValue = '"
+				+ aname.trim() + "' ";
+
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, 1);
+
+		if (col.size() > 0) {
+			ItemCollection aworkitem = col.iterator().next();
+			return aworkitem;
+		}
+		return null;
+
+	}
+	
+	/**
+	 * This method returns a profile ItemCollection for a specified email address.
+	 * The email address is mapped to a technical name inside a profile. The method
+	 * returns null if no Profile for this email address was found
+	 * 
+	 * @param email
+	 * @return
+	 */
+	public ItemCollection findProfileByEmail(String email) {
+		if (email == null || "".equals(email))
+			return null;
+		
+		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+				+ " JOIN profile.textItems AS t2"
+				+ " WHERE  profile.type= 'profile' "
+				+ " AND t2.itemName = 'txtemail' " + " AND t2.itemValue = '"
+				+ email.toLowerCase().trim() + "' ";
+
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, 1);
+
+		if (col.size() > 0) {
+			ItemCollection aworkitem = col.iterator().next();
+			return aworkitem;
+		}
+		return null;
+
+	}
+
+
+	/**
+	 * Updates a Profile Entity
+	 */
+	public ItemCollection saveProfile(ItemCollection aeditProfile) throws Exception {
+		if (!isValidProfile(aeditProfile))
+			throw new Exception(
+					"ProfileServiceBean - invalid profile object! Attribute 'txtname' not found");
+		aeditProfile.replaceItemValue("type", "profile");
+		return entityService.save(aeditProfile);
+
+	}
 
 	/**
 	 * This method process a profile object using the IX WorkflowManager. The
@@ -81,71 +250,97 @@ public interface ProfileService {
 	 * @param activityID
 	 *            activity ID the issue should be processed
 	 */
-	public ItemCollection processProfile(ItemCollection aProfile)
-			throws Exception;
+	public ItemCollection processProfile(ItemCollection aeditProfile) throws Exception {
+
+		if (!isValidUserName(aeditProfile))
+			throw new Exception(
+					"Username is already taken - verifiy txtname and txtusername");
+
+		if (!isValidProfile(aeditProfile))
+			throw new Exception(
+					"ProfileServiceBean - invalid profile object! Attribute 'txtname' not found");
+
+		workItem = aeditProfile;
+
+		workItem.replaceItemValue("type", "profile");
+
+		// Process workitem...
+		workItem = wm.processWorkItem(workItem);
+	
+		return workItem;
+
+	}
+
+	public List<ItemCollection> findAllProfiles(int row, int count) {
+		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
+		String sQuery = "SELECT DISTINCT profile FROM Entity AS profile "
+				+ " JOIN profile.textItems AS t2"
+				+ " WHERE profile.type= 'profile' "
+				+ " AND t2.itemName = 'txtname' "
+				+ " ORDER BY t2.itemValue ASC";
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				row, count);
+
+		for (ItemCollection aworkitem : col) {
+			teamList.add(aworkitem);
+		}
+		return teamList;
+	}
 
 	/**
-	 * This method deletes an existing profile.
-	 * 
-	 * @param aTeamName
+	 * This method validates if the attributes supported to a map are
+	 * corresponding to the team structure
 	 */
-	public void deleteProfile(ItemCollection aProfile) throws Exception;
+	private boolean isValidProfile(ItemCollection aproject) throws Exception {
+		boolean bvalid = true;
+		if (!aproject.hasItem("txtname"))
+			bvalid = false;
 
-	/**
-	 * This method returns a profile ItemCollection for a specified id The
-	 * method returns null if no Profile for this name was found
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public ItemCollection findProfile(String id);
-
-	/**
-	 * This method returns a profile ItemCollection for a specified technical
-	 * name. if no name is supported the remote user name will by used to find
-	 * the profile The method returns null if no Profile for this name was found
-	 * 
-	 * @param aname
-	 * @return
-	 */
-	public ItemCollection findProfileByName(String aname);
-
-	/**
-	 * This method returns a profile ItemCollection for a specified user name.
-	 * The UserName is mapped to the technical account name. Also the UserName
-	 * is a unique name.
-	 * 
-	 * @param aname
-	 * @return
-	 */
-	public ItemCollection findProfileByUserName(String aname);
+		return bvalid;
+	}
 
 	
-	/**
-	 * This method returns a profile ItemCollection for a specified email address.
-	 * The email address is mapped to the technical account name. Also the email address
-	 * is a unique name.
-	 * 
-	 * @param aname
-	 * @return
-	 */
-	public ItemCollection findProfileByEmail(String aname);
-
-	
-	
-	
-	/**
-	 * Updates a Profile Entity without verification of txtname or txtusername.
-	 */
-	public ItemCollection saveProfile(ItemCollection aproject) throws Exception;
 
 	/**
-	 * Returns a list of projects
+	 * verifies if the txtName and txtUsername is available. Attribute
+	 * txtUsername is optional and will be only verified if provided.
 	 * 
-	 * @param row
-	 * @param count
+	 * returns true if name isn't still taken by another object.
+	 * 
+	 * @param aprofile
 	 * @return
 	 */
-	public List<ItemCollection> findAllProfiles(int row, int count);
+	private boolean isValidUserName(ItemCollection aprofile) {
+
+		String sName = aprofile.getItemValueString("txtName");
+		String sUserName = aprofile.getItemValueString("txtUserName");
+		String sID = aprofile.getItemValueString("$uniqueid");
+
+		String sQuery;
+
+		// username provided?
+		if (sUserName != null && !"".equals(sUserName))
+			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+					+ " JOIN profile.textItems AS n"
+					+ " JOIN profile.textItems AS u" 
+					+ " WHERE  profile.type = 'profile' "
+					+ " AND ((n.itemName = 'txtname' " + " AND n.itemValue = '"
+					+ sName + "') OR  (u.itemName = 'txtusername' "
+					+ " AND u.itemValue = '" + sUserName + "'))"
+					+ " AND profile.id<>'"+ sID + "' ";
+		else
+			// query only txtName
+			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+					+ " JOIN profile.textItems AS n" + " WHERE profile.id<>'"
+					+ sID + "' AND  profile.type = 'profile' "
+					+ " AND n.itemName = 'txtname' " + " AND n.itemValue = '"
+					+ sName + "'";
+
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, 1);
+
+		return (col.size() == 0);
+
+	}
 
 }

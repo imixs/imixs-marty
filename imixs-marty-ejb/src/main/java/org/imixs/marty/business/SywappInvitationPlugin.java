@@ -7,7 +7,7 @@ import javax.naming.InitialContext;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
-import org.imixs.workflow.jee.plugins.AbstractPlugin;
+import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * This Plugin handles an acception of a invitation. There fore the plugin makes
@@ -18,7 +18,7 @@ import org.imixs.workflow.jee.plugins.AbstractPlugin;
  * The Plugin runns only in Activity 90 !
  * 
  * 
- * @see InvitationServiceBean
+ * @see InvitationService
  * @author rsoika
  * @version 1.0
  * 
