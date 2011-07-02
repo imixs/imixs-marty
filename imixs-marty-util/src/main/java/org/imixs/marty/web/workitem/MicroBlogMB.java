@@ -17,9 +17,8 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 
-import org.imixs.marty.business.WorkitemServiceBean;
+import org.imixs.marty.business.WorkitemService;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.util.ItemCollectionAdapter;
 
 /**
  * This MicroBlogMB is used to store a micro blog into a single ItemCollection
@@ -66,8 +65,7 @@ public class MicroBlogMB {
 
 	private ItemCollection blogWorkitem = null;
 	private ItemCollection blogEntry = null;
-	protected ItemCollectionAdapter workitemAdapter = null;
-
+	
 	public MicroBlogMB() {
 		super();
 
@@ -82,7 +80,7 @@ public class MicroBlogMB {
 	 */
 	public void setWorkitem(ItemCollection aItemcol) {
 		blogEntry = aItemcol;
-		workitemAdapter = new ItemCollectionAdapter(blogEntry);
+		
 	}
 
 	/**
@@ -342,14 +340,14 @@ public class MicroBlogMB {
 	 * 
 	 * @return
 	 */
-	public List<ItemCollectionAdapter> getBlogEntries() {
-		List<ItemCollectionAdapter> blog = new ArrayList<ItemCollectionAdapter>();
+	public List<ItemCollection> getBlogEntries() {
+		List<ItemCollection> blog = new ArrayList<ItemCollection>();
 
 		Vector<Map> vCommentList = blogWorkitem.getItemValue("txtMicroBlog");
 
 		for (Map map : vCommentList) {
 			try {
-				blog.add(new ItemCollectionAdapter(new ItemCollection(map)));
+				blog.add((new ItemCollection(map)));
 			} catch (Exception e) {
 				// unable to add entry!
 				e.printStackTrace();
@@ -360,62 +358,9 @@ public class MicroBlogMB {
 		return blog;
 	}
 
-	/**
-	 * returns the current selected row as a ItemCollectionAdapter
-	 * 
-	 * @param event
-	 * @return
-	 * @throws Exception
-	 */
+	
+	
 
-	private ItemCollectionAdapter xxxxxxxxxxxxgetCurrentSelection(
-			ActionEvent event) throws Exception {
-
-		ItemCollectionAdapter currentSelection = null;
-		// suche selektierte Zeile....
-		UIComponent component = event.getComponent();
-		for (UIComponent parent = component.getParent(); parent != null; parent = parent
-				.getParent()) {
-			if (!(parent instanceof UIData))
-				continue;
-
-			// Zeile gefunden
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
-					.getRowData();
-
-			return currentSelection;
-		}
-		return null;
-	}
-
-	/**
-	 * returns a workitemAdapter Item field
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public Map getItem() throws Exception {
-		return workitemAdapter.getItem();
-	}
-
-	/**
-	 * returns a workitemAdapter ItemList
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public Map getItemList() throws Exception {
-		return workitemAdapter.getItemList();
-	}
-
-	/**
-	 * returns a workitemAdapter ItemList Array
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public Map getItemListArray() throws Exception {
-		return workitemAdapter.getItemListArray();
-	}
+	
 
 }

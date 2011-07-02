@@ -2,13 +2,11 @@ package org.imixs.marty.web.util;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
-import javax.faces.component.UIParameter;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 
-import org.imixs.workflow.jee.jsf.util.BLOBWorkitemController;
+import org.imixs.workflow.jee.faces.BLOBWorkitemController;
 import org.richfaces.event.UploadEvent;
 import org.richfaces.model.UploadItem;
 

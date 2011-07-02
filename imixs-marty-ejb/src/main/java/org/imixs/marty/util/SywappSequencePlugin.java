@@ -5,11 +5,11 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 
 import org.imixs.marty.business.SequenceService;
-import org.imixs.marty.business.SequenceServiceBean;
+import org.imixs.marty.business.SequenceService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
-import org.imixs.workflow.jee.plugins.AbstractPlugin;
+import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * This Plugin handles a unique sequence number for all worktimes in a workitem Group. The
@@ -23,7 +23,7 @@ import org.imixs.workflow.jee.plugins.AbstractPlugin;
  * To compute the sequence Number the plugin uses the stateless session EJB SequeceService
  * which updates the latest used sequence Number..
  * 
- * @see SequenceServiceBean
+ * @see SequenceService
  * @author rsoika
  * @version 1.0
  * 

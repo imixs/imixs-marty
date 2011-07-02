@@ -39,12 +39,11 @@ import javax.faces.event.ActionEvent;
 
 import org.imixs.marty.model.ModelVersionHandler;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.jsf.util.AbstractWorkflowController;
-import org.imixs.workflow.util.ItemCollectionAdapter;
+import org.imixs.workflow.jee.faces.AbstractWorkflowController;
 
 public class NewsMB extends AbstractWorkflowController {
 
-	private ArrayList<ItemCollectionAdapter> news = null;
+	private ArrayList<ItemCollection> news = null;
 	private int count = 30;
 	private int row = 0;
 	private boolean endOfList = false;
@@ -82,7 +81,7 @@ public class NewsMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doDelete(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -91,10 +90,10 @@ public class NewsMB extends AbstractWorkflowController {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
 			if (currentSelection != null) {
-				getEntityService().remove(currentSelection.getItemCollection());
+				getEntityService().remove(currentSelection);
 				// clear inivtations
 				news = null;
 			}
@@ -157,7 +156,7 @@ public class NewsMB extends AbstractWorkflowController {
 		loadNewsList();
 	}
 
-	public List<ItemCollectionAdapter> getNews() {
+	public List<ItemCollection> getNews() {
 		if (news == null)
 			loadNewsList();
 		return news;
@@ -165,7 +164,7 @@ public class NewsMB extends AbstractWorkflowController {
 	}
 
 	private void loadNewsList() {
-		news = new ArrayList<ItemCollectionAdapter>();
+		news = new ArrayList<ItemCollection>();
 		try {
 			System.out.println("...Reload News...");
 			FacesContext context = FacesContext.getCurrentInstance();
@@ -181,7 +180,7 @@ public class NewsMB extends AbstractWorkflowController {
 					.findAllEntities(sQuery, 0, -1);
 			// endOfList = col.size() < count;
 			for (ItemCollection aworkitem : col) {
-				news.add(new ItemCollectionAdapter(aworkitem));
+				news.add((aworkitem));
 			}
 		} catch (Exception ee) {
 			news = null;

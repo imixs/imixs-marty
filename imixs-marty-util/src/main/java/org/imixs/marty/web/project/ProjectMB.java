@@ -53,8 +53,7 @@ import org.imixs.marty.web.util.ConfigMB;
 import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.jsf.util.AbstractWorkflowController;
-import org.imixs.workflow.util.ItemCollectionAdapter;
+import org.imixs.workflow.jee.faces.AbstractWorkflowController;
 import org.richfaces.event.DropEvent;
 import org.richfaces.model.TreeNode;
 import org.richfaces.model.TreeNodeImpl;
@@ -82,9 +81,9 @@ public class ProjectMB extends AbstractWorkflowController {
 	private WorklistMB worklistMB = null;
 	private WorkitemMB workitemMB = null;
 	private NameLookupMB nameLookup = null;
-	private ArrayList<ItemCollectionAdapter> invitations = null;
-	private ArrayList<ItemCollectionAdapter> team = null;
-	private ArrayList<ItemCollectionAdapter> projectSiblingList = null;
+	private ArrayList<ItemCollection> invitations = null;
+	private ArrayList<ItemCollection> team = null;
+	private ArrayList<ItemCollection> projectSiblingList = null;
 
 	private TreeNodeImpl projectTree = null;
 
@@ -371,7 +370,7 @@ public class ProjectMB extends AbstractWorkflowController {
 				.getConfigBean().getWorkitem().getItemValue(
 						"defaultprojectprocesslist"));
 
-		workitemAdapter = new ItemCollectionAdapter(workitemItemCollection);
+		
 
 	}
 
@@ -407,7 +406,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		workitemItemCollection.replaceItemValue("$UniqueIDRef",
 				sParentProjektID);
 
-		workitemAdapter = new ItemCollectionAdapter(workitemItemCollection);
+	
 
 	}
 
@@ -706,7 +705,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doDeleteInvitation(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -715,13 +714,13 @@ public class ProjectMB extends AbstractWorkflowController {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
 			break;
 
 		}
 		if (currentSelection != null) {
-			getEntityService().remove(currentSelection.getItemCollection());
+			getEntityService().remove(currentSelection);
 			// clear inivtations
 			invitations = null;
 		}
@@ -736,7 +735,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doAddInvitationToTeamlist(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -745,14 +744,14 @@ public class ProjectMB extends AbstractWorkflowController {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
 			break;
 
 		}
 		if (currentSelection != null) {
 			Vector vEntries;
-			String sAccount = currentSelection.getItemCollection()
+			String sAccount = currentSelection
 					.getItemValueString("namAcceptedBy");
 			// username zur Teamliste hinzufügen
 			vEntries = workitemItemCollection.getItemValue("namTeam");
@@ -994,7 +993,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	 */
 	public void doSwitchToMainProject(ActionEvent event) {
 
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 
 		String sIDRef = this.getWorkitem().getItemValueString("$uniqueIDRef");
 		ItemCollection parentProject = this.getProjectService().findProject(
@@ -1181,16 +1180,16 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * 
 	 * @return
 	 */
-	public ArrayList<ItemCollectionAdapter> getTeam() throws Exception {
+	public ArrayList<ItemCollection> getTeam() throws Exception {
 		if (team != null)
 			return team;
-		team = new ArrayList<ItemCollectionAdapter>();
+		team = new ArrayList<ItemCollection>();
 		Vector<String> vTeam = this.getWorkitem().getItemValue("namTeam");
 		for (String sName : vTeam) {
 			ItemCollection profile = profileService
 					.findProfileByUserName(sName);
 			if (profile != null)
-				team.add(new ItemCollectionAdapter(profile));
+				team.add((profile));
 		}
 		return team;
 	}
@@ -1264,7 +1263,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * 
 	 * @return
 	 */
-	public List<ItemCollectionAdapter> getInvitations() {
+	public List<ItemCollection> getInvitations() {
 		if (invitations == null)
 			loadInvitations();
 		return invitations;
@@ -1278,15 +1277,15 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * 
 	 * @return
 	 */
-	public List<ItemCollectionAdapter> getUniqueInvitations() {
+	public List<ItemCollection> getUniqueInvitations() {
 		if (invitations == null)
 			loadInvitations();
 
 		Vector<String> vEmails = new Vector<String>();
-		List<ItemCollectionAdapter> uniqueList = new Vector<ItemCollectionAdapter>();
+		List<ItemCollection> uniqueList = new Vector<ItemCollection>();
 		// remove duplicates
-		for (ItemCollectionAdapter aInvitation : invitations) {
-			String email = aInvitation.getItemCollection().getItemValueString(
+		for (ItemCollection aInvitation : invitations) {
+			String email = aInvitation.getItemValueString(
 					"txtEmail");
 			if (vEmails.indexOf(email) == -1) {
 				// new address
@@ -1299,7 +1298,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	}
 
 	private void loadInvitations() {
-		invitations = new ArrayList<ItemCollectionAdapter>();
+		invitations = new ArrayList<ItemCollection>();
 		try {
 
 			String sQuery = "";
@@ -1315,7 +1314,7 @@ public class ProjectMB extends AbstractWorkflowController {
 					.findAllEntities(sQuery, 0, -1);
 			// endOfList = col.size() < count;
 			for (ItemCollection aworkitem : col) {
-				invitations.add(new ItemCollectionAdapter(aworkitem));
+				invitations.add((aworkitem));
 			}
 		} catch (Exception ee) {
 			invitations = null;
@@ -1355,12 +1354,12 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * 
 	 * @return
 	 */
-	public ArrayList<ItemCollectionAdapter> getProjectSiblings() {
+	public ArrayList<ItemCollection> getProjectSiblings() {
 
 		if (projectSiblingList != null)
 			return projectSiblingList;
 
-		projectSiblingList = new ArrayList<ItemCollectionAdapter>();
+		projectSiblingList = new ArrayList<ItemCollection>();
 		List<ItemCollection> col = null;
 
 		String sIDRef = this.getWorkitem().getItemValueString("$uniqueIDRef");
@@ -1373,7 +1372,7 @@ public class ProjectMB extends AbstractWorkflowController {
 			col = projectService.findAllSubProjects(sIDRef, 0, -1);
 
 		for (ItemCollection aworkitem : col) {
-			projectSiblingList.add(new ItemCollectionAdapter(aworkitem));
+			projectSiblingList.add((aworkitem));
 		}
 
 		return projectSiblingList;

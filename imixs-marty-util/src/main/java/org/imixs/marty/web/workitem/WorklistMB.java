@@ -42,13 +42,12 @@ import org.imixs.marty.util.LoginMB;
 import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.util.ConfigMB;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.util.ItemCollectionAdapter;
 
 public class WorklistMB {
 
 	ItemCollection currentProjectSelection = null; // current selected project
 
-	private ArrayList<ItemCollectionAdapter> workitems = null;
+	private ArrayList<ItemCollection> workitems = null;
 	private int count = 10;
 	private int row = 0;
 	private int sortby=0;
@@ -232,7 +231,7 @@ public class WorklistMB {
 		this.processFilter = processFilter;
 	}
 
-	public List<ItemCollectionAdapter> getWorkitems() {
+	public List<ItemCollection> getWorkitems() {
 		if (workitems == null)
 			loadWorkItemList();
 		return workitems;
@@ -244,16 +243,16 @@ public class WorklistMB {
 	 * @return
 	 */
 	public void doEdit(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = getCurrentSelection(event);
+		ItemCollection currentSelection = getCurrentSelection(event);
 		if (currentSelection != null) {
 
 			// remove a4j: attributes generated inside the viewentries by the UI
-			currentSelection.getItemCollection().getAllItems().remove(
+			currentSelection.getAllItems().remove(
 					"a4j:showhistory");
-			currentSelection.getItemCollection().getAllItems().remove(
+			currentSelection.getAllItems().remove(
 					"a4j:showdetails");
 
-			getWorkitemMB().setWorkitem(currentSelection.getItemCollection());
+			getWorkitemMB().setWorkitem(currentSelection);
 
 			// update projectMB if necessary
 			getWorkitemMB().updateProjectMB();
@@ -268,16 +267,16 @@ public class WorklistMB {
 	 * @return
 	 */
 	public void doToggleDetails(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = getCurrentSelection(event);
+		ItemCollection currentSelection = getCurrentSelection(event);
 		if (currentSelection != null) {
 
 			// now try to read current toogle state and switch state
 
 			boolean bTogle = false;
-			if (currentSelection.getItemCollection().hasItem("a4j:showDetails")) {
+			if (currentSelection.hasItem("a4j:showDetails")) {
 				try {
 					boolean bTogleCurrent = (Boolean) currentSelection
-							.getItemCollection()
+							
 							.getItemValue("a4j:showDetails").firstElement();
 					bTogle = !bTogleCurrent;
 				} catch (Exception e) {
@@ -286,7 +285,7 @@ public class WorklistMB {
 			} else
 				// item did not exist yet....
 				bTogle = true;
-			currentSelection.getItemCollection().replaceItemValue(
+			currentSelection.replaceItemValue(
 					"a4j:showDetails", bTogle);
 
 		}
@@ -299,15 +298,15 @@ public class WorklistMB {
 	 * @return
 	 */
 	public void doToggleHistory(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = getCurrentSelection(event);
+		ItemCollection currentSelection = getCurrentSelection(event);
 		if (currentSelection != null) {
 			// now try to read current toogle state and switch state
 
 			boolean bTogle = false;
-			if (currentSelection.getItemCollection().hasItem("a4j:showHistory")) {
+			if (currentSelection.hasItem("a4j:showHistory")) {
 				try {
 					boolean bTogleCurrent = (Boolean) currentSelection
-							.getItemCollection()
+							
 							.getItemValue("a4j:showHistory").firstElement();
 					bTogle = !bTogleCurrent;
 				} catch (Exception e) {
@@ -316,7 +315,7 @@ public class WorklistMB {
 			} else
 				// item did not exist yet....
 				bTogle = true;
-			currentSelection.getItemCollection().replaceItemValue(
+			currentSelection.replaceItemValue(
 					"a4j:showHistory", bTogle);
 
 		}
@@ -396,17 +395,17 @@ public class WorklistMB {
 	 */
 	public void doMoveIntoArchive(ActionEvent event) throws Exception {
 
-		ItemCollectionAdapter currentSelection = getCurrentSelection(event);
+		ItemCollection currentSelection = getCurrentSelection(event);
 		if (currentSelection != null) {
 
 			// remove a4j: attributes generated inside the viewentries by the UI
-			currentSelection.getItemCollection().getAllItems().remove(
+			currentSelection.getAllItems().remove(
 					"a4j:showhistory");
-			currentSelection.getItemCollection().getAllItems().remove(
+			currentSelection.getAllItems().remove(
 					"a4j:showdetails");
 
 			workitemService.moveIntoArchive(currentSelection
-					.getItemCollection());
+					);
 
 			this.doRefresh(event);
 		}
@@ -421,17 +420,17 @@ public class WorklistMB {
 	 * @throws Exception
 	 */
 	public void doMoveIntoDeletions(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = getCurrentSelection(event);
+		ItemCollection currentSelection = getCurrentSelection(event);
 		if (currentSelection != null) {
 
 			// remove a4j: attributes generated inside the viewentries by the UI
-			currentSelection.getItemCollection().getAllItems().remove(
+			currentSelection.getAllItems().remove(
 					"a4j:showhistory");
-			currentSelection.getItemCollection().getAllItems().remove(
+			currentSelection.getAllItems().remove(
 					"a4j:showdetails");
 
 			workitemService.moveIntoDeletions(currentSelection
-					.getItemCollection());
+					);
 
 			this.doRefresh(event);
 		}
@@ -446,17 +445,17 @@ public class WorklistMB {
 	 * @throws Exception
 	 */
 	public void doRestoreFromArchive(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = getCurrentSelection(event);
+		ItemCollection currentSelection = getCurrentSelection(event);
 		if (currentSelection != null) {
 
 			// remove a4j: attributes generated inside the viewentries by the UI
-			currentSelection.getItemCollection().getAllItems().remove(
+			currentSelection.getAllItems().remove(
 					"a4j:showhistory");
-			currentSelection.getItemCollection().getAllItems().remove(
+			currentSelection.getAllItems().remove(
 					"a4j:showdetails");
 
 			workitemService.restoreFromArchive(currentSelection
-					.getItemCollection());
+					);
 
 			this.doRefresh(event);
 		}
@@ -471,15 +470,15 @@ public class WorklistMB {
 	 * @throws Exception
 	 */
 	public void doRestoreFromDeletions(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = getCurrentSelection(event);
+		ItemCollection currentSelection = getCurrentSelection(event);
 		if (currentSelection != null) {
 			// remove a4j: attributes generated inside the viewentries by the UI
-			currentSelection.getItemCollection().getAllItems().remove(
+			currentSelection.getAllItems().remove(
 					"a4j:showhistory");
-			currentSelection.getItemCollection().getAllItems().remove(
+			currentSelection.getAllItems().remove(
 					"a4j:showdetails");
 			workitemService.restoreFromDeletions(currentSelection
-					.getItemCollection());
+					);
 
 			this.doRefresh(event);
 		}
@@ -492,10 +491,10 @@ public class WorklistMB {
 	 * @return
 	 * @throws Exception
 	 */
-	private ItemCollectionAdapter getCurrentSelection(ActionEvent event)
+	private ItemCollection getCurrentSelection(ActionEvent event)
 			throws Exception {
 
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -504,7 +503,7 @@ public class WorklistMB {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
 
 			return currentSelection;
@@ -547,10 +546,10 @@ public class WorklistMB {
 	 * not uptodate. The only way to go back to a caching mechanism would be to
 	 * place a refresh-button into the worklist pages.
 	 * 
-	 * @see org.imixs.shareyouwork.business.WorkitemServiceBean
+	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
 	 */
 	private void loadWorkItemList() {
-		workitems = new ArrayList<ItemCollectionAdapter>();
+		workitems = new ArrayList<ItemCollection>();
 		Collection<ItemCollection> col = null;
 		try {
 			long lTime = System.currentTimeMillis();
@@ -607,7 +606,7 @@ public class WorklistMB {
 
 			endOfList = col.size() < count;
 			for (ItemCollection aworkitem : col) {
-				workitems.add(new ItemCollectionAdapter(aworkitem));
+				workitems.add((aworkitem));
 			}
 		} catch (Exception ee) {
 			workitems = null;

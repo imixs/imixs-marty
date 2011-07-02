@@ -41,8 +41,8 @@ import javax.faces.event.ActionEvent;
 import javax.faces.validator.ValidatorException;
 
 import org.imixs.marty.business.ProfileService;
-import org.imixs.workflow.jee.jsf.util.AbstractWorkflowController;
-import org.imixs.workflow.util.ItemCollectionAdapter;
+import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.faces.AbstractWorkflowController;
 
 public class ProfileMB extends AbstractWorkflowController {
 
@@ -224,7 +224,7 @@ public class ProfileMB extends AbstractWorkflowController {
 	 */
 	public void doResetProfile(ActionEvent event) throws Exception {
 		// Profile raussuchen
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 
@@ -234,10 +234,10 @@ public class ProfileMB extends AbstractWorkflowController {
 			if (!(parent instanceof UIData))
 				continue;
 			// get current project from row
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
 
-			setWorkitem(currentSelection.getItemCollection());
+			setWorkitem(currentSelection);
 			break;
 		}
 

@@ -47,7 +47,6 @@ import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.ModelService;
-import org.imixs.workflow.util.ItemCollectionAdapter;
 import org.richfaces.model.TreeNodeImpl;
 
 /**
@@ -69,8 +68,8 @@ public class ProjectlistMB {
 
 	private StartProcessCache startProcessList;
 	private SubProcessCache subProcessList;
-	private ArrayList<ItemCollectionAdapter> projects = null;
-	private ArrayList<ItemCollectionAdapter> startProjects = null;
+	private ArrayList<ItemCollection> projects = null;
+	private ArrayList<ItemCollection> startProjects = null;
 	private int count = 10;
 	private int row = 0;
 	private boolean endOfList = false;
@@ -167,7 +166,7 @@ public class ProjectlistMB {
 	 */
 	public void doSwitchToProject(ActionEvent event) {
 
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 
@@ -177,7 +176,7 @@ public class ProjectlistMB {
 			if (!(parent instanceof UIData))
 				continue;
 			// get current project from row
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
 
 			// get WorklistMB instance
@@ -187,7 +186,7 @@ public class ProjectlistMB {
 							null, "worklistMB");
 
 			worklist.doReset(event);
-			getProjectBean().setWorkitem(currentSelection.getItemCollection());
+			getProjectBean().setWorkitem(currentSelection);
 			break;
 		}
 
@@ -209,7 +208,7 @@ public class ProjectlistMB {
 
 	public void doToggleProcessList(ActionEvent event) throws Exception {
 
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -218,16 +217,16 @@ public class ProjectlistMB {
 				continue;
 
 			// get current project from row
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
 
 			// now try to read current toogle state and switch state
 			boolean bTogle = false;
-			if (currentSelection.getItemCollection().hasItem(
+			if (currentSelection.hasItem(
 					"a4j:showProcessList")) {
 				try {
 					boolean bTogleCurrent = (Boolean) currentSelection
-							.getItemCollection().getItemValue(
+							.getItemValue(
 									"a4j:showProcessList").firstElement();
 					bTogle = !bTogleCurrent;
 				} catch (Exception e) {
@@ -238,9 +237,9 @@ public class ProjectlistMB {
 				bTogle = true;
 
 			// update projectMB
-			getProjectBean().setWorkitem(currentSelection.getItemCollection());
+			getProjectBean().setWorkitem(currentSelection);
 
-			currentSelection.getItemCollection().replaceItemValue(
+			currentSelection.replaceItemValue(
 					"a4j:showprocesslist", bTogle);
 			break;
 		}
@@ -254,7 +253,7 @@ public class ProjectlistMB {
 	 * @return
 	 */
 	public void doToggleTeam(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -263,15 +262,15 @@ public class ProjectlistMB {
 				continue;
 
 			// workitem found
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
 
 			// now try to read current toogle state and switch state
 			boolean bTogle = false;
-			if (currentSelection.getItemCollection().hasItem("a4j:showTeam")) {
+			if (currentSelection.hasItem("a4j:showTeam")) {
 				try {
 					boolean bTogleCurrent = (Boolean) currentSelection
-							.getItemCollection().getItemValue("a4j:showTeam")
+							.getItemValue("a4j:showTeam")
 							.firstElement();
 					bTogle = !bTogleCurrent;
 				} catch (Exception e) {
@@ -280,7 +279,7 @@ public class ProjectlistMB {
 			} else
 				// item did not exist yet....
 				bTogle = true;
-			currentSelection.getItemCollection().replaceItemValue(
+			currentSelection.replaceItemValue(
 					"a4j:showteam", bTogle);
 			break;
 
@@ -298,7 +297,7 @@ public class ProjectlistMB {
 	 * @throws Exception
 	 */
 	public void doEdit(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -307,23 +306,23 @@ public class ProjectlistMB {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
 
 			// remove a4j: attributes generated inside the viewentries by the UI
-			currentSelection.getItemCollection().getAllItems().remove(
+			currentSelection.getAllItems().remove(
 					"a4j:showteam");
-			currentSelection.getItemCollection().getAllItems().remove(
+			currentSelection.getAllItems().remove(
 					"a4j:showprocesslist");
 
 			Locale userLocale = FacesContext.getCurrentInstance().getViewRoot()
 					.getLocale();
 
 			// set default language if not set - only necessary during migration
-			String sModelLanguage = currentSelection.getItemCollection()
+			String sModelLanguage = currentSelection
 					.getItemValueString("txtModelLanguage");
 			if ("".equals(sModelLanguage)) {
-				currentSelection.getItemCollection().replaceItemValue(
+				currentSelection.replaceItemValue(
 						"txtModelLanguage", userLocale.getLanguage());
 			}
 
@@ -332,10 +331,10 @@ public class ProjectlistMB {
 			String sModelVersion = this.getProfileBean()
 					.getModelVersionHandler().getLatestSystemVersion(
 							userLocale.getLanguage());
-			currentSelection.getItemCollection().replaceItemValue(
+			currentSelection.replaceItemValue(
 					"$modelversion", sModelVersion);
 
-			getProjectBean().setWorkitem(currentSelection.getItemCollection());
+			getProjectBean().setWorkitem(currentSelection);
 			break;
 
 		}
@@ -352,7 +351,7 @@ public class ProjectlistMB {
 	 * @throws Exception
 	 */
 	public void doSoftDelete(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// search current row....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -361,10 +360,10 @@ public class ProjectlistMB {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
 
-			this.getProjectBean().getProjectService().moveIntoDeletions(currentSelection.getItemCollection());
+			this.getProjectBean().getProjectService().moveIntoDeletions(currentSelection);
 
 			this.doReset(event);
 
@@ -385,7 +384,7 @@ public class ProjectlistMB {
 	 * @throws Exception
 	 */
 	public void doCreateSubproject(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -394,9 +393,9 @@ public class ProjectlistMB {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
-			getProjectBean().setWorkitem(currentSelection.getItemCollection());
+			getProjectBean().setWorkitem(currentSelection);
 			getProjectBean().doCreateSubproject(event);
 			break;
 
@@ -451,7 +450,7 @@ public class ProjectlistMB {
 		projects = null;
 	}
 
-	public List<ItemCollectionAdapter> getProjects() {
+	public List<ItemCollection> getProjects() {
 		selectMainProjects = false;
 		if (projects == null)
 			loadProjectList();
@@ -459,7 +458,7 @@ public class ProjectlistMB {
 
 	}
 
-	public List<ItemCollectionAdapter> getMainProjects() {
+	public List<ItemCollection> getMainProjects() {
 		selectMainProjects = true;
 		if (projects == null)
 			loadProjectList();
@@ -470,7 +469,7 @@ public class ProjectlistMB {
 	 * returns a project list where the current user is owner
 	 * @return
 	 */
-	public List<ItemCollectionAdapter> getMyProjects() {
+	public List<ItemCollection> getMyProjects() {
 		if (projects == null)
 			loadMyProjectList();
 		return projects;
@@ -479,7 +478,7 @@ public class ProjectlistMB {
 	 * returns a project list where the current user is member
 	 * @return
 	 */
-	public List<ItemCollectionAdapter> getMemberProjects() {
+	public List<ItemCollection> getMemberProjects() {
 		if (projects == null)
 			loadMemberProjectList();
 		return projects;
@@ -488,8 +487,8 @@ public class ProjectlistMB {
 	 * returns a project list where the type is 'projectdeleted'
 	 * @return
 	 */
-	public List<ItemCollectionAdapter> getDeletedProjects() {
-		ArrayList projectsDelted = new ArrayList<ItemCollectionAdapter>();
+	public List<ItemCollection> getDeletedProjects() {
+		ArrayList projectsDelted = new ArrayList<ItemCollection>();
 		try {
 			Collection<ItemCollection> col = null;
 			long l = System.currentTimeMillis();
@@ -504,7 +503,7 @@ public class ProjectlistMB {
 
 			endOfList = col.size() < count;
 			for (ItemCollection aworkitem : col) {
-				projectsDelted.add(new ItemCollectionAdapter(aworkitem));
+				projectsDelted.add((aworkitem));
 			}
 		} catch (Exception ee) {
 			projectsDelted = null;
@@ -522,9 +521,9 @@ public class ProjectlistMB {
 	 * 
 	 * @return
 	 */
-	public List<ItemCollectionAdapter> getStartProjects() {
+	public List<ItemCollection> getStartProjects() {
 		if (startProjects == null) {
-			startProjects = new ArrayList<ItemCollectionAdapter>();
+			startProjects = new ArrayList<ItemCollection>();
 			try {
 				List<ItemCollection> col = null;
 				long l = System.currentTimeMillis();
@@ -539,7 +538,7 @@ public class ProjectlistMB {
 					Vector<String> vprojectList = aworkitem
 					.getItemValue("txtprocesslist");
 					if (vprojectList.size()>0 && this.getProjectBean().isMember(aworkitem))
-						startProjects.add(new ItemCollectionAdapter(aworkitem));
+						startProjects.add((aworkitem));
 				}
 			} catch (Exception ee) {
 				ee.printStackTrace();
@@ -610,8 +609,8 @@ public class ProjectlistMB {
 	 * 
 	 * @return
 	 */
-	private List<ItemCollectionAdapter> loadProjectList() {
-		projects = new ArrayList<ItemCollectionAdapter>();
+	private List<ItemCollection> loadProjectList() {
+		projects = new ArrayList<ItemCollection>();
 		try {
 			List<ItemCollection> col = null;
 			long l = System.currentTimeMillis();
@@ -625,7 +624,7 @@ public class ProjectlistMB {
 
 			endOfList = col.size() < count;
 			for (ItemCollection aworkitem : col) {
-				projects.add(new ItemCollectionAdapter(aworkitem));
+				projects.add((aworkitem));
 			}
 		} catch (Exception ee) {
 			projects = null;
@@ -639,8 +638,8 @@ public class ProjectlistMB {
 	 * 
 	 * @return
 	 */
-	private List<ItemCollectionAdapter> loadMyProjectList() {
-		projects = new ArrayList<ItemCollectionAdapter>();
+	private List<ItemCollection> loadMyProjectList() {
+		projects = new ArrayList<ItemCollection>();
 		try {
 			List<ItemCollection> col = null;
 			long l = System.currentTimeMillis();
@@ -651,7 +650,7 @@ public class ProjectlistMB {
 
 			endOfList = col.size() < count;
 			for (ItemCollection aworkitem : col) {
-				projects.add(new ItemCollectionAdapter(aworkitem));
+				projects.add((aworkitem));
 			}
 		} catch (Exception ee) {
 			projects = null;
@@ -668,8 +667,8 @@ public class ProjectlistMB {
 	 * 
 	 * @return
 	 */
-	private List<ItemCollectionAdapter> loadMemberProjectList() {
-		projects = new ArrayList<ItemCollectionAdapter>();
+	private List<ItemCollection> loadMemberProjectList() {
+		projects = new ArrayList<ItemCollection>();
 		try {
 			List<ItemCollection> col = null;
 			long l = System.currentTimeMillis();
@@ -680,7 +679,7 @@ public class ProjectlistMB {
 
 			endOfList = col.size() < count;
 			for (ItemCollection aworkitem : col) {
-				projects.add(new ItemCollectionAdapter(aworkitem));
+				projects.add((aworkitem));
 			}
 		} catch (Exception ee) {
 			projects = null;
@@ -791,14 +790,14 @@ public class ProjectlistMB {
 		 */
 		@SuppressWarnings("unchecked")
 		public Object get(Object key) {
-			List<ItemCollectionAdapter> startProcessList;
+			List<ItemCollection> startProcessList;
 
 			// check if a key is a String....
 			if (!(key instanceof String))
 				return null;
 
 			// 1.) try to get list out from cache..
-			startProcessList = (List<ItemCollectionAdapter>) super.get(key);
+			startProcessList = (List<ItemCollection>) super.get(key);
 			if (startProcessList != null)
 				// list already known and loaded into the cache!....
 				return startProcessList;
@@ -809,7 +808,7 @@ public class ProjectlistMB {
 			if (processEntityCache == null)
 				processEntityCache = new HashMap();
 
-			startProcessList = new ArrayList<ItemCollectionAdapter>();
+			startProcessList = new ArrayList<ItemCollection>();
 			// first load Project
 			ItemCollection aProject = projectService
 					.findProject(key.toString());
@@ -870,7 +869,7 @@ public class ProjectlistMB {
 								itemColProcessEntity);
 				}
 				if (itemColProcessEntity != null)
-					startProcessList.add(new ItemCollectionAdapter(
+					startProcessList.add((
 							itemColProcessEntity));
 			}
 
@@ -923,7 +922,7 @@ public class ProjectlistMB {
 		 */
 		@SuppressWarnings("unchecked")
 		public Object get(Object key) {
-			List<ItemCollectionAdapter> startProcessList;
+			List<ItemCollection> startProcessList;
 
 			// check if a key is a String....
 			if (!(key instanceof String))
@@ -953,12 +952,12 @@ public class ProjectlistMB {
 			key = sModelVersion + "|" + sGroupName;
 
 			// 1.) try to get list out from cache..
-			startProcessList = (List<ItemCollectionAdapter>) super.get(key);
+			startProcessList = (List<ItemCollection>) super.get(key);
 			if (startProcessList != null)
 				// list already known and loaded into the cache!....
 				return startProcessList;
 
-			startProcessList = new ArrayList<ItemCollectionAdapter>();
+			startProcessList = new ArrayList<ItemCollection>();
 
 			System.out
 					.println(" -------------- loadSubProcessList for ModelVersion "
@@ -991,7 +990,7 @@ public class ProjectlistMB {
 					e.printStackTrace();
 				}
 
-				startProcessList.add(new ItemCollectionAdapter(processEntity));
+				startProcessList.add((processEntity));
 
 			}
 

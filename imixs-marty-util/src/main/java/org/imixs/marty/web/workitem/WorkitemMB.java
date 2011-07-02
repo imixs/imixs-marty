@@ -45,15 +45,14 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 
 import org.imixs.marty.business.ProjectService;
-import org.imixs.marty.business.WorkitemServiceBean;
+import org.imixs.marty.business.WorkitemService;
 import org.imixs.marty.web.profile.NameLookupMB;
 import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.util.ConfigMB;
 import org.imixs.marty.web.util.FileUploadBean;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.jsf.util.AbstractWorkflowController;
-import org.imixs.workflow.jee.jsf.util.BLOBWorkitemController;
-import org.imixs.workflow.util.ItemCollectionAdapter;
+import org.imixs.workflow.jee.faces.AbstractWorkflowController;
+import org.imixs.workflow.jee.faces.BLOBWorkitemController;
 
 public class WorkitemMB extends AbstractWorkflowController {
 
@@ -73,9 +72,9 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 	/* Child Process */
 	protected ItemCollection childWorkitemItemCollection = null;
-	protected ItemCollectionAdapter childWorkitemAdapter = null;
-	private ArrayList<ItemCollectionAdapter> childs = null;
-	private ArrayList<ItemCollectionAdapter> versions = null;
+	
+	private ArrayList<ItemCollection> childs = null;
+	private ArrayList<ItemCollection> versions = null;
 
 	private Collection<WorkitemListener> workitemListeners = new ArrayList<WorkitemListener>();
 
@@ -367,7 +366,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * Optional the param 'project' is evaluated. If this param is provided the
 	 * method selects the refered project.
 	 * 
-	 * @see WorkitemServiceBean
+	 * @see WorkitemService
 	 * 
 	 * @param event
 	 * @return
@@ -584,7 +583,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * This method is similar to the createWorkitem method but creates a child
 	 * process to the current workitem.
 	 * 
-	 * @see WorkitemServiceBean
+	 * @see WorkitemService
 	 * 
 	 * @param event
 	 * @return
@@ -631,7 +630,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @return
 	 */
 	public void doEditChild(ActionEvent event) {
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -640,9 +639,9 @@ public class WorkitemMB extends AbstractWorkflowController {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
-			setChildWorkitem(currentSelection.getItemCollection());
+			setChildWorkitem(currentSelection);
 			break;
 
 		}
@@ -711,7 +710,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doDeleteChild(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -720,9 +719,9 @@ public class WorkitemMB extends AbstractWorkflowController {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
-			childWorkitemItemCollection = currentSelection.getItemCollection();
+			childWorkitemItemCollection = currentSelection;
 
 			break;
 		}
@@ -752,7 +751,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doSoftDeleteChild(ActionEvent event) throws Exception {
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -761,9 +760,9 @@ public class WorkitemMB extends AbstractWorkflowController {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
-			childWorkitemItemCollection = currentSelection.getItemCollection();
+			childWorkitemItemCollection = currentSelection;
 
 			break;
 		}
@@ -773,7 +772,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 			fireChildSoftDeleteEvent();
 
 			workitemService.moveIntoDeletions(currentSelection
-					.getItemCollection());
+					);
 
 			doResetChildWorkitems(event);
 
@@ -1181,24 +1180,21 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @param ateam
 	 */
 	public void setChildWorkitem(ItemCollection aworkitem) {
-		if (childWorkitemAdapter == null)
-			childWorkitemAdapter = new ItemCollectionAdapter();
+		
 		if (aworkitem != null)
 			childWorkitemItemCollection = aworkitem;
 		else
 			childWorkitemItemCollection = new ItemCollection();
-		childWorkitemAdapter.setItemCollection(childWorkitemItemCollection);
+		
 	}
 
 	public ItemCollection getChildWorkitem() {
 		return childWorkitemItemCollection;
 	}
 
-	public ItemCollectionAdapter getChild() {
-		if (childWorkitemAdapter == null)
-			childWorkitemAdapter = new ItemCollectionAdapter();
-
-		return childWorkitemAdapter;
+	public ItemCollection getChild() {
+	
+		return getChildWorkitem();
 	}
 
 	/**
@@ -1206,7 +1202,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * 
 	 * @return
 	 */
-	public List<ItemCollectionAdapter> getChilds() {
+	public List<ItemCollection> getChilds() {
 		if (childs == null)
 			loadChildWorkItemList();
 		return childs;
@@ -1215,10 +1211,10 @@ public class WorkitemMB extends AbstractWorkflowController {
 	/**
 	 * this method loads the child workitems to the current workitem
 	 * 
-	 * @see org.imixs.shareyouwork.business.WorkitemServiceBean
+	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
 	 */
 	private void loadChildWorkItemList() {
-		childs = new ArrayList<ItemCollectionAdapter>();
+		childs = new ArrayList<ItemCollection>();
 		if (this.isNewWorkitem())
 			return;
 		Collection<ItemCollection> col = null;
@@ -1230,7 +1226,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 					this.getWorklistBean().getSortby(), this.getWorklistBean()
 							.getSortorder());
 			for (ItemCollection aworkitem : col) {
-				childs.add(new ItemCollectionAdapter(aworkitem));
+				childs.add((aworkitem));
 			}
 		} catch (Exception ee) {
 			childs = null;
@@ -1246,8 +1242,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * 
 	 * @return
 	 */
-	public ArrayList<ItemCollectionAdapter> getChildActivities() {
-		ArrayList<ItemCollectionAdapter> activityChildList = new ArrayList<ItemCollectionAdapter>();
+	public ArrayList<ItemCollection> getChildActivities() {
+		ArrayList<ItemCollection> activityChildList = new ArrayList<ItemCollection>();
 
 		if (childWorkitemItemCollection == null)
 			return activityChildList;
@@ -1271,7 +1267,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 			col = getModelService().getPublicActivitiesByVersion(processId,
 					getModelVersion());
 		for (ItemCollection aworkitem : col) {
-			activityChildList.add(new ItemCollectionAdapter(aworkitem));
+			activityChildList.add((aworkitem));
 		}
 		return activityChildList;
 	}
@@ -1281,7 +1277,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * 
 	 * @return
 	 */
-	public List<ItemCollectionAdapter> getVersions() {
+	public List<ItemCollection> getVersions() {
 		if (versions == null)
 			loadVersionWorkItemList();
 		return versions;
@@ -1290,10 +1286,10 @@ public class WorkitemMB extends AbstractWorkflowController {
 	/**
 	 * this method loads all versions to the current workitem
 	 * 
-	 * @see org.imixs.shareyouwork.business.WorkitemServiceBean
+	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
 	 */
 	private void loadVersionWorkItemList() {
-		versions = new ArrayList<ItemCollectionAdapter>();
+		versions = new ArrayList<ItemCollection>();
 		if (this.isNewWorkitem())
 			return;
 		Collection<ItemCollection> col = null;
@@ -1309,7 +1305,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 			col = this.getEntityService().findAllEntities(refQuery, 0, -1);
 			for (ItemCollection aworkitem : col) {
-				versions.add(new ItemCollectionAdapter(aworkitem));
+				versions.add(aworkitem);
 			}
 		} catch (Exception ee) {
 			versions = null;

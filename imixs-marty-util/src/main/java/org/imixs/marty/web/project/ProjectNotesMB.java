@@ -38,8 +38,7 @@ import javax.faces.event.ActionEvent;
 
 import org.imixs.marty.web.profile.MyProfileMB;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.jsf.util.AbstractWorkflowController;
-import org.imixs.workflow.util.ItemCollectionAdapter;
+import org.imixs.workflow.jee.faces.AbstractWorkflowController;
 
 /**
  * Eine Project Note ist eine Workitem mit einer Nachricht innerhalb eines
@@ -62,7 +61,7 @@ public class ProjectNotesMB extends AbstractWorkflowController {
 	// public final static int SEND_NOTE= 10;
 	public final static int REMOVE_USER = 80;
 
-	private ArrayList<ItemCollectionAdapter> notes = null;
+	private ArrayList<ItemCollection> notes = null;
 
 	private long lastFetchNotes = -1; // last load of notes
 	private final int REFRESH_NOTES = 10; // timeout in seconds
@@ -70,7 +69,7 @@ public class ProjectNotesMB extends AbstractWorkflowController {
 	
 	private MyProfileMB myProfileMB = null;
 	ProjectMB projectBean = null;
-	private ArrayList<ItemCollectionAdapter> invitations = null;
+	private ArrayList<ItemCollection> invitations = null;
 
 	public ProjectNotesMB() {
 	}
@@ -139,8 +138,7 @@ public class ProjectNotesMB extends AbstractWorkflowController {
 		// create receivers
 		workitemItemCollection.replaceItemValue("namTeam",  getProjectBean().getMemberList());
 
-		workitemAdapter = new ItemCollectionAdapter(workitemItemCollection);
-
+		
 	}
 
 	/**
@@ -183,7 +181,7 @@ public class ProjectNotesMB extends AbstractWorkflowController {
 	 * 
 	 * @return
 	 */
-	public List<ItemCollectionAdapter> getNotes() {
+	public List<ItemCollection> getNotes() {
 
 		long lNow = System.currentTimeMillis() / 1000;
 		if (notes == null || lastFetchNotes < lNow - REFRESH_NOTES) {
@@ -204,7 +202,7 @@ public class ProjectNotesMB extends AbstractWorkflowController {
 	 * Otherwise managers would see always also 'deleted' notes 
 	 */
 	private void loadNotes() {
-		notes = new ArrayList<ItemCollectionAdapter>();
+		notes = new ArrayList<ItemCollection>();
 		try {
 			System.out.println("...Reload Project notes...");
 			FacesContext context = FacesContext.getCurrentInstance();
@@ -225,7 +223,7 @@ public class ProjectNotesMB extends AbstractWorkflowController {
 					sQuery, 0, -1);
 			// endOfList = col.size() < count;
 			for (ItemCollection aworkitem : col) {
-				notes.add(new ItemCollectionAdapter(aworkitem));
+				notes.add((aworkitem));
 			}
 		} catch (Exception ee) {
 			notes=null;
@@ -248,7 +246,7 @@ public class ProjectNotesMB extends AbstractWorkflowController {
 
 		ItemCollection note = null;
 
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -257,10 +255,10 @@ public class ProjectNotesMB extends AbstractWorkflowController {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
 
-			note = currentSelection.getItemCollection();
+			note = currentSelection;
 
 			break;
 
@@ -298,8 +296,7 @@ public class ProjectNotesMB extends AbstractWorkflowController {
 		
 		super.doReset(event);
 		notes=null;
-		// reset current workitem
-		workitemAdapter = new ItemCollectionAdapter(new ItemCollection());
+		
 		
 	}
 	

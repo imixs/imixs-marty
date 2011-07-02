@@ -5,7 +5,7 @@
 	<artifactId>imixs-marty</artifactId>
 	<packaging>pom</packaging>
 	<name>Imixs Workflow - Marty</name>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.1.0-SNAPSHOT</version>
 	<organization>
 		<name>Imixs Software Solutions GmbH</name>
 		<url>http://www.imixs.com</url>
@@ -32,37 +32,24 @@
 			<!-- WORKFLOW -->
 			<dependency>
 				<groupId>org.imixs.workflow</groupId>
-				<artifactId>imixs-workflow-api</artifactId>
-				<version>2.1.1</version>
+				<artifactId>imixs-workflow-core</artifactId>
+				<version>3.0.0-SNAPSHOT</version>
 				<scope>provided</scope>
 				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
 			</dependency>
+			
 			<dependency>
 				<groupId>org.imixs.workflow</groupId>
-				<artifactId>imixs-workflow-xml</artifactId>
-				<version>2.1.0</version>
-				<scope>provided</scope>
-				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
-			</dependency>
-			<dependency>
-				<groupId>org.imixs.workflow</groupId>
-				<artifactId>imixs-workflow-jee</artifactId>
-				<version>2.1.3</version>
-				<scope>provided</scope>
-				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
-			</dependency>
-			<dependency>
-				<groupId>org.imixs.workflow</groupId>
-				<artifactId>imixs-workflow-jee-impl</artifactId>
-				<version>2.1.3</version>
+				<artifactId>imixs-workflow-engine</artifactId>
+				<version>3.0.0-SNAPSHOT</version>
 				<scope>provided</scope>
 				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
 			</dependency>
 
 			<dependency>
 				<groupId>org.imixs.workflow</groupId>
-				<artifactId>imixs-workflow-jsf</artifactId>
-				<version>2.1.0</version>
+				<artifactId>imixs-workflow-faces</artifactId>
+				<version>3.0.0-SNAPSHOT</version>
 			</dependency>
 
 			<!-- RichFaces -->

@@ -35,7 +35,7 @@ public class SywappApplicationPlugin extends ApplicationPlugin {
 	}
 
 	@Override
-	public void close(int arg0) {
+	public void close(int arg0) throws Exception {
 		super.close(arg0);
 
 		try { // now cut txtworkflowgroup if ~ is available

@@ -1,14 +1,11 @@
 package org.imixs.marty.web.util;
 
-import java.util.Map;
-
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.event.ActionEvent;
 
 import org.imixs.marty.business.ConfigService;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.util.ItemCollectionAdapter;
 
 /**
  * This Backing Bean acts as a application wide config bean. It holds general
@@ -35,7 +32,7 @@ public class ConfigMB {
 
 	public final static String SYW_CONFIGURATION = "SYW_CONFIGURATION";
 
-	protected ItemCollectionAdapter workitemAdapter = null;
+	
 	private ItemCollection configItemCollection = null;
 	
 	@EJB
@@ -93,8 +90,7 @@ public class ConfigMB {
 			
 		}
 		
-		workitemAdapter = new ItemCollectionAdapter(configItemCollection);
-
+	
 	}
 
 	
@@ -116,31 +112,13 @@ public class ConfigMB {
 		// save entity
 		configItemCollection=entityService.save(configItemCollection);
 		
-		workitemAdapter = new ItemCollectionAdapter(configItemCollection);
+		
 	}
 	
 	
 
 	
-	/**
-	 * WorkitemAdapter getter Methods
-	 * @return
-	 * @throws Exception
-	 */
-	@SuppressWarnings("unchecked")
-	public Map getItem() throws Exception {
-		return workitemAdapter.getItem();
-	}
 
-	@SuppressWarnings("unchecked")
-	public Map getItemList() throws Exception {
-		return workitemAdapter.getItemList();
-	}
-
-	@SuppressWarnings("unchecked")
-	public Map getItemListArray() throws Exception {
-		return workitemAdapter.getItemListArray();
-	}
 	
 	
 

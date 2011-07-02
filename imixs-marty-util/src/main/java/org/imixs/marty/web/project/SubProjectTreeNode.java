@@ -2,12 +2,10 @@ package org.imixs.marty.web.project;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.faces.context.FacesContext;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.util.ItemCollectionAdapter;
 import org.richfaces.model.TreeNodeImpl;
 
 /**
@@ -33,7 +31,7 @@ public class SubProjectTreeNode extends TreeNodeImpl {
 	
 	private static final long serialVersionUID = 1L;
 
-	private ItemCollectionAdapter project = null;
+	private ItemCollection project = null;
 
 	public SubProjectTreeNode(ItemCollection parent, int aprojecttype) {
 		super();
@@ -44,7 +42,7 @@ public class SubProjectTreeNode extends TreeNodeImpl {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		project = new ItemCollectionAdapter(parent);
+		project = (parent);
 
 		
 		this.setData(project);
@@ -65,7 +63,7 @@ public class SubProjectTreeNode extends TreeNodeImpl {
 	 * returns the Project Data as a ItemCollectionAdapter
 	 * @return
 	 */
-	public ItemCollectionAdapter getProject() {
+	public ItemCollection getProject() {
 		return project;
 	}
 
@@ -120,7 +118,7 @@ public class SubProjectTreeNode extends TreeNodeImpl {
 	public void loadChildren() throws Exception {
 		long l = System.currentTimeMillis();
 		// get unique id
-		String sProjectID = project.getItemCollection().getItemValueString(
+		String sProjectID = project.getItemValueString(
 				"$UniqueID");
 		Collection<ItemCollection> col = this.getProjectBean()
 				.getProjectService().findAllSubProjects(sProjectID, 0, -1);

@@ -56,8 +56,7 @@ import org.imixs.marty.web.util.ConfigMB;
 import org.imixs.marty.web.util.SystemSetupMB;
 import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.jsf.util.AbstractWorkflowController;
-import org.imixs.workflow.util.ItemCollectionAdapter;
+import org.imixs.workflow.jee.faces.AbstractWorkflowController;
 import org.richfaces.event.DropEvent;
 
 /**
@@ -110,7 +109,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 	private boolean profileLoaded = false;
 
-	private ArrayList<ItemCollectionAdapter> invitations = null;
+	private ArrayList<ItemCollection> invitations = null;
 
 	private String lastDropType; // stores the last drop type event
 
@@ -621,7 +620,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 	 * 
 	 * /* Comperator for ProjectNames
 	 */
-	class ProjectComparator implements Comparator<ItemCollectionAdapter> {
+	class ProjectComparator implements Comparator<ItemCollection> {
 		private final Collator collator;
 
 		private final boolean ascending;
@@ -631,9 +630,9 @@ public class MyProfileMB extends AbstractWorkflowController {
 			this.ascending = ascending;
 		}
 
-		public int compare(ItemCollectionAdapter a, ItemCollectionAdapter b) {
-			String nameA = a.getItemCollection().getItemValueString("txtName");
-			String nameB = b.getItemCollection().getItemValueString("txtName");
+		public int compare(ItemCollection a, ItemCollection b) {
+			String nameA = a.getItemValueString("txtName");
+			String nameB = b.getItemValueString("txtName");
 			int result = this.collator.compare(nameA, nameB);
 			if (!this.ascending) {
 				result = -result;
@@ -875,7 +874,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 			}
 		}
 
-		ItemCollectionAdapter currentSelection = null;
+		ItemCollection currentSelection = null;
 		// suche selektierte Zeile....
 		UIComponent component = event.getComponent();
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -884,10 +883,10 @@ public class MyProfileMB extends AbstractWorkflowController {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollectionAdapter) ((UIData) parent)
+			currentSelection = (ItemCollection) ((UIData) parent)
 					.getRowData();
 
-			ItemCollection invitation = currentSelection.getItemCollection();
+			ItemCollection invitation = currentSelection;
 
 			// if inivtation accepted add current username!
 			int iProcessID = invitation.getItemValueInteger("$ProcessID");
@@ -911,7 +910,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 	}
 
-	public List<ItemCollectionAdapter> getInvitations() {
+	public List<ItemCollection> getInvitations() {
 		if (invitations == null)
 			loadInvitations();
 		return invitations;
@@ -919,7 +918,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 	}
 
 	private void loadInvitations() {
-		invitations = new ArrayList<ItemCollectionAdapter>();
+		invitations = new ArrayList<ItemCollection>();
 		try {
 			System.out.println("----- Reload Inventations... ");
 			String sEmail = workitemItemCollection
@@ -937,7 +936,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 					.findAllEntities(sQuery, 0, -1);
 			// endOfList = col.size() < count;
 			for (ItemCollection aworkitem : col) {
-				invitations.add(new ItemCollectionAdapter(aworkitem));
+				invitations.add(aworkitem);
 			}
 		} catch (Exception ee) {
 			ee.printStackTrace();

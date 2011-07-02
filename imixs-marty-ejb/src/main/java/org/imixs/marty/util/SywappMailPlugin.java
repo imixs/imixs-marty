@@ -10,7 +10,7 @@ import org.imixs.marty.business.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
-import org.imixs.workflow.jee.plugins.MailPlugin;
+import org.imixs.workflow.plugins.jee.MailPlugin;
 
 public class SywappMailPlugin extends MailPlugin {
 
