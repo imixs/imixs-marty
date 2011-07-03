@@ -11,6 +11,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
@@ -31,14 +32,30 @@ public class SywappTeamPlugin extends AbstractPlugin {
 	@Override
 	public void init(WorkflowContext actx) throws Exception {
 		super.init(actx);
+		     // check for an instance of WorkflowService
+	        if (actx instanceof WorkflowService) {
+	                // yes we are running in a WorkflowService EJB
+	                WorkflowService ws=(WorkflowService)actx;
+	                // get latest model version....
+	                entityService=ws.getEntityService();
+	        }
+	        
+	        
 		// lookup profile service EJB
-		String jndiName = "ejb/ProjectServiceBean";
-		InitialContext ictx = new InitialContext();
-		Context ctx = (Context) ictx.lookup("java:comp/env");
-		projectService = (ProjectService) ctx.lookup(jndiName);
+		//String jndiName = "ejb/ProjectServiceBean";
+		//InitialContext ictx = new InitialContext();
+		
+		 // FooBean foo = (FooBean) new InitialContext().lookup("java:module/FooBean");
 
-		jndiName = "ejb/EntityServiceBean";
-		entityService = (EntityService) ctx.lookup(jndiName);
+		//Context ctx = (Context) ictx.lookup("java:comp/env");
+		//projectService = (ProjectService) ctx.lookup(jndiName);
+		  projectService= (ProjectService) new InitialContext().lookup("java:module/ProjectService");
+		
+		  if (projectService==null)
+			  System.out.println(" war nix");
+			  else
+				  System.out.println(" war was hurrar");
+				    
 
 	}
 

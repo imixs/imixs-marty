@@ -212,7 +212,7 @@ public class ProjectNotesMB extends AbstractWorkflowController {
 			// workitemItemCollection.getItemValueString("txtName");
 			String sQuery = "";
 			sQuery = "SELECT wi from Entity as wi "
-				    + " JOIN wi.readAccess readeraccess "
+				    + " JOIN wi.readAccessList readeraccess "
 					+ " JOIN wi.integerItems as p "
 					+ " WHERE wi.type = 'note'"
 					+ " AND readeraccess.value IN ('"+remoteUser+"')"

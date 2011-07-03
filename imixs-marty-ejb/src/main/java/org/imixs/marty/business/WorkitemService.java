@@ -431,7 +431,7 @@ public class WorkitemService {
 
 		// construct query
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-		sQuery += " JOIN wi.writeAccess as a1";
+		sQuery += " JOIN wi.writeAccessList as a1";
 		if (!"".equals(ref))
 			sQuery += " JOIN wi.textItems as t2 ";
 		if (!"".equals(processgroup))

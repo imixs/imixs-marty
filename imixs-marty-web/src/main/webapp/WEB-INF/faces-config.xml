@@ -40,7 +40,7 @@
 	</managed-bean>
 	<managed-bean>
 		<managed-bean-name>workitemBlobMB</managed-bean-name>
-		<managed-bean-class>org.imixs.workflow.jee.jsf.util.BLOBWorkitemController</managed-bean-class>
+		<managed-bean-class>org.imixs.workflow.jee.faces.BLOBWorkitemController</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 	<managed-bean>
