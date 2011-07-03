@@ -122,37 +122,6 @@
 	</servlet-mapping>
 
 
-        <!-- EJB Refs necessary for GF 1.2 and GF 3 if @session annotation is left -->
-        <ejb-local-ref>
-                <ejb-ref-name>org.imixs.workflow.jee.ejb.EntityService</ejb-ref-name>
-                <ejb-ref-type>Session</ejb-ref-type>
-                <local-home/>
-                <local>org.imixs.workflow.jee.ejb.EntityService</local>
-        </ejb-local-ref>
-        <ejb-local-ref>
-                <ejb-ref-name>org.imixs.workflow.jee.ejb.WorkflowService</ejb-ref-name>
-                <ejb-ref-type>Session</ejb-ref-type>
-                <local-home/>
-                <local>org.imixs.workflow.jee.ejb.WorkflowService</local>
-        </ejb-local-ref>
-        <ejb-local-ref>
-                <ejb-ref-name>org.imixs.workflow.jee.ejb.ModelService</ejb-ref-name>
-                <ejb-ref-type>Session</ejb-ref-type>
-                <local-home/>
-                <local>org.imixs.workflow.jee.ejb.ModelService</local>
-        </ejb-local-ref>
-        <ejb-local-ref>
-                <ejb-ref-name>org.imixs.workflow.jee.ejb.ReportService</ejb-ref-name>
-                <ejb-ref-type>Session</ejb-ref-type>
-                <local-home/>
-                <local>org.imixs.workflow.jee.ejb.ReportService</local>
-        </ejb-local-ref>
-
-
-
-
-	
-
 	<!-- Error handling -->
 	<error-page>
 		<exception-type>java.lang.RuntimeException</exception-type>
