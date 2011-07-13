@@ -25,8 +25,8 @@ public class ConfigMB {
 	private int maxWorkitemHistoryLength = 10;
 	private int sortby = 0;
 	private int sortorder = 0;
-	//private int defaultworklistview = 0;
 	private int maxviewentriesperpage = 10;
+	private int defaultworklistview=0;
 	private boolean createDefaultProject = false;
 	private String defaultPage = "pages/notes";
 
@@ -80,6 +80,9 @@ public class ConfigMB {
 				configItemCollection.replaceItemValue("sortorder", sortorder);
 				configItemCollection.replaceItemValue("maxProjectHistoryLength", maxProjectHistoryLength);
 				configItemCollection.replaceItemValue("maxProjectHistoryLength", maxProjectHistoryLength);
+				configItemCollection.replaceItemValue("defaultworklistview", defaultworklistview);
+					
+				
 				
 			} catch (Exception e) {
 				e.printStackTrace();

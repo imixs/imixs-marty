@@ -95,21 +95,10 @@ public class ProjectlistMB {
 		startProcessList = new StartProcessCache();
 		subProcessList = new SubProcessCache();
 
-		count = this.getConfigBean().getWorkitem().getItemValueInteger(
-				"MaxviewEntriesPerPage");
+		count = this.getConfigBean().getWorkitem()
+				.getItemValueInteger("MaxviewEntriesPerPage");
 	}
 
-	private ConfigMB getConfigBean() {
-		if (configMB == null)
-			configMB = (ConfigMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
-							null, "configMB");
-		return configMB;
-	}
-
-	
-	
 	public int getCount() {
 		return count;
 	}
@@ -122,6 +111,17 @@ public class ProjectlistMB {
 		this.row = row;
 	}
 
+	private ConfigMB getConfigBean() {
+		if (configMB == null)
+			configMB = (ConfigMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
+							null, "configMB");
+		return configMB;
+	}
+
 	/**
 	 * Returns a instance of the MBProfileMB. This ManagedBean can not be find
 	 * during the constructor because the referenece of this bean is queried
@@ -131,9 +131,11 @@ public class ProjectlistMB {
 	 */
 	public MyProfileMB getProfileBean() {
 		if (myProfileMB == null)
-			myProfileMB = (MyProfileMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			myProfileMB = (MyProfileMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "myProfileMB");
 
 		return myProfileMB;
@@ -142,32 +144,41 @@ public class ProjectlistMB {
 
 	public WorkitemMB getWorkitemBean() {
 		if (workitemMB == null)
-			workitemMB = (WorkitemMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			workitemMB = (WorkitemMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "workitemMB");
 		return workitemMB;
 	}
 
 	public ProjectMB getProjectBean() {
 		if (projectMB == null)
-			projectMB = (ProjectMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			projectMB = (ProjectMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "projectMB");
 		return projectMB;
 	}
 
 	/**
 	 * This Method Selects the current project and refreshes the Worklist Bean
-	 * so wokitems of these project will be displayed after show_worklist
+	 * so wokitems of this project can be displayed
 	 * 
 	 * @return
 	 */
 	public void doSwitchToProject(ActionEvent event) {
 
+		if (event==null) {
+			getProjectBean().setWorkitem(null);
+			return;
+		}
+		
 		ItemCollection currentSelection = null;
-		// suche selektierte Zeile....
+		// find current data row....
 		UIComponent component = event.getComponent();
 
 		for (UIComponent parent = component.getParent(); parent != null; parent = parent
@@ -175,19 +186,20 @@ public class ProjectlistMB {
 
 			if (!(parent instanceof UIData))
 				continue;
-			// get current project from row
-			currentSelection = (ItemCollection) ((UIData) parent)
-					.getRowData();
 
-			// get WorklistMB instance
-			WorklistMB worklist = (WorklistMB) FacesContext
-					.getCurrentInstance().getApplication().getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "worklistMB");
+			try {
+				// get current project from row
+				currentSelection = (ItemCollection) ((UIData) parent)
+						.getRowData();
 
-			worklist.doReset(event);
-			getProjectBean().setWorkitem(currentSelection);
-			break;
+				if (currentSelection.getItemValueString("type").equals(
+						"project")) {
+					getProjectBean().setWorkitem(currentSelection);
+					break;
+				}
+			} catch (Exception e) {
+				// unable to select data
+			}
 		}
 
 	}
@@ -217,17 +229,14 @@ public class ProjectlistMB {
 				continue;
 
 			// get current project from row
-			currentSelection = (ItemCollection) ((UIData) parent)
-					.getRowData();
+			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
 
 			// now try to read current toogle state and switch state
 			boolean bTogle = false;
-			if (currentSelection.hasItem(
-					"a4j:showProcessList")) {
+			if (currentSelection.hasItem("a4j:showProcessList")) {
 				try {
 					boolean bTogleCurrent = (Boolean) currentSelection
-							.getItemValue(
-									"a4j:showProcessList").firstElement();
+							.getItemValue("a4j:showProcessList").firstElement();
 					bTogle = !bTogleCurrent;
 				} catch (Exception e) {
 					bTogle = true;
@@ -239,8 +248,7 @@ public class ProjectlistMB {
 			// update projectMB
 			getProjectBean().setWorkitem(currentSelection);
 
-			currentSelection.replaceItemValue(
-					"a4j:showprocesslist", bTogle);
+			currentSelection.replaceItemValue("a4j:showprocesslist", bTogle);
 			break;
 		}
 
@@ -262,16 +270,14 @@ public class ProjectlistMB {
 				continue;
 
 			// workitem found
-			currentSelection = (ItemCollection) ((UIData) parent)
-					.getRowData();
+			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
 
 			// now try to read current toogle state and switch state
 			boolean bTogle = false;
 			if (currentSelection.hasItem("a4j:showTeam")) {
 				try {
 					boolean bTogleCurrent = (Boolean) currentSelection
-							.getItemValue("a4j:showTeam")
-							.firstElement();
+							.getItemValue("a4j:showTeam").firstElement();
 					bTogle = !bTogleCurrent;
 				} catch (Exception e) {
 					bTogle = true;
@@ -279,8 +285,7 @@ public class ProjectlistMB {
 			} else
 				// item did not exist yet....
 				bTogle = true;
-			currentSelection.replaceItemValue(
-					"a4j:showteam", bTogle);
+			currentSelection.replaceItemValue("a4j:showteam", bTogle);
 			break;
 
 		}
@@ -306,14 +311,11 @@ public class ProjectlistMB {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent)
-					.getRowData();
+			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
 
 			// remove a4j: attributes generated inside the viewentries by the UI
-			currentSelection.getAllItems().remove(
-					"a4j:showteam");
-			currentSelection.getAllItems().remove(
-					"a4j:showprocesslist");
+			currentSelection.getAllItems().remove("a4j:showteam");
+			currentSelection.getAllItems().remove("a4j:showprocesslist");
 
 			Locale userLocale = FacesContext.getCurrentInstance().getViewRoot()
 					.getLocale();
@@ -322,17 +324,16 @@ public class ProjectlistMB {
 			String sModelLanguage = currentSelection
 					.getItemValueString("txtModelLanguage");
 			if ("".equals(sModelLanguage)) {
-				currentSelection.replaceItemValue(
-						"txtModelLanguage", userLocale.getLanguage());
+				currentSelection.replaceItemValue("txtModelLanguage",
+						userLocale.getLanguage());
 			}
 
 			// determine user language and set Modelversion depending on the
 			// selected user locale
 			String sModelVersion = this.getProfileBean()
-					.getModelVersionHandler().getLatestSystemVersion(
-							userLocale.getLanguage());
-			currentSelection.replaceItemValue(
-					"$modelversion", sModelVersion);
+					.getModelVersionHandler()
+					.getLatestSystemVersion(userLocale.getLanguage());
+			currentSelection.replaceItemValue("$modelversion", sModelVersion);
 
 			getProjectBean().setWorkitem(currentSelection);
 			break;
@@ -341,10 +342,9 @@ public class ProjectlistMB {
 
 	}
 
-	
 	/**
-	 * Selects the current project and  deletes the Project and its subprojects and workitems
-	 *  by changing the attribute type' into 'workitemdeleted'
+	 * Selects the current project and deletes the Project and its subprojects
+	 * and workitems by changing the attribute type' into 'workitemdeleted'
 	 * 
 	 * 
 	 * @return
@@ -360,10 +360,10 @@ public class ProjectlistMB {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent)
-					.getRowData();
+			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
 
-			this.getProjectBean().getProjectService().moveIntoDeletions(currentSelection);
+			this.getProjectBean().getProjectService()
+					.moveIntoDeletions(currentSelection);
 
 			this.doReset(event);
 
@@ -373,8 +373,6 @@ public class ProjectlistMB {
 
 	}
 
-	
-	
 	/**
 	 * Selects the current project and creates a subproject based on the
 	 * selected. A Subproject begins with the name of the parent project
@@ -393,8 +391,7 @@ public class ProjectlistMB {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent)
-					.getRowData();
+			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
 			getProjectBean().setWorkitem(currentSelection);
 			getProjectBean().doCreateSubproject(event);
 			break;
@@ -402,8 +399,6 @@ public class ProjectlistMB {
 		}
 
 	}
-	
-	
 
 	/**
 	 * resets the current project list and projectMB and reset the Row count
@@ -437,7 +432,7 @@ public class ProjectlistMB {
 
 	public void doLoadNext(ActionEvent event) {
 		row = row + count;
-		//loadProjectList();
+		// loadProjectList();
 		projects = null;
 	}
 
@@ -445,8 +440,8 @@ public class ProjectlistMB {
 		row = row - count;
 		if (row < 0)
 			row = 0;
-		
-		//loadProjectList();
+
+		// loadProjectList();
 		projects = null;
 	}
 
@@ -464,9 +459,10 @@ public class ProjectlistMB {
 			loadProjectList();
 		return projects;
 	}
-	
+
 	/**
 	 * returns a project list where the current user is owner
+	 * 
 	 * @return
 	 */
 	public List<ItemCollection> getMyProjects() {
@@ -474,8 +470,10 @@ public class ProjectlistMB {
 			loadMyProjectList();
 		return projects;
 	}
+
 	/**
 	 * returns a project list where the current user is member
+	 * 
 	 * @return
 	 */
 	public List<ItemCollection> getMemberProjects() {
@@ -483,8 +481,10 @@ public class ProjectlistMB {
 			loadMemberProjectList();
 		return projects;
 	}
+
 	/**
 	 * returns a project list where the type is 'projectdeleted'
+	 * 
 	 * @return
 	 */
 	public List<ItemCollection> getDeletedProjects() {
@@ -492,10 +492,10 @@ public class ProjectlistMB {
 		try {
 			Collection<ItemCollection> col = null;
 			long l = System.currentTimeMillis();
-			
-			String query="SELECT project FROM Entity AS project " +
-					" WHERE project.type IN ('projectdeleted' ) " +
-					" ORDER BY project.modified DESC";
+
+			String query = "SELECT project FROM Entity AS project "
+					+ " WHERE project.type IN ('projectdeleted' ) "
+					+ " ORDER BY project.modified DESC";
 			col = entityService.findAllEntities(query, row, count);
 
 			System.out.println("  loadDeletedProjectList ("
@@ -510,9 +510,8 @@ public class ProjectlistMB {
 			ee.printStackTrace();
 		}
 		return projectsDelted;
-	
-	}
 
+	}
 
 	/**
 	 * This method returns a list of all Projects with ProcessIDs defined and
@@ -527,17 +526,18 @@ public class ProjectlistMB {
 			try {
 				List<ItemCollection> col = null;
 				long l = System.currentTimeMillis();
-				col = projectService.findAllProjects(0,-1);
+				col = projectService.findAllProjects(0, -1);
 
 				System.out.println("  loadStartProjectList ("
 						+ (System.currentTimeMillis() - l) + " ms) ");
 
 				endOfList = col.size() < count;
-				for (ItemCollection aworkitem : col) {					
+				for (ItemCollection aworkitem : col) {
 					// test if Project contains a ProcessList
 					Vector<String> vprojectList = aworkitem
-					.getItemValue("txtprocesslist");
-					if (vprojectList.size()>0 && this.getProjectBean().isMember(aworkitem))
+							.getItemValue("txtprocesslist");
+					if (vprojectList.size() > 0
+							&& this.getProjectBean().isMember(aworkitem))
 						startProjects.add((aworkitem));
 				}
 			} catch (Exception ee) {
@@ -574,8 +574,9 @@ public class ProjectlistMB {
 					// add project id to the tree node....
 					SubProjectTreeNode nodeProcess = new SubProjectTreeNode(
 							aworkitem, SubProjectTreeNode.ROOT_PROJECT);
-					projectTree.addChild(aworkitem
-							.getItemValueString("$uniqueid"), nodeProcess);
+					projectTree.addChild(
+							aworkitem.getItemValueString("$uniqueid"),
+							nodeProcess);
 
 				}
 			} catch (Exception ee) {
@@ -632,7 +633,7 @@ public class ProjectlistMB {
 		}
 		return projects;
 	}
-	
+
 	/**
 	 * Loads the project list where the current user is owner
 	 * 
@@ -658,12 +659,10 @@ public class ProjectlistMB {
 		}
 		return projects;
 	}
-	
-	
-	
+
 	/**
-	 * Loads the project list where the current user is member of
-	 * without public projects
+	 * Loads the project list where the current user is member of without public
+	 * projects
 	 * 
 	 * @return
 	 */
@@ -687,7 +686,6 @@ public class ProjectlistMB {
 		}
 		return projects;
 	}
-
 
 	public int getRow() {
 		return row;
@@ -839,8 +837,8 @@ public class ProjectlistMB {
 									.println(" -------------- loadProcessEntity into cache ----------------- ");
 
 							String sProcessModelVersion = aProcessIdentifier
-									.substring(0, aProcessIdentifier
-											.indexOf('|'));
+									.substring(0,
+											aProcessIdentifier.indexOf('|'));
 							String sProcessID = aProcessIdentifier
 									.substring(aProcessIdentifier.indexOf('|') + 1);
 
@@ -851,8 +849,8 @@ public class ProjectlistMB {
 									+ sProcessID + " ----------------- ");
 
 							itemColProcessEntity = modelService
-									.getProcessEntityByVersion(Integer
-											.parseInt(sProcessID),
+									.getProcessEntityByVersion(
+											Integer.parseInt(sProcessID),
 											sProcessModelVersion);
 
 						}
@@ -869,8 +867,7 @@ public class ProjectlistMB {
 								itemColProcessEntity);
 				}
 				if (itemColProcessEntity != null)
-					startProcessList.add((
-							itemColProcessEntity));
+					startProcessList.add((itemColProcessEntity));
 			}
 
 			// now put startProcessList first time into the cache
@@ -982,9 +979,10 @@ public class ProjectlistMB {
 				// subprocess maches!
 				// add txtWorkflowSubGroup property
 				try {
-					processEntity.replaceItemValue("txtWorkflowSubGroup",
-							sSubGroupName
-									.substring(sSubGroupName.indexOf("~") + 1));
+					processEntity
+							.replaceItemValue("txtWorkflowSubGroup",
+									sSubGroupName.substring(sSubGroupName
+											.indexOf("~") + 1));
 				} catch (Exception e) {
 
 					e.printStackTrace();

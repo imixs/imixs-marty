@@ -54,6 +54,18 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.AbstractWorkflowController;
 import org.imixs.workflow.jee.faces.BLOBWorkitemController;
 
+/**
+ * This class provides methods to access
+ * a single workitem controlled by the Imixs Workflow engine. This is the most
+ * used BackingBean class in forms. The different pages from the marty-web
+ * module providing all the functionality to create and manage workitems. You
+ * can implement additional sub_forms for your individual business process. In
+ * this case you can access the WorkitemMB to bind input fields to specific
+ * properties of a workitem
+ * 
+ * @author rsoika
+ * 
+ */
 public class WorkitemMB extends AbstractWorkflowController {
 
 	public final static String DEFAULT_EDITOR_ID = "default";
@@ -72,7 +84,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 	/* Child Process */
 	protected ItemCollection childWorkitemItemCollection = null;
-	
+
 	private ArrayList<ItemCollection> childs = null;
 	private ArrayList<ItemCollection> versions = null;
 
@@ -514,14 +526,16 @@ public class WorkitemMB extends AbstractWorkflowController {
 				"enableMicroBlogging")) {
 			getMicroBlogBean().update(workitemItemCollection);
 			// add the last workflow history entry
-			Vector vList=workitemItemCollection.getItemValue("txtworkflowhistorylog");
+			Vector vList = workitemItemCollection
+					.getItemValue("txtworkflowhistorylog");
 			getMicroBlogBean().doCreateBlogEntry(null);
-			getMicroBlogBean().getBlogEntry().replaceItemValue("txtComment",vList.elementAt(0));
+			getMicroBlogBean().getBlogEntry().replaceItemValue("txtComment",
+					vList.elementAt(0));
 			// add and save the microblog
 			getMicroBlogBean().doAddEntry(null);
-			
+
 		}
-		
+
 		// update workitemcollection and reset childs
 		this.setWorkitem(workitemItemCollection);
 		// inform Listeners...
@@ -639,8 +653,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent)
-					.getRowData();
+			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
 			setChildWorkitem(currentSelection);
 			break;
 
@@ -719,8 +732,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent)
-					.getRowData();
+			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
 			childWorkitemItemCollection = currentSelection;
 
 			break;
@@ -760,8 +772,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent)
-					.getRowData();
+			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
 			childWorkitemItemCollection = currentSelection;
 
 			break;
@@ -771,8 +782,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 			// inform Listeners...
 			fireChildSoftDeleteEvent();
 
-			workitemService.moveIntoDeletions(currentSelection
-					);
+			workitemService.moveIntoDeletions(currentSelection);
 
 			doResetChildWorkitems(event);
 
@@ -1180,12 +1190,12 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @param ateam
 	 */
 	public void setChildWorkitem(ItemCollection aworkitem) {
-		
+
 		if (aworkitem != null)
 			childWorkitemItemCollection = aworkitem;
 		else
 			childWorkitemItemCollection = new ItemCollection();
-		
+
 	}
 
 	public ItemCollection getChildWorkitem() {
@@ -1193,7 +1203,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	}
 
 	public ItemCollection getChild() {
-	
+
 		return getChildWorkitem();
 	}
 
@@ -1222,7 +1232,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 			String sRefUniqueID = workitemItemCollection
 					.getItemValueString("$uniqueid");
 
-			col = workitemService.findAllWorkitems(sRefUniqueID, null, 0, -1,
+			col = workitemService.findAllWorkitems(sRefUniqueID,null, null,0, 0, -1,
 					this.getWorklistBean().getSortby(), this.getWorklistBean()
 							.getSortorder());
 			for (ItemCollection aworkitem : col) {

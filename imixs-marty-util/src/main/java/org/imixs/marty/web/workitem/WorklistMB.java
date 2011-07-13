@@ -37,26 +37,33 @@ import javax.faces.component.UIData;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.event.ValueChangeEvent;
+import javax.faces.model.SelectItem;
 
 import org.imixs.marty.util.LoginMB;
 import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.util.ConfigMB;
 import org.imixs.workflow.ItemCollection;
 
-public class WorklistMB {
+public class WorklistMB implements WorkitemListener {
 
 	ItemCollection currentProjectSelection = null; // current selected project
 
 	private ArrayList<ItemCollection> workitems = null;
-	private int count = 10;
+
+	// view options
+	private int count = 0;
 	private int row = 0;
-	private int sortby=0;
-	private int sortorder=0;
+	private int sortby = -1;
+	private int sortorder = -1;
 	private boolean endOfList = false;
 	private String viewTitle = "undefined viewtitle";
-	private String processFilter = "";
 
-	private int queryType = 0;
+	// filter options
+	private String workflowGroupFilter = "";
+	private int processFilter = 0;
+
+	// view types
+	private int queryType = -1;
 	final int QUERY_WORKLIST_BY_OWNER = 0;
 	final int QUERY_WORKLIST_BY_CREATOR = 1;
 	final int QUERY_WORKLIST_BY_AUTHOR = 2;
@@ -64,7 +71,7 @@ public class WorklistMB {
 	final int QUERY_WORKLIST_ARCHIVE = 4;
 	final int QUERY_WORKLIST_DELETIONS = 7;
 	final int QUERY_SEARCH = 5;
-	private String searchQuery=null;
+	private String searchQuery = null;
 
 	java.util.EventObject eo;
 	@EJB
@@ -75,41 +82,60 @@ public class WorklistMB {
 	private ProjectMB projectBean = null;
 	private ConfigMB configMB = null;
 	private LoginMB loginMB = null;
-	
-	
+
+	/**
+	 * This method initializes the view type an view settings like sort order
+	 * and max entries per page. These properties can be set through the
+	 * BeanProperties in the faces-config.xml or controlled by the config
+	 * entity.
+	 */
 	@PostConstruct
 	public void init() {
-		
-		// set default view
-		this.doSwitchToWorklistAll(null);
-	
-		
-		// read configurations for count and sort order
-		count=this.getConfigBean().getWorkitem().getItemValueInteger("Maxviewentriesperpage");
-		
-		sortby=this.getConfigBean().getWorkitem().getItemValueInteger("Sortby");
-		sortorder=this.getConfigBean().getWorkitem().getItemValueInteger("Sortorder");
+
+		// register this Bean as a workitemListener to the current WorktieMB
+		this.getWorkitemMB().addWorkitemListener(this);
+
+		// set default view if not set
+		if (queryType == -1)
+			setQueryType(this.getConfigBean().getWorkitem()
+					.getItemValueInteger("defaultworklistview"));
+
+		// read configurations for the max count. This value can be also set via
+		// faces-config-custom.xml
+		if (count == 0)
+			count = this.getConfigBean().getWorkitem()
+					.getItemValueInteger("Maxviewentriesperpage");
+		// read configuration for the sort order
+		if (sortby == -1)
+			sortby = this.getConfigBean().getWorkitem()
+					.getItemValueInteger("Sortby");
+		if (sortorder == -1)
+			sortorder = this.getConfigBean().getWorkitem()
+					.getItemValueInteger("Sortorder");
 	}
 
-	
 	public ProjectMB getProjectMB() {
-		if (projectBean==null) {
-		projectBean = (ProjectMB) FacesContext.getCurrentInstance()
-		.getApplication().getELResolver().getValue(
-				FacesContext.getCurrentInstance().getELContext(), null,
-				"projectMB");
+		if (projectBean == null) {
+			projectBean = (ProjectMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
+							null, "projectMB");
 		}
-		
+
 		return projectBean;
 
 	}
-	
+
 	public WorkitemMB getWorkitemMB() {
-		if (workitemBean==null) {
-			workitemBean = (WorkitemMB) FacesContext.getCurrentInstance()
-			.getApplication().getELResolver().getValue(
-					FacesContext.getCurrentInstance().getELContext(), null,
-					"workitemMB");
+		if (workitemBean == null) {
+			workitemBean = (WorkitemMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
+							null, "workitemMB");
 		}
 		return workitemBean;
 
@@ -117,95 +143,98 @@ public class WorklistMB {
 
 	private ConfigMB getConfigBean() {
 		if (configMB == null)
-			configMB = (ConfigMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			configMB = (ConfigMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "configMB");
 		return configMB;
 	}
-	
-	
+
 	private LoginMB getLoginBean() {
 		if (loginMB == null)
-			loginMB = (LoginMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			loginMB = (LoginMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "loginMB");
 		return loginMB;
 	}
 
-	
 	public int getCount() {
 		return count;
 	}
-
-
-
-
-
 
 	public void setCount(int count) {
 		this.count = count;
 	}
 
-
-
-
-
-
 	public int getSortby() {
 		return sortby;
 	}
-
-
-
-
-
 
 	public void setSortby(int sortby) {
 		this.sortby = sortby;
 	}
 
-
-
-
-
-
 	public int getSortorder() {
 		return sortorder;
 	}
-
-
-
-
-
 
 	public void setSortorder(int sortorder) {
 		this.sortorder = sortorder;
 	}
 
-
-
-
 	public String getSearchQuery() {
 		return searchQuery;
 	}
 
-
-
 	/**
 	 * set a search query to be used for the query-type QUERY_SEARCH
+	 * 
 	 * @param searchQuery
 	 */
 	public void setSearchQuery(String searchQuery) {
 		this.searchQuery = searchQuery;
 	}
 
+	public int getQueryType() {
+		return queryType;
+	}
 
+	public void setQueryType(int queryType) {
+		this.queryType = queryType;
 
+		switch (queryType) {
+		case QUERY_WORKLIST_BY_AUTHOR:
+			setViewTitle("title_worklist_by_author");
+			break;
+		case QUERY_WORKLIST_BY_OWNER:
+			setViewTitle("title_worklist_by_owner");
+			break;
+		case QUERY_WORKLIST_BY_CREATOR:
+			setViewTitle("title_worklist_by_creator");
+			break;
+		case QUERY_WORKLIST_ARCHIVE:
+			setViewTitle("title_worklist_archive");
+			break;
+		case QUERY_WORKLIST_DELETIONS:
+			setViewTitle("title_worklist_deletions");
+			break;
 
+		default:
+			setViewTitle("title_worklist_all");
+			break;
 
+		}
 
+		// reset view
+		doReset(null);
+		this.setProcessFilter(0);
+		this.setWorkflowGroupFilter(null);
+	}
 
 	public String getViewTitle() {
 		return viewTitle;
@@ -223,14 +252,78 @@ public class WorklistMB {
 
 	}
 
-	public String getProcessFilter() {
+	public String getWorkflowGroupFilter() {
+		if (workflowGroupFilter==null)
+			workflowGroupFilter="-";
+		return workflowGroupFilter;
+	}
+
+	public void setWorkflowGroupFilter(String workflowGroupFilter) {
+		this.workflowGroupFilter = workflowGroupFilter;
+		// reset process filter now
+		setProcessFilter(0);
+	}
+
+	public int getProcessFilter() {
+		if (workflowGroupFilter==null || "-".equals(workflowGroupFilter))
+			processFilter=0;
 		return processFilter;
 	}
 
-	public void setProcessFilter(String processFilter) {
+	public void setProcessFilter(int processFilter) {
 		this.processFilter = processFilter;
+		this.doReset(null);
 	}
 
+	/**
+	 * returns a SelctItem Array containing all Process Ids for the current
+	 * workflowGroupFilter. The workflowGroupFilter property has the format: 'offic-de-1.0.0|Purchase'
+	 * 
+	 * the method searches only for processIDs in the same ModelVerson and Group
+	 * 
+	 * 
+	 * @return a SelectItem array list with the corresponding ProcessIDs (int)
+	 */
+	public ArrayList<SelectItem> getProcessFilterSelection() {
+		String sWorkflowGroup = null;
+		String sModel = null;
+		// build new groupSelection
+		ArrayList<SelectItem> processSelection = new ArrayList<SelectItem>();
+
+		if (workflowGroupFilter==null || "-".equals(workflowGroupFilter))
+			return processSelection;
+		
+		if (workflowGroupFilter.indexOf('|')>-1) {
+			// cut model and version
+			sModel = workflowGroupFilter.substring(0,
+					workflowGroupFilter.indexOf("|") - 0);
+			sWorkflowGroup = workflowGroupFilter.substring(workflowGroupFilter
+					.indexOf("|") + 1);
+
+			List<ItemCollection> processList = this.getWorkitemMB()
+					.getModelService()
+					.getAllProcessEntitiesByGroupByVersion(sWorkflowGroup,sModel);
+			for (ItemCollection process : processList) {
+				//String sModelVersion = process
+				//		.getItemValueString("$modelVersion");
+				//if (sModel.equals(sModelVersion)) {
+				//	String sValue = sModelVersion + "|"
+					//		+ process.getItemValueInteger("numprocessid");
+					processSelection.add(new SelectItem(process.getItemValueInteger("numprocessid"), process
+							.getItemValueString("txtname")));
+				//}
+			}
+
+		}
+		return processSelection;
+
+	}
+
+	/**
+	 * loads the current workitem collection based on the selected view-type
+	 * 
+	 * @return
+	 */
 	public List<ItemCollection> getWorkitems() {
 		if (workitems == null)
 			loadWorkItemList();
@@ -238,7 +331,7 @@ public class WorklistMB {
 	}
 
 	/**
-	 * this method is called by the datatables to select a workitem 
+	 * this method is called by the datatables to select a workitem
 	 * 
 	 * @return
 	 */
@@ -247,10 +340,8 @@ public class WorklistMB {
 		if (currentSelection != null) {
 
 			// remove a4j: attributes generated inside the viewentries by the UI
-			currentSelection.getAllItems().remove(
-					"a4j:showhistory");
-			currentSelection.getAllItems().remove(
-					"a4j:showdetails");
+			currentSelection.getAllItems().remove("a4j:showhistory");
+			currentSelection.getAllItems().remove("a4j:showdetails");
 
 			getWorkitemMB().setWorkitem(currentSelection);
 
@@ -276,8 +367,8 @@ public class WorklistMB {
 			if (currentSelection.hasItem("a4j:showDetails")) {
 				try {
 					boolean bTogleCurrent = (Boolean) currentSelection
-							
-							.getItemValue("a4j:showDetails").firstElement();
+
+					.getItemValue("a4j:showDetails").firstElement();
 					bTogle = !bTogleCurrent;
 				} catch (Exception e) {
 					bTogle = true;
@@ -285,8 +376,7 @@ public class WorklistMB {
 			} else
 				// item did not exist yet....
 				bTogle = true;
-			currentSelection.replaceItemValue(
-					"a4j:showDetails", bTogle);
+			currentSelection.replaceItemValue("a4j:showDetails", bTogle);
 
 		}
 	}
@@ -306,8 +396,8 @@ public class WorklistMB {
 			if (currentSelection.hasItem("a4j:showHistory")) {
 				try {
 					boolean bTogleCurrent = (Boolean) currentSelection
-							
-							.getItemValue("a4j:showHistory").firstElement();
+
+					.getItemValue("a4j:showHistory").firstElement();
 					bTogle = !bTogleCurrent;
 				} catch (Exception e) {
 					bTogle = true;
@@ -315,8 +405,7 @@ public class WorklistMB {
 			} else
 				// item did not exist yet....
 				bTogle = true;
-			currentSelection.replaceItemValue(
-					"a4j:showHistory", bTogle);
+			currentSelection.replaceItemValue("a4j:showHistory", bTogle);
 
 		}
 	}
@@ -339,52 +428,113 @@ public class WorklistMB {
 		workitems = null;
 	}
 
+	/**
+	 * selects the task-list for the current user
+	 * 
+	 * @param event
+	 */
 	public void doSwitchToWorklistByAuthor(ActionEvent event) {
-		queryType = this.QUERY_WORKLIST_BY_AUTHOR;
-		setViewTitle("title_worklist_by_author");
-		doReset(event);
+		// reset project selection
+		this.getProjectMB().setWorkitem(null);
+		setQueryType(QUERY_WORKLIST_BY_AUTHOR);
 	}
 
+	/**
+	 * select all workitems assigned by owner to the current user
+	 * 
+	 * @param event
+	 */
 	public void doSwitchToWorklistByOwner(ActionEvent event) {
-		queryType = this.QUERY_WORKLIST_BY_OWNER;
-		setViewTitle("title_worklist_by_owner");
-		doReset(event);
+		// reset project selection
+		this.getProjectMB().setWorkitem(null);
+		setQueryType(QUERY_WORKLIST_BY_OWNER);
 	}
 
+	/**
+	 * selects all workitems created by the current user
+	 * 
+	 * @param event
+	 */
 	public void doSwitchToWorklistByCreator(ActionEvent event) {
-		queryType = this.QUERY_WORKLIST_BY_CREATOR;
-		setViewTitle("title_worklist_by_creator");
-		doReset(event);
+		// reset project selection
+		this.getProjectMB().setWorkitem(null);
+		setQueryType(QUERY_WORKLIST_BY_CREATOR);
 	}
 
+	/**
+	 * select the archive list
+	 * 
+	 * @param event
+	 */
 	public void doSwitchToWorklistArchive(ActionEvent event) {
-		queryType = this.QUERY_WORKLIST_ARCHIVE;
-		setViewTitle("title_worklist_archive");
-		doReset(event);
+		// reset project selection
+		this.getProjectMB().setWorkitem(null);
+		setQueryType(QUERY_WORKLIST_ARCHIVE);
 	}
 
+	/**
+	 * select all deleted workitems
+	 * 
+	 * @param event
+	 */
 	public void doSwitchToWorklistDeletions(ActionEvent event) {
-		queryType = this.QUERY_WORKLIST_DELETIONS;
-		setViewTitle("title_worklist_deletions");
-		doReset(event);
+		// reset project selection
+		this.getProjectMB().setWorkitem(null);
+		setQueryType(QUERY_WORKLIST_DELETIONS);
 	}
 
+	/**
+	 * selects all workitems
+	 * 
+	 * @param event
+	 */
 	public void doSwitchToWorklistAll(ActionEvent event) {
-		queryType = this.QUERY_WORKLIST_ALL;
-		setViewTitle("title_worklist_all");
-		doReset(event);
+		// reset project selection
+		this.getProjectMB().setWorkitem(null);
+		setQueryType(QUERY_WORKLIST_ALL);
 	}
-	
-	
+
+	/**
+	 * selects workitms based on the current search query.
+	 * 
+	 * @param event
+	 */
 	public void doSwitchToWorklistSearch(ActionEvent event) {
-		queryType = this.QUERY_SEARCH;
-		setViewTitle("title_worklist_all");
-		doReset(event);
+		// reset project selection
+		this.getProjectMB().setWorkitem(null);
+		setQueryType(QUERY_SEARCH);
 	}
-	
-	
-	
-	
+
+	/**
+	 * selects the task-list for the current user assigned to the current
+	 * project
+	 * 
+	 * @param event
+	 */
+	public void doSwitchToProjectWorklistByAuthor(ActionEvent event) {
+		// switch to project
+		this.getProjectMB().getProjectListMB().doSwitchToProject(event);
+		setQueryType(QUERY_WORKLIST_BY_AUTHOR);
+	}
+
+	public void doSwitchToProjectWorklistByOwner(ActionEvent event) {
+		// switch to project
+		this.getProjectMB().getProjectListMB().doSwitchToProject(event);
+		setQueryType(QUERY_WORKLIST_BY_OWNER);
+	}
+
+	public void doSwitchToProjectWorklistByCreator(ActionEvent event) {
+		// switch to project
+		this.getProjectMB().getProjectListMB().doSwitchToProject(event);
+		setQueryType(QUERY_WORKLIST_BY_CREATOR);
+	}
+
+	public void doSwitchToProjectWorklistAll(ActionEvent event) {
+		// switch to project
+		this.getProjectMB().getProjectListMB().doSwitchToProject(event);
+		setQueryType(QUERY_WORKLIST_ALL);
+	}
+
 	/**
 	 * moves a workitem into the archive by changing the attribute type to
 	 * 'workitemarchive'
@@ -399,13 +549,10 @@ public class WorklistMB {
 		if (currentSelection != null) {
 
 			// remove a4j: attributes generated inside the viewentries by the UI
-			currentSelection.getAllItems().remove(
-					"a4j:showhistory");
-			currentSelection.getAllItems().remove(
-					"a4j:showdetails");
+			currentSelection.getAllItems().remove("a4j:showhistory");
+			currentSelection.getAllItems().remove("a4j:showdetails");
 
-			workitemService.moveIntoArchive(currentSelection
-					);
+			workitemService.moveIntoArchive(currentSelection);
 
 			this.doRefresh(event);
 		}
@@ -424,13 +571,10 @@ public class WorklistMB {
 		if (currentSelection != null) {
 
 			// remove a4j: attributes generated inside the viewentries by the UI
-			currentSelection.getAllItems().remove(
-					"a4j:showhistory");
-			currentSelection.getAllItems().remove(
-					"a4j:showdetails");
+			currentSelection.getAllItems().remove("a4j:showhistory");
+			currentSelection.getAllItems().remove("a4j:showdetails");
 
-			workitemService.moveIntoDeletions(currentSelection
-					);
+			workitemService.moveIntoDeletions(currentSelection);
 
 			this.doRefresh(event);
 		}
@@ -449,13 +593,10 @@ public class WorklistMB {
 		if (currentSelection != null) {
 
 			// remove a4j: attributes generated inside the viewentries by the UI
-			currentSelection.getAllItems().remove(
-					"a4j:showhistory");
-			currentSelection.getAllItems().remove(
-					"a4j:showdetails");
+			currentSelection.getAllItems().remove("a4j:showhistory");
+			currentSelection.getAllItems().remove("a4j:showdetails");
 
-			workitemService.restoreFromArchive(currentSelection
-					);
+			workitemService.restoreFromArchive(currentSelection);
 
 			this.doRefresh(event);
 		}
@@ -473,12 +614,9 @@ public class WorklistMB {
 		ItemCollection currentSelection = getCurrentSelection(event);
 		if (currentSelection != null) {
 			// remove a4j: attributes generated inside the viewentries by the UI
-			currentSelection.getAllItems().remove(
-					"a4j:showhistory");
-			currentSelection.getAllItems().remove(
-					"a4j:showdetails");
-			workitemService.restoreFromDeletions(currentSelection
-					);
+			currentSelection.getAllItems().remove("a4j:showhistory");
+			currentSelection.getAllItems().remove("a4j:showdetails");
+			workitemService.restoreFromDeletions(currentSelection);
 
 			this.doRefresh(event);
 		}
@@ -503,8 +641,7 @@ public class WorklistMB {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent)
-					.getRowData();
+			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
 
 			return currentSelection;
 		}
@@ -551,6 +688,8 @@ public class WorklistMB {
 	private void loadWorkItemList() {
 		workitems = new ArrayList<ItemCollection>();
 		Collection<ItemCollection> col = null;
+		String sModel = null;
+		String sWorkflowGroup = null;
 		try {
 			long lTime = System.currentTimeMillis();
 
@@ -558,47 +697,62 @@ public class WorklistMB {
 
 			String sProjectUniqueID = project.getItemValueString("$uniqueid");
 
-			switch (queryType) {
+			if (this.getWorkflowGroupFilter().indexOf('|')>-1) {
+				sModel = this.getWorkflowGroupFilter().substring(0,
+						this.getWorkflowGroupFilter().indexOf("|") - 0);
+				sWorkflowGroup = this.getWorkflowGroupFilter().substring(
+						this.getWorkflowGroupFilter().indexOf("|") + 1);
+			}
+
+			switch (getQueryType()) {
 			case QUERY_WORKLIST_BY_OWNER:
 				col = workitemService.findWorkitemsByOwner(sProjectUniqueID,
-						this.getProcessFilter(), row, count,sortby,sortorder);
+						sModel, sWorkflowGroup, this.getProcessFilter(), row,
+						count, sortby, sortorder);
 				break;
 			case QUERY_WORKLIST_BY_CREATOR:
 				col = workitemService.findWorkitemsByCreator(sProjectUniqueID,
-						this.getProcessFilter(), row, count,sortby,sortorder);
+						sModel, sWorkflowGroup, this.getProcessFilter(), row,
+						count, sortby, sortorder);
 				break;
 
 			case QUERY_WORKLIST_BY_AUTHOR:
 				col = workitemService.findWorkitemsByAuthor(sProjectUniqueID,
-						this.getProcessFilter(), row, count,sortby,sortorder);
+						sModel, sWorkflowGroup, this.getProcessFilter(), row,
+						count, sortby, sortorder);
 				break;
 
 			case QUERY_WORKLIST_ALL:
-				col = workitemService.findAllWorkitems(sProjectUniqueID, this
-						.getProcessFilter(), row, count,sortby,sortorder);
+				col = workitemService.findAllWorkitems(sProjectUniqueID,
+						sModel, sWorkflowGroup, this.getProcessFilter(), row,
+						count, sortby, sortorder);
 				break;
 
 			case QUERY_WORKLIST_ARCHIVE:
-				col = workitemService.findArchive(sProjectUniqueID, this
-						.getProcessFilter(), row, count,sortby,sortorder);
+				col = workitemService.findArchive(sProjectUniqueID, sModel,
+						sWorkflowGroup, this.getProcessFilter(), row, count,
+						sortby, sortorder);
 				break;
 
 			case QUERY_WORKLIST_DELETIONS:
-				col = workitemService.findDeletions(sProjectUniqueID, this
-						.getProcessFilter(), row, count,sortby,sortorder);
+				col = workitemService.findDeletions(sProjectUniqueID, sModel,
+						sWorkflowGroup, this.getProcessFilter(), row, count,
+						sortby, sortorder);
 				break;
-				
+
 			case QUERY_SEARCH:
-				if (searchQuery!=null || "".equals(searchQuery))
-					col=this.workitemService.findWorkitemsByQuery(searchQuery, row,count);
-				else 
+				if (searchQuery != null || "".equals(searchQuery))
+					col = this.workitemService.findWorkitemsByQuery(
+							searchQuery, row, count);
+				else
 					// return empty result if no filter is defined!
-					col=new Vector<ItemCollection>();
+					col = new Vector<ItemCollection>();
 				break;
-				
+
 			default:
-				col = workitemService.findAllWorkitems(sProjectUniqueID, this
-						.getProcessFilter(), row, count,sortby,sortorder);
+				col = workitemService.findAllWorkitems(sProjectUniqueID,
+						sModel, sWorkflowGroup, this.getProcessFilter(), row,
+						count, sortby, sortorder);
 			}
 
 			lTime = System.currentTimeMillis() - lTime;
@@ -627,6 +781,87 @@ public class WorklistMB {
 
 	public boolean isEndOfList() {
 		return endOfList;
+	}
+
+	/***
+	 * Workitem listener methods
+	 * 
+	 * 
+	 */
+
+	public void onWorkitemProcessCompleted(ItemCollection arg0) {
+
+		doReset(null);
+	}
+
+	public void onWorkitemCreated(ItemCollection e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onWorkitemChanged(ItemCollection e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onWorkitemProcess(ItemCollection e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onWorkitemDelete(ItemCollection e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onWorkitemDeleteCompleted() {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onWorkitemSoftDelete(ItemCollection e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onWorkitemSoftDeleteCompleted(ItemCollection e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onChildProcess(ItemCollection e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onChildProcessCompleted(ItemCollection e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onChildCreated(ItemCollection e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onChildDelete(ItemCollection e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onChildDeleteCompleted() {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onChildSoftDelete(ItemCollection e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onChildSoftDeleteCompleted(ItemCollection e) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

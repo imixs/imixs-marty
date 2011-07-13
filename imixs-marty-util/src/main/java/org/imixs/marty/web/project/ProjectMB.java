@@ -187,7 +187,8 @@ public class ProjectMB extends AbstractWorkflowController {
 			
 			
 			// reset search filter
-			this.getworkListMB().setProcessFilter("");
+			this.getworkListMB().setProcessFilter(0);
+			this.getworkListMB().setWorkflowGroupFilter(null);
 
 			// disable toogle switch for searchfilter and process list
 			workitemItemCollection.replaceItemValue("a4j:showSearchFilter",
@@ -200,12 +201,13 @@ public class ProjectMB extends AbstractWorkflowController {
 		
 		// switch in default list
 		// if user is project member switch into all-worktiems list. otherwise in statuslist
+		/*
 		if (aworkitem!=null && !isMember())
 			this.getworkListMB().doSwitchToWorklistByCreator(null);
 		else
 			this.getworkListMB().doSwitchToWorklistAll(null);
 			
-		
+		*/
 	}
 
 	/**

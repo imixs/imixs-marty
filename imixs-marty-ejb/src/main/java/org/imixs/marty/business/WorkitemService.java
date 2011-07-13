@@ -39,12 +39,12 @@ import javax.ejb.Stateless;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.jpa.EntityIndex;
 
-@DeclareRoles( { "org.imixs.ACCESSLEVEL.NOACCESS",
+@DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
 		"org.imixs.ACCESSLEVEL.READERACCESS",
 		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
 		"org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
-@RolesAllowed( { "org.imixs.ACCESSLEVEL.NOACCESS",
+@RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS",
 		"org.imixs.ACCESSLEVEL.READERACCESS",
 		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
 		"org.imixs.ACCESSLEVEL.EDITORACCESS",
@@ -58,7 +58,6 @@ public class WorkitemService {
 	public final static int SORT_ORDER_DESC = 0;
 	public final static int SORT_ORDER_ASC = 1;
 
-	
 	// Persistence Manager
 	@EJB
 	org.imixs.workflow.jee.ejb.EntityService entityService;
@@ -135,10 +134,10 @@ public class WorkitemService {
 		workItem.replaceItemValue("$processID", processID);
 
 		// assign project name and reference
-		workItem.replaceItemValue("$uniqueidRef", parent
-				.getItemValueString("$uniqueid"));
-		workItem.replaceItemValue("txtProjectName", parent
-				.getItemValueString("txtname"));
+		workItem.replaceItemValue("$uniqueidRef",
+				parent.getItemValueString("$uniqueid"));
+		workItem.replaceItemValue("txtProjectName",
+				parent.getItemValueString("txtname"));
 
 		// assign ModelVersion, group and editor
 		workItem.replaceItemValue("$modelversion", sModelVersion);
@@ -265,9 +264,8 @@ public class WorkitemService {
 				// recursive method call
 				moveIntoArchive(achildworkitem);
 			}
-			workitem.replaceItemValue("type", workitem
-					.getItemValueString("type")
-					+ "archive");
+			workitem.replaceItemValue("type",
+					workitem.getItemValueString("type") + "archive");
 
 			workitem = entityService.save(workitem);
 		}
@@ -313,9 +311,8 @@ public class WorkitemService {
 				// recursive method call
 				moveIntoDeletions(achildworkitem);
 			}
-			workitem.replaceItemValue("type", workitem
-					.getItemValueString("type")
-					+ "deleted");
+			workitem.replaceItemValue("type",
+					workitem.getItemValueString("type") + "deleted");
 			workitem = entityService.save(workitem);
 		}
 
@@ -361,17 +358,28 @@ public class WorkitemService {
 	/**
 	 * Returns a collection of workitems where current user is owner (namOwner)
 	 * 
+	 * @param model
+	 *            - an optional model version to filter workitems
+	 * @param processgroup
+	 *            - an optional processgroup to filter workitems
+	 * @param processid
+	 *            - an optional processID to filter workitems
 	 * @param row
+	 *            - start position
 	 * @param count
-	 * @return
+	 *            - max count of selected worktiems
+	 * @return list of workitems 
 	 */
-	public List<ItemCollection> findWorkitemsByOwner(String ref,
-			String processgroup, int row, int count, int sortby, int sortorder) {
+	public List<ItemCollection> findWorkitemsByOwner(String ref, String model,
+			String processgroup, int processid, int row, int count, int sortby,
+			int sortorder) {
 		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
 		if (ref == null)
 			ref = "";
 		if (processgroup == null)
 			processgroup = "";
+		if (model==null)
+			model="";
 
 		String name = ctx.getCallerPrincipal().getName();
 
@@ -382,15 +390,28 @@ public class WorkitemService {
 			sQuery += " JOIN wi.textItems as t2 ";
 		if (!"".equals(processgroup))
 			sQuery += " JOIN wi.textItems as t3 ";
+		if (processid > 0)
+			sQuery += " JOIN wi.integerItems as t4 ";
+		if (!"".equals(model))
+			sQuery += " JOIN wi.textItems AS model ";
 		sQuery += " WHERE wi.type = 'workitem'";
 		sQuery += " AND a1.itemName = 'namowner' and a1.itemValue = '" + name
 				+ "'";
 		if (!"".equals(ref))
 			sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
 					+ ref + "' ";
+
+		if (!"".equals(model))
+			sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
+					+ model + "'";
+
 		if (!"".equals(processgroup))
 			sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
 					+ processgroup + "' ";
+		// Process ID
+		if (processid > 0)
+			sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
+					+ processid + "'";
 
 		// creade ORDER BY phrase
 		sQuery += " ORDER BY wi.";
@@ -415,17 +436,29 @@ public class WorkitemService {
 	/**
 	 * Returns a collection representing the worklist for the current user
 	 * 
+	 * @param model
+	 *            - an optional model version to filter workitems
+	 * @param processgroup
+	 *            - an optional processgroup to filter workitems
+	 * @param processid
+	 *            - an optional processID to filter workitems
 	 * @param row
+	 *            - start position
 	 * @param count
-	 * @return
+	 *            - max count of selected worktiems
+	 * @return list of workitems 
 	 */
-	public List<ItemCollection> findWorkitemsByAuthor(String ref,
-			String processgroup, int row, int count, int sortby, int sortorder) {
+	public List<ItemCollection> findWorkitemsByAuthor(String ref, String model,
+			String processgroup, int processid, int row, int count, int sortby,
+			int sortorder) {
 		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
 		if (ref == null)
 			ref = "";
 		if (processgroup == null)
-			processgroup = "";
+			processgroup = "";	
+		if (model==null)
+				model="";
+
 
 		String name = ctx.getCallerPrincipal().getName();
 
@@ -436,14 +469,27 @@ public class WorkitemService {
 			sQuery += " JOIN wi.textItems as t2 ";
 		if (!"".equals(processgroup))
 			sQuery += " JOIN wi.textItems as t3 ";
+		if (processid > 0)
+			sQuery += " JOIN wi.integerItems as t4 ";
+		if (!"".equals(model))
+			sQuery += " JOIN wi.textItems AS model ";
 		sQuery += " WHERE wi.type = 'workitem'";
 		sQuery += " AND a1.value = '" + name + "'";
 		if (!"".equals(ref))
 			sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
 					+ ref + "' ";
+		if (!"".equals(model))
+			sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
+					+ model + "'";
+
 		if (!"".equals(processgroup))
 			sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
 					+ processgroup + "' ";
+		// Process ID
+		if (processid > 0)
+			sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
+					+ processid + "'";
+
 		// creade ORDER BY phrase
 		sQuery += " ORDER BY wi.";
 		if (sortby == WorkitemService.SORT_BY_CREATED)
@@ -467,17 +513,28 @@ public class WorkitemService {
 	/**
 	 * Returns a collection representing the worklist for the current user
 	 * 
+	 * @param model
+	 *            - an optional model version to filter workitems
+	 * @param processgroup
+	 *            - an optional processgroup to filter workitems
+	 * @param processid
+	 *            - an optional processID to filter workitems
 	 * @param row
+	 *            - start position
 	 * @param count
-	 * @return
+	 *            - max count of selected worktiems
+	 * @return list of workitems 
 	 */
 	public List<ItemCollection> findWorkitemsByCreator(String ref,
-			String processgroup, int row, int count, int sortby, int sortorder) {
+			String model, String processgroup, int processid, int row,
+			int count, int sortby, int sortorder) {
 		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
 		if (ref == null)
 			ref = "";
 		if (processgroup == null)
 			processgroup = "";
+		if (model==null)
+			model="";
 
 		String name = ctx.getCallerPrincipal().getName();
 
@@ -488,15 +545,28 @@ public class WorkitemService {
 			sQuery += " JOIN wi.textItems as t2 ";
 		if (!"".equals(processgroup))
 			sQuery += " JOIN wi.textItems as t3 ";
+		if (processid > 0)
+			sQuery += " JOIN wi.integerItems as t4 ";
+		if (!"".equals(model))
+			sQuery += " JOIN wi.textItems AS model ";
 		sQuery += " WHERE wi.type = 'workitem'";
 		sQuery += " AND a1.itemName = 'namcreator' and a1.itemValue = '" + name
 				+ "'";
 		if (!"".equals(ref))
 			sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
 					+ ref + "' ";
+		if (!"".equals(model))
+			sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
+					+ model + "'";
+
 		if (!"".equals(processgroup))
 			sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
 					+ processgroup + "' ";
+		// Process ID
+		if (processid > 0)
+			sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
+					+ processid + "'";
+
 		// creade ORDER BY phrase
 		sQuery += " ORDER BY wi.";
 		if (sortby == WorkitemService.SORT_BY_CREATED)
@@ -525,17 +595,28 @@ public class WorkitemService {
 	 * returns workitems from type='childworkitem'. So the method can be used to
 	 * select childprocesses inside a form.
 	 * 
+	 * @param model
+	 *            - an optional model version to filter workitems
+	 * @param processgroup
+	 *            - an optional processgroup to filter workitems
+	 * @param processid
+	 *            - an optional processID to filter workitems
 	 * @param row
+	 *            - start position
 	 * @param count
-	 * @return
+	 *            - max count of selected workitems
+	 * @return list of workitems 
 	 */
-	public List<ItemCollection> findAllWorkitems(String ref,
-			String processgroup, int row, int count, int sortby, int sortorder) {
+	public List<ItemCollection> findAllWorkitems(String ref, String model,
+			String processgroup, int processid, int row, int count, int sortby,
+			int sortorder) {
 		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
 		if (ref == null)
 			ref = "";
 		if (processgroup == null)
 			processgroup = "";
+		if (model==null)
+			model="";
 
 		// construct query
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
@@ -543,6 +624,10 @@ public class WorkitemService {
 			sQuery += " JOIN wi.textItems as t2 ";
 		if (!"".equals(processgroup))
 			sQuery += " JOIN wi.textItems as t3 ";
+		if (processid > 0)
+			sQuery += " JOIN wi.integerItems as t4 ";
+		if (!"".equals(model))
+			sQuery += " JOIN wi.textItems AS model ";
 
 		// restrict type depending of a supporte ref id
 		if (!"".equals(ref))
@@ -553,9 +638,18 @@ public class WorkitemService {
 		if (!"".equals(ref))
 			sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
 					+ ref + "' ";
+		if (!"".equals(model))
+			sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
+					+ model + "'";
+
 		if (!"".equals(processgroup))
 			sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
 					+ processgroup + "' ";
+		// Process ID
+		if (processid > 0)
+			sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
+					+ processid + "'";
+
 		// creade ORDER BY phrase
 		sQuery += " ORDER BY wi.";
 		if (sortby == WorkitemService.SORT_BY_CREATED)
@@ -579,17 +673,28 @@ public class WorkitemService {
 	 * Returns a collection of all Woritems independent of the current user
 	 * name!
 	 * 
+	 * @param model
+	 *            - an optional model version to filter workitems
+	 * @param processgroup
+	 *            - an optional processgroup to filter workitems
+	 * @param processid
+	 *            - an optional processID to filter workitems
 	 * @param row
+	 *            - start position
 	 * @param count
-	 * @return
+	 *            - max count of selected worktiems
+	 * @return list of workitems 
 	 */
-	public List<ItemCollection> findArchive(String project,
-			String processgroup, int row, int count, int sortby, int sortorder) {
+	public List<ItemCollection> findArchive(String project, String model,
+			String processgroup, int processid, int row, int count, int sortby,
+			int sortorder) {
 		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
 		if (project == null)
 			project = "";
 		if (processgroup == null)
 			processgroup = "";
+		if (model==null)
+			model="";
 
 		// construct query
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
@@ -597,13 +702,26 @@ public class WorkitemService {
 			sQuery += " JOIN wi.textItems as t2 ";
 		if (!"".equals(processgroup))
 			sQuery += " JOIN wi.textItems as t3 ";
+		if (processid > 0)
+			sQuery += " JOIN wi.integerItems as t4 ";
+		if (!"".equals(model))
+			sQuery += " JOIN wi.textItems AS model ";
 		sQuery += " WHERE wi.type = 'workitemarchive'";
 		if (!"".equals(project))
 			sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
 					+ project + "' ";
+		if (!"".equals(model))
+			sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
+					+ model + "'";
+
 		if (!"".equals(processgroup))
 			sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
 					+ processgroup + "' ";
+		// Process ID
+		if (processid > 0)
+			sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
+					+ processid + "'";
+
 		// creade ORDER BY phrase
 		sQuery += " ORDER BY wi.";
 		if (sortby == WorkitemService.SORT_BY_CREATED)
@@ -627,17 +745,28 @@ public class WorkitemService {
 	 * Returns a collection of all Woritems independent of the current user
 	 * name!
 	 * 
+	 * @param model
+	 *            - an optional model version to filter workitems
+	 * @param processgroup
+	 *            - an optional processgroup to filter workitems
+	 * @param processid
+	 *            - an optional processID to filter workitems
 	 * @param row
+	 *            - start position
 	 * @param count
-	 * @return
+	 *            - max count of selected worktiems
+	 * @return list of workitems 
 	 */
-	public List<ItemCollection> findDeletions(String ref, String processgroup,
-			int row, int count, int sortby, int sortorder) {
+	public List<ItemCollection> findDeletions(String ref, String model,
+			String processgroup, int processid, int row, int count, int sortby,
+			int sortorder) {
 		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
 		if (ref == null)
 			ref = "";
 		if (processgroup == null)
 			processgroup = "";
+		if (model==null)
+			model="";
 
 		// construct query
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
@@ -645,13 +774,26 @@ public class WorkitemService {
 			sQuery += " JOIN wi.textItems as t2 ";
 		if (!"".equals(processgroup))
 			sQuery += " JOIN wi.textItems as t3 ";
+		if (processid > 0)
+			sQuery += " JOIN wi.integerItems as t4 ";
+		if (!"".equals(model))
+			sQuery += " JOIN wi.textItems AS model ";
 		sQuery += " WHERE wi.type = 'workitemdeleted'";
 		if (!"".equals(ref))
 			sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
 					+ ref + "' ";
+		if (!"".equals(model))
+			sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
+					+ model + "'";
+
 		if (!"".equals(processgroup))
 			sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
 					+ processgroup + "' ";
+		// Process ID
+		if (processid > 0)
+			sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
+					+ processid + "'";
+
 		// creade ORDER BY phrase
 		sQuery += " ORDER BY wi.";
 		if (sortby == WorkitemService.SORT_BY_CREATED)
