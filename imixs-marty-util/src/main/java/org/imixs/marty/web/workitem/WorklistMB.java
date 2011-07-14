@@ -59,8 +59,10 @@ public class WorklistMB implements WorkitemListener {
 	private String viewTitle = "undefined viewtitle";
 
 	// filter options
+	private String projectFilter="";
 	private String workflowGroupFilter = "";
 	private int processFilter = 0;
+	
 
 	// view types
 	private int queryType = -1;
@@ -252,6 +254,14 @@ public class WorklistMB implements WorkitemListener {
 
 	}
 
+	public String getProjectFilter() {
+		return projectFilter;
+	}
+
+	public void setProjectFilter(String projectFilter) {
+		this.projectFilter = projectFilter;
+	}
+
 	public String getWorkflowGroupFilter() {
 		if (workflowGroupFilter==null)
 			workflowGroupFilter="-";
@@ -436,6 +446,7 @@ public class WorklistMB implements WorkitemListener {
 	public void doSwitchToWorklistByAuthor(ActionEvent event) {
 		// reset project selection
 		this.getProjectMB().setWorkitem(null);
+		setProjectFilter(null);
 		setQueryType(QUERY_WORKLIST_BY_AUTHOR);
 	}
 
@@ -447,6 +458,8 @@ public class WorklistMB implements WorkitemListener {
 	public void doSwitchToWorklistByOwner(ActionEvent event) {
 		// reset project selection
 		this.getProjectMB().setWorkitem(null);
+		setProjectFilter(null);
+
 		setQueryType(QUERY_WORKLIST_BY_OWNER);
 	}
 
@@ -458,6 +471,8 @@ public class WorklistMB implements WorkitemListener {
 	public void doSwitchToWorklistByCreator(ActionEvent event) {
 		// reset project selection
 		this.getProjectMB().setWorkitem(null);
+		setProjectFilter(null);
+
 		setQueryType(QUERY_WORKLIST_BY_CREATOR);
 	}
 
@@ -469,6 +484,8 @@ public class WorklistMB implements WorkitemListener {
 	public void doSwitchToWorklistArchive(ActionEvent event) {
 		// reset project selection
 		this.getProjectMB().setWorkitem(null);
+		setProjectFilter(null);
+
 		setQueryType(QUERY_WORKLIST_ARCHIVE);
 	}
 
@@ -480,6 +497,8 @@ public class WorklistMB implements WorkitemListener {
 	public void doSwitchToWorklistDeletions(ActionEvent event) {
 		// reset project selection
 		this.getProjectMB().setWorkitem(null);
+		setProjectFilter(null);
+
 		setQueryType(QUERY_WORKLIST_DELETIONS);
 	}
 
@@ -491,6 +510,8 @@ public class WorklistMB implements WorkitemListener {
 	public void doSwitchToWorklistAll(ActionEvent event) {
 		// reset project selection
 		this.getProjectMB().setWorkitem(null);
+		setProjectFilter(null);
+
 		setQueryType(QUERY_WORKLIST_ALL);
 	}
 
@@ -502,6 +523,8 @@ public class WorklistMB implements WorkitemListener {
 	public void doSwitchToWorklistSearch(ActionEvent event) {
 		// reset project selection
 		this.getProjectMB().setWorkitem(null);
+		setProjectFilter(null);
+
 		setQueryType(QUERY_SEARCH);
 	}
 
@@ -514,24 +537,45 @@ public class WorklistMB implements WorkitemListener {
 	public void doSwitchToProjectWorklistByAuthor(ActionEvent event) {
 		// switch to project
 		this.getProjectMB().getProjectListMB().doSwitchToProject(event);
+		
+		if (getProjectMB().getWorkitem()!=null)
+			setProjectFilter(getProjectMB().getWorkitem().getItemValueString("$uniqueid"));
+		else
+			setProjectFilter(null);
+		
 		setQueryType(QUERY_WORKLIST_BY_AUTHOR);
 	}
 
 	public void doSwitchToProjectWorklistByOwner(ActionEvent event) {
 		// switch to project
 		this.getProjectMB().getProjectListMB().doSwitchToProject(event);
+		if (getProjectMB().getWorkitem()!=null)
+			setProjectFilter(getProjectMB().getWorkitem().getItemValueString("$uniqueid"));
+		else
+			setProjectFilter(null);
+
 		setQueryType(QUERY_WORKLIST_BY_OWNER);
 	}
 
 	public void doSwitchToProjectWorklistByCreator(ActionEvent event) {
 		// switch to project
 		this.getProjectMB().getProjectListMB().doSwitchToProject(event);
+		if (getProjectMB().getWorkitem()!=null)
+			setProjectFilter(getProjectMB().getWorkitem().getItemValueString("$uniqueid"));
+		else
+			setProjectFilter(null);
+
 		setQueryType(QUERY_WORKLIST_BY_CREATOR);
 	}
 
 	public void doSwitchToProjectWorklistAll(ActionEvent event) {
 		// switch to project
 		this.getProjectMB().getProjectListMB().doSwitchToProject(event);
+		if (getProjectMB().getWorkitem()!=null)
+			setProjectFilter(getProjectMB().getWorkitem().getItemValueString("$uniqueid"));
+		else
+			setProjectFilter(null);
+
 		setQueryType(QUERY_WORKLIST_ALL);
 	}
 
@@ -692,10 +736,7 @@ public class WorklistMB implements WorkitemListener {
 		String sWorkflowGroup = null;
 		try {
 			long lTime = System.currentTimeMillis();
-
-			ItemCollection project = getProjectMB().getWorkitem();
-
-			String sProjectUniqueID = project.getItemValueString("$uniqueid");
+			String sProjectUniqueID =getProjectFilter();
 
 			if (this.getWorkflowGroupFilter().indexOf('|')>-1) {
 				sModel = this.getWorkflowGroupFilter().substring(0,
