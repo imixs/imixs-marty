@@ -46,12 +46,12 @@ import org.imixs.workflow.jee.ejb.ModelService;
  * This backing beans provides informations about the Models provided in the
  * current workflow Instance.
  * 
- * There are two types of models handled. The Sytem Model (used for project
+ * There are two types of models handled. The System Model (used for project
  * management or Profile Settings) and the general Models used in a typical
  * workflow
  * 
- * A latest System Model is depends on the current user locale. The general
- * modeles are language independent.
+ * A latest System Model depends on the current user locale. The general
+ * models are language independent.
  * 
  * A ModelVersion is always expected in the format
  * 

@@ -55,13 +55,12 @@ import org.imixs.workflow.jee.faces.AbstractWorkflowController;
 import org.imixs.workflow.jee.faces.BLOBWorkitemController;
 
 /**
- * This class provides methods to access
- * a single workitem controlled by the Imixs Workflow engine. This is the most
- * used BackingBean class in forms. The different pages from the marty-web
- * module providing all the functionality to create and manage workitems. You
- * can implement additional sub_forms for your individual business process. In
- * this case you can access the WorkitemMB to bind input fields to specific
- * properties of a workitem
+ * This class provides methods to access a single workitem controlled by the
+ * Imixs Workflow engine. This is the most used BackingBean class in forms. The
+ * different pages from the marty-web module providing all the functionality to
+ * create and manage workitems. You can implement additional sub_forms for your
+ * individual business process. In this case you can access the WorkitemMB to
+ * bind input fields to specific properties of a workitem
  * 
  * @author rsoika
  * 
@@ -87,6 +86,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 	private ArrayList<ItemCollection> childs = null;
 	private ArrayList<ItemCollection> versions = null;
+	private ArrayList<ItemCollection> processList = null;
 
 	private Collection<WorkitemListener> workitemListeners = new ArrayList<WorkitemListener>();
 
@@ -313,6 +313,31 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 	}
 
+	/**
+	 * This method returns all process entities for the current workflow model.
+	 * This list can be used to display state/flow informations inside a form
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getProcessList() {
+		if (processList == null) {
+			processList = new ArrayList<ItemCollection>();
+
+			String sGroup = this.getWorkitem().getItemValueString(
+					"txtWorkflowGroup");
+			String sVersion = this.getWorkitem().getItemValueString(
+					"$modelVersion");
+
+			List<ItemCollection> col = this.getModelService()
+					.getAllProcessEntitiesByGroupByVersion(sGroup, sVersion);
+
+			for (ItemCollection aworkitem : col)
+				processList.add((aworkitem));
+		}
+
+		return processList;
+	}
+
 	@Override
 	public void setWorkitem(ItemCollection aworkitem) {
 
@@ -323,6 +348,9 @@ public class WorkitemMB extends AbstractWorkflowController {
 		// reset Childs
 		childs = null;
 		this.setChildWorkitem(null);
+
+		// reset processlist
+		processList = null;
 
 		try {
 			// load lobWorkItem if uniqueid changed since last update
@@ -1232,9 +1260,9 @@ public class WorkitemMB extends AbstractWorkflowController {
 			String sRefUniqueID = workitemItemCollection
 					.getItemValueString("$uniqueid");
 
-			col = workitemService.findAllWorkitems(sRefUniqueID,null, null,0, 0, -1,
-					this.getWorklistBean().getSortby(), this.getWorklistBean()
-							.getSortorder());
+			col = workitemService.findAllWorkitems(sRefUniqueID, null, null, 0,
+					0, -1, this.getWorklistBean().getSortby(), this
+							.getWorklistBean().getSortorder());
 			for (ItemCollection aworkitem : col) {
 				childs.add((aworkitem));
 			}
