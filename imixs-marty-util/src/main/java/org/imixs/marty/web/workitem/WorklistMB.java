@@ -208,6 +208,8 @@ public class WorklistMB implements WorkitemListener {
 
 	public void setQueryType(int queryType) {
 		this.queryType = queryType;
+		
+		
 
 		switch (queryType) {
 		case QUERY_WORKLIST_BY_AUTHOR:
@@ -233,7 +235,8 @@ public class WorklistMB implements WorkitemListener {
 		}
 
 		// reset view
-		doReset(null);
+//		doReset(null);
+		
 		this.setProcessFilter(0);
 		this.setWorkflowGroupFilter(null);
 	}
@@ -282,7 +285,7 @@ public class WorklistMB implements WorkitemListener {
 
 	public void setProcessFilter(int processFilter) {
 		this.processFilter = processFilter;
-		this.doReset(null);
+		//this.doReset(null);
 	}
 
 	/**
@@ -329,6 +332,7 @@ public class WorklistMB implements WorkitemListener {
 
 	}
 
+	
 	/**
 	 * loads the current workitem collection based on the selected view-type
 	 * 
