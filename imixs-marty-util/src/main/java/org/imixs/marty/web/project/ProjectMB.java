@@ -249,6 +249,69 @@ public class ProjectMB extends AbstractWorkflowController {
 				.indexOf(remoteUser) > -1);
 
 	}
+	
+	
+
+
+
+	/**
+	 * Returns true if current user is member of the current project team list
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public boolean isProjectTeam() {
+		ExternalContext externalContext = FacesContext.getCurrentInstance()
+				.getExternalContext();
+		String remoteUser = externalContext.getRemoteUser();
+		Vector<String> vTeam = workitemItemCollection.getItemValue("namTeam");
+		return (vTeam.indexOf(remoteUser) > -1);
+	}
+
+	/**
+	 * Returns true if current user is member of the current project owner list
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public boolean isProjectOwner() {
+		ExternalContext externalContext = FacesContext.getCurrentInstance()
+				.getExternalContext();
+		String remoteUser = externalContext.getRemoteUser();
+		Vector<String> vTeam = workitemItemCollection.getItemValue("namOwner");
+		return (vTeam.indexOf(remoteUser) > -1);
+	}
+
+	
+	/**
+	 * Returns true if current user is member of the current project manager list
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public boolean isProjectManager() {
+		ExternalContext externalContext = FacesContext.getCurrentInstance()
+				.getExternalContext();
+		String remoteUser = externalContext.getRemoteUser();
+		Vector<String> vTeam = workitemItemCollection.getItemValue("namManager");
+		return (vTeam.indexOf(remoteUser) > -1);
+	}
+
+	
+	/**
+	 * Returns true if current user is member of the current project assist list
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public boolean isProjectAssist() {
+		ExternalContext externalContext = FacesContext.getCurrentInstance()
+				.getExternalContext();
+		String remoteUser = externalContext.getRemoteUser();
+		Vector<String> vTeam = workitemItemCollection.getItemValue("namAssist");
+		return (vTeam.indexOf(remoteUser) > -1);
+	}
+
 
 	/**
 	 * returns a unique list with all member names
@@ -545,6 +608,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		// remove a4j: attributes generated inside the viewentries by the UI
 		workitemItemCollection.getAllItems().remove("a4j:showprocesslist");
 		workitemItemCollection.getAllItems().remove("a4j:showteam");
+		workitemItemCollection.getAllItems().remove("a4j:showteamlist");
 		workitemItemCollection.getAllItems().remove("a4j:showsearchfilter");
 
 		// set max History & log length
