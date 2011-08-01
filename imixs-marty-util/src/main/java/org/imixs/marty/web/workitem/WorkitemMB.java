@@ -612,7 +612,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 			// inform Listeners...
 			fireWorkitemSoftDeleteEvent();
 
-			workitemService.moveIntoDeletions(workitemItemCollection);
+			workitemItemCollection=workitemService.moveIntoDeletions(workitemItemCollection);
 
 			// inform Listeners...
 			fireWorkitemSoftDeleteCompletedEvent();
@@ -871,7 +871,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 			workitemItemCollection.getAllItems().remove("a4j:showhistory");
 			workitemItemCollection.getAllItems().remove("a4j:showdetails");
 
-			workitemService.moveIntoArchive(workitemItemCollection);
+			workitemItemCollection=workitemService.moveIntoArchive(workitemItemCollection);
 			this.getWorklistBean().doRefresh(event);
 		}
 	}
@@ -891,7 +891,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 			workitemItemCollection.getAllItems().remove("a4j:showhistory");
 			workitemItemCollection.getAllItems().remove("a4j:showdetails");
 
-			workitemService.moveIntoDeletions(workitemItemCollection);
+			workitemItemCollection=workitemService.moveIntoDeletions(workitemItemCollection);
 			this.getWorklistBean().doRefresh(event);
 
 		}
@@ -912,7 +912,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 			workitemItemCollection.getAllItems().remove("a4j:showhistory");
 			workitemItemCollection.getAllItems().remove("a4j:showdetails");
 
-			workitemService.restoreFromArchive(workitemItemCollection);
+			workitemItemCollection=workitemService.restoreFromArchive(workitemItemCollection);
 
 			this.getWorklistBean().doRefresh(event);
 		}
@@ -931,7 +931,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 			// remove a4j: attributes generated inside the viewentries by the UI
 			workitemItemCollection.getAllItems().remove("a4j:showhistory");
 			workitemItemCollection.getAllItems().remove("a4j:showdetails");
-			workitemService.restoreFromDeletions(workitemItemCollection);
+			workitemItemCollection=workitemService.restoreFromDeletions(workitemItemCollection);
 
 			this.getWorklistBean().doRefresh(event);
 		}

@@ -205,7 +205,7 @@ public class WorkitemService {
 	public ItemCollection processWorkItem(ItemCollection aworkitem)
 			throws Exception {
 		String sResult = null;
-		String sType = "workitem";
+		String sDefaultType = "workitem";
 
 		if (validateIssue(aworkitem) == false)
 			throw new Exception(
@@ -225,14 +225,16 @@ public class WorkitemService {
 							.getItemValueString("type");
 					if ("workitem".equals(parenttype))
 						// type becomes a child
-						sType = "childworkitem";
+						sDefaultType = "childworkitem";
 				}
 			} catch (Exception esearch) {
-				sType = "workitem";
+				sDefaultType = "workitem";
 			}
 		}
 
-		workItem.replaceItemValue("type", sType);
+		// replace type only if no type was still set!
+		if ("".equals(workItem.getItemValueString("type")))
+			workItem.replaceItemValue("type", sDefaultType);
 
 		// Process workitem...
 		workItem = wm.processWorkItem(workItem);
