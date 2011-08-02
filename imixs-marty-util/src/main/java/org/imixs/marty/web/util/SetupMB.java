@@ -11,7 +11,6 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -28,41 +27,108 @@ import org.imixs.workflow.xml.XMLItemCollectionAdapter;
  * config parms like the current historylength. The parameters are stored in a
  * configuration entity.
  * 
- * The bean also provides a method to import entity data from a xml structure.
- * 
  * @author rsoika
  * 
  */
-public class SystemSetupMB {
+public class SetupMB {
 
+	/**
+	 * Default values for maximum history entries are currently hard coded
+	 */
+	private int maxProjectHistoryLength = 10;
+	private int maxProfileHistoryLength = 10;
+	private int maxWorkitemHistoryLength = 10;
+	private int sortby = 0;
+	private int sortorder = 0;
+	private int maxviewentriesperpage = 10;
+	private int defaultworklistview=0;
+	private boolean createDefaultProject = false;
+	private String defaultPage = "pages/notes";
+
+	public final static String SYW_CONFIGURATION = "SYW_CONFIGURATION";
+
+	
 	private boolean setupOk = false;
-	private ConfigMB configMB = null;
 
-	@EJB
-	org.imixs.workflow.jee.ejb.EntityService epm;
+	
+	private ItemCollection configItemCollection = null;
+	
 	@EJB
 	ConfigService configService;
 	@EJB
 	org.imixs.workflow.jee.ejb.EntityService entityService;
+
+	@EJB
+	org.imixs.workflow.jee.ejb.EntityService epm;
+	
 	@EJB
 	org.imixs.workflow.jee.ejb.ModelService modelService;
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
-	public SystemSetupMB() {
+	
+	public SetupMB() {
 		super();
 	}
 
+	public ItemCollection getWorkitem() {
+		
+		return configItemCollection;
+	}
 	/**
 	 * This method tries to load the config entity to read default values
 	 */
 	@PostConstruct
 	public void init() {
-		setupOk = getConfigBean().getWorkitem().getItemValueBoolean(
-				"keySystemSetupCompleted");
+		configItemCollection = configService
+				.loadConfiguration(SYW_CONFIGURATION);
 
+		if (configItemCollection == null) {
+			
+			try {
+				configItemCollection = configService
+				.createConfiguration(SYW_CONFIGURATION);
+			} catch (Exception e) {				
+				e.printStackTrace();
+			}
+			
+			// set default values
+			try {
+				configItemCollection.replaceItemValue("maxProjectHistoryLength", maxProjectHistoryLength);
+				
+				configItemCollection.replaceItemValue("maxProfileHistoryLength", maxProfileHistoryLength);
+				configItemCollection.replaceItemValue("maxWorkitemHistoryLength", maxWorkitemHistoryLength);
+				configItemCollection.replaceItemValue("createDefaultProject", createDefaultProject);
+				
+				configItemCollection.replaceItemValue("defaultPage", defaultPage);
+				//configItemCollection.replaceItemValue("defaultworklistview", defaultworklistview);
+				configItemCollection.replaceItemValue("maxviewentriesperpage", maxviewentriesperpage);
+				configItemCollection.replaceItemValue("sortby", sortby);
+				configItemCollection.replaceItemValue("sortorder", sortorder);
+				configItemCollection.replaceItemValue("maxProjectHistoryLength", maxProjectHistoryLength);
+				configItemCollection.replaceItemValue("maxProjectHistoryLength", maxProjectHistoryLength);
+				configItemCollection.replaceItemValue("defaultworklistview", defaultworklistview);
+					
+				
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			
+			
+			
+		}
+		
+		
+		setupOk = configItemCollection.getItemValueBoolean(
+					"keySystemSetupCompleted");
+
+	
+	
 	}
 
+	
 	public boolean isSetupOk() {
 		return setupOk;
 	}
@@ -70,6 +136,32 @@ public class SystemSetupMB {
 	public void setSetupOk(boolean systemSetupOk) {
 		this.setupOk = systemSetupOk;
 	}
+	
+	
+	/**
+	 * save method tries to load the config entity. if not availabe. the method
+	 * will create the entity the first time
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	
+	public void doSave(ActionEvent event) throws Exception {
+		// update write and read access
+		//configItemCollection.replaceItemValue("type", TYPE);
+		configItemCollection.replaceItemValue("txtname",SYW_CONFIGURATION);
+		configItemCollection.replaceItemValue("$writeAccess", "org.imixs.ACCESSLEVEL.MANAGERACCESS");
+		configItemCollection.replaceItemValue("$readAccess", "");
+		// save entity
+		configItemCollection=entityService.save(configItemCollection);
+		
+		
+	}
+	
+	
+
+	
+
 
 	/**
 	 * starts a ConsistencyCheck without updating values
@@ -105,9 +197,9 @@ public class SystemSetupMB {
 		epm.addIndex("txtUsername", EntityIndex.TYP_TEXT);
 
 		// update System configuration.....
-		getConfigBean().getWorkitem().replaceItemValue(
+		getWorkitem().replaceItemValue(
 				"keySystemSetupCompleted", true);
-		this.getConfigBean().doSave(event);
+		doSave(event);
 
 		// load default models
 		loadDefaultModels();
@@ -157,7 +249,7 @@ public class SystemSetupMB {
 				// try to load this model
 				String filePath = r.getString(sKey);
 
-				InputStream inputStream = SystemSetupMB.class.getClassLoader()
+				InputStream inputStream = SetupMB.class.getClassLoader()
 						.getResourceAsStream(filePath);
 				// byte[] bytes = IOUtils.toByteArray(inputStream);
 
@@ -263,17 +355,6 @@ public class SystemSetupMB {
 		}
 
 	}
-
-	private ConfigMB getConfigBean() {
-		if (configMB == null)
-			configMB = (ConfigMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "configMB");
-
-		return configMB;
-	}
+	
 
 }

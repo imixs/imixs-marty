@@ -41,7 +41,7 @@ import javax.faces.model.SelectItem;
 
 import org.imixs.marty.util.LoginMB;
 import org.imixs.marty.web.project.ProjectMB;
-import org.imixs.marty.web.util.ConfigMB;
+import org.imixs.marty.web.util.SetupMB;
 import org.imixs.workflow.ItemCollection;
 
 public class WorklistMB implements WorkitemListener {
@@ -82,7 +82,7 @@ public class WorklistMB implements WorkitemListener {
 	/* Backing Beans */
 	private WorkitemMB workitemBean = null;
 	private ProjectMB projectBean = null;
-	private ConfigMB configMB = null;
+	private SetupMB setupMB = null;
 	private LoginMB loginMB = null;
 
 	/**
@@ -143,15 +143,15 @@ public class WorklistMB implements WorkitemListener {
 
 	}
 
-	private ConfigMB getConfigBean() {
-		if (configMB == null)
-			configMB = (ConfigMB) FacesContext
+	private SetupMB getConfigBean() {
+		if (setupMB == null)
+			setupMB = (SetupMB) FacesContext
 					.getCurrentInstance()
 					.getApplication()
 					.getELResolver()
 					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "configMB");
-		return configMB;
+							null, "setupMB");
+		return setupMB;
 	}
 
 	private LoginMB getLoginBean() {

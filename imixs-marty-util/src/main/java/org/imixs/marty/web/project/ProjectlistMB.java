@@ -41,7 +41,7 @@ import javax.faces.model.SelectItem;
 
 import org.imixs.marty.business.ProjectService;
 import org.imixs.marty.web.profile.MyProfileMB;
-import org.imixs.marty.web.util.ConfigMB;
+import org.imixs.marty.web.util.SetupMB;
 import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
@@ -88,7 +88,7 @@ public class ProjectlistMB {
 	private WorkitemMB workitemMB = null;
 	private ProjectMB projectMB = null;
 	private MyProfileMB myProfileMB = null;
-	private ConfigMB configMB = null;
+	private SetupMB setupMB = null;
 
 	public ProjectlistMB() {
 
@@ -111,15 +111,15 @@ public class ProjectlistMB {
 		this.row = row;
 	}
 
-	private ConfigMB getConfigBean() {
-		if (configMB == null)
-			configMB = (ConfigMB) FacesContext
+	private SetupMB getConfigBean() {
+		if (setupMB == null)
+			setupMB = (SetupMB) FacesContext
 					.getCurrentInstance()
 					.getApplication()
 					.getELResolver()
 					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "configMB");
-		return configMB;
+							null, "setupMB");
+		return setupMB;
 	}
 
 	/**

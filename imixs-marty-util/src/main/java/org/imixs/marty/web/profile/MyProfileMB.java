@@ -52,8 +52,8 @@ import org.imixs.marty.business.ProjectService;
 import org.imixs.marty.model.ModelVersionHandler;
 import org.imixs.marty.util.LoginMB;
 import org.imixs.marty.web.project.ProjectMB;
-import org.imixs.marty.web.util.ConfigMB;
-import org.imixs.marty.web.util.SystemSetupMB;
+import org.imixs.marty.web.util.SetupMB;
+
 import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.AbstractWorkflowController;
@@ -118,7 +118,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 	private LoginMB loginMB = null;
 	private ProjectMB projectMB = null;
 	private WorkitemMB workitemMB = null;
-	private ConfigMB configMB = null;
+	private SetupMB setupMB = null;
 
 	/**
 	 * The init method is used to load a user profile or automatically create a
@@ -150,12 +150,12 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 			// if SystemSetup is not yet completed - start System Setup now
 
-			SystemSetupMB systemSetupMB = (SystemSetupMB) FacesContext
+			SetupMB systemSetupMB = (SetupMB) FacesContext
 					.getCurrentInstance()
 					.getApplication()
 					.getELResolver()
 					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "systemSetupMB");
+							null, "setupMB");
 			if (systemSetupMB != null && !systemSetupMB.isSetupOk())
 				systemSetupMB.doSetup(null);
 			
@@ -986,15 +986,15 @@ public class MyProfileMB extends AbstractWorkflowController {
 		return loginMB;
 	}
 
-	private ConfigMB getConfigBean() {
-		if (configMB == null)
-			configMB = (ConfigMB) FacesContext
+	private SetupMB getConfigBean() {
+		if (setupMB == null)
+			setupMB = (SetupMB) FacesContext
 					.getCurrentInstance()
 					.getApplication()
 					.getELResolver()
 					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "configMB");
-		return configMB;
+							null, "setupMB");
+		return setupMB;
 	}
 
 	public WorkitemMB getWorkitemBean() {

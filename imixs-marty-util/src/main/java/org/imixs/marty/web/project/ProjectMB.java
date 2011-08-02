@@ -49,7 +49,7 @@ import org.imixs.marty.business.ProjectService;
 import org.imixs.marty.model.ModelData;
 import org.imixs.marty.web.profile.MyProfileMB;
 import org.imixs.marty.web.profile.NameLookupMB;
-import org.imixs.marty.web.util.ConfigMB;
+import org.imixs.marty.web.util.SetupMB;
 import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
@@ -76,7 +76,7 @@ public class ProjectMB extends AbstractWorkflowController {
 
 	private TreeNode processTreeSelection = null;
 	private MyProfileMB myProfileMB = null;
-	private ConfigMB configMB = null;
+	private SetupMB setupMB = null;
 	private ProjectlistMB projectlist = null;
 	private WorklistMB worklistMB = null;
 	private WorkitemMB workitemMB = null;
@@ -105,13 +105,13 @@ public class ProjectMB extends AbstractWorkflowController {
 
 	}
 
-	private ConfigMB getConfigBean() {
-		if (configMB == null)
-			configMB = (ConfigMB) FacesContext.getCurrentInstance()
+	private SetupMB getConfigBean() {
+		if (setupMB == null)
+			setupMB = (SetupMB) FacesContext.getCurrentInstance()
 					.getApplication().getELResolver().getValue(
 							FacesContext.getCurrentInstance().getELContext(),
-							null, "configMB");
-		return configMB;
+							null, "setupMB");
+		return setupMB;
 	}
 
 	public ProjectlistMB getProjectListMB() {

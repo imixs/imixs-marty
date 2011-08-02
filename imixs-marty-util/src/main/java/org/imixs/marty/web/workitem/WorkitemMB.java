@@ -48,7 +48,7 @@ import org.imixs.marty.business.ProjectService;
 import org.imixs.marty.business.WorkitemService;
 import org.imixs.marty.web.profile.NameLookupMB;
 import org.imixs.marty.web.project.ProjectMB;
-import org.imixs.marty.web.util.ConfigMB;
+import org.imixs.marty.web.util.SetupMB;
 import org.imixs.marty.web.util.FileUploadBean;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.AbstractWorkflowController;
@@ -75,7 +75,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	/* Project Backing Bean */
 	private ProjectMB projectBean = null;
 	private WorklistMB worklistBean = null;
-	private ConfigMB configMB = null;
+	private SetupMB setupMB = null;
 	private NameLookupMB nameLookupMB = null;
 	private BLOBWorkitemController workitemLobMB = null;
 	private FileUploadBean fileUploadMB = null;
@@ -120,15 +120,15 @@ public class WorkitemMB extends AbstractWorkflowController {
 		return projectBean;
 	}
 
-	private ConfigMB getConfigBean() {
-		if (configMB == null)
-			configMB = (ConfigMB) FacesContext
+	private SetupMB getConfigBean() {
+		if (setupMB == null)
+			setupMB = (SetupMB) FacesContext
 					.getCurrentInstance()
 					.getApplication()
 					.getELResolver()
 					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "configMB");
-		return configMB;
+							null, "setupMB");
+		return setupMB;
 	}
 
 	/**
