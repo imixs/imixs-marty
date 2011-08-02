@@ -24,7 +24,7 @@ import org.imixs.workflow.ItemCollection;
  * The name property can be set using the faces-config.xml descriptor:
  * 
  * <code>
- * 	<managed-bean>
+  	<managed-bean>
 		<managed-bean-name>configMB</managed-bean-name>
 		<managed-bean-class>org.imixs.marty.web.util.ConfigMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
