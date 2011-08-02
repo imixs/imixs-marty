@@ -35,7 +35,7 @@ import org.imixs.workflow.ItemCollection;
 	</managed-bean>
  * </code>
  * 
- * The Bean provides an ItemCollectionAdapter to access the config params from a JSF Page. Example:
+ * The Bean provides access to the config params from a JSF Page. Example:
  * 
  * <code>
  * <h:inputText value="#{configMB.item['myParam1']}" >
@@ -60,6 +60,16 @@ public class ConfigMB {
 	}
 
 	/**
+	 * This method tries to load the config entity. If no Entity exists than the
+	 * method creates a new entity
+	 * 
+	 * */
+	@PostConstruct
+	public void init() {
+		doLoadConfiguration(null);
+	}
+	
+	/**
 	 * Returns the name of the configuration entity
 	 * 
 	 * @return
@@ -77,16 +87,13 @@ public class ConfigMB {
 		this.name = name;
 	}
 
-	/**
-	 * This method tries to load the config entity. If no Entity exists than the
-	 * method creates a new entity
-	 * 
-	 * */
-	@PostConstruct
-	public void init() {
-		doLoadConfiguration(null);
-	}
+	
 
+	public ItemCollection getWorkitem() {
+		return this.configItemCollection;
+	}
+	
+	
 	/**
 	 * save method tries to load the config entity. if not availabe. the method
 	 * will create the entity the first time
