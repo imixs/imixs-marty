@@ -72,6 +72,10 @@ public class VectorIntegerConverter implements Converter {
 			Object value) throws ConverterException {
 
 		String s = "";
+		// test if object is vector
+		if (! (value instanceof Vector))
+			return value.toString();
+		
 		Vector vValues = (Vector)value;
 		ListIterator li = vValues.listIterator();
 		while(li.hasNext()){

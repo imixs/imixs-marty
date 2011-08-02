@@ -69,7 +69,12 @@ public class VectorConverter implements Converter {
 	public String getAsString(FacesContext context, UIComponent component,
 			Object value) throws ConverterException {
 
+		// test if object is vector
+		if (! (value instanceof Vector))
+			return value.toString();
+		
 		String s = "";
+		
 		Vector vValues = (Vector)value;
 		ListIterator li = vValues.listIterator();
 		while(li.hasNext()){
