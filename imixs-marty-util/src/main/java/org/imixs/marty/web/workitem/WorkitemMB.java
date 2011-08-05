@@ -810,12 +810,12 @@ public class WorkitemMB extends AbstractWorkflowController {
 			// inform Listeners...
 			fireChildSoftDeleteEvent();
 
-			workitemService.moveIntoDeletions(currentSelection);
-
-			doResetChildWorkitems(event);
-
+			childWorkitemItemCollection=workitemService.moveIntoDeletions(childWorkitemItemCollection);
+		
 			// inform Listeners...
 			fireChildSoftDeleteCompletedEvent();
+			
+			doResetChildWorkitems(event);
 		}
 	}
 
