@@ -107,7 +107,7 @@ input.rich-calendar-spinner-input {
 }
 
 .rich-separator {
-	height:1px;	
+	height: 1px;
 }
 
 /**********************************************
@@ -238,6 +238,49 @@ input.rich-calendar-spinner-input {
 	list-style: none;
 	display: inline;
 	margin: 0em 0em 0em 1.5em;
+}
+
+/* ==== Form ======= */
+.sywapp-form .sywapp-viewentry,.sywapp-view-header .sywapp-viewentry {
+	margin: 0;
+}
+
+.sywapp-form .sywapp-viewentry:HOVER {
+	background: transparent;
+}
+
+.sywapp-form-header,.sywapp-view-header {
+	margin-bottom: 20px;
+}
+
+.sywapp-form-header {
+	background: #BED6F8;
+	padding: 5px;
+}
+
+.sywapp-form-header a {
+	font-size: 11px;
+}
+
+.sywapp-form-body,.sywapp-view-body {
+	margin-bottom: 20px;
+}
+
+.sywapp-form-body {
+	
+}
+
+/* Standard Rahmen im Formular abschalten */
+.sywapp-workitem-body {
+	
+}
+
+.sywapp-form-footer {
+	
+}
+
+.sywapp-form-footer,.sywapp-view-footer {
+	margin-bottom: 20px;
 }
 
 .sywapp-info-box {
@@ -398,9 +441,38 @@ input.rich-calendar-spinner-input {
 	background: transparent;
 }
 
+.rich-panel-body {
+	color: #666;
+}
+
 .rich-stglpanel {
 	margin-bottom: 11px;
 }
+
+.rich-datalist {
+	padding: 0px;
+	margin: 0px;
+}
+
+
+.rich-table {
+	border: 1px;
+	empty-cells: show;
+	width: 100%;
+}
+
+
+.rich-table-cell {
+	border: 1px solid silver;
+	border-bottom: 1px solid silver;
+	padding: 8px;
+}
+
+.rich-table-subheadercell {
+	border: 1px;
+	text-align: left;
+}
+
 
 /*
  *Tree Node 
