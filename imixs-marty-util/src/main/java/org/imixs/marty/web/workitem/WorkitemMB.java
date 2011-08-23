@@ -299,9 +299,11 @@ public class WorkitemMB extends AbstractWorkflowController {
 						else
 							rb = ResourceBundle.getBundle("bundle.forms");
 
-						sName = rb.getString(sURL);
+						String sResouceURL=sURL.replace('/','_');
+						sName = rb.getString(sResouceURL);
 					} catch (java.util.MissingResourceException eb) {
 						sName = "";
+						System.out.println(eb.getMessage());
 					}
 
 					EditorSection aSection = new EditorSection(sURL, sName);
