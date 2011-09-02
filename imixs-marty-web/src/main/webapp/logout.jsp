@@ -1,3 +1,3 @@
 <%@ page contentType="text/html;charset=utf-8" %>
 <% session.invalidate(); %>
-<% response.sendRedirect(request.getContextPath()+"/index.jsp"); %>
+<% response.sendRedirect(request.getContextPath()+"/logout.jsf"); %>

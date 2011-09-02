@@ -8,41 +8,25 @@
 	template="/layout/template.xhtml">
 
 	<ui:define name="content">
-		<form method="post"
-			action="#{facesContext.externalContext.requestContextPath}/j_security_check">
+		<h:form id="logoutform">
+		
 			<div class="sywapp-form sywapp-workitem">
 				<div class="sywapp-form-body sywapp-workitem-body">
 					<rich:panel>
 						<f:facet name="header">
-							<h:outputLabel value="#{global.login_title}" />
+							<h:outputLabel value="#{global.logout_title}" />
 						</f:facet>
+						<br />
+						<h:outputLabel value="#{global.logout_help}" />
 
-
-						<dl class="columns-1">
-
-
-							<dt>
-
-								<h:outputLabel value="#{global.username}:" />
-							</dt>
-							<dd>
-								<h:inputText id="j_username" />
-							</dd>
-							<dt>
-								<h:outputLabel value="#{global.password}:" />
-							</dt>
-							<dd>
-								<h:inputSecret id="j_password" />
-
-							</dd>
-						</dl>
-						<div style="clear:left;" />
-						<input type="submit" value="#{global.login}" />
+						<br />
+						<br />
+						<br />
+						<h:commandButton value="#{global.login}" action="home" />
 					</rich:panel>
-
 				</div>
 			</div>
-		</form>
+		</h:form>
 
 	</ui:define>
 </ui:composition>

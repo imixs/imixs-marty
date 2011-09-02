@@ -11,8 +11,20 @@
 
 	<ui:define name="content">
 
-		<h1>Anmeldung fehlgeschlagen</h1>
-
-		<p>Register or try to login again.</p>
+		<h:form id="logoutform">
+			<div class="sywapp-form sywapp-workitem">
+				<div class="sywapp-form-body sywapp-workitem-body">
+					<rich:panel>
+						<f:facet name="header">
+							<h:outputLabel value="#{global.login_error}" />
+						</f:facet>
+						<p>
+							<h:outputText value="#{global.login_error_help}" />
+						</p>
+						<h:commandButton value="#{global.prev}" action="notes" />
+					</rich:panel>
+				</div>
+			</div>
+		</h:form>
 	</ui:define>
 </ui:composition>
