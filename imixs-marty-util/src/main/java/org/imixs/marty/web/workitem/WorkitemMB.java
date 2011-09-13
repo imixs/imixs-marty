@@ -77,8 +77,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 	private WorklistMB worklistBean = null;
 	private SetupMB setupMB = null;
 	private NameLookupMB nameLookupMB = null;
-	private BLOBWorkitemController workitemLobMB = null;
-	private FileUploadBean fileUploadMB = null;
+	//private BLOBWorkitemController workitemLobMB = null;
+	//private FileUploadBean fileUploadMB = null;
 	private MicroBlogMB microBlogMB = null;
 
 	/* Child Process */
@@ -168,6 +168,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * Blob Controler
 	 */
 
+	/*
 	public BLOBWorkitemController getWorkitemBlobBean() {
 		if (workitemLobMB == null)
 			workitemLobMB = (BLOBWorkitemController) FacesContext
@@ -179,7 +180,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 		return workitemLobMB;
 
 	}
-
+	*/
+	/*
 	private FileUploadBean getFileUploadMB() {
 		if (fileUploadMB == null)
 			fileUploadMB = (FileUploadBean) FacesContext
@@ -190,6 +192,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 							null, "fileUploadBean");
 		return fileUploadMB;
 	}
+	*/
 
 	public MicroBlogMB getMicroBlogBean() {
 		if (microBlogMB == null)
@@ -355,13 +358,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		processList = null;
 
 		try {
-			// load lobWorkItem if uniqueid changed since last update
-			if (!workitemItemCollection.getItemValueString("$UniqueID").equals(
-					this.getWorkitemBlobBean().getWorkitem()
-							.getItemValueString("$UniqueIDRef"))) {
-				this.getWorkitemBlobBean().load(workitemItemCollection);
-				this.getFileUploadMB().reset();
-			}
+			
 
 			// load microBlog Workitem if uniqueid changed since last update
 			if (getConfigBean().getWorkitem().getItemValueBoolean(
@@ -447,7 +444,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 */
 	public void doCreateWorkitem(String processEntityIdentifier,
 			String projectIdentifier) throws Exception {
-		this.getWorkitemBlobBean().clear();
+		//this.getWorkitemBlobBean().clear();
 		if (processEntityIdentifier != null
 				&& !"".equals(processEntityIdentifier)) {
 
@@ -548,8 +545,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 				.processWorkItem(workitemItemCollection);
 
 		// save attachments stored in WorkitemBlobMB
-		getWorkitemBlobBean().save(workitemItemCollection);
-		getFileUploadMB().reset();
+	//	getWorkitemBlobBean().save(workitemItemCollection);
+		//getFileUploadMB().reset();
 
 		// save micorBlogMB
 		if (getConfigBean().getWorkitem().getItemValueBoolean(
@@ -591,7 +588,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 			workitemService.deleteWorkItem(workitemItemCollection);
 			this.setWorkitem(null);
-			getFileUploadMB().reset();
+			//getFileUploadMB().reset();
 
 			// inform Listeners...
 			fireWorkitemDeleteCompletedEvent();
@@ -1004,31 +1001,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 	}
 
-	/**
-	 * delete a attachment
-	 */
-	public void doDeleteFile(ActionEvent event) throws Exception {
-		// File Name raussuchen und in activityID speichern
-		List children = event.getComponent().getChildren();
-		String sFileName = "";
-
-		for (int i = 0; i < children.size(); i++) {
-			if (children.get(i) instanceof UIParameter) {
-				UIParameter currentParam = (UIParameter) children.get(i);
-				if (currentParam.getName().equals("filename")
-						&& currentParam.getValue() != null) {
-					// Value can be provided as String or Integer Object
-					sFileName = currentParam.getValue().toString();
-					break;
-				}
-			}
-		}
-
-		if (sFileName != null && !"".equals(sFileName)) {
-			// getWorkitemBlobBean().load(getWorkitem());
-			getWorkitemBlobBean().removeFile(sFileName);
-		}
-	}
+	
 
 	/**
 	 * returns the last workflow result to control the navigation flow if no

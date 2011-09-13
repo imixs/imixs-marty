@@ -1,11 +1,20 @@
 package org.imixs.marty.web.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
+import javax.annotation.PostConstruct;
+import javax.faces.component.UIParameter;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 
+import org.imixs.marty.web.workitem.WorkitemListener;
+import org.imixs.marty.web.workitem.WorkitemMB;
+import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.BLOBWorkitemController;
 import org.richfaces.event.UploadEvent;
 import org.richfaces.model.UploadItem;
@@ -29,7 +38,7 @@ import org.richfaces.model.UploadItem;
  * @author rsoika
  * 
  */
-public class FileUploadBean {
+public class FileUploadBean implements WorkitemListener {
 	private ArrayList<String> filesUploaded = new ArrayList<String>();
 
 	private int maxAttachments = 10;
@@ -37,12 +46,27 @@ public class FileUploadBean {
 	private boolean useFlash = false;
 	private String fileName;
 
-	private BLOBWorkitemController workitemBlobMB = null;
+	/* Backing Beans */
+	private WorkitemMB workitemMB = null;
+	private BLOBWorkitemController workitemLobMB = null;
 
 	public FileUploadBean() {
 	}
 
-	public void reset() {
+	/**
+	 * This method registers the workitemListener
+	 * 
+	 * */
+	@PostConstruct
+	public void init() {
+		// register listener
+		getWorkitemBean().addWorkitemListener(this);
+
+		// try to update blobMB with the current workitem
+		onWorkitemChanged(getWorkitemBean().getWorkitem());
+	}
+
+	public void resetFileUpload() {
 		filesUploaded = new ArrayList<String>();
 	}
 
@@ -55,6 +79,15 @@ public class FileUploadBean {
 		this.fileName = fileName;
 	}
 
+
+	/**
+	 * just a wrapper method to get direct access to the current filelist
+	 * @return
+	 */
+	public String[] getFiles() {
+		return this.getWorkitemBlobBean().getFiles();
+	}
+	
 	/**
 	 * adds a uploaded file into the blobBean
 	 * 
@@ -64,10 +97,36 @@ public class FileUploadBean {
 	public void listener(UploadEvent event) throws Exception {
 		UploadItem item = event.getUploadItem();
 
-		this.getWorkitemBlobBean().addFile(item.getData(), item.getFileName(),
+		getWorkitemBlobBean().addFile(item.getData(), item.getFileName(),
 				item.getContentType());
 
 		filesUploaded.add(item.getFileName());
+	}
+
+	/**
+	 * delete a attachment
+	 */
+	public void doDeleteFile(ActionEvent event) throws Exception {
+		// Find selected filename...
+		List children = event.getComponent().getChildren();
+		String sFileName = "";
+	
+		for (int i = 0; i < children.size(); i++) {
+			if (children.get(i) instanceof UIParameter) {
+				UIParameter currentParam = (UIParameter) children.get(i);
+				if (currentParam.getName().equals("filename")
+						&& currentParam.getValue() != null) {
+					// Value can be provided as String or Integer Object
+					sFileName = currentParam.getValue().toString();
+					break;
+				}
+			}
+		}
+	
+		if (sFileName != null && !"".equals(sFileName)) {
+			// getWorkitemBlobBean().load(getWorkitem());
+			getWorkitemBlobBean().removeFile(sFileName);
+		}
 	}
 
 	/**
@@ -85,8 +144,7 @@ public class FileUploadBean {
 				System.out.println("Removing single fileName=" + fileName);
 				this.getWorkitemBlobBean().removeFile(fileName);
 				filesUploaded.remove(fileName);
-			}
-			else {
+			} else {
 				// remove all files form fileUploadBean...
 				Iterator<String> iter = filesUploaded.iterator();
 				System.out.println("Removing all files....");
@@ -101,8 +159,6 @@ public class FileUploadBean {
 			e.printStackTrace();
 		}
 	}
-
-	
 
 	public long getTimeStamp() {
 		return System.currentTimeMillis();
@@ -124,8 +180,11 @@ public class FileUploadBean {
 	 * @return
 	 */
 	public int getUploadsAvailable() {
-		
-		System.out.println("getUploadsAvailable="+(maxAttachments - this.getWorkitemBlobBean().getFiles().length));
+
+		System.out
+				.println("getUploadsAvailable="
+						+ (maxAttachments - this.getWorkitemBlobBean()
+								.getFiles().length));
 		return maxAttachments - this.getWorkitemBlobBean().getFiles().length;
 	}
 
@@ -145,14 +204,122 @@ public class FileUploadBean {
 		this.useFlash = useFlash;
 	}
 
-	private BLOBWorkitemController getWorkitemBlobBean() {
-		if (workitemBlobMB == null)
-			workitemBlobMB = (BLOBWorkitemController) FacesContext
-					.getCurrentInstance().getApplication().getELResolver()
+	@Override
+	public void onWorkitemCreated(ItemCollection e) {
+		this.getWorkitemBlobBean().clear();
+	}
+
+	@Override
+	public void onWorkitemChanged(ItemCollection aworkitem) {
+		try {
+			// load lobWorkItem if uniqueid changed since last update
+			if (aworkitem != null
+					&& !aworkitem.getItemValueString("$UniqueID").equals(
+							this.getWorkitemBlobBean().getWorkitem()
+									.getItemValueString("$UniqueIDRef"))) {
+
+				this.getWorkitemBlobBean().load(aworkitem);
+
+			}
+			resetFileUpload();
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * This method updates the property $dms from the current workitem. The $dms
+	 * holds a map with key value pairs. Key is the filename. The value is a Map
+	 * with metadata
+	 * 
+	 */
+	@Override
+	public void onWorkitemProcess(ItemCollection aworkitem) {
+
+	}
+
+	@Override
+	public void onWorkitemProcessCompleted(ItemCollection aworkitem) {
+		try {
+			getWorkitemBlobBean().save(aworkitem);
+			this.resetFileUpload();
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		}
+
+	}
+
+	@Override
+	public void onWorkitemDelete(ItemCollection e) {
+	}
+
+	@Override
+	public void onWorkitemDeleteCompleted() {
+		this.resetFileUpload();
+	}
+
+	@Override
+	public void onWorkitemSoftDelete(ItemCollection e) {
+	}
+
+	@Override
+	public void onWorkitemSoftDeleteCompleted(ItemCollection e) {
+	}
+
+	@Override
+	public void onChildProcess(ItemCollection e) {
+	}
+
+	@Override
+	public void onChildProcessCompleted(ItemCollection e) {
+	}
+
+	@Override
+	public void onChildCreated(ItemCollection e) {
+	}
+
+	@Override
+	public void onChildDelete(ItemCollection e) {
+	}
+
+	@Override
+	public void onChildDeleteCompleted() {
+	}
+
+	@Override
+	public void onChildSoftDelete(ItemCollection e) {
+
+	}
+
+	@Override
+	public void onChildSoftDeleteCompleted(ItemCollection e) {
+
+	}
+
+	public BLOBWorkitemController getWorkitemBlobBean() {
+		if (workitemLobMB == null) {
+			workitemLobMB = (BLOBWorkitemController) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
 					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "workitemBlobMB");
 
-		return workitemBlobMB;
+		}
+		return workitemLobMB;
 
+	}
+
+	public WorkitemMB getWorkitemBean() {
+		if (workitemMB == null)
+			workitemMB = (WorkitemMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
+							null, "workitemMB");
+		return workitemMB;
 	}
 }
