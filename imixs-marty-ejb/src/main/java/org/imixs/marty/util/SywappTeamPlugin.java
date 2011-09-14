@@ -50,12 +50,6 @@ public class SywappTeamPlugin extends AbstractPlugin {
 		//Context ctx = (Context) ictx.lookup("java:comp/env");
 		//projectService = (ProjectService) ctx.lookup(jndiName);
 		  projectService= (ProjectService) new InitialContext().lookup("java:module/ProjectService");
-		
-		  if (projectService==null)
-			  System.out.println(" war nix");
-			  else
-				  System.out.println(" war was hurrar");
-				    
 
 	}
 
