@@ -24,7 +24,7 @@ import org.richfaces.event.UploadEvent;
  * This Bean extends the fileUploadBean with a lazy-loading mechanism. In
  * different to the FileUploadBean Blobworkitems will be only loaded if a file
  * needs to be added or removed. The information of existing files is stored in
- * the property $dms from the parent workitem.
+ * the property dms from the parent workitem.
  * 
  * @see org.imixs.marty.web.util.FileUploadBean
  * @author rsoika
@@ -39,10 +39,9 @@ public class DmsMB extends FileUploadBean {
 	private int row = 0;
 	private boolean endOfList = false;
 	private boolean blobWorkitemLoaded = false;
-	
+
 	/* Backing Beans */
 	private LoginMB loginMB = null;
-
 
 	/* EJBs */
 	@EJB
@@ -248,9 +247,8 @@ public class DmsMB extends FileUploadBean {
 	public void doDeleteFile(ActionEvent event) throws Exception {
 		doLazyLoading();
 		super.doDeleteFile(event);
-		
-		
-		// remove the file also from the current $dms property...
+
+		// remove the file also from the current dms property...
 		List children = event.getComponent().getChildren();
 		String sFileName = "";
 		// find the file name....
@@ -265,39 +263,78 @@ public class DmsMB extends FileUploadBean {
 				}
 			}
 		}
-		// try to remove the file metadata form the $dms...
-		if (sFileName != null && !"".equals(sFileName)) 
+		// try to remove the file metadata form the dms...
+		if (sFileName != null && !"".equals(sFileName))
 			removeMetadata(sFileName);
-		
-		
-		
+
 	}
 
 	/**
-	 * This method updates the property $dms from the current workitem. The $dms
-	 * holds a List of Maps with the meta data for each file. The standard
-	 * property of the meta data is the field txtName holding the file name. All
-	 * other properties are optional. If a file was removed also the meta data
-	 * will be removed
-	 * 
+	 * This method updates the property dms from the current BlobWorkitem. The
+	 * dms holds a List of meta data for each attached file. If a file was
+	 * removed also the meta data will be removed.
 	 * 
 	 * The method only runs if a new file was added or an existing file was
-	 * removed.... (blobWorkitemLoaded = true)
+	 * removed.
 	 * 
 	 * 
 	 */
 	@Override
 	public void onWorkitemProcess(ItemCollection aworkitem) {
+		if (blobWorkitemLoaded == false)
+			// no changes - exit!
+			return;
+		else
+			// update the dms property....
+			updateDmsMetaData(aworkitem);
+	}
+
+	/**
+	 * Avoid preloading the blobworkitem on a workitemchanged event
+	 * 
+	 */
+	@Override
+	public void onWorkitemChanged(ItemCollection aworkitem) {
+		blobWorkitemLoaded = false;
+		
+		// test if dms property still exists - if not create a new one
+		if (!getWorkitemBlobBean().getWorkitem().hasItem("dms")) {
+			doLazyLoading();
+			// create the dms property....
+			updateDmsMetaData(aworkitem);
+		}
+			
+		// reset the file upload list
+		resetFileUpload();
+	}
+
+	/**
+	 * This method implements the lazyLoading mechanism for the BlogWOrkitem.
+	 * The BlobWorkitem will only be loaded if the flag 'lazyloading' is true.
+	 * After the method call the flag will be cleared again.
+	 * 
+	 */
+	private void doLazyLoading() {
+		if (!blobWorkitemLoaded) {
+			super.onWorkitemChanged(this.getWorkitemBean().getWorkitem());
+			// clear flag
+			blobWorkitemLoaded = true;
+		}
+	}
+
+	/**
+	 * This method updates the property dms from the current Blobworkitem. The
+	 * dms holds a List of Maps with the meta data for each file. The standard
+	 * property of the meta data is the field txtName holding the file name. All
+	 * other properties are optional. If a file was removed also the meta data
+	 * will be removed
+	 */
+	private void updateDmsMetaData(ItemCollection aworkitem) {
 		try {
-
-			if (blobWorkitemLoaded == false)
-				// no changes - exit!
-				return;
-
 			// get the current file list
 			String[] fileNames = getWorkitemBlobBean().getFiles();
 
-			// get the current $dms value....
+			// get the current dms value....
 			Vector<Map> vDMSnew = new Vector<Map>();
 
 			// now we test if for each file entry a dms meta data entry still
@@ -323,47 +360,18 @@ public class DmsMB extends FileUploadBean {
 							getWorkitemBlobBean().getWorkitem()
 									.getItemValueString("$UniqueID"));
 					aMetadata.replaceItemValue("$created", new Date());
-					aMetadata.replaceItemValue("namCreator", this.getLoginBean().getUserPrincipal());
+					aMetadata.replaceItemValue("namCreator", this
+							.getLoginBean().getUserPrincipal());
 
-					
 					// Important! do only store the Map not the ItemCollection!!
 					vDMSnew.add(aMetadata.getAllItems());
 				}
 
 			}
 			// update dms property....
-			aworkitem.replaceItemValue("$dms", vDMSnew);
+			aworkitem.replaceItemValue("dms", vDMSnew);
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Avoid preloading the blobworkitem on a workitemchanged event
-	 * 
-	 */
-	@Override
-	public void onWorkitemChanged(ItemCollection aworkitem) {
-		try {
-			blobWorkitemLoaded = false;
-			resetFileUpload();
-		} catch (Exception e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * This method implements the lazyLoading mechanism for the BlogWOrkitem.
-	 * The BlobWorkitem will only be loaded if the flag 'lazyloading' is true.
-	 * After the method call the flag will be cleared again.
-	 * 
-	 */
-	private void doLazyLoading() {
-		if (!blobWorkitemLoaded) {
-			super.onWorkitemChanged(this.getWorkitemBean().getWorkitem());
-			// clear flag
-			blobWorkitemLoaded = true;
 		}
 	}
 
@@ -375,7 +383,7 @@ public class DmsMB extends FileUploadBean {
 	public List<ItemCollection> getFileList() {
 
 		List<Map> vDMS = this.getWorkitemBean().getWorkitem()
-				.getItemValue("$dms");
+				.getItemValue("dms");
 
 		List<ItemCollection> filelist = new ArrayList<ItemCollection>();
 		try {
@@ -383,12 +391,10 @@ public class DmsMB extends FileUploadBean {
 			for (Map aMetadata : vDMS) {
 
 				ItemCollection itemCol;
-				//itemCol = new ItemCollection(aMetadata);
+				// itemCol = new ItemCollection(aMetadata);
 				itemCol = new ItemCollection();
 				itemCol.setAllItems(aMetadata);
 				filelist.add(itemCol);
-				
-				
 
 			}
 		} catch (Exception e) {
@@ -405,7 +411,7 @@ public class DmsMB extends FileUploadBean {
 	private ItemCollection findMetadata(String aFilename) {
 
 		List<Map> vDMS = this.getWorkitemBean().getWorkitem()
-				.getItemValue("$dms");
+				.getItemValue("dms");
 
 		try {
 
@@ -436,31 +442,27 @@ public class DmsMB extends FileUploadBean {
 	private void removeMetadata(String aFilename) {
 		try {
 			List<Map> vDMS = this.getWorkitemBean().getWorkitem()
-					.getItemValue("$dms");
+					.getItemValue("dms");
 
-			for (int i=0;i<vDMS.size();i++) {
-				Map aMetadata =vDMS.get(i);
+			for (int i = 0; i < vDMS.size(); i++) {
+				Map aMetadata = vDMS.get(i);
 				ItemCollection itemCol;
 				itemCol = new ItemCollection(aMetadata);
 				if (itemCol.getItemValueString("txtName").equals(aFilename)) {
 					vDMS.remove(i);
 					break;
 				}
-				
+
 			}
-	
-			this.getWorkitemBean().getWorkitem().replaceItemValue("$dms", vDMS);
+
+			this.getWorkitemBean().getWorkitem().replaceItemValue("dms", vDMS);
 		} catch (Exception e) {
 
 			e.printStackTrace();
 		}
 
 	}
-	
-	
-	
-	
-	
+
 	private LoginMB getLoginBean() {
 		if (loginMB == null)
 			loginMB = (LoginMB) FacesContext
@@ -471,6 +473,5 @@ public class DmsMB extends FileUploadBean {
 							null, "loginMB");
 		return loginMB;
 	}
-
 
 }

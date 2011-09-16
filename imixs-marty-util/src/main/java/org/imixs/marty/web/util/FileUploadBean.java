@@ -228,12 +228,7 @@ public class FileUploadBean implements WorkitemListener {
 		}
 	}
 
-	/**
-	 * This method updates the property $dms from the current workitem. The $dms
-	 * holds a map with key value pairs. Key is the filename. The value is a Map
-	 * with metadata
-	 * 
-	 */
+
 	@Override
 	public void onWorkitemProcess(ItemCollection aworkitem) {
 
