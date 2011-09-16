@@ -2,8 +2,7 @@ package org.imixs.marty.web.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -16,13 +15,10 @@ import javax.faces.component.UIParameter;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 
-import org.imixs.marty.web.workitem.WorkitemListener;
-import org.imixs.marty.web.workitem.WorkitemMB;
+import org.imixs.marty.util.LoginMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.faces.BLOBWorkitemController;
 import org.richfaces.event.UploadEvent;
-import org.richfaces.model.UploadItem;
 
 /**
  * This Bean extends the fileUploadBean with a lazy-loading mechanism. In
@@ -43,6 +39,10 @@ public class DmsMB extends FileUploadBean {
 	private int row = 0;
 	private boolean endOfList = false;
 	private boolean blobWorkitemLoaded = false;
+	
+	/* Backing Beans */
+	private LoginMB loginMB = null;
+
 
 	/* EJBs */
 	@EJB
@@ -322,6 +322,10 @@ public class DmsMB extends FileUploadBean {
 					aMetadata.replaceItemValue("$uniqueidRef",
 							getWorkitemBlobBean().getWorkitem()
 									.getItemValueString("$UniqueID"));
+					aMetadata.replaceItemValue("$created", new Date());
+					aMetadata.replaceItemValue("namCreator", this.getLoginBean().getUserPrincipal());
+
+					
 					// Important! do only store the Map not the ItemCollection!!
 					vDMSnew.add(aMetadata.getAllItems());
 				}
@@ -379,8 +383,12 @@ public class DmsMB extends FileUploadBean {
 			for (Map aMetadata : vDMS) {
 
 				ItemCollection itemCol;
-				itemCol = new ItemCollection(aMetadata);
+				//itemCol = new ItemCollection(aMetadata);
+				itemCol = new ItemCollection();
+				itemCol.setAllItems(aMetadata);
 				filelist.add(itemCol);
+				
+				
 
 			}
 		} catch (Exception e) {
@@ -448,5 +456,21 @@ public class DmsMB extends FileUploadBean {
 		}
 
 	}
+	
+	
+	
+	
+	
+	private LoginMB getLoginBean() {
+		if (loginMB == null)
+			loginMB = (LoginMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
+							null, "loginMB");
+		return loginMB;
+	}
+
 
 }
