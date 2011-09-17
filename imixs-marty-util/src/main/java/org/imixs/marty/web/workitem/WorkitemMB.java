@@ -548,6 +548,11 @@ public class WorkitemMB extends AbstractWorkflowController {
 	//	getWorkitemBlobBean().save(workitemItemCollection);
 		//getFileUploadMB().reset();
 
+		
+		// inform Listeners...
+		fireWorkitemProcessCompletedEvent();
+
+		
 		// save micorBlogMB
 		if (getConfigBean().getWorkitem().getItemValueBoolean(
 				"enableMicroBlogging")) {
@@ -563,10 +568,9 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 		}
 
+		
 		// update workitemcollection and reset childs
 		this.setWorkitem(workitemItemCollection);
-		// inform Listeners...
-		fireWorkitemProcessCompletedEvent();
 		getWorklistBean().doRefresh(event);
 	}
 

@@ -3,9 +3,12 @@ package org.imixs.marty.web.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -16,8 +19,10 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 
 import org.imixs.marty.util.LoginMB;
+import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.richfaces.event.UploadEvent;
 
 /**
@@ -39,15 +44,21 @@ public class DmsMB extends FileUploadBean {
 	private int row = 0;
 	private boolean endOfList = false;
 	private boolean blobWorkitemLoaded = false;
+	private boolean assignDMSWorkitem = false;
 
 	/* Backing Beans */
 	private LoginMB loginMB = null;
+	private WorklistMB worklistMB = null;
 
 	/* EJBs */
 	@EJB
 	org.imixs.marty.dms.DmsSchedulerService dmsSchedulerService;
 	@EJB
 	EntityService entityService;
+	@EJB
+	WorkflowService workflowService;
+
+	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
 	public DmsMB() {
 		super();
@@ -128,7 +139,8 @@ public class DmsMB extends FileUploadBean {
 	}
 
 	/**
-	 * This Method Selects the current dms object
+	 * This Method Selects the current dms object. This dms workitem can be
+	 * displayed in a form or assigned to a new process
 	 * 
 	 * @return
 	 */
@@ -157,6 +169,40 @@ public class DmsMB extends FileUploadBean {
 			}
 		}
 
+	}
+
+	/**
+	 * selects the workitem for a suggestion box and opens the corresponding
+	 * process. A parameter 'id' with the $uniqueid is expected
+	 * 
+	 * Later the dmsItemCollection will be assigend to this workitem - @see
+	 * onWorkitemProcess
+	 * 
+	 * @param event
+	 * @return
+	 * @throws Exception
+	 */
+	public void doAssignWorkitem(ActionEvent event) throws Exception {
+		// alles wichtige steht jetzt im feld _reference
+		String sID = this.dmsItemCollection.getItemValueString("_reference");
+
+		logger.info("dmsMB: doAssignWorkitem....");
+		getworkListMB().doEdit(event);
+
+		assignDMSWorkitem = true;
+
+		// getWorkitemMB().setWorkitem(currentSelection);
+
+		// update projectMB if necessary
+		// getWorkitemMB().updateProjectMB();
+
+	}
+
+	public void doAssignNewWorkitem(ActionEvent event) throws Exception {
+		logger.info("dmsMB: doAssignNewWorkitem....");
+		assignDMSWorkitem = true;
+
+		getworkListMB().getWorkitemMB().doCreateWorkitem(event);
 	}
 
 	public List<ItemCollection> getWorkitems() {
@@ -296,16 +342,37 @@ public class DmsMB extends FileUploadBean {
 	@Override
 	public void onWorkitemChanged(ItemCollection aworkitem) {
 		blobWorkitemLoaded = false;
-		
+
+		// check if dms files need to be copied...
+		if (assignDMSWorkitem == true) {
+			// copy file into wokritem....
+			logger.info("onWorkitemChanged Jetzt muß ich das dms zuweisen....");
+
+			doLazyLoading();
+			copyDmsFiles();
+			assignDMSWorkitem=false;
+		}
+
+	
 		// test if dms property still exists - if not create a new one
-		if (!getWorkitemBlobBean().getWorkitem().hasItem("dms")) {
+		if (!getWorkitemBean().getWorkitem().hasItem("dms")) {
 			doLazyLoading();
 			// create the dms property....
 			updateDmsMetaData(aworkitem);
 		}
-			
+
 		// reset the file upload list
 		resetFileUpload();
+	}
+
+	@Override
+	public void onWorkitemCreated(ItemCollection e) {
+		super.onWorkitemCreated(e);
+
+		if (assignDMSWorkitem == true) {
+
+			logger.info("onWorkitemCreated Jetzt muß ich das dms zuweisen....");
+		}
 	}
 
 	/**
@@ -320,6 +387,64 @@ public class DmsMB extends FileUploadBean {
 			// clear flag
 			blobWorkitemLoaded = true;
 		}
+	}
+	
+	
+	/**
+	 * this Method copies the files form the current dmsItemCollection into the 
+	 * current BlobWorkitem
+	 */
+	private void copyDmsFiles() {
+		Map fileMapDMS = null;
+		Map fileMapBlob = null;
+
+			doLazyLoading();
+
+			// get the $file map from the Blob Workitem....
+			Vector vFiles = getWorkitemBlobBean().getWorkitem().getItemValue(
+					"$file");
+			if (vFiles != null && vFiles.size() > 0) 
+				fileMapBlob = (HashMap) vFiles.elementAt(0);
+			else
+				fileMapBlob=new HashMap();
+
+			// now get the $file map from the DMS Workitem...
+			vFiles = dmsItemCollection.getItemValue("$file");
+			if (vFiles != null && vFiles.size() > 0) 
+				fileMapDMS = (HashMap) vFiles.elementAt(0);
+			else
+				fileMapDMS=new HashMap();
+
+			// next copy all file entry from the dmsMap into the BlobMap...
+
+			// now we copy each element from the Map into the current
+			// BlobWorkitem...
+			Iterator it = fileMapDMS.entrySet().iterator();
+			while (it.hasNext()) {
+				Map.Entry pairs = (Map.Entry) it.next();
+
+				fileMapBlob.put(pairs.getKey(), pairs.getValue());
+				System.out.println(pairs.getKey() + " = " + pairs.getValue());
+			}
+			
+			// finally replace the $file property
+			// and update the meta data...
+			try {
+				getWorkitemBlobBean().getWorkitem().replaceItemValue("$file", fileMapBlob);
+				
+				String[] fileNames=	 getWorkitemBlobBean().getFiles();
+				 
+				 
+				updateDmsMetaData(this.getWorkitemBean().getWorkitem());
+				
+				fileNames=	 getWorkitemBlobBean().getFiles();
+				
+				int i=fileNames.length;
+			} catch (Exception e) {
+				
+				e.printStackTrace();
+			}
+
 	}
 
 	/**
@@ -472,6 +597,19 @@ public class DmsMB extends FileUploadBean {
 					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "loginMB");
 		return loginMB;
+	}
+
+	private WorklistMB getworkListMB() {
+		// get WorklistMB instance
+		if (worklistMB == null)
+			worklistMB = (WorklistMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
+							null, "worklistMB");
+
+		return worklistMB;
 	}
 
 }
