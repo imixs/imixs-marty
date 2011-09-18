@@ -21,15 +21,20 @@ import javax.faces.event.ActionEvent;
 import org.imixs.marty.util.LoginMB;
 import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.richfaces.event.UploadEvent;
 
 /**
- * This Bean extends the fileUploadBean with a lazy-loading mechanism. In
- * different to the FileUploadBean Blobworkitems will be only loaded if a file
- * needs to be added or removed. The information of existing files is stored in
- * the property dms from the parent workitem.
+ * This Bean acts a a front controller for the DMS feature. The bean supports
+ * methods to control the DMSService and also to manage the DMSWorkitemList.
+ * 
+ * In addition this Bean extends the fileUploadBean and implements a
+ * lazy-loading mechanism for the blobWorkitem. In different to the
+ * FileUploadBean a blobWorkitem will only be loaded if a new file needs to be added
+ * or removed. The information of existing files is stored in the property dms
+ * from the parent workItem.
  * 
  * @see org.imixs.marty.web.util.FileUploadBean
  * @author rsoika
@@ -43,8 +48,15 @@ public class DmsMB extends FileUploadBean {
 	private int count = 10;
 	private int row = 0;
 	private boolean endOfList = false;
-	private boolean blobWorkitemLoaded = false;
-	private boolean assignDMSWorkitem = false;
+	private boolean blobWorkitemLoaded = false; // indicate that the
+												// blobWorkitem still was not
+												// loaded after a
+												// workitemChanged event
+	private boolean assignDMSWorkitem = false; // indicate that the current
+												// DMSWorkitem should be
+												// assigned to the next workitem
+												// after a workitemChangeed
+												// event
 
 	/* Backing Beans */
 	private LoginMB loginMB = null;
@@ -183,25 +195,14 @@ public class DmsMB extends FileUploadBean {
 	 * @throws Exception
 	 */
 	public void doAssignWorkitem(ActionEvent event) throws Exception {
-		// alles wichtige steht jetzt im feld _reference
-		String sID = this.dmsItemCollection.getItemValueString("_reference");
-
 		logger.info("dmsMB: doAssignWorkitem....");
-		getworkListMB().doEdit(event);
-
 		assignDMSWorkitem = true;
-
-		// getWorkitemMB().setWorkitem(currentSelection);
-
-		// update projectMB if necessary
-		// getWorkitemMB().updateProjectMB();
-
+		getworkListMB().doEdit(event);
 	}
 
 	public void doAssignNewWorkitem(ActionEvent event) throws Exception {
 		logger.info("dmsMB: doAssignNewWorkitem....");
 		assignDMSWorkitem = true;
-
 		getworkListMB().getWorkitemMB().doCreateWorkitem(event);
 	}
 
@@ -323,6 +324,10 @@ public class DmsMB extends FileUploadBean {
 	 * The method only runs if a new file was added or an existing file was
 	 * removed.
 	 * 
+	 * The DMS meta data includes also the referece (uniqueid) to the blob
+	 * workitem. If the blobWorkitem was genereated new no $uniqueid still
+	 * exists. In this case we generate a new $unqiueid for the blobWorkitem in
+	 * this method.
 	 * 
 	 */
 	@Override
@@ -330,9 +335,30 @@ public class DmsMB extends FileUploadBean {
 		if (blobWorkitemLoaded == false)
 			// no changes - exit!
 			return;
-		else
+		else {
 			// update the dms property....
+
+			// if a blobWorkitem was just created the blobWorkitem has no
+			// $uniqueid.
+			// But this ID is necessary to build the meta data for the parent
+			// workitem.
+			// This is the reason why we set a uniqueid explicit here.
+
+			// test the current UniqueidRef
+			String sUnidRef = getWorkitemBlobBean().getWorkitem()
+					.getItemValueString("$UniqueID");
+			if ("".equals(sUnidRef)) {
+				// generate a $uniqueid....
+				try {
+					getWorkitemBlobBean().getWorkitem().replaceItemValue(
+							"$UniqueID", WorkflowKernel.generateUniqueID());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+			}
 			updateDmsMetaData(aworkitem);
+		}
 	}
 
 	/**
@@ -350,10 +376,9 @@ public class DmsMB extends FileUploadBean {
 
 			doLazyLoading();
 			copyDmsFiles();
-			assignDMSWorkitem=false;
+			assignDMSWorkitem = false;
 		}
 
-	
 		// test if dms property still exists - if not create a new one
 		if (!getWorkitemBean().getWorkitem().hasItem("dms")) {
 			doLazyLoading();
@@ -388,62 +413,55 @@ public class DmsMB extends FileUploadBean {
 			blobWorkitemLoaded = true;
 		}
 	}
-	
-	
+
 	/**
-	 * this Method copies the files form the current dmsItemCollection into the 
+	 * this Method copies the files form the current dmsItemCollection into the
 	 * current BlobWorkitem
 	 */
 	private void copyDmsFiles() {
 		Map fileMapDMS = null;
 		Map fileMapBlob = null;
 
-			doLazyLoading();
+		doLazyLoading();
 
-			// get the $file map from the Blob Workitem....
-			Vector vFiles = getWorkitemBlobBean().getWorkitem().getItemValue(
-					"$file");
-			if (vFiles != null && vFiles.size() > 0) 
-				fileMapBlob = (HashMap) vFiles.elementAt(0);
-			else
-				fileMapBlob=new HashMap();
+		// get the $file map from the Blob Workitem....
+		Vector vFiles = getWorkitemBlobBean().getWorkitem().getItemValue(
+				"$file");
+		if (vFiles != null && vFiles.size() > 0)
+			fileMapBlob = (HashMap) vFiles.elementAt(0);
+		else
+			fileMapBlob = new HashMap();
 
-			// now get the $file map from the DMS Workitem...
-			vFiles = dmsItemCollection.getItemValue("$file");
-			if (vFiles != null && vFiles.size() > 0) 
-				fileMapDMS = (HashMap) vFiles.elementAt(0);
-			else
-				fileMapDMS=new HashMap();
+		// now get the $file map from the DMS Workitem...
+		vFiles = dmsItemCollection.getItemValue("$file");
+		if (vFiles != null && vFiles.size() > 0)
+			fileMapDMS = (HashMap) vFiles.elementAt(0);
+		else
+			fileMapDMS = new HashMap();
 
-			// next copy all file entry from the dmsMap into the BlobMap...
+		// next copy all file entry from the dmsMap into the BlobMap...
 
-			// now we copy each element from the Map into the current
-			// BlobWorkitem...
-			Iterator it = fileMapDMS.entrySet().iterator();
-			while (it.hasNext()) {
-				Map.Entry pairs = (Map.Entry) it.next();
+		// now we copy each element from the Map into the current
+		// BlobWorkitem...
+		Iterator it = fileMapDMS.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry pairs = (Map.Entry) it.next();
 
-				fileMapBlob.put(pairs.getKey(), pairs.getValue());
-				System.out.println(pairs.getKey() + " = " + pairs.getValue());
-			}
-			
-			// finally replace the $file property
-			// and update the meta data...
-			try {
-				getWorkitemBlobBean().getWorkitem().replaceItemValue("$file", fileMapBlob);
-				
-				String[] fileNames=	 getWorkitemBlobBean().getFiles();
-				 
-				 
-				updateDmsMetaData(this.getWorkitemBean().getWorkitem());
-				
-				fileNames=	 getWorkitemBlobBean().getFiles();
-				
-				int i=fileNames.length;
-			} catch (Exception e) {
-				
-				e.printStackTrace();
-			}
+			fileMapBlob.put(pairs.getKey(), pairs.getValue());
+			System.out.println(pairs.getKey() + " = " + pairs.getValue());
+		}
+
+		// finally replace the $file property
+		// and update the meta data...
+		try {
+			getWorkitemBlobBean().getWorkitem().replaceItemValue("$file",
+					fileMapBlob);
+
+			updateDmsMetaData(this.getWorkitemBean().getWorkitem());
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		}
 
 	}
 
@@ -453,9 +471,27 @@ public class DmsMB extends FileUploadBean {
 	 * property of the meta data is the field txtName holding the file name. All
 	 * other properties are optional. If a file was removed also the meta data
 	 * will be removed
+	 * 
+	 * The Meta data also includes the $uniquidRef property which points to the
+	 * workitem holding the attachment. <br>
+	 * <br>
+	 * Situation assigneNewProcess: <br>
+	 * If a new DmsWorktitem was currently assigned and the current workitem
+	 * still have no uniqueid (because the main workitem was not still
+	 * processed) the $uniuqidRef points to the dmsworkitem. This need to be
+	 * updated during the processWorkitem method
+	 * 
 	 */
 	private void updateDmsMetaData(ItemCollection aworkitem) {
 		try {
+			// get the current UniqueidRef
+			String sUnidRef = getWorkitemBlobBean().getWorkitem()
+					.getItemValueString("$UniqueID");
+			if ("".equals(sUnidRef) && dmsItemCollection != null) {
+				// no id still exists - so take the dms id if exists....
+				sUnidRef = dmsItemCollection.getItemValueString("$UniqueID");
+			}
+
 			// get the current file list
 			String[] fileNames = getWorkitemBlobBean().getFiles();
 
@@ -471,9 +507,7 @@ public class DmsMB extends FileUploadBean {
 				if (itemCol != null) {
 					// the meta data exists....
 					// update the $ref....
-					itemCol.replaceItemValue("$uniqueidRef",
-							getWorkitemBlobBean().getWorkitem()
-									.getItemValueString("$UniqueID"));
+					itemCol.replaceItemValue("$uniqueidRef", sUnidRef);
 					vDMSnew.add(itemCol.getAllItems());
 
 				} else {
@@ -481,9 +515,7 @@ public class DmsMB extends FileUploadBean {
 					ItemCollection aMetadata = new ItemCollection();
 
 					aMetadata.replaceItemValue("txtname", aFilename);
-					aMetadata.replaceItemValue("$uniqueidRef",
-							getWorkitemBlobBean().getWorkitem()
-									.getItemValueString("$UniqueID"));
+					aMetadata.replaceItemValue("$uniqueidRef", sUnidRef);
 					aMetadata.replaceItemValue("$created", new Date());
 					aMetadata.replaceItemValue("namCreator", this
 							.getLoginBean().getUserPrincipal());

@@ -79,15 +79,15 @@ public class FileUploadBean implements WorkitemListener {
 		this.fileName = fileName;
 	}
 
-
 	/**
 	 * just a wrapper method to get direct access to the current filelist
+	 * 
 	 * @return
 	 */
 	public String[] getFiles() {
 		return this.getWorkitemBlobBean().getFiles();
 	}
-	
+
 	/**
 	 * adds a uploaded file into the blobBean
 	 * 
@@ -110,7 +110,7 @@ public class FileUploadBean implements WorkitemListener {
 		// Find selected filename...
 		List children = event.getComponent().getChildren();
 		String sFileName = "";
-	
+
 		for (int i = 0; i < children.size(); i++) {
 			if (children.get(i) instanceof UIParameter) {
 				UIParameter currentParam = (UIParameter) children.get(i);
@@ -122,7 +122,7 @@ public class FileUploadBean implements WorkitemListener {
 				}
 			}
 		}
-	
+
 		if (sFileName != null && !"".equals(sFileName)) {
 			// getWorkitemBlobBean().load(getWorkitem());
 			getWorkitemBlobBean().removeFile(sFileName);
@@ -211,23 +211,30 @@ public class FileUploadBean implements WorkitemListener {
 
 	@Override
 	public void onWorkitemChanged(ItemCollection aworkitem) {
+		// try to load the blobWorkitem...
 		try {
-			// load lobWorkItem if uniqueid changed since last update
-			if (aworkitem != null
-					&& !aworkitem.getItemValueString("$UniqueID").equals(
-							this.getWorkitemBlobBean().getWorkitem()
-									.getItemValueString("$UniqueIDRef"))) {
-
-				this.getWorkitemBlobBean().load(aworkitem);
-
+			if (aworkitem == null
+					|| "".equals(aworkitem.getItemValueString("$UniqueID"))) {
+				// new wokitem - clear!
+				this.getWorkitemBlobBean().clear();
+			} else {
+				// caching mechanism:
+				// load lobWorkItem only if uniqueid changed since last
+				// change....
+				if (!aworkitem.getItemValueString("$UniqueID").equals(
+						getWorkitemBlobBean().getWorkitem().getItemValueString(
+								"$UniqueIDRef"))) {
+					this.getWorkitemBlobBean().load(aworkitem);
+				}
 			}
-			resetFileUpload();
+			
 		} catch (Exception e) {
-
+			this.getWorkitemBlobBean().clear();
 			e.printStackTrace();
 		}
+		
+		resetFileUpload();
 	}
-
 
 	@Override
 	public void onWorkitemProcess(ItemCollection aworkitem) {
