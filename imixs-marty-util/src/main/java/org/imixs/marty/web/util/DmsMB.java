@@ -32,9 +32,9 @@ import org.richfaces.event.UploadEvent;
  * 
  * In addition this Bean extends the fileUploadBean and implements a
  * lazy-loading mechanism for the blobWorkitem. In different to the
- * FileUploadBean a blobWorkitem will only be loaded if a new file needs to be added
- * or removed. The information of existing files is stored in the property dms
- * from the parent workItem.
+ * FileUploadBean a blobWorkitem will only be loaded if a new file needs to be
+ * added or removed. The information of existing files is stored in the property
+ * dms from the parent workItem.
  * 
  * @see org.imixs.marty.web.util.FileUploadBean
  * @author rsoika
@@ -56,6 +56,11 @@ public class DmsMB extends FileUploadBean {
 												// DMSWorkitem should be
 												// assigned to the next workitem
 												// after a workitemChangeed
+												// event
+	private boolean removeDMWWorkitem = false; // indicate that the dmsWorkitem
+												// was assigned to the current
+												// workitem and can be removed
+												// on the onProcessCompleted
 												// event
 
 	/* Backing Beans */
@@ -332,35 +337,59 @@ public class DmsMB extends FileUploadBean {
 	 */
 	@Override
 	public void onWorkitemProcess(ItemCollection aworkitem) {
+		// if a blobWorkitem was just created the blobWorkitem has no
+		// $uniqueid.
+		// But this ID is necessary to build the meta data for the parent
+		// workitem.
+		// This is the reason why we set a uniqueid explicit here.
+
+		String sUnidRef = getWorkitemBlobBean().getWorkitem()
+				.getItemValueString("$UniqueID");
+		if ("".equals(sUnidRef)) {
+			// generate a $uniqueid....
+			try {
+				getWorkitemBlobBean().getWorkitem().replaceItemValue(
+						"$UniqueID", WorkflowKernel.generateUniqueID());
+				blobWorkitemLoaded = true;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
 		if (blobWorkitemLoaded == false)
 			// no changes - exit!
 			return;
 		else {
 			// update the dms property....
-
-			// if a blobWorkitem was just created the blobWorkitem has no
-			// $uniqueid.
-			// But this ID is necessary to build the meta data for the parent
-			// workitem.
-			// This is the reason why we set a uniqueid explicit here.
-
-			// test the current UniqueidRef
-			String sUnidRef = getWorkitemBlobBean().getWorkitem()
-					.getItemValueString("$UniqueID");
-			if ("".equals(sUnidRef)) {
-				// generate a $uniqueid....
-				try {
-					getWorkitemBlobBean().getWorkitem().replaceItemValue(
-							"$UniqueID", WorkflowKernel.generateUniqueID());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-
-			}
 			updateDmsMetaData(aworkitem);
 		}
 	}
 
+
+	/**
+	 * remove dmsWorkitem if it was assigned before
+	 */
+	@Override
+	public void onWorkitemProcessCompleted(ItemCollection aworkitem) {
+		super.onWorkitemProcessCompleted(aworkitem);
+		
+		try {
+			if (removeDMWWorkitem==true && dmsItemCollection!=null) {
+				logger.info("DmsMB - removing dmsItemCollection.....");
+				entityService.remove(dmsItemCollection);
+				removeDMWWorkitem=false;
+				
+				doReset(null);
+				
+			}
+			
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		}
+
+	}
+	
 	/**
 	 * Avoid preloading the blobworkitem on a workitemchanged event
 	 * 
@@ -368,6 +397,7 @@ public class DmsMB extends FileUploadBean {
 	@Override
 	public void onWorkitemChanged(ItemCollection aworkitem) {
 		blobWorkitemLoaded = false;
+		removeDMWWorkitem = false;
 
 		// check if dms files need to be copied...
 		if (assignDMSWorkitem == true) {
@@ -375,8 +405,14 @@ public class DmsMB extends FileUploadBean {
 			logger.info("onWorkitemChanged Jetzt muß ich das dms zuweisen....");
 
 			doLazyLoading();
+
 			copyDmsFiles();
+
 			assignDMSWorkitem = false;
+			// indicate that the dmsWorkitem should be removed after
+			// onProcessCompleted
+			removeDMWWorkitem = true;
+
 		}
 
 		// test if dms property still exists - if not create a new one
@@ -390,14 +426,16 @@ public class DmsMB extends FileUploadBean {
 		resetFileUpload();
 	}
 
+	/**
+	 * Overwrite onWorkitemCreated to avoid clearing the BlobWorkitem which was
+	 * just created from the onWorkitemChanged method.
+	 */
 	@Override
 	public void onWorkitemCreated(ItemCollection e) {
-		super.onWorkitemCreated(e);
+		// do not call the super method!
+		// super.onWorkitemCreated(e);
+		logger.info("dms onWorkitemCreated ...");
 
-		if (assignDMSWorkitem == true) {
-
-			logger.info("onWorkitemCreated Jetzt muß ich das dms zuweisen....");
-		}
 	}
 
 	/**

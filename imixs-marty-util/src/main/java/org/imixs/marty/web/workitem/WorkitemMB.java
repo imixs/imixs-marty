@@ -77,8 +77,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 	private WorklistMB worklistBean = null;
 	private SetupMB setupMB = null;
 	private NameLookupMB nameLookupMB = null;
-	//private BLOBWorkitemController workitemLobMB = null;
-	//private FileUploadBean fileUploadMB = null;
+	// private BLOBWorkitemController workitemLobMB = null;
+	// private FileUploadBean fileUploadMB = null;
 	private MicroBlogMB microBlogMB = null;
 
 	/* Child Process */
@@ -169,30 +169,21 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 */
 
 	/*
-	public BLOBWorkitemController getWorkitemBlobBean() {
-		if (workitemLobMB == null)
-			workitemLobMB = (BLOBWorkitemController) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "workitemBlobMB");
-		return workitemLobMB;
-
-	}
-	*/
+	 * public BLOBWorkitemController getWorkitemBlobBean() { if (workitemLobMB
+	 * == null) workitemLobMB = (BLOBWorkitemController) FacesContext
+	 * .getCurrentInstance() .getApplication() .getELResolver()
+	 * .getValue(FacesContext.getCurrentInstance().getELContext(), null,
+	 * "workitemBlobMB"); return workitemLobMB;
+	 * 
+	 * }
+	 */
 	/*
-	private FileUploadBean getFileUploadMB() {
-		if (fileUploadMB == null)
-			fileUploadMB = (FileUploadBean) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "fileUploadBean");
-		return fileUploadMB;
-	}
-	*/
+	 * private FileUploadBean getFileUploadMB() { if (fileUploadMB == null)
+	 * fileUploadMB = (FileUploadBean) FacesContext .getCurrentInstance()
+	 * .getApplication() .getELResolver()
+	 * .getValue(FacesContext.getCurrentInstance().getELContext(), null,
+	 * "fileUploadBean"); return fileUploadMB; }
+	 */
 
 	public MicroBlogMB getMicroBlogBean() {
 		if (microBlogMB == null)
@@ -302,7 +293,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 						else
 							rb = ResourceBundle.getBundle("bundle.forms");
 
-						String sResouceURL=sURL.replace('/','_');
+						String sResouceURL = sURL.replace('/', '_');
 						sName = rb.getString(sResouceURL);
 					} catch (java.util.MissingResourceException eb) {
 						sName = "";
@@ -358,7 +349,6 @@ public class WorkitemMB extends AbstractWorkflowController {
 		processList = null;
 
 		try {
-			
 
 			// load microBlog Workitem if uniqueid changed since last update
 			if (getConfigBean().getWorkitem().getItemValueBoolean(
@@ -444,7 +434,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 */
 	public void doCreateWorkitem(String processEntityIdentifier,
 			String projectIdentifier) throws Exception {
-		//this.getWorkitemBlobBean().clear();
+		// this.getWorkitemBlobBean().clear();
 		if (processEntityIdentifier != null
 				&& !"".equals(processEntityIdentifier)) {
 
@@ -545,14 +535,12 @@ public class WorkitemMB extends AbstractWorkflowController {
 				.processWorkItem(workitemItemCollection);
 
 		// save attachments stored in WorkitemBlobMB
-	//	getWorkitemBlobBean().save(workitemItemCollection);
-		//getFileUploadMB().reset();
+		// getWorkitemBlobBean().save(workitemItemCollection);
+		// getFileUploadMB().reset();
 
-		
 		// inform Listeners...
 		fireWorkitemProcessCompletedEvent();
 
-		
 		// save micorBlogMB
 		if (getConfigBean().getWorkitem().getItemValueBoolean(
 				"enableMicroBlogging")) {
@@ -568,7 +556,6 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 		}
 
-		
 		// update workitemcollection and reset childs
 		this.setWorkitem(workitemItemCollection);
 		getWorklistBean().doRefresh(event);
@@ -592,7 +579,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 			workitemService.deleteWorkItem(workitemItemCollection);
 			this.setWorkitem(null);
-			//getFileUploadMB().reset();
+			// getFileUploadMB().reset();
 
 			// inform Listeners...
 			fireWorkitemDeleteCompletedEvent();
@@ -615,7 +602,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 			// inform Listeners...
 			fireWorkitemSoftDeleteEvent();
 
-			workitemItemCollection=workitemService.moveIntoDeletions(workitemItemCollection);
+			workitemItemCollection = workitemService
+					.moveIntoDeletions(workitemItemCollection);
 
 			// inform Listeners...
 			fireWorkitemSoftDeleteCompletedEvent();
@@ -813,11 +801,12 @@ public class WorkitemMB extends AbstractWorkflowController {
 			// inform Listeners...
 			fireChildSoftDeleteEvent();
 
-			childWorkitemItemCollection=workitemService.moveIntoDeletions(childWorkitemItemCollection);
-		
+			childWorkitemItemCollection = workitemService
+					.moveIntoDeletions(childWorkitemItemCollection);
+
 			// inform Listeners...
 			fireChildSoftDeleteCompletedEvent();
-			
+
 			doResetChildWorkitems(event);
 		}
 	}
@@ -874,7 +863,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 			workitemItemCollection.getAllItems().remove("a4j:showhistory");
 			workitemItemCollection.getAllItems().remove("a4j:showdetails");
 
-			workitemItemCollection=workitemService.moveIntoArchive(workitemItemCollection);
+			workitemItemCollection = workitemService
+					.moveIntoArchive(workitemItemCollection);
 			this.getWorklistBean().doRefresh(event);
 		}
 	}
@@ -894,7 +884,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 			workitemItemCollection.getAllItems().remove("a4j:showhistory");
 			workitemItemCollection.getAllItems().remove("a4j:showdetails");
 
-			workitemItemCollection=workitemService.moveIntoDeletions(workitemItemCollection);
+			workitemItemCollection = workitemService
+					.moveIntoDeletions(workitemItemCollection);
 			this.getWorklistBean().doRefresh(event);
 
 		}
@@ -915,7 +906,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 			workitemItemCollection.getAllItems().remove("a4j:showhistory");
 			workitemItemCollection.getAllItems().remove("a4j:showdetails");
 
-			workitemItemCollection=workitemService.restoreFromArchive(workitemItemCollection);
+			workitemItemCollection = workitemService
+					.restoreFromArchive(workitemItemCollection);
 
 			this.getWorklistBean().doRefresh(event);
 		}
@@ -934,7 +926,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 			// remove a4j: attributes generated inside the viewentries by the UI
 			workitemItemCollection.getAllItems().remove("a4j:showhistory");
 			workitemItemCollection.getAllItems().remove("a4j:showdetails");
-			workitemItemCollection=workitemService.restoreFromDeletions(workitemItemCollection);
+			workitemItemCollection = workitemService
+					.restoreFromDeletions(workitemItemCollection);
 
 			this.getWorklistBean().doRefresh(event);
 		}
@@ -1004,8 +997,6 @@ public class WorkitemMB extends AbstractWorkflowController {
 		workitemItemCollection.replaceItemValue("a4j:showHistory", bTogle);
 
 	}
-
-	
 
 	/**
 	 * returns the last workflow result to control the navigation flow if no
@@ -1334,7 +1325,10 @@ public class WorkitemMB extends AbstractWorkflowController {
 	/*** Action Events ***/
 
 	public synchronized void addWorkitemListener(WorkitemListener l) {
-		workitemListeners.add(l);
+		// Test if the current listener was allreaded added to avoid that a
+		// listener register itself more than once!
+		if (!workitemListeners.contains(l))
+			workitemListeners.add(l);
 	}
 
 	public synchronized void removeWorkitemListener(WorkitemListener l) {
