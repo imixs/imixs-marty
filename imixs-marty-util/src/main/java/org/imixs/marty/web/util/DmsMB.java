@@ -139,13 +139,15 @@ public class DmsMB extends FileUploadBean {
 	 * @throws Exception
 	 */
 	public void doStartScheduler(ActionEvent event) throws Exception {
+		configItemCollection.replaceItemValue("_enabled", true);
 		configItemCollection = dmsSchedulerService
 				.saveConfiguration(configItemCollection);
 		configItemCollection = dmsSchedulerService.start();
 	}
 
 	public void doStopScheduler(ActionEvent event) throws Exception {
-		configItemCollection = dmsSchedulerService
+		configItemCollection.replaceItemValue("_enabled", false);
+			configItemCollection = dmsSchedulerService
 				.saveConfiguration(configItemCollection);
 		configItemCollection = dmsSchedulerService.stop();
 	}
