@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.faces.component.UIComponent;
@@ -89,6 +90,9 @@ public class ProjectlistMB {
 	private ProjectMB projectMB = null;
 	private MyProfileMB myProfileMB = null;
 	private SetupMB setupMB = null;
+	
+	private static Logger logger = Logger.getLogger("org.imixs.workflow");
+
 
 	public ProjectlistMB() {
 
@@ -498,7 +502,7 @@ public class ProjectlistMB {
 					+ " ORDER BY project.modified DESC";
 			col = entityService.findAllEntities(query, row, count);
 
-			System.out.println("  loadDeletedProjectList ("
+			logger.fine("  loadDeletedProjectList ("
 					+ (System.currentTimeMillis() - l) + " ms) ");
 
 			endOfList = col.size() < count;
@@ -528,7 +532,7 @@ public class ProjectlistMB {
 				long l = System.currentTimeMillis();
 				col = projectService.findAllProjects(0, -1);
 
-				System.out.println("  loadStartProjectList ("
+				logger.fine("  loadStartProjectList ("
 						+ (System.currentTimeMillis() - l) + " ms) ");
 
 				endOfList = col.size() < count;
@@ -566,7 +570,7 @@ public class ProjectlistMB {
 				// load main projects for tree root nodes...
 				col = projectService.findAllMainProjects(0, -1);
 
-				System.out.println("  loadProjectTree ("
+				logger.fine("  loadProjectTree ("
 						+ (System.currentTimeMillis() - l) + " ms) ");
 
 				endOfList = col.size() < count;
@@ -620,7 +624,7 @@ public class ProjectlistMB {
 			else
 				col = projectService.findAllProjects(row, count);
 
-			System.out.println("  loadProjectList ("
+			logger.fine("  loadProjectList ("
 					+ (System.currentTimeMillis() - l) + " ms) ");
 
 			endOfList = col.size() < count;
@@ -646,7 +650,7 @@ public class ProjectlistMB {
 			long l = System.currentTimeMillis();
 			col = projectService.findAllProjectsByOwner(row, count);
 
-			System.out.println("  loadMyProjectList ("
+			logger.fine("  loadMyProjectList ("
 					+ (System.currentTimeMillis() - l) + " ms) ");
 
 			endOfList = col.size() < count;
@@ -673,7 +677,7 @@ public class ProjectlistMB {
 			long l = System.currentTimeMillis();
 			col = projectService.findAllProjectsByMember(row, count);
 
-			System.out.println("  loadMyProjectList ("
+			logger.fine("  loadMyProjectList ("
 					+ (System.currentTimeMillis() - l) + " ms) ");
 
 			endOfList = col.size() < count;
@@ -748,7 +752,7 @@ public class ProjectlistMB {
 
 		List<ItemCollection> col = projectService.findAllProjects(0, -1);
 
-		System.out.println(" -------------- loadMyProjectList : "
+		logger.fine(" -------------- loadMyProjectList : "
 				+ (System.currentTimeMillis() - l) + " ----------------- ");
 		for (ItemCollection aworkitem : col) {
 
@@ -800,7 +804,7 @@ public class ProjectlistMB {
 				// list already known and loaded into the cache!....
 				return startProcessList;
 
-			System.out.println(" -------------- loadProcessList for Project "
+			logger.fine(" -------------- loadProcessList for Project "
 					+ key + "----------------- ");
 
 			if (processEntityCache == null)
@@ -833,8 +837,7 @@ public class ProjectlistMB {
 					try {
 						// now try to separate modelversion from process id ...
 						if (aProcessIdentifier.contains("|")) {
-							System.out
-									.println(" -------------- loadProcessEntity into cache ----------------- ");
+							logger.fine(" -------------- loadProcessEntity into cache ----------------- ");
 
 							String sProcessModelVersion = aProcessIdentifier
 									.substring(0,
@@ -842,10 +845,10 @@ public class ProjectlistMB {
 							String sProcessID = aProcessIdentifier
 									.substring(aProcessIdentifier.indexOf('|') + 1);
 
-							System.out.println(" -------------- Modelversion:"
+							logger.fine(" -------------- Modelversion:"
 									+ sProcessModelVersion
 									+ " ----------------- ");
-							System.out.println(" -------------- ProcessID:"
+							logger.fine(" -------------- ProcessID:"
 									+ sProcessID + " ----------------- ");
 
 							itemColProcessEntity = modelService

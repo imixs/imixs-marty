@@ -339,6 +339,10 @@ public class DmsMB extends FileUploadBean {
 	 */
 	@Override
 	public void onWorkitemProcess(ItemCollection aworkitem) {
+		
+		// ensure that blobworkitem was loaded!
+		doLazyLoading();
+
 		// if a blobWorkitem was just created the blobWorkitem has no
 		// $uniqueid.
 		// But this ID is necessary to build the meta data for the parent
@@ -352,19 +356,19 @@ public class DmsMB extends FileUploadBean {
 			try {
 				getWorkitemBlobBean().getWorkitem().replaceItemValue(
 						"$UniqueID", WorkflowKernel.generateUniqueID());
-				blobWorkitemLoaded = true;
+	//			blobWorkitemLoaded = true;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 
-		if (blobWorkitemLoaded == false)
+	//	if (blobWorkitemLoaded == false)
 			// no changes - exit!
-			return;
-		else {
+	//		return;
+	//	else {
 			// update the dms property....
 			updateDmsMetaData(aworkitem);
-		}
+	//	}
 	}
 
 
@@ -404,12 +408,9 @@ public class DmsMB extends FileUploadBean {
 		// check if dms files need to be copied...
 		if (assignDMSWorkitem == true) {
 			// copy file into wokritem....
-			logger.info("onWorkitemChanged Jetzt muß ich das dms zuweisen....");
-
+			logger.info("onWorkitemChanged assignDMSWorkitem....");
 			doLazyLoading();
-
 			copyDmsFiles();
-
 			assignDMSWorkitem = false;
 			// indicate that the dmsWorkitem should be removed after
 			// onProcessCompleted

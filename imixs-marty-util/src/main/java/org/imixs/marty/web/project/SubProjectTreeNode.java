@@ -2,6 +2,7 @@ package org.imixs.marty.web.project;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import javax.faces.context.FacesContext;
 
@@ -32,7 +33,9 @@ public class SubProjectTreeNode extends TreeNodeImpl {
 	private static final long serialVersionUID = 1L;
 
 	private ItemCollection project = null;
+	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
+	
 	public SubProjectTreeNode(ItemCollection parent, int aprojecttype) {
 		super();
 		
@@ -129,7 +132,7 @@ public class SubProjectTreeNode extends TreeNodeImpl {
 
 		}
 		
-		System.out.println(" ProjectTree loadChildren ("
+		logger.fine(" ProjectTree loadChildren ("
 				+ (System.currentTimeMillis() - l) + " ms) ");
 
 	}

@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -120,6 +121,9 @@ public class MyProfileMB extends AbstractWorkflowController {
 	private WorkitemMB workitemMB = null;
 	private SetupMB setupMB = null;
 
+	private static Logger logger = Logger.getLogger("org.imixs.workflow");
+
+	
 	/**
 	 * The init method is used to load a user profile or automatically create a
 	 * new one if no profile for the user is available. A new Profile will be
@@ -201,8 +205,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 								"CreateDefaultProject") == true)
 							createUserDefaultProject(defaultProcessList);
 					} catch (Exception ecp) {
-						System.out
-								.println("WARNING: Can not create default User Project");
+						logger.warning("WARNING: Can not create default User Project");
 						ecp.printStackTrace();
 					}
 					// process new profile...
@@ -320,8 +323,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 				sDefaultProjectDesc = rb
 						.getString("default_project_description");
 			} catch (Exception e) {
-				System.out
-						.println("Warning: can not load ressource bundle profile");
+				logger.warning("Warning: can not load ressource bundle profile");
 				e.printStackTrace();
 			}
 
@@ -422,7 +424,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 			// Now add the latest ModelVersion to the modelVersionHandler
 			for (String latestversion : latestModelVersions.values()) {
-				System.out.println("===> modelVersionHandler adding:"
+				logger.fine("===> modelVersionHandler adding:"
 						+ latestversion);
 				modelVersionHandler.addVersion(latestversion);
 			}
@@ -465,8 +467,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 			FacesContext context = FacesContext.getCurrentInstance();
 			String sID = (String) context.getExternalContext()
 					.getRequestParameterMap().get("uniqueid");
-			System.out
-					.println("------------ doSwitchToPrimaryProject $uniqueid:"
+			logger.fine("------------ doSwitchToPrimaryProject $uniqueid:"
 							+ sID);
 
 			if (sID == null)
@@ -575,50 +576,8 @@ public class MyProfileMB extends AbstractWorkflowController {
 		updateLocale();
 	}
 
-	/**
-	 * This Method returns a list of the Primary Projects defined by the user
-	 * The Primary Projects are stored in the Attribute txtPrimaryProjectList as
-	 * a collection of $UnqiueIDs
-	 * <p>
-	 * The collection will be sorted by the project names
-	 * 
-	 * @return
-	 */
-	/*
-	 * public List<ItemCollectionAdapter> getPrimaryProjects() { if
-	 * (primaryProjects != null) return primaryProjects;
-	 * System.out.println("----- Compute Primary Project list... ");
-	 * 
-	 * // create primary Project list primaryProjects = new
-	 * ArrayList<ItemCollectionAdapter>();
-	 * 
-	 * Vector<String> vPrimaryProjectList = this.getWorkitem().getItemValue(
-	 * "txtPrimaryProjectList");
-	 * 
-	 * // the following code checks if project uniqueids no longer valid. If so
-	 * // the ids will be collected into a second vector and the attribute //
-	 * txtPrimaryProjectList will be updated afterwords Vector<String>
-	 * vUpdatedPrimaryProjectList = new Vector(); for (String aid :
-	 * vPrimaryProjectList) { ItemCollection itemCol =
-	 * projectService.findProject(aid); if (itemCol != null) {
-	 * primaryProjects.add(new ItemCollectionAdapter(itemCol)); // itemCol can
-	 * be null if user have no longer read access - so // remove this id form
-	 * the primary list later vUpdatedPrimaryProjectList.add(aid);
-	 * System.out.println("----- Loaded Primary Project : " + aid); } } // now
-	 * check if updatedProcjectIDs are different.... if
-	 * (!vPrimaryProjectList.equals(vUpdatedPrimaryProjectList)) { try {
-	 * this.getWorkitem().replaceItemValue("txtPrimaryProjectList",
-	 * vUpdatedPrimaryProjectList);
-	 * profileService.saveProfile(this.getWorkitem()); } catch (Exception e) {
-	 * e.printStackTrace(); } }
-	 * 
-	 * // sort list Collections.sort(primaryProjects, new
-	 * ProjectComparator(FacesContext
-	 * .getCurrentInstance().getViewRoot().getLocale(), true));
-	 * 
-	 * return primaryProjects; }(
-	 * 
-	 * /* Comperator for ProjectNames
+	
+	 /* Comparator for ProjectNames
 	 */
 	class ProjectComparator implements Comparator<ItemCollection> {
 		private final Collator collator;
@@ -642,57 +601,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 	}
 
-	/**
-	 * This Method returns a list of the Primary WorkItems defined by the user
-	 * The Primary Workitems are stored in the Attribute txtPrimaryWorkitemList
-	 * ans a collection of $UnqiueIDs
-	 * 
-	 * If the user has no read access to the worktiem it will be automatical
-	 * removed from the list
-	 * 
-	 * @return
-	 */
-	/*
-	 * public List<ItemCollectionAdapter> getPrimaryWorkitems() { if
-	 * (primaryWorkitems != null) return primaryWorkitems;
-	 * System.out.println("----- Compute Primary Work list... ");
-	 * 
-	 * // create primary Project list primaryWorkitems = new
-	 * ArrayList<ItemCollectionAdapter>();
-	 * 
-	 * Vector<String> vPrimaryWorkItemList = this.getWorkitem().getItemValue(
-	 * "txtPrimaryWorkitemList");
-	 * 
-	 * // the following code checks if project uniqueids no longer valid. If so
-	 * // the ids will be collected into a second vector and the attribute //
-	 * txtPrimaryProjectList will be updated afterwords Vector<String>
-	 * vUpdatedPrimaryWorkitemList = new Vector(); for (String aid :
-	 * vPrimaryWorkItemList) { ItemCollection itemCol =
-	 * workitemService.findWorkItem(aid); if (itemCol != null) {
-	 * primaryWorkitems.add(new ItemCollectionAdapter(itemCol)); // itemCol can
-	 * be null if user have no longer read access - so // remove this id form
-	 * the primary list later vUpdatedPrimaryWorkitemList.add(aid);
-	 * System.out.println("----- Loaded Primary Workitem : " + aid);
-	 * 
-	 * } } // now check if updatedProcjectIDs are different.... if
-	 * (!vPrimaryWorkItemList.equals(vUpdatedPrimaryWorkitemList)) { try {
-	 * this.getWorkitem().replaceItemValue("txtPrimaryWorkitemList",
-	 * vUpdatedPrimaryWorkitemList);
-	 * profileService.saveProfile(this.getWorkitem()); } catch (Exception e) {
-	 * e.printStackTrace(); } }
-	 * 
-	 * return primaryWorkitems; }(
-	 * 
-	 * /** This Method acts as a ActionListener from the PanelMenuItem and
-	 * Selects the current Workitem and refreshes the Worklist Bean
-	 * 
-	 * The method expects the param uniqueid which holds the $uniqueID from the
-	 * selected Workitem.
-	 * 
-	 * The method also sets the corresponding project for the selected workitem
-	 * 
-	 * @return
-	 */
+	
 	public void doEditWorkitem(ActionEvent event) {
 		// get selection
 		UIComponent component = event.getComponent();
@@ -720,8 +629,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 			} catch (Exception e) {
 				// unable to load workitem!
-				System.out
-						.println("Unable to load workitem form TopIssue List!");
+				logger.warning("Unable to load workitem form TopIssue List!");
 				e.printStackTrace();
 			}
 
@@ -776,10 +684,10 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 			lastDropType = sDragType;
 
-			System.out.println("--- Added " + sDragType + " ID: " + sUniqueID);
+			logger.fine("--- Added " + sDragType + " ID: " + sUniqueID);
 
 		} catch (Exception e) {
-			System.out.println("Unable to process Drop Event");
+			logger.warning("Unable to process Drop Event");
 			e.printStackTrace();
 
 		}
@@ -840,10 +748,10 @@ public class MyProfileMB extends AbstractWorkflowController {
 			clearCache();
 			lastDropType = sDragType;
 
-			System.out.println("--- Added " + sDragType + " ID: " + sUniqueID);
+			logger.fine("--- Added " + sDragType + " ID: " + sUniqueID);
 
 		} catch (Exception e) {
-			System.out.println("Unable to process Drop Event");
+			logger.warning("Unable to process Drop Event");
 			e.printStackTrace();
 
 		}
@@ -920,7 +828,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 	private void loadInvitations() {
 		invitations = new ArrayList<ItemCollection>();
 		try {
-			System.out.println("----- Reload Inventations... ");
+			logger.fine("----- Reload Inventations... ");
 			String sEmail = workitemItemCollection
 					.getItemValueString("txtEmail");
 			String sQuery = "";

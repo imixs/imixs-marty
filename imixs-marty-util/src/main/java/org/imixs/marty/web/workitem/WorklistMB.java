@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -84,6 +85,8 @@ public class WorklistMB implements WorkitemListener {
 	private ProjectMB projectBean = null;
 	private SetupMB setupMB = null;
 	private LoginMB loginMB = null;
+
+	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
 	/**
 	 * This method initializes the view type an view settings like sort order
@@ -801,7 +804,7 @@ public class WorklistMB implements WorkitemListener {
 			}
 
 			lTime = System.currentTimeMillis() - lTime;
-			System.out.println("  loadWorkItemList (" + lTime + " ms)");
+			logger.fine("  loadWorkItemList (" + lTime + " ms)");
 
 			endOfList = col.size() < count;
 			for (ItemCollection aworkitem : col) {

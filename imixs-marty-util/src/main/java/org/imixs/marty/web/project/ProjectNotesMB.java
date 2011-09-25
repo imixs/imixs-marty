@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
@@ -71,6 +72,9 @@ public class ProjectNotesMB extends AbstractWorkflowController {
 	ProjectMB projectBean = null;
 	private ArrayList<ItemCollection> invitations = null;
 
+	private static Logger logger = Logger.getLogger("org.imixs.workflow");
+
+	
 	public ProjectNotesMB() {
 	}
 
@@ -204,7 +208,7 @@ public class ProjectNotesMB extends AbstractWorkflowController {
 	private void loadNotes() {
 		notes = new ArrayList<ItemCollection>();
 		try {
-			System.out.println("...Reload Project notes...");
+			logger.fine("...Reload Project notes...");
 			FacesContext context = FacesContext.getCurrentInstance();
 			ExternalContext externalContext = context.getExternalContext();
 			String remoteUser = externalContext.getRemoteUser();
