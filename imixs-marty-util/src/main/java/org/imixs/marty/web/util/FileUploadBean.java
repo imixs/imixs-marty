@@ -258,6 +258,9 @@ public class FileUploadBean implements WorkitemListener {
 	@Override
 	public void onWorkitemProcessCompleted(ItemCollection aworkitem) {
 		try {
+			// reload to get updated file information....
+			getWorkitemBlobBean().load(aworkitem);
+			// final save to upate read/write access
 			getWorkitemBlobBean().save(aworkitem);
 			this.resetFileUpload();
 		} catch (Exception e) {
