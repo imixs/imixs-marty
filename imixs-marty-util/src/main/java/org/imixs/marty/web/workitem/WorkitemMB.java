@@ -513,11 +513,10 @@ public class WorkitemMB extends AbstractWorkflowController {
 		// remove a4j: attributes generated inside the viewentries by the UI
 		workitemItemCollection.removeItem("a4j:showhistory");
 		workitemItemCollection.removeItem("a4j:showdetails");
-		
+
 		// remove last workflow result properties......
 		workitemItemCollection.removeItem("action");
 		workitemItemCollection.removeItem("project");
-
 
 		// set max History & log length
 		workitemItemCollection.replaceItemValue(
@@ -1001,42 +1000,22 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 	/**
 	 * returns the last workflow result to control the navigation flow if no
-	 * result is found open_worklist will be returned.
+	 * result is found open_workitem will be returned.
 	 * 
-	 * The Method parses the WorklfowProperty 'txtworkflowresultmessage' for the
-	 * the präfix:
-	 * 
-	 * <ul>
-	 * <li>view=
-	 * </ul>
-	 * 
-	 * If this präfix is available the string followed by 'view=' will be
-	 * returned
-	 * 
+	 * The property 'action' is computed by teh result plugin
 	 * @return
 	 */
-	/*
-	public String getWorkflowResult() {
+	public String getAction() {
 		if (workitemItemCollection == null)
-			return "open_worklist";
+			return "open_workitem";
 
-		String sResult = workitemItemCollection
-				.getItemValueString("txtworkflowresultmessage");
-		if (sResult == null || "".equals(sResult))
-			return "open_worklist";
-		else {
-			// test if result contains "view="
-			if (sResult.indexOf("view=") > -1) {
-				sResult = sResult.substring(sResult.indexOf("view=") + 5);
-				// cut next newLine
-				if (sResult.indexOf("\n") > -1)
-					sResult = sResult.substring(0, sResult.indexOf("\n"));
-			}
-			System.out.println("getWorkflowResult=" + sResult);
+		String sResult = workitemItemCollection.getItemValueString("action");
+		if ("".equals(sResult))
+			return "open_workitem";
+		else
 			return sResult;
-		}
+
 	}
-	*/
 
 	/**
 	 * returns the process description text from the current processEntity
@@ -1113,27 +1092,17 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @return
 	 */
 	/*
-	 * <code>
-	public String getWorkflowProject() {
-		if (workitemItemCollection == null)
-			return "";
-
-		String sResult = workitemItemCollection
-				.getItemValueString("txtworkflowresultmessage");
-		if (sResult != null && !"".equals(sResult)) {
-			// test if result contains "report="
-			if (sResult.indexOf("project=") > -1) {
-				sResult = sResult.substring(sResult.indexOf("project=") + 8);
-				// cut next newLine
-				if (sResult.indexOf("\n") > -1)
-					sResult = sResult.substring(0, sResult.indexOf("\n"));
-			}
-			return sResult;
-		} else
-			return "";
-	}
-	</code>
-	*/
+	 * <code> public String getWorkflowProject() { if (workitemItemCollection ==
+	 * null) return "";
+	 * 
+	 * String sResult = workitemItemCollection
+	 * .getItemValueString("txtworkflowresultmessage"); if (sResult != null &&
+	 * !"".equals(sResult)) { // test if result contains "report=" if
+	 * (sResult.indexOf("project=") > -1) { sResult =
+	 * sResult.substring(sResult.indexOf("project=") + 8); // cut next newLine
+	 * if (sResult.indexOf("\n") > -1) sResult = sResult.substring(0,
+	 * sResult.indexOf("\n")); } return sResult; } else return ""; } </code>
+	 */
 	/***
 	 * This method finds the corresponding Project of the curreent workitem and
 	 * updates the ProjectMB with this project
