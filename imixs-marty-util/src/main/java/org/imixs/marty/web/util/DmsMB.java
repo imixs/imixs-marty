@@ -369,6 +369,9 @@ public class DmsMB extends FileUploadBean {
 			// update the dms property....
 			updateDmsMetaData(aworkitem);
 	//	}
+			
+			
+			super.onWorkitemProcess(aworkitem);
 	}
 
 

@@ -511,8 +511,13 @@ public class WorkitemMB extends AbstractWorkflowController {
 		}
 
 		// remove a4j: attributes generated inside the viewentries by the UI
-		workitemItemCollection.getAllItems().remove("a4j:showhistory");
-		workitemItemCollection.getAllItems().remove("a4j:showdetails");
+		workitemItemCollection.removeItem("a4j:showhistory");
+		workitemItemCollection.removeItem("a4j:showdetails");
+		
+		// remove last workflow result properties......
+		workitemItemCollection.removeItem("action");
+		workitemItemCollection.removeItem("project");
+
 
 		// set max History & log length
 		workitemItemCollection.replaceItemValue(
@@ -533,10 +538,6 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 		workitemItemCollection = workitemService
 				.processWorkItem(workitemItemCollection);
-
-		// save attachments stored in WorkitemBlobMB
-		// getWorkitemBlobBean().save(workitemItemCollection);
-		// getFileUploadMB().reset();
 
 		// inform Listeners...
 		fireWorkitemProcessCompletedEvent();
@@ -1014,6 +1015,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * 
 	 * @return
 	 */
+	/*
 	public String getWorkflowResult() {
 		if (workitemItemCollection == null)
 			return "open_worklist";
@@ -1034,6 +1036,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 			return sResult;
 		}
 	}
+	*/
 
 	/**
 	 * returns the process description text from the current processEntity
@@ -1109,6 +1112,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * 
 	 * @return
 	 */
+	/*
+	 * <code>
 	public String getWorkflowProject() {
 		if (workitemItemCollection == null)
 			return "";
@@ -1127,7 +1132,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 		} else
 			return "";
 	}
-
+	</code>
+	*/
 	/***
 	 * This method finds the corresponding Project of the curreent workitem and
 	 * updates the ProjectMB with this project

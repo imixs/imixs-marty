@@ -12,6 +12,7 @@ import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
+import org.imixs.workflow.plugins.ResultPlugin;
 import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
@@ -32,24 +33,25 @@ public class SywappTeamPlugin extends AbstractPlugin {
 	@Override
 	public void init(WorkflowContext actx) throws Exception {
 		super.init(actx);
-		     // check for an instance of WorkflowService
-	        if (actx instanceof WorkflowService) {
-	                // yes we are running in a WorkflowService EJB
-	                WorkflowService ws=(WorkflowService)actx;
-	                // get latest model version....
-	                entityService=ws.getEntityService();
-	        }
-	        
-	        
-		// lookup profile service EJB
-		//String jndiName = "ejb/ProjectServiceBean";
-		//InitialContext ictx = new InitialContext();
-		
-		 // FooBean foo = (FooBean) new InitialContext().lookup("java:module/FooBean");
+		// check for an instance of WorkflowService
+		if (actx instanceof WorkflowService) {
+			// yes we are running in a WorkflowService EJB
+			WorkflowService ws = (WorkflowService) actx;
+			// get latest model version....
+			entityService = ws.getEntityService();
+		}
 
-		//Context ctx = (Context) ictx.lookup("java:comp/env");
-		//projectService = (ProjectService) ctx.lookup(jndiName);
-		  projectService= (ProjectService) new InitialContext().lookup("java:module/ProjectService");
+		// lookup profile service EJB
+		// String jndiName = "ejb/ProjectServiceBean";
+		// InitialContext ictx = new InitialContext();
+
+		// FooBean foo = (FooBean) new
+		// InitialContext().lookup("java:module/FooBean");
+
+		// Context ctx = (Context) ictx.lookup("java:comp/env");
+		// projectService = (ProjectService) ctx.lookup(jndiName);
+		projectService = (ProjectService) new InitialContext()
+				.lookup("java:module/ProjectService");
 
 	}
 
@@ -91,42 +93,61 @@ public class SywappTeamPlugin extends AbstractPlugin {
 	public int run(ItemCollection workItem, ItemCollection documentActivity)
 			throws Exception {
 
+		String sProjectName = null;
+		String sResult = null;
+
 		/*
 		 * the following code updates a project reference if the
-		 * workflowresultmessage contains a project= ref
+		 * workflowresultmessage contains a project= ref test if a new project
+		 * reference need to be set now! we support both - old pattern
+		 * 'project=....' and new pattern
+		 * 
+		 * '<item name="_project">...</item>'
 		 */
 
-		String sResult = null;
-		// test if a new project reference need to be set now!
 		try {
 			// Read workflow result directly from the activity definition
 			sResult = documentActivity.getItemValueString("txtActivityResult");
-			sResult = replaceDynamicValues(sResult, workItem);
 
+			ItemCollection evalItemCollection=new ItemCollection();
+			ResultPlugin.evaluate(sResult, evalItemCollection);
+			
+			
+			// check for old pattern 'project=....' (deprecated!)
+			/*
 			if (sResult.indexOf("project=") > -1) {
-				sResult = sResult.substring(sResult.indexOf("project=") + 8);
+				sResult = replaceDynamicValues(sResult, workItem);
+				sProjectName = sResult
+						.substring(sResult.indexOf("project=") + 8);
 				// cut next newLine
-				if (sResult.indexOf("\n") > -1)
-					sResult = sResult.substring(0, sResult.indexOf("\n"));
+				if (sProjectName.indexOf("\n") > -1)
+					sProjectName = sProjectName.substring(0,
+							sProjectName.indexOf("\n"));
 
-				if (!"".equals(sResult)) {
-					System.out
-							.println("[WorkitemService] Updating Project reference: "
-									+ sResult);
-					// try to update project reference
-					ItemCollection parent = this.projectService
-							.findProjectByName(sResult);
-					if (parent != null) {
+			} else {
+			*/
+				// new Pattern
+				sProjectName = evalItemCollection.getItemValueString("project");
+			//}
 
-						// assign project name and reference
-						workItem.replaceItemValue("$uniqueidRef", parent
-								.getItemValueString("$uniqueid"));
-						workItem.replaceItemValue("txtProjectName", parent
-								.getItemValueString("txtname"));
+			if (!"".equals(sProjectName)) {
+				System.out
+						.println("[WorkitemService] Updating Project reference: "
+								+ sProjectName);
+				// try to update project reference
+				ItemCollection parent = this.projectService
+						.findProjectByName(sProjectName);
+				if (parent != null) {
 
-					}
+					// assign project name and reference
+					workItem.replaceItemValue("$uniqueidRef",
+							parent.getItemValueString("$uniqueid"));
+					workItem.replaceItemValue("txtProjectName",
+							parent.getItemValueString("txtname"));
+
 				}
 			}
+
 		} catch (Exception upr) {
 			System.out
 					.println("[WorkitemServiceBean] WARNING - Unable to update Project ("
@@ -162,7 +183,7 @@ public class SywappTeamPlugin extends AbstractPlugin {
 			Vector vSubOwner = new Vector();
 			Vector vSubAssist = new Vector();
 			Vector vSubManager = new Vector();
-			String sProjectName = "";
+			 sProjectName = "";
 
 			String parentType = itemColProject.getItemValueString("type");
 			if ("project".equals(parentType)) {
@@ -220,8 +241,7 @@ public class SywappTeamPlugin extends AbstractPlugin {
 			workItem.replaceItemValue("namProjectAssist", vAssist);
 			workItem.replaceItemValue("namProjectManager", vManager);
 			workItem.replaceItemValue("namParentProjectAssist", vParentAssist);
-			workItem
-					.replaceItemValue("namParentProjectManager", vParentManager);
+			workItem.replaceItemValue("namParentProjectManager", vParentManager);
 			workItem.replaceItemValue("namSubProjectAssist", vSubAssist);
 			workItem.replaceItemValue("namSubProjectManager", vSubManager);
 

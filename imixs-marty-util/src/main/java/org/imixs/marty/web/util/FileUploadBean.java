@@ -227,20 +227,34 @@ public class FileUploadBean implements WorkitemListener {
 					this.getWorkitemBlobBean().load(aworkitem);
 				}
 			}
-			
+
 		} catch (Exception e) {
 			this.getWorkitemBlobBean().clear();
 			e.printStackTrace();
 		}
-		
+
 		resetFileUpload();
 	}
 
+	/**
+	 * Save the BlobWorkitem content before processing. This is necessary to
+	 * provide blobWorkitem informations to other ejb based plugins
+	 */
 	@Override
 	public void onWorkitemProcess(ItemCollection aworkitem) {
+		try {
+			getWorkitemBlobBean().save(aworkitem);
+			this.resetFileUpload();
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		}
 
 	}
 
+	/**
+	 * Finally save the blobWorkite with the current access settings
+	 */
 	@Override
 	public void onWorkitemProcessCompleted(ItemCollection aworkitem) {
 		try {
