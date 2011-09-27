@@ -242,6 +242,10 @@
 			<from-outcome>open_workitem</from-outcome>
 			<to-view-id>/pages/workitems/workitem.xhtml</to-view-id>
 		</navigation-case>
+		<navigation-case>
+			<from-outcome>show_workitem</from-outcome>
+			<to-view-id>/pages/workitems/workitem.xhtml</to-view-id>
+		</navigation-case>
 
 
 		<!-- ***** MyProfile ****** -->
