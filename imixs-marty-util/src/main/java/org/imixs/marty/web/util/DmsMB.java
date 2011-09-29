@@ -544,9 +544,10 @@ public class DmsMB extends FileUploadBean {
 			// exists (this is an external reference)
 			List<Map> vDMS = aworkitem.getItemValue("dms");
 			for (Map aMetadata : vDMS) {
-				// test for proprety url....
-				String sTestURL=(String)aMetadata.get("url");
-				if (sTestURL != null && !"".equals(sTestURL))
+				// test for property url....
+				ItemCollection itemCol =new ItemCollection (aMetadata);
+				String sTestURL=itemCol.getItemValueString("url");
+				if (!"".equals(sTestURL))
 					vDMSnew.add(aMetadata);
 			}
 
