@@ -147,7 +147,7 @@ public class DmsMB extends FileUploadBean {
 
 	public void doStopScheduler(ActionEvent event) throws Exception {
 		configItemCollection.replaceItemValue("_enabled", false);
-			configItemCollection = dmsSchedulerService
+		configItemCollection = dmsSchedulerService
 				.saveConfiguration(configItemCollection);
 		configItemCollection = dmsSchedulerService.stop();
 	}
@@ -339,7 +339,7 @@ public class DmsMB extends FileUploadBean {
 	 */
 	@Override
 	public void onWorkitemProcess(ItemCollection aworkitem) {
-		
+
 		// ensure that blobworkitem was loaded!
 		doLazyLoading();
 
@@ -356,24 +356,22 @@ public class DmsMB extends FileUploadBean {
 			try {
 				getWorkitemBlobBean().getWorkitem().replaceItemValue(
 						"$UniqueID", WorkflowKernel.generateUniqueID());
-	//			blobWorkitemLoaded = true;
+				// blobWorkitemLoaded = true;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 
-	//	if (blobWorkitemLoaded == false)
-			// no changes - exit!
-	//		return;
-	//	else {
-			// update the dms property....
-			updateDmsMetaData(aworkitem);
-	//	}
-			
-			
-			super.onWorkitemProcess(aworkitem);
-	}
+		// if (blobWorkitemLoaded == false)
+		// no changes - exit!
+		// return;
+		// else {
+		// update the dms property....
+		updateDmsMetaData(aworkitem);
+		// }
 
+		super.onWorkitemProcess(aworkitem);
+	}
 
 	/**
 	 * remove dmsWorkitem if it was assigned before
@@ -381,24 +379,24 @@ public class DmsMB extends FileUploadBean {
 	@Override
 	public void onWorkitemProcessCompleted(ItemCollection aworkitem) {
 		super.onWorkitemProcessCompleted(aworkitem);
-		
+
 		try {
-			if (removeDMWWorkitem==true && dmsItemCollection!=null) {
+			if (removeDMWWorkitem == true && dmsItemCollection != null) {
 				logger.info("DmsMB - removing dmsItemCollection.....");
 				entityService.remove(dmsItemCollection);
-				removeDMWWorkitem=false;
-				
+				removeDMWWorkitem = false;
+
 				doReset(null);
-				
+
 			}
-			
+
 		} catch (Exception e) {
 
 			e.printStackTrace();
 		}
 
 	}
-	
+
 	/**
 	 * Avoid preloading the blobworkitem on a workitemchanged event
 	 * 
@@ -541,6 +539,16 @@ public class DmsMB extends FileUploadBean {
 
 			// get the current dms value....
 			Vector<Map> vDMSnew = new Vector<Map>();
+
+			// first we add all old dms informations where a 'url' property
+			// exists (this is an external reference)
+			List<Map> vDMS = aworkitem.getItemValue("dms");
+			for (Map aMetadata : vDMS) {
+				// test for proprety url....
+				String sTestURL=(String)aMetadata.get("url");
+				if (sTestURL != null && !"".equals(sTestURL))
+					vDMSnew.add(aMetadata);
+			}
 
 			// now we test if for each file entry a dms meta data entry still
 			// exists

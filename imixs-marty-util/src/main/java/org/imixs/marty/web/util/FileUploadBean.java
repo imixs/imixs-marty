@@ -238,7 +238,11 @@ public class FileUploadBean implements WorkitemListener {
 
 	/**
 	 * Save the BlobWorkitem content before processing. This is necessary to
-	 * provide blobWorkitem informations to other ejb based plugins
+	 * provide blobWorkitem informations to other ejb based plugins.
+	 * 
+	 * If the workItem itself was not saved before also no valid $uniqueID
+	 * exists. In this case the blobWorkitem will not! be saved.
+	 * 
 	 */
 	@Override
 	public void onWorkitemProcess(ItemCollection aworkitem) {
@@ -254,13 +258,25 @@ public class FileUploadBean implements WorkitemListener {
 
 	/**
 	 * Finally save the blobWorkite with the current access settings
+	 * 
+	 * Before the save call, the method tries to reload the blobWorkitem. This
+	 * is necessary to reflect changes made by a plug-in.
+	 * 
+	 * But the method only must re-load the BlobWorkitem if we have a valid
+	 * $uniqueIDref. If not this indicates that the blobWorkitem is new and was
+	 * not saved before!
 	 */
 	@Override
 	public void onWorkitemProcessCompleted(ItemCollection aworkitem) {
 		try {
-			// reload to get updated file information....
-			getWorkitemBlobBean().load(aworkitem);
-			// final save to upate read/write access
+			// reload the blobWorkitem to get updated file information if it was
+			// saved before....
+			if (getWorkitemBlobBean().getWorkitem() != null
+					&& !"".equals(getWorkitemBlobBean().getWorkitem()
+							.getItemValueString("$uniqueidRef")))
+				getWorkitemBlobBean().load(aworkitem);
+
+			// finally save the blobWorkitem to update the read/write access settings
 			getWorkitemBlobBean().save(aworkitem);
 			this.resetFileUpload();
 		} catch (Exception e) {
