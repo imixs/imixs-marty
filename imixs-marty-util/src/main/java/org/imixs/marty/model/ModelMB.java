@@ -31,11 +31,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
+import javax.management.RuntimeErrorException;
 
 import org.imixs.marty.util.SelectItemComparator;
 import org.imixs.marty.web.profile.MyProfileMB;
@@ -50,8 +52,8 @@ import org.imixs.workflow.jee.ejb.ModelService;
  * management or Profile Settings) and the general Models used in a typical
  * workflow
  * 
- * A latest System Model depends on the current user locale. The general
- * models are language independent.
+ * A latest System Model depends on the current user locale. The general models
+ * are language independent.
  * 
  * A ModelVersion is always expected in the format
  * 
@@ -75,11 +77,14 @@ public class ModelMB {
 	private ArrayList<SelectItem> workflowGroupSelection = null;
 	private ArrayList<SelectItem> startProcessSelection = null;
 
-	private HashMap modelCache = null;
+	private HashMap modelVersionCache = null;
+	private HashMap processEntityCache = null;
 
 	/* Model Service */
 	@EJB
 	ModelService modelService;
+
+	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
 	/**
 	 * The init method is used load all model versions and store the latest
@@ -115,7 +120,8 @@ public class ModelMB {
 	@PostConstruct
 	public void init() {
 
-		modelCache = new HashMap();
+		modelVersionCache = new HashMap();
+		processEntityCache= new ProcessCache();
 
 		List<String> col;
 		try {
@@ -142,15 +148,15 @@ public class ModelMB {
 				// all this stuff is because of a unlucky modelversion format
 				// from early versions
 				String sJunk = aModelVersion;
-				
-				
-				String sVersionPart = sJunk.substring(sJunk.lastIndexOf("-") + 1);
+
+				String sVersionPart = sJunk
+						.substring(sJunk.lastIndexOf("-") + 1);
 				String sMainPart = sJunk.substring(0, sJunk.lastIndexOf("-"));
 				// the language is now the second token from the main part!
-				stFormat = new StringTokenizer(sMainPart,"-");
+				stFormat = new StringTokenizer(sMainPart, "-");
 				String sDomain = stFormat.nextToken();
 				String sLanguage = stFormat.nextToken();
-				
+
 				// Check if modelversion is a System Model - latest version will
 				// be
 				// stored
@@ -177,9 +183,9 @@ public class ModelMB {
 				 * Now we have a general Model. So we test her if the Mainpart
 				 * is later then the last version stored
 				 */
-				String lastModel = (String) modelCache.get(sMainPart);
+				String lastModel = (String) modelVersionCache.get(sMainPart);
 				if (lastModel == null || lastModel.compareTo(aModelVersion) < 0) {
-					modelCache.put(sMainPart, aModelVersion);
+					modelVersionCache.put(sMainPart, aModelVersion);
 
 				}
 
@@ -202,7 +208,7 @@ public class ModelMB {
 		if (workflowGroupSelection == null) {
 			// build new groupSelection
 			workflowGroupSelection = new ArrayList<SelectItem>();
-			Iterator iter = modelCache.entrySet().iterator();
+			Iterator iter = modelVersionCache.entrySet().iterator();
 			while (iter.hasNext()) {
 				Map.Entry mapEntry = (Map.Entry) iter.next();
 				String sModelVersionName = mapEntry.getValue().toString();
@@ -274,7 +280,7 @@ public class ModelMB {
 					.getItemValueString("txtlocale");
 
 			// interate over all processgroups...
-			Iterator iterGroups = modelCache.entrySet().iterator();
+			Iterator iterGroups = modelVersionCache.entrySet().iterator();
 			while (iterGroups.hasNext()) {
 				Map.Entry mapEntry = (Map.Entry) iterGroups.next();
 				String sModelVersionName = mapEntry.getValue().toString();
@@ -345,12 +351,109 @@ public class ModelMB {
 	 */
 	public MyProfileMB getProfileBean() {
 		if (myProfileMB == null)
-			myProfileMB = (MyProfileMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			myProfileMB = (MyProfileMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "myProfileMB");
 
 		return myProfileMB;
+
+	}
+	
+	
+	
+	
+	/**
+	 * returns the internal cache map to lookup a process entity 
+	 * @return
+	 */
+	public HashMap getProcessEntity() {
+		return processEntityCache;
+	}
+
+
+
+
+	/**
+	 * This class implements an internal Cache for Process Entities. The Class
+	 * overwrites the get() Method and implements an lazy loading mechanism to
+	 * load a process entity only once a time the entity was requested. After
+	 * the first load the entity is cached internal so further get() calls are
+	 * very fast.
+	 * 
+	 * The key value expected of the get() method is a string with
+	 * modelVersion|ProcessID.
+	 * 
+	 * The Cache size is shrinked to a maximum of 30 process entities to be
+	 * cached one time. This mechanism can be optimized later...
+	 * 
+	 * @author rsoika
+	 * 
+	 */
+	class ProcessCache extends HashMap {
+		final int MAX_SIZE = 30;
+
+		/**
+		 * returns a single value out of the ItemCollection if the key dos not
+		 * exist the method will create a value automatical
+		 */
+		@SuppressWarnings("unchecked")
+		public Object get(Object key) {
+			ItemCollection process;
+			String sProcessKey;
+
+			// check if a key is a String....
+			if (key == null || !(key instanceof String))
+				return null;
+
+			sProcessKey = (String) key;
+
+			// 1.) try to get entity out from cache..
+			process = (ItemCollection) super.get(key);
+			if (process != null)
+				// entity already known and loaded into the cache!....
+				return process;
+
+			logger.info(" ModelMB loadProcess Entity " + sProcessKey);
+
+			// not yet cached...
+			try {
+				// now try to separate modelversion from process id ...
+				if (sProcessKey.contains("|")) {
+					String sProcessModelVersion = sProcessKey.substring(0,
+							sProcessKey.indexOf('|'));
+					String sProcessID = sProcessKey.substring(sProcessKey
+							.indexOf('|') + 1);
+
+					process = modelService.getProcessEntityByVersion(
+							Integer.parseInt(sProcessID), sProcessModelVersion);
+
+				} else
+					throw new RuntimeException(" ModelMB invalid Process Identitfier: " + sProcessKey + " - modellversion|processid expected!");
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+				process = null;
+			} catch (Exception e) {
+				e.printStackTrace();
+				process = null;
+			}
+
+			// now put processEntity first time into the cache
+
+			// if size > MAX_SIZE than remove first entry
+			if (this.keySet().size() > MAX_SIZE) {
+				Object oldesKey = this.keySet().iterator().next();
+				System.out
+						.println(" ModelMB maximum ProcessCacheSize exeeded remove : "
+								+ oldesKey);
+				this.remove(oldesKey);
+			}
+
+			this.put(key, process);
+			return process;
+		}
 
 	}
 
