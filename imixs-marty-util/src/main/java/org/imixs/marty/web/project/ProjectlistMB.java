@@ -90,9 +90,8 @@ public class ProjectlistMB {
 	private ProjectMB projectMB = null;
 	private MyProfileMB myProfileMB = null;
 	private SetupMB setupMB = null;
-	
-	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
+	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
 	public ProjectlistMB() {
 
@@ -176,11 +175,11 @@ public class ProjectlistMB {
 	 */
 	public void doSwitchToProject(ActionEvent event) {
 
-		if (event==null) {
+		if (event == null) {
 			getProjectBean().setWorkitem(null);
 			return;
 		}
-		
+
 		ItemCollection currentSelection = null;
 		// find current data row....
 		UIComponent component = event.getComponent();
@@ -804,8 +803,8 @@ public class ProjectlistMB {
 				// list already known and loaded into the cache!....
 				return startProcessList;
 
-			logger.fine(" -------------- loadProcessList for Project "
-					+ key + "----------------- ");
+			logger.fine(" -------------- loadProcessList for Project " + key
+					+ "----------------- ");
 
 			if (processEntityCache == null)
 				processEntityCache = new HashMap();

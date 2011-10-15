@@ -251,10 +251,7 @@ public class WorklistMB implements WorkitemListener {
 	public void setViewTitle(String viewTitle) {
 		Locale locale = new Locale(this.getLoginBean().getLocale());
 		ResourceBundle rb = null;
-		if (locale != null)
-			rb = ResourceBundle.getBundle("bundle.workitem", locale);
-		else
-			rb = ResourceBundle.getBundle("bundle.workitem");
+		rb = ResourceBundle.getBundle("bundle.workitem", locale);
 
 		this.viewTitle = rb.getString(viewTitle);
 

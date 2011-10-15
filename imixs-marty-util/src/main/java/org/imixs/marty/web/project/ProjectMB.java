@@ -96,9 +96,11 @@ public class ProjectMB extends AbstractWorkflowController {
 	 */
 	public MyProfileMB getProfileBean() {
 		if (myProfileMB == null)
-			myProfileMB = (MyProfileMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			myProfileMB = (MyProfileMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "myProfileMB");
 
 		return myProfileMB;
@@ -107,9 +109,11 @@ public class ProjectMB extends AbstractWorkflowController {
 
 	private SetupMB getConfigBean() {
 		if (setupMB == null)
-			setupMB = (SetupMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			setupMB = (SetupMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "setupMB");
 		return setupMB;
 	}
@@ -117,9 +121,11 @@ public class ProjectMB extends AbstractWorkflowController {
 	public ProjectlistMB getProjectListMB() {
 		// get WorklistMB instance
 		if (projectlist == null)
-			projectlist = (ProjectlistMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			projectlist = (ProjectlistMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "projectlistMB");
 
 		return projectlist;
@@ -128,9 +134,11 @@ public class ProjectMB extends AbstractWorkflowController {
 	public WorklistMB getworkListMB() {
 		// get WorklistMB instance
 		if (worklistMB == null)
-			worklistMB = (WorklistMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			worklistMB = (WorklistMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "worklistMB");
 
 		return worklistMB;
@@ -138,9 +146,11 @@ public class ProjectMB extends AbstractWorkflowController {
 
 	public WorkitemMB getWorkitemBean() {
 		if (workitemMB == null)
-			workitemMB = (WorkitemMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			workitemMB = (WorkitemMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "workitemMB");
 		return workitemMB;
 	}
@@ -148,9 +158,11 @@ public class ProjectMB extends AbstractWorkflowController {
 	public NameLookupMB getNameLookupBean() {
 		// get WorklistMB instance
 		if (nameLookup == null)
-			nameLookup = (NameLookupMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
+			nameLookup = (NameLookupMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "nameLookupMB");
 
 		return nameLookup;
@@ -184,11 +196,12 @@ public class ProjectMB extends AbstractWorkflowController {
 		try {
 			// reset worklist
 			this.getworkListMB().doReset(null);
-			
-			
-			// reset search filter
+
+			// reset view filters
 			this.getworkListMB().setProcessFilter(0);
 			this.getworkListMB().setWorkflowGroupFilter(null);
+			this.getworkListMB().setProjectFilter(
+					workitemItemCollection.getItemValueString("$uniqueid"));
 
 			// disable toogle switch for searchfilter and process list
 			workitemItemCollection.replaceItemValue("a4j:showSearchFilter",
@@ -198,16 +211,15 @@ public class ProjectMB extends AbstractWorkflowController {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		// switch in default list
-		// if user is project member switch into all-worktiems list. otherwise in statuslist
+		// if user is project member switch into all-worktiems list. otherwise
+		// in statuslist
 		/*
-		if (aworkitem!=null && !isMember())
-			this.getworkListMB().doSwitchToWorklistByCreator(null);
-		else
-			this.getworkListMB().doSwitchToWorklistAll(null);
-			
-		*/
+		 * if (aworkitem!=null && !isMember())
+		 * this.getworkListMB().doSwitchToWorklistByCreator(null); else
+		 * this.getworkListMB().doSwitchToWorklistAll(null);
+		 */
 	}
 
 	/**
@@ -249,10 +261,6 @@ public class ProjectMB extends AbstractWorkflowController {
 				.indexOf(remoteUser) > -1);
 
 	}
-	
-	
-
-
 
 	/**
 	 * Returns true if current user is member of the current project team list
@@ -282,9 +290,9 @@ public class ProjectMB extends AbstractWorkflowController {
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
 
-	
 	/**
-	 * Returns true if current user is member of the current project manager list
+	 * Returns true if current user is member of the current project manager
+	 * list
 	 * 
 	 * @return
 	 */
@@ -293,11 +301,11 @@ public class ProjectMB extends AbstractWorkflowController {
 		ExternalContext externalContext = FacesContext.getCurrentInstance()
 				.getExternalContext();
 		String remoteUser = externalContext.getRemoteUser();
-		Vector<String> vTeam = workitemItemCollection.getItemValue("namManager");
+		Vector<String> vTeam = workitemItemCollection
+				.getItemValue("namManager");
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
 
-	
 	/**
 	 * Returns true if current user is member of the current project assist list
 	 * 
@@ -311,7 +319,6 @@ public class ProjectMB extends AbstractWorkflowController {
 		Vector<String> vTeam = workitemItemCollection.getItemValue("namAssist");
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
-
 
 	/**
 	 * returns a unique list with all member names
@@ -431,11 +438,10 @@ public class ProjectMB extends AbstractWorkflowController {
 		workitemItemCollection.replaceItemValue("namManager", new Vector());
 
 		// add a default process
-		workitemItemCollection.replaceItemValue("txtprocesslist", this
-				.getConfigBean().getWorkitem().getItemValue(
-						"defaultprojectprocesslist"));
-
-		
+		workitemItemCollection.replaceItemValue(
+				"txtprocesslist",
+				this.getConfigBean().getWorkitem()
+						.getItemValue("defaultprojectprocesslist"));
 
 	}
 
@@ -470,8 +476,6 @@ public class ProjectMB extends AbstractWorkflowController {
 				sParentProjectName);
 		workitemItemCollection.replaceItemValue("$UniqueIDRef",
 				sParentProjektID);
-
-	
 
 	}
 
@@ -612,10 +616,12 @@ public class ProjectMB extends AbstractWorkflowController {
 		workitemItemCollection.getAllItems().remove("a4j:showsearchfilter");
 
 		// set max History & log length
-		workitemItemCollection.replaceItemValue("numworkflowHistoryLength",
+		workitemItemCollection.replaceItemValue(
+				"numworkflowHistoryLength",
 				getConfigBean().getWorkitem().getItemValueInteger(
 						"MaxProjectHistoryLength"));
-		workitemItemCollection.replaceItemValue("numworkflowLogLength",
+		workitemItemCollection.replaceItemValue(
+				"numworkflowLogLength",
 				getConfigBean().getWorkitem().getItemValueInteger(
 						"MaxProjectHistoryLength"));
 
@@ -655,15 +661,14 @@ public class ProjectMB extends AbstractWorkflowController {
 		workitemItemCollection = projectService
 				.processProject(workitemItemCollection);
 
-		ItemCollection saveItem=workitemItemCollection;
-		
+		ItemCollection saveItem = workitemItemCollection;
+
 		this.getProjectListMB().doRefresh(event);
 		this.getProjectListMB().resetProcessList();
 		this.getProfileBean().clearCache();
 
-		
 		this.setWorkitem(saveItem);
-		
+
 	}
 
 	/**
@@ -733,24 +738,24 @@ public class ProjectMB extends AbstractWorkflowController {
 		invitation.replaceItemValue("$ModelVersion", sModelVersion);
 
 		invitation.replaceItemValue("type", "invitation");
-		invitation.replaceItemValue("$UniqueIDRef", workitemItemCollection
-				.getItemValue("$uniqueID"));
+		invitation.replaceItemValue("$UniqueIDRef",
+				workitemItemCollection.getItemValue("$uniqueID"));
 
 		// test if a workitem is currently defined to store the uniqueid
 		ItemCollection aworkitem = this.getWorkitemBean().getWorkitem();
 		if (aworkitem != null)
-			invitation.replaceItemValue("$invitationWorkitemID", aworkitem
-					.getItemValue("$uniqueID"));
+			invitation.replaceItemValue("$invitationWorkitemID",
+					aworkitem.getItemValue("$uniqueID"));
 
-		invitation.replaceItemValue("txtProjectName", workitemItemCollection
-				.getItemValue("txtProjectName"));
+		invitation.replaceItemValue("txtProjectName",
+				workitemItemCollection.getItemValue("txtProjectName"));
 		invitation.replaceItemValue("txtProjectdescription",
 				workitemItemCollection.getItemValue("txtdescription"));
 
-		invitation.replaceItemValue("namOwner", workitemItemCollection
-				.getItemValue("namOwner"));
-		invitation.replaceItemValue("namTeam", workitemItemCollection
-				.getItemValue("namTeam"));
+		invitation.replaceItemValue("namOwner",
+				workitemItemCollection.getItemValue("namOwner"));
+		invitation.replaceItemValue("namTeam",
+				workitemItemCollection.getItemValue("namTeam"));
 
 		invitation.replaceItemValue("txtEmail", sEmail);
 
@@ -780,8 +785,7 @@ public class ProjectMB extends AbstractWorkflowController {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent)
-					.getRowData();
+			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
 			break;
 
 		}
@@ -810,8 +814,7 @@ public class ProjectMB extends AbstractWorkflowController {
 				continue;
 
 			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent)
-					.getRowData();
+			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
 			break;
 
 		}
@@ -1068,10 +1071,12 @@ public class ProjectMB extends AbstractWorkflowController {
 		this.setWorkitem(parentProject);
 
 		// get WorklistMB instance
-		WorklistMB worklist = (WorklistMB) FacesContext.getCurrentInstance()
-				.getApplication().getELResolver().getValue(
-						FacesContext.getCurrentInstance().getELContext(), null,
-						"worklistMB");
+		WorklistMB worklist = (WorklistMB) FacesContext
+				.getCurrentInstance()
+				.getApplication()
+				.getELResolver()
+				.getValue(FacesContext.getCurrentInstance().getELContext(),
+						null, "worklistMB");
 
 		worklist.doReset(event);
 
@@ -1090,17 +1095,18 @@ public class ProjectMB extends AbstractWorkflowController {
 		ExternalContext ectx = FacesContext.getCurrentInstance()
 				.getExternalContext();
 		String remoteUser = ectx.getRemoteUser();
-		Vector ownerList=this.getWorkitem().getItemValue("namOwner");
-		
-		if (ectx.isUserInRole("org.imixs.ACCESSLEVEL.MANAGERACCESS") || ownerList.indexOf(remoteUser)>-1) {
+		Vector ownerList = this.getWorkitem().getItemValue("namOwner");
+
+		if (ectx.isUserInRole("org.imixs.ACCESSLEVEL.MANAGERACCESS")
+				|| ownerList.indexOf(remoteUser) > -1) {
 			projectService.deleteProject(this.getWorkitem());
 			this.getProjectListMB().doReset(event);
 		}
 	}
-	
+
 	/**
-	 * deletes a Project and its subprojects and workitems
-	 *  by changing the attribute type' into 'workitemdeleted'
+	 * deletes a Project and its subprojects and workitems by changing the
+	 * attribute type' into 'workitemdeleted'
 	 * 
 	 * @param event
 	 * @return
@@ -1113,7 +1119,6 @@ public class ProjectMB extends AbstractWorkflowController {
 			this.getProjectListMB().doReset(event);
 		}
 	}
-
 
 	/**
 	 * This method collects informations about all workitmes connected to the
@@ -1183,7 +1188,8 @@ public class ProjectMB extends AbstractWorkflowController {
 									Integer.parseInt(sProcessID), sModelVersion);
 					// ...add ProcessTreeNode
 					if (processEntity != null) {
-						this.getProfileBean().getModelVersionHandler()
+						this.getProfileBean()
+								.getModelVersionHandler()
 								.addModelTreeNode(processTreeSelection,
 										sModelVersion, processEntity);
 					}
@@ -1222,13 +1228,15 @@ public class ProjectMB extends AbstractWorkflowController {
 							.getProcessEntityByVersion(modelData.getId(),
 									modelData.getVersion());
 					// and add the ProcessEntity
-					this.getProfileBean().getModelVersionHandler()
+					this.getProfileBean()
+							.getModelVersionHandler()
 							.addModelTreeNode(processTreeSelection,
 									modelData.getVersion(), processEntity);
 				} else {
 					// no - a node form the model version was dropped.
 					// so simply add the full tree...
-					this.getProfileBean().getModelVersionHandler()
+					this.getProfileBean()
+							.getModelVersionHandler()
 							.addModelTreeNode(processTreeSelection,
 									modelData.getVersion(), null);
 				}
@@ -1351,8 +1359,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		List<ItemCollection> uniqueList = new Vector<ItemCollection>();
 		// remove duplicates
 		for (ItemCollection aInvitation : invitations) {
-			String email = aInvitation.getItemValueString(
-					"txtEmail");
+			String email = aInvitation.getItemValueString("txtEmail");
 			if (vEmails.indexOf(email) == -1) {
 				// new address
 				uniqueList.add(aInvitation);
