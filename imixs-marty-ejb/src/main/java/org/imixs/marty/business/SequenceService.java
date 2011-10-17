@@ -23,6 +23,9 @@
  *******************************************************************************/
 package org.imixs.marty.business;
 
+import java.util.Collection;
+import java.util.Vector;
+
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.annotation.security.RunAs;
@@ -38,18 +41,23 @@ import org.imixs.workflow.ItemCollection;
  * update a unique sequence number. If the given workitem has no $unqiueIDRef
  * the ejb will throw an exception!
  * 
+ * The Method getNextSequenceNumberByGroup computes the sequence number based on
+ * a configuration entity with the name "SYW_CONFIGURATION". The configuration
+ * provides a property 'sequencenumbers' with the current number range for each
+ * workflowGroup.
+ * 
  * This EJB should only run with manager access !
  * 
  * sun-ejb-jar.xml
  * <p>
  * <code>
-    <ejb>
-		<ejb-name>ScheduledWorkflowServiceImplementation</ejb-name>
-		<jndi-name>
-			ejb/ReklamationsmanagementScheduledWorkflowServiceImplementation
-		</jndi-name>
-		<principal><name>Glassfish</name></principal>
-	</ejb>
+ <ejb>
+ <ejb-name>ScheduledWorkflowServiceImplementation</ejb-name>
+ <jndi-name>
+ ejb/ReklamationsmanagementScheduledWorkflowServiceImplementation
+ </jndi-name>
+ <principal><name>Glassfish</name></principal>
+ </ejb>
 
  * </code>
  * 
@@ -57,35 +65,85 @@ import org.imixs.workflow.ItemCollection;
  * 
  */
 
-@DeclareRoles( { "org.imixs.ACCESSLEVEL.NOACCESS",
-	"org.imixs.ACCESSLEVEL.READERACCESS",
-	"org.imixs.ACCESSLEVEL.AUTHORACCESS",
-	"org.imixs.ACCESSLEVEL.EDITORACCESS",
-	"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
-@RolesAllowed( { "org.imixs.ACCESSLEVEL.NOACCESS",
-	"org.imixs.ACCESSLEVEL.READERACCESS",
-	"org.imixs.ACCESSLEVEL.AUTHORACCESS",
-	"org.imixs.ACCESSLEVEL.EDITORACCESS",
-	"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
+@DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
+		"org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
+		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
+@RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS",
+		"org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
+		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Stateless
 @LocalBean
 @RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
-public class SequenceService  {
+public class SequenceService {
 
 	private final static String SEQUENCE_NAME = "numLastSequenceNummer";
-	
 
 	// Persistence Manager
 	@EJB
 	org.imixs.workflow.jee.ejb.EntityService entityService;
-	
 
+	/**
+	 * This method computes the sequecne number based on a configuration entity
+	 * with the name "SYW_CONFIGURATION". The configuration provides a property
+	 * 'sequencenumbers' with the current number range for each workflowGroup.
+	 * If a Workitem have a WorklfowGroup with no corresponding entry the method
+	 * will not compute a new number.
+	 * 
+	 */
+	public int getNextSequenceNumberByGroup(ItemCollection aworkitem)
+			throws Exception {
+
+		ItemCollection configItemCollection = null;
+
+		String sQuery = "SELECT config FROM Entity AS config "
+				+ " JOIN config.textItems AS t2"
+				+ " WHERE config.type = 'configuration'"
+				+ " AND t2.itemName = 'txtname'"
+				+ " AND t2.itemValue = 'SYW_CONFIGURATION'"
+				+ " ORDER BY t2.itemValue asc";
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, 1);
+
+		if (col.size() > 0) {
+			configItemCollection = col.iterator().next();
+
+			// read configuration and test if a corresponding configuration exists
+			String sWorkflowGroup=aworkitem.getItemValueString("txtWorkflowGroup");
+			Vector<String> vNumbers=configItemCollection.getItemValue("sequencenumbers");
+			for (int i=0;i<vNumbers.size();i++) {
+				String aNumber=vNumbers.elementAt(i);
+				if (aNumber.startsWith(sWorkflowGroup+"=")) {
+					// we got the next number....
+					String sequcenceNumber=aNumber.substring(aNumber.indexOf('=')+1);
+					// 
+					int sequenceNumber=Integer.parseInt(sequcenceNumber);
+					sequenceNumber++;
+					// Save the new Number back into the config entity
+					aNumber=sWorkflowGroup+"="+sequenceNumber;
+					vNumbers.set(i, sWorkflowGroup+"="+sequenceNumber);
+					configItemCollection.replaceItemValue("sequencenumbers",vNumbers);
+					entityService.save(configItemCollection);
+					// return the new number 
+					return sequenceNumber;
+				}
+				
+				
+			}
+		
+		}
+
+		return 0;
+	}
 
 	/**
 	 * this method computes the next sequence number and updates the parent
 	 * workitem where the last sequence number will be stored.
 	 */
-	//@TransactionAttribute(value = TransactionAttributeType.REQUIRES_NEW)
+	// @TransactionAttribute(value = TransactionAttributeType.REQUIRES_NEW)
 	public int getNextSequenceNumber(ItemCollection aworkitem) throws Exception {
 		// load current Number
 		ItemCollection sequenceNumberObject = loadSequenceNumberItemCollection(aworkitem);
@@ -93,8 +151,8 @@ public class SequenceService  {
 				.getItemValueInteger(SEQUENCE_NAME);
 		sequenceNumber++;
 		// Save new Number
-		sequenceNumberObject.replaceItemValue(SEQUENCE_NAME,
-				new Integer(sequenceNumber));
+		sequenceNumberObject.replaceItemValue(SEQUENCE_NAME, new Integer(
+				sequenceNumber));
 		entityService.save(sequenceNumberObject);
 		return sequenceNumber;
 

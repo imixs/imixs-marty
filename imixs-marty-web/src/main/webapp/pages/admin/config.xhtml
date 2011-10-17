@@ -34,31 +34,24 @@
 									</h:outputLabel>
 								</dt>
 								<dd>
-									<h:inputText style="width: 20em;" required="true"
+									<h:selectOneMenu required="true"
 										value="#{setupMB.workitem.item['defaultworklistview']}">
-									</h:inputText>
+										<f:selectItem itemValue="0" itemLabel="BY_OWNER" />
+										<f:selectItem itemValue="1" itemLabel="BY_CREATOR" />
+										<f:selectItem itemValue="2" itemLabel="BY_AUTHOR" />
+										<f:selectItem itemValue="3" itemLabel="ALL" />
+										<f:selectItem itemValue="4" itemLabel="ARCHIVE" />
+										<f:selectItem itemValue="5" itemLabel="SEARCH" />
+										<f:selectItem itemValue="7" itemLabel="DELETIONS" />
+									</h:selectOneMenu>
 
-									<br />
-									<h:outputLabel value="BY_OWNER = 0" />
-									<br />
-									<h:outputLabel value="BY_CREATOR = 1" />
-									<br />
-									<h:outputLabel value="BY_AUTHOR = 2" />
-									<br />
-									<h:outputLabel value="ALL = 3" />
-									<br />
-									<h:outputLabel value="ARCHIVE = 4" />
-									<br />
-									<h:outputLabel value="DELETIONS = 7" />
-									<br />
-									<h:outputLabel value="SEARCH = 5" />
 								</dd>
 
 
 
 
 
-								<dt style="clear: left">
+								<dt>
 									<h:outputLabel value="#{messages.maxviewentriesperpage}">
 									</h:outputLabel>
 								</dt>
@@ -73,33 +66,34 @@
 									</h:outputLabel>
 								</dt>
 								<dd>
-									<h:inputText style="width: 5em;" required="true"
+									<h:selectOneMenu required="true"
 										value="#{setupMB.workitem.item['sortorder']}">
-									</h:inputText>
+										<f:selectItem itemValue="0" itemLabel="Descanding" />
+										<f:selectItem itemValue="1" itemLabel="Ascending" />
+
+
+									</h:selectOneMenu>
 								</dd>
 
-								<dt style="clear: left">
+								<dt>
 									<h:outputLabel value="#{messages.sortby}">
 									</h:outputLabel>
 								</dt>
 								<dd>
-									<h:inputText style="width: 5em;" required="true"
+
+									<h:selectOneMenu required="true"
 										value="#{setupMB.workitem.item['sortby']}">
-									</h:inputText>
+										<f:selectItem itemValue="0" itemLabel="created" />
+										<f:selectItem itemValue="1" itemLabel="modified" />
+
+
+									</h:selectOneMenu>
+
+
 								</dd>
 
 
-								<dt style="clear: left">
-									<h:outputLabel value="#{messages.defaultprojectprocesslist}">
-									</h:outputLabel>
-								</dt>
-								<dd>
-									<h:inputTextarea required="false"
-										converter="imixs.VectorConverter"
-										style="height: 7em; width: 20em;"
-										value="#{setupMB.workitem.itemList['defaultprojectprocesslist']}">
-									</h:inputTextarea>
-								</dd>
+							
 
 							</dl>
 
@@ -118,34 +112,34 @@
 									<h:outputLabel value="#{messages.maxprojecthistorylength}">
 									</h:outputLabel>
 								</dt>
-								<dd>
-									<h:inputText style="width: 20em;" required="true"
+								<dd> 
+									<h:inputText style="width: 5em;" required="true"
 										value="#{setupMB.workitem.item['maxProjectHistoryLength']}">
 									</h:inputText>
 								</dd>
 
-								<dt style="clear: left">
+								<dt >
 									<h:outputLabel value="#{messages.maxprofilehistorylength}">
 									</h:outputLabel>
 								</dt>
 								<dd>
-									<h:inputText style="width: 20em;" required="true"
+									<h:inputText style="width: 5em;" required="true"
 										value="#{setupMB.workitem.item['maxProfileHistoryLength']}">
 									</h:inputText>
 								</dd>
 
-								<dt style="clear: left">
+								<dt >
 									<h:outputLabel value="#{messages.maxworkitemhistorylength}">
 									</h:outputLabel>
 								</dt>
 								<dd>
-									<h:inputText style="width: 20em;" required="true"
+									<h:inputText style="width: 5em;" required="true"
 										value="#{setupMB.workitem.item['maxWorkitemHistoryLength']}">
 									</h:inputText>
 								</dd>
 
 
-								<dt style="clear: left">
+								<dt >
 									<h:outputLabel value="#{messages.enablemicroblog}">
 									</h:outputLabel>
 								</dt>
@@ -153,6 +147,33 @@
 									<h:selectBooleanCheckbox
 										value="#{setupMB.workitem.item['enableMicroBlogging']}"
 										title="enable/disable" />
+								</dd>
+								
+								
+								
+								<dt style="clear: left">
+									<h:outputLabel value="#{messages.defaultprojectprocesslist}">
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputTextarea required="false"
+										converter="imixs.VectorConverter"
+										style="height: 3em; width: 16em;"
+										value="#{setupMB.workitem.itemList['defaultprojectprocesslist']}">
+									</h:inputTextarea>
+								</dd>
+								
+								
+								<dt >
+									<h:outputLabel value="#{messages.sequencenumbers}">
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputTextarea required="false"
+										converter="imixs.VectorConverter"
+										style="height: 8em; width: 16em;"
+										value="#{setupMB.workitem.itemList['sequencenumbers']}">
+									</h:inputTextarea>
 								</dd>
 
 							</dl>

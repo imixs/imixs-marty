@@ -210,6 +210,20 @@ public class SetupMB {
 
 	}
 
+	
+	
+	
+	/**
+	 * THis method reloads teh configuration Entity
+	 * @param event
+	 * @throws Exception
+	 */
+	public void doReset(ActionEvent event) throws Exception {
+		configItemCollection = configService
+				.loadConfiguration(SYW_CONFIGURATION);
+	
+	}
+
 	/**
 	 * This method loads the default model files defined by the configuration
 	 * file: /configuration/model.properties
