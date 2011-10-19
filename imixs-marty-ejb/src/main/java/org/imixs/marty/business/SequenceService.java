@@ -120,15 +120,15 @@ public class SequenceService {
 					// we got the next number....
 					String sequcenceNumber=aNumber.substring(aNumber.indexOf('=')+1);
 					// 
-					int sequenceNumber=Integer.parseInt(sequcenceNumber);
-					sequenceNumber++;
+					int currentSequenceNumber=Integer.parseInt(sequcenceNumber);
+					int newSequenceNumber=currentSequenceNumber+1;
 					// Save the new Number back into the config entity
-					aNumber=sWorkflowGroup+"="+sequenceNumber;
-					vNumbers.set(i, sWorkflowGroup+"="+sequenceNumber);
+					aNumber=sWorkflowGroup+"="+newSequenceNumber;
+					vNumbers.set(i, sWorkflowGroup+"="+newSequenceNumber);
 					configItemCollection.replaceItemValue("sequencenumbers",vNumbers);
 					entityService.save(configItemCollection);
 					// return the new number 
-					return sequenceNumber;
+					return currentSequenceNumber;
 				}
 				
 				
