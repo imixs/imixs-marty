@@ -400,8 +400,8 @@ public class ProjectService  {
 		ArrayList<ItemCollection> subList = new ArrayList<ItemCollection>();
 		String sQuery = "SELECT project FROM Entity AS project "
 				+ " JOIN project.textItems AS n1"
-				+ " JOIN project.readAccess AS readaccess "
-				+ " JOIN project.writeAccess AS writeaccess "
+				+ " JOIN project.readAccessList AS readaccess "
+				+ " JOIN project.writeAccessList AS writeaccess "
 				+ " WHERE project.type = 'project'"
 				+ " AND ( readaccess.value IN ( '" + aname + "')"
 				+ "      OR writeaccess.value IN ( '" + aname + "')) "
