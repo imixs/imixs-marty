@@ -110,8 +110,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 	private boolean profileLoaded = false;
 
-	private ArrayList<ItemCollection> invitations = null;
-
+	
 	private String lastDropType; // stores the last drop type event
 
 	private ModelVersionHandler modelVersionHandler = null;
@@ -698,9 +697,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 	 * method is called after a doProcess and after DropEvents
 	 */
 	public void clearCache() {
-		// primaryProjects = null;
-		// primaryWorkitems = null;
-		invitations = null;
+		
 	}
 
 	/**
@@ -758,100 +755,8 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 	}
 
-	/**
-	 * This method is for saving and processing a profile using the
-	 * profileService EJB
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void doProcessInvitation(ActionEvent event) throws Exception {
-		// Activity ID raussuchen und in activityID speichern
-		List children = event.getComponent().getChildren();
-		String sActivityID = "";
-		int activityID = 0;
-		for (int i = 0; i < children.size(); i++) {
-			if (children.get(i) instanceof UIParameter) {
-				UIParameter currentParam = (UIParameter) children.get(i);
-				if (currentParam.getName().equals("id")
-						&& currentParam.getValue() != null) {
-					sActivityID = currentParam.getValue().toString();
-					activityID = Integer.parseInt(sActivityID);
-					break;
-				}
-			}
-		}
-
-		ItemCollection currentSelection = null;
-		// suche selektierte Zeile....
-		UIComponent component = event.getComponent();
-		for (UIComponent parent = component.getParent(); parent != null; parent = parent
-				.getParent()) {
-			if (!(parent instanceof UIData))
-				continue;
-
-			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent)
-					.getRowData();
-
-			ItemCollection invitation = currentSelection;
-
-			// if inivtation accepted add current username!
-			int iProcessID = invitation.getItemValueInteger("$ProcessID");
-			if (iProcessID == ProjectMB.PROJECT_INVITATION_PENDING
-					&& activityID == ProjectMB.ACCEPT_PROJECT_INVITATION) {
-				FacesContext context = FacesContext.getCurrentInstance();
-				ExternalContext externalContext = context.getExternalContext();
-				String remoteUser = externalContext.getRemoteUser();
-
-				invitation.replaceItemValue("namAcceptedBy", remoteUser);
-
-			}
-
-			invitation.replaceItemValue("$ActivityID", activityID);
-			getWorkflowService().processWorkItem(invitation);
-
-			invitations = null;
-			break;
-
-		}
-
-	}
-
-	public List<ItemCollection> getInvitations() {
-		if (invitations == null)
-			loadInvitations();
-		return invitations;
-
-	}
-
-	private void loadInvitations() {
-		invitations = new ArrayList<ItemCollection>();
-		try {
-			logger.fine("----- Reload Inventations... ");
-			String sEmail = workitemItemCollection
-					.getItemValueString("txtEmail");
-			String sQuery = "";
-			sQuery = "SELECT wi from Entity as wi "
-					+ " JOIN wi.textItems as r "
-					+ " JOIN wi.integerItems as p "
-					+ " WHERE wi.type = 'invitation'"
-					+ " AND p.itemName = '$processid' AND p.itemValue = 310"
-					+ " AND r.itemName = 'txtemail' and r.itemValue = '"
-					+ sEmail + "' " + " order by wi.created desc";
-
-			Collection<ItemCollection> col = getEntityService()
-					.findAllEntities(sQuery, 0, -1);
-			// endOfList = col.size() < count;
-			for (ItemCollection aworkitem : col) {
-				invitations.add(aworkitem);
-			}
-		} catch (Exception ee) {
-			ee.printStackTrace();
-		}
-
-	}
-
+	
+	
 	/*
 	 * HELPER METHODS
 	 */

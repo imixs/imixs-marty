@@ -24,7 +24,6 @@
 package org.imixs.marty.web.project;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -61,12 +60,7 @@ import org.richfaces.model.TreeNodeImpl;
 public class ProjectMB extends AbstractWorkflowController {
 
 	public final static int START_PROJECT_PROCESS_ID = 100;
-	// public final static int START_WORKITEM_PROCESS_ID = 10000;
 
-	public final static int PROJECT_INVITATION_NEW = 300;
-	public final static int PROJECT_INVITATION_PENDING = 310;
-	public final static int SEND_PROJECT_INVITATION = 10;
-	public final static int ACCEPT_PROJECT_INVITATION = 10;
 	/* Project Service */
 	@EJB
 	ProjectService projectService;
@@ -81,7 +75,6 @@ public class ProjectMB extends AbstractWorkflowController {
 	private WorklistMB worklistMB = null;
 	private WorkitemMB workitemMB = null;
 	private NameLookupMB nameLookup = null;
-	private ArrayList<ItemCollection> invitations = null;
 	private ArrayList<ItemCollection> team = null;
 	private ArrayList<ItemCollection> projectSiblingList = null;
 
@@ -182,7 +175,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	 */
 	public void setWorkitem(ItemCollection aworkitem) {
 		// clear inivtations and team
-		invitations = null;
+		
 		team = null;
 		// clear ProcessTree Selection
 		processTreeSelection = null;
@@ -705,134 +698,6 @@ public class ProjectMB extends AbstractWorkflowController {
 	}
 
 	/**
-	 * This Method generates a new Invitation Document as a child to the current
-	 * project. After creation the method processes the workitem with the
-	 * process PROJECT_INVITATION_NEW.SEND_PROJECT_INVITATION
-	 * 
-	 * The method also stores the current workitem UniqueID into the property
-	 * "invitationWorkitemID" if available.
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void doSendInvitation(ActionEvent event) throws Exception {
-
-		String sEmail = workitemItemCollection
-				.getItemValueString("txtInvitationEmail");
-
-		if ("".equals(sEmail))
-			return; // no operation
-
-		// lowercase email to allow later unique lookup
-		sEmail = sEmail.toLowerCase().trim();
-
-		// create new Workitem
-		ItemCollection invitation = new ItemCollection();
-		invitation.replaceItemValue("$processID", PROJECT_INVITATION_NEW);
-
-		Locale userLocale = FacesContext.getCurrentInstance().getViewRoot()
-				.getLocale();
-		String sModelVersion = this.getProfileBean().getModelVersionHandler()
-				.getLatestSystemVersion(userLocale.getLanguage());
-
-		invitation.replaceItemValue("$ModelVersion", sModelVersion);
-
-		invitation.replaceItemValue("type", "invitation");
-		invitation.replaceItemValue("$UniqueIDRef",
-				workitemItemCollection.getItemValue("$uniqueID"));
-
-		// test if a workitem is currently defined to store the uniqueid
-		ItemCollection aworkitem = this.getWorkitemBean().getWorkitem();
-		if (aworkitem != null)
-			invitation.replaceItemValue("$invitationWorkitemID",
-					aworkitem.getItemValue("$uniqueID"));
-
-		invitation.replaceItemValue("txtProjectName",
-				workitemItemCollection.getItemValue("txtProjectName"));
-		invitation.replaceItemValue("txtProjectdescription",
-				workitemItemCollection.getItemValue("txtdescription"));
-
-		invitation.replaceItemValue("namOwner",
-				workitemItemCollection.getItemValue("namOwner"));
-		invitation.replaceItemValue("namTeam",
-				workitemItemCollection.getItemValue("namTeam"));
-
-		invitation.replaceItemValue("txtEmail", sEmail);
-
-		invitation.replaceItemValue("$activityID", SEND_PROJECT_INVITATION);
-		getWorkflowService().processWorkItem(invitation);
-
-		// clear inivtations
-		invitations = null;
-		// clear input
-		workitemItemCollection.replaceItemValue("txtInvitationEmail", "");
-	}
-
-	/**
-	 * Deletes the current selection of an invitation object. Without a
-	 * Workflowstep!
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void doDeleteInvitation(ActionEvent event) throws Exception {
-		ItemCollection currentSelection = null;
-		// suche selektierte Zeile....
-		UIComponent component = event.getComponent();
-		for (UIComponent parent = component.getParent(); parent != null; parent = parent
-				.getParent()) {
-			if (!(parent instanceof UIData))
-				continue;
-
-			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
-			break;
-
-		}
-		if (currentSelection != null) {
-			getEntityService().remove(currentSelection);
-			// clear inivtations
-			invitations = null;
-		}
-
-	}
-
-	/**
-	 * adds the current selection of an invitation object to the team list.
-	 * Without a Workflowstep!
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void doAddInvitationToTeamlist(ActionEvent event) throws Exception {
-		ItemCollection currentSelection = null;
-		// suche selektierte Zeile....
-		UIComponent component = event.getComponent();
-		for (UIComponent parent = component.getParent(); parent != null; parent = parent
-				.getParent()) {
-			if (!(parent instanceof UIData))
-				continue;
-
-			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
-			break;
-
-		}
-		if (currentSelection != null) {
-			Vector vEntries;
-			String sAccount = currentSelection
-					.getItemValueString("namAcceptedBy");
-			// username zur Teamliste hinzufügen
-			vEntries = workitemItemCollection.getItemValue("namTeam");
-			if (vEntries.indexOf(sAccount) == -1) {
-				vEntries.add(sAccount);
-				workitemItemCollection.replaceItemValue("namTeam", vEntries);
-			}
-		}
-
-	}
-
-	/**
 	 * This Method adds an user entry to the owner or team list. The method is
 	 * triggered by an ajax command from the project.xhtml
 	 * 
@@ -1332,69 +1197,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		return nameSelection;
 	}
 
-	/**
-	 * Returns a list of all Invitation Objects (ItemCollection)
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getInvitations() {
-		if (invitations == null)
-			loadInvitations();
-		return invitations;
-
-	}
-
-	/**
-	 * Returns a list of unique Invitation Objects (ItemCollection). Each
-	 * invitation Object is checked for the property email. Duplicates will be
-	 * dropped. Used by workitem forms like issue.xhtml
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getUniqueInvitations() {
-		if (invitations == null)
-			loadInvitations();
-
-		Vector<String> vEmails = new Vector<String>();
-		List<ItemCollection> uniqueList = new Vector<ItemCollection>();
-		// remove duplicates
-		for (ItemCollection aInvitation : invitations) {
-			String email = aInvitation.getItemValueString("txtEmail");
-			if (vEmails.indexOf(email) == -1) {
-				// new address
-				uniqueList.add(aInvitation);
-				vEmails.add(email);
-			}
-		}
-		return uniqueList;
-
-	}
-
-	private void loadInvitations() {
-		invitations = new ArrayList<ItemCollection>();
-		try {
-
-			String sQuery = "";
-			String sProjectID = workitemItemCollection
-					.getItemValueString("$uniqueID");
-			sQuery = "SELECT wi from Entity as wi "
-					+ " JOIN wi.textItems as r "
-					+ " where wi.type = 'invitation'"
-					+ " and r.itemName = '$uniqueidref' and r.itemValue = '"
-					+ sProjectID + "' " + " order by wi.created desc";
-
-			Collection<ItemCollection> col = getEntityService()
-					.findAllEntities(sQuery, 0, -1);
-			// endOfList = col.size() < count;
-			for (ItemCollection aworkitem : col) {
-				invitations.add((aworkitem));
-			}
-		} catch (Exception ee) {
-			invitations = null;
-			ee.printStackTrace();
-		}
-
-	}
+	
 
 	/**
 	 * returns a richFacess TreeNode implementation containing a tree structure
