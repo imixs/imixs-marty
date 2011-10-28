@@ -23,9 +23,12 @@ import org.imixs.workflow.xml.XMLItemCollection;
 import org.imixs.workflow.xml.XMLItemCollectionAdapter;
 
 /**
- * This Backing Bean acts as a application wide config bean. It holds general
- * config parms like the current historylength. The parameters are stored in a
+ * This Backing Bean acts as a application wide config Bean. It holds general
+ * config parms like the current historyLength. The parameters are stored in a
  * configuration entity.
+ * 
+ * The method doSetup() initializes the system. The method also loads a default
+ * model configuration if no model yet exists.
  * 
  * @author rsoika
  * 
@@ -41,18 +44,16 @@ public class SetupMB {
 	private int sortby = 0;
 	private int sortorder = 0;
 	private int maxviewentriesperpage = 10;
-	private int defaultworklistview=0;
+	private int defaultworklistview = 0;
 	private boolean createDefaultProject = false;
 	private String defaultPage = "pages/notes";
 
 	public final static String SYW_CONFIGURATION = "SYW_CONFIGURATION";
 
-	
 	private boolean setupOk = false;
 
-	
 	private ItemCollection configItemCollection = null;
-	
+
 	@EJB
 	ConfigService configService;
 	@EJB
@@ -60,21 +61,21 @@ public class SetupMB {
 
 	@EJB
 	org.imixs.workflow.jee.ejb.EntityService epm;
-	
+
 	@EJB
 	org.imixs.workflow.jee.ejb.ModelService modelService;
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
-	
 	public SetupMB() {
 		super();
 	}
 
 	public ItemCollection getWorkitem() {
-		
+
 		return configItemCollection;
 	}
+
 	/**
 	 * This method tries to load the config entity to read default values
 	 */
@@ -84,51 +85,52 @@ public class SetupMB {
 				.loadConfiguration(SYW_CONFIGURATION);
 
 		if (configItemCollection == null) {
-			
+
 			try {
 				configItemCollection = configService
-				.createConfiguration(SYW_CONFIGURATION);
-			} catch (Exception e) {				
-				e.printStackTrace();
-			}
-			
-			// set default values
-			try {
-				configItemCollection.replaceItemValue("maxProjectHistoryLength", maxProjectHistoryLength);
-				
-				configItemCollection.replaceItemValue("maxProfileHistoryLength", maxProfileHistoryLength);
-				configItemCollection.replaceItemValue("maxWorkitemHistoryLength", maxWorkitemHistoryLength);
-				configItemCollection.replaceItemValue("createDefaultProject", createDefaultProject);
-				
-				configItemCollection.replaceItemValue("defaultPage", defaultPage);
-				//configItemCollection.replaceItemValue("defaultworklistview", defaultworklistview);
-				configItemCollection.replaceItemValue("maxviewentriesperpage", maxviewentriesperpage);
-				configItemCollection.replaceItemValue("sortby", sortby);
-				configItemCollection.replaceItemValue("sortorder", sortorder);
-				configItemCollection.replaceItemValue("maxProjectHistoryLength", maxProjectHistoryLength);
-				configItemCollection.replaceItemValue("maxProjectHistoryLength", maxProjectHistoryLength);
-				configItemCollection.replaceItemValue("defaultworklistview", defaultworklistview);
-					
-				
-				
+						.createConfiguration(SYW_CONFIGURATION);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
-			
-			
-			
-		}
-		
-		
-		setupOk = configItemCollection.getItemValueBoolean(
-					"keySystemSetupCompleted");
 
-	
-	
+			// set default values
+			try {
+				configItemCollection.replaceItemValue(
+						"maxProjectHistoryLength", maxProjectHistoryLength);
+
+				configItemCollection.replaceItemValue(
+						"maxProfileHistoryLength", maxProfileHistoryLength);
+				configItemCollection.replaceItemValue(
+						"maxWorkitemHistoryLength", maxWorkitemHistoryLength);
+				configItemCollection.replaceItemValue("createDefaultProject",
+						createDefaultProject);
+
+				configItemCollection.replaceItemValue("defaultPage",
+						defaultPage);
+				// configItemCollection.replaceItemValue("defaultworklistview",
+				// defaultworklistview);
+				configItemCollection.replaceItemValue("maxviewentriesperpage",
+						maxviewentriesperpage);
+				configItemCollection.replaceItemValue("sortby", sortby);
+				configItemCollection.replaceItemValue("sortorder", sortorder);
+				configItemCollection.replaceItemValue(
+						"maxProjectHistoryLength", maxProjectHistoryLength);
+				configItemCollection.replaceItemValue(
+						"maxProjectHistoryLength", maxProjectHistoryLength);
+				configItemCollection.replaceItemValue("defaultworklistview",
+						defaultworklistview);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+		}
+
+		setupOk = configItemCollection
+				.getItemValueBoolean("keySystemSetupCompleted");
+
 	}
 
-	
 	public boolean isSetupOk() {
 		return setupOk;
 	}
@@ -136,8 +138,7 @@ public class SetupMB {
 	public void setSetupOk(boolean systemSetupOk) {
 		this.setupOk = systemSetupOk;
 	}
-	
-	
+
 	/**
 	 * save method tries to load the config entity. if not availabe. the method
 	 * will create the entity the first time
@@ -145,23 +146,18 @@ public class SetupMB {
 	 * @return
 	 * @throws Exception
 	 */
-	
+
 	public void doSave(ActionEvent event) throws Exception {
 		// update write and read access
-		//configItemCollection.replaceItemValue("type", TYPE);
-		configItemCollection.replaceItemValue("txtname",SYW_CONFIGURATION);
-		configItemCollection.replaceItemValue("$writeAccess", "org.imixs.ACCESSLEVEL.MANAGERACCESS");
+		// configItemCollection.replaceItemValue("type", TYPE);
+		configItemCollection.replaceItemValue("txtname", SYW_CONFIGURATION);
+		configItemCollection.replaceItemValue("$writeAccess",
+				"org.imixs.ACCESSLEVEL.MANAGERACCESS");
 		configItemCollection.replaceItemValue("$readAccess", "");
 		// save entity
-		configItemCollection=entityService.save(configItemCollection);
-		
-		
+		configItemCollection = entityService.save(configItemCollection);
+
 	}
-	
-	
-
-	
-
 
 	/**
 	 * starts a ConsistencyCheck without updating values
@@ -170,7 +166,7 @@ public class SetupMB {
 	 * @throws Exception
 	 */
 	public void doSetup(ActionEvent event) throws Exception {
-		logger.info("Imixs Office Workflow : starting System Setup...");
+		logger.info("[SetupMB] starting System Setup...");
 		// model
 		epm.addIndex("numprocessid", EntityIndex.TYP_INT);
 		epm.addIndex("numactivityid", EntityIndex.TYP_INT);
@@ -196,9 +192,11 @@ public class SetupMB {
 		epm.addIndex("txtProjectName", EntityIndex.TYP_TEXT);
 		epm.addIndex("txtUsername", EntityIndex.TYP_TEXT);
 
+		
+		logger.info("[SetupMB] index configuration - ok");
+		
 		// update System configuration.....
-		getWorkitem().replaceItemValue(
-				"keySystemSetupCompleted", true);
+		getWorkitem().replaceItemValue("keySystemSetupCompleted", true);
 		doSave(event);
 
 		// load default models
@@ -206,27 +204,27 @@ public class SetupMB {
 
 		setupOk = true;
 
-		logger.info("Imixs Office Workflow : starting System Setup completed!");
+		logger.info("[SetupMB] system setup completed");
 
 	}
 
-	
-	
-	
 	/**
-	 * THis method reloads teh configuration Entity
+	 * THis method reloads the configuration Entity
+	 * 
 	 * @param event
 	 * @throws Exception
 	 */
 	public void doReset(ActionEvent event) throws Exception {
 		configItemCollection = configService
 				.loadConfiguration(SYW_CONFIGURATION);
-	
+
 	}
 
 	/**
 	 * This method loads the default model files defined by the configuration
 	 * file: /configuration/model.properties
+	 * 
+	 * The method returns without any action if a system model still exists.
 	 * 
 	 * 
 	 * @param aSkin
@@ -234,7 +232,7 @@ public class SetupMB {
 	 */
 	public void loadDefaultModels() {
 
-		logger.info(" check for default models...");
+		logger.info("[SetupMB] searching system model...");
 		try {
 			List<String> col = modelService.getAllModelVersions();
 			// check if system model is available
@@ -245,23 +243,23 @@ public class SetupMB {
 
 				if ("system".equals(sModelDomain)) {
 
-					logger.info("System model allready instaled - skip loading default models");
+					logger.info("[SetupMB] system model '" + sversion + "' found - skip loading default models");
 					return;
 
 				}
 			}
 
-			logger.info(" Loading default Models..");
+			logger.info("[SetupMB] loading default model configuration from 'configuration/model.properties'...");
 
 			ResourceBundle r = ResourceBundle.getBundle("configuration.model");
 			if (r == null)
-				logger.warning("SystemSetup: no configuration/model.properties file found!");
+				logger.warning("[SetupMB] configuration/model.properties - file found");
 			Enumeration<String> enkeys = r.getKeys();
 			while (enkeys.hasMoreElements()) {
 				String sKey = enkeys.nextElement();
-				logger.info(" loading Model: " + sKey);
 				// try to load this model
 				String filePath = r.getString(sKey);
+				logger.info("[SetupMB] loading model configuration '" + sKey+"=" + filePath + "'");
 
 				InputStream inputStream = SetupMB.class.getClassLoader()
 						.getResourceAsStream(filePath);
@@ -282,8 +280,8 @@ public class SetupMB {
 				this.importXmlEntityData(result);
 			}
 		} catch (Exception e) {
-			logger.warning("SystemSetup: unable to load default models - please check configuration/model.properties file!");
-			e.printStackTrace();
+			logger.severe("[SetupMB] unable to load model configuration - please check configuration/model.properties file!");
+			throw new RuntimeException("[SetupMB] unable to load model configuration - please check configuration/model.properties file!");
 		}
 
 	}
@@ -300,13 +298,12 @@ public class SetupMB {
 		XMLItemCollection entity;
 		ItemCollection itemCollection;
 		String sModelVersion = null;
-		
-		
+
 		if (filestream == null)
 			return;
 		try {
 			EntityCollection ecol = null;
-			logger.info("import EntityData from file....");
+			logger.info("[SetupMB] verifing file content....");
 			JAXBContext context = JAXBContext
 					.newInstance(EntityCollection.class);
 			Unmarshaller m = context.createUnmarshaller();
@@ -314,16 +311,15 @@ public class SetupMB {
 			ByteArrayInputStream input = new ByteArrayInputStream(filestream);
 			Object jaxbObject = m.unmarshal(input);
 			if (jaxbObject == null) {
-				throw new Exception("WARNING - wrong xml file format - unable to import!");
+				throw new RuntimeException(
+						"[SetupMB] error - wrong xml file format - unable to import file!");
 			}
 
 			ecol = (EntityCollection) jaxbObject;
 
-			
-
 			// import entities....
 			if (ecol.getEntity().length > 0) {
-				
+
 				Vector<String> vModelVersions = new Vector<String>();
 				// first iterrate over all enttity and find if model entries are
 				// included
@@ -345,12 +341,9 @@ public class SetupMB {
 				}
 				// now remove old model entries....
 				for (String aModelVersion : vModelVersions) {
-					logger.info(" Removing old Model Version: " + aModelVersion);
+					logger.info("[SetupMB] removing existing configuration for model version '" + aModelVersion+ "'");
 					modelService.removeModelVersion(aModelVersion);
-
 				}
-
-				logger.info(" Starting import...");
 				// save new entities into database and update modelversion.....
 				for (int i = 0; i < ecol.getEntity().length; i++) {
 					entity = ecol.getEntity()[i];
@@ -360,8 +353,8 @@ public class SetupMB {
 					entityService.save(itemCollection);
 				}
 
-				logger.info(ecol.getEntity().length
-						+ " Entities sucessfully imported");
+				logger.info("[SetupMB] "+ecol.getEntity().length
+						+ " entries sucessfull imported");
 			}
 
 		} catch (Exception e) {
@@ -369,6 +362,5 @@ public class SetupMB {
 		}
 
 	}
-	
 
 }
