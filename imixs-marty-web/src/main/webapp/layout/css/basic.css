@@ -65,20 +65,65 @@ h3 {
 	font-weight: bold;
 }
 
+
+/*** DL Definitonen ****/
 dl {
-	margin: 0em;
-	padding: 0em;
-}
-
-dd {
-	margin: 0em 0em 1em 0em;
-	padding: 0em;
-}
-
-dt {
-	font-weight: bold;
 	font-size: 12px;
+	min-width: 665px;
 }
+
+
+dl dt {
+	margin: 0;
+	padding: 5px;
+	font-weight: bold;
+}
+
+dl dd {
+	padding: 5px;
+	margin: 0em 0em 1em 0em;
+}
+
+/*** DL 1 Column Layout ***/
+dl.columns-1 {
+	clear: left;
+	width: 690px;
+	padding: 0 0 0 5px;
+}
+
+dl.columns-1 dt {
+	float: left;
+	width: 120px;
+	padding: 0;
+}
+
+dl.columns-1 dd {
+	float: left;
+	width: 560px;
+	padding: 0;
+}
+
+/*** DL 2 Column Layout ***/
+dl.columns-2 {
+	clear: left;
+	width: 690px;
+	padding: 0 0 0 5px;
+}
+
+dl.columns-2 dt {
+	float: left;
+	width: 120px;
+	padding: 0 0 0 0;
+}
+
+dl.columns-2 dd {
+	float: left;
+	width: 220px;
+	padding: 0;
+}
+
+
+
 
 a {
 	text-decoration: none;
