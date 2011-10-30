@@ -134,8 +134,7 @@ a:hover {
 }
 
 input[type="text"],input[type="password"],textarea {
-	width: 20em;
-	xborder-color: silver;
+	width: 200px;
 }
 
 input.rich-combobox-button,input.rich-combobox-button-inactive,input.rich-combobox-button-disabled

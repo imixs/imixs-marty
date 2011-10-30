@@ -24,6 +24,8 @@
 package org.imixs.marty.web.project;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -31,6 +33,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Vector;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
@@ -49,6 +52,7 @@ import org.imixs.marty.model.ModelData;
 import org.imixs.marty.web.profile.MyProfileMB;
 import org.imixs.marty.web.profile.NameLookupMB;
 import org.imixs.marty.web.util.SetupMB;
+import org.imixs.marty.web.workitem.WorkitemListener;
 import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
@@ -78,8 +82,83 @@ public class ProjectMB extends AbstractWorkflowController {
 	private ArrayList<ItemCollection> team = null;
 	private ArrayList<ItemCollection> projectSiblingList = null;
 
-	private TreeNodeImpl projectTree = null;
+	private TreeNodeImpl subProjectTree = null;
 
+	private Collection<ProjectListener> projectListeners = new ArrayList<ProjectListener>();
+
+	
+	
+	@PostConstruct
+	public void init() {
+		projectListeners = new ArrayList<ProjectListener>();
+	}
+
+	public synchronized void addProjectistener(ProjectListener l) {
+		// Test if the current listener was allreaded added to avoid that a
+		// listener register itself more than once!
+		if (!projectListeners.contains(l))
+			projectListeners.add(l);
+	}
+
+	public synchronized void removeProjectListener(ProjectListener l) {
+		projectListeners.remove(l);
+	}
+
+	/**
+	 * Informs WorkitemListeners about a new or updated Workitem
+	 */
+	private void fireProjectCreatedEvent() {
+		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
+				.hasNext();) {
+			ProjectListener l = i.next();
+			l.onProjectCreated(workitemItemCollection);
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a new or updated Workitem
+	 */
+	private void fireProjectChangedEvent() {
+		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
+				.hasNext();) {
+			ProjectListener l = i.next();
+			l.onProjectChanged(workitemItemCollection);
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a new or updated Workitem
+	 */
+	private void fireProjectProcessEvent() {
+		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
+				.hasNext();) {
+			ProjectListener l = i.next();
+			l.onProjectProcess(workitemItemCollection);
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a new or updated Workitem
+	 */
+	private void fireProjectProcessCompletedEvent() {
+		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
+				.hasNext();) {
+			ProjectListener l = i.next();
+			l.onProjectProcessCompleted(workitemItemCollection);
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a deletion of a workitem
+	 */
+	private void fireProjectDeleteEvent() {
+		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
+				.hasNext();) {
+			ProjectListener l = i.next();
+			l.onProjectDelete(workitemItemCollection);
+		}
+	}
+	
 	/**
 	 * Returns a instance of the MBProfileMB. This ManagedBean can not be find
 	 * during the constructor because the referenece of this bean is queried
@@ -180,7 +259,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		// clear ProcessTree Selection
 		processTreeSelection = null;
 		// clear SubprojectTree Selection
-		projectTree = null;
+		subProjectTree = null;
 		// clear sibling list
 		projectSiblingList = null;
 
@@ -205,14 +284,8 @@ public class ProjectMB extends AbstractWorkflowController {
 			e.printStackTrace();
 		}
 
-		// switch in default list
-		// if user is project member switch into all-worktiems list. otherwise
-		// in statuslist
-		/*
-		 * if (aworkitem!=null && !isMember())
-		 * this.getworkListMB().doSwitchToWorklistByCreator(null); else
-		 * this.getworkListMB().doSwitchToWorklistAll(null);
-		 */
+		// inform listeners
+		fireProjectChangedEvent();
 	}
 
 	/**
@@ -435,6 +508,11 @@ public class ProjectMB extends AbstractWorkflowController {
 				"txtprocesslist",
 				this.getConfigBean().getWorkitem()
 						.getItemValue("defaultprojectprocesslist"));
+		
+		
+		// inform Listeners...
+					fireProjectCreatedEvent();
+
 
 	}
 
@@ -624,7 +702,6 @@ public class ProjectMB extends AbstractWorkflowController {
 		 * processTreeSelection is null. Object is null if no treeSelector is
 		 * used by the JSF Page
 		 */
-
 		if (processTreeSelection != null) {
 			Vector<String> vProcessList = new Vector<String>();
 			addProcessTreeSelectionToVector(this.processTreeSelection,
@@ -651,8 +728,15 @@ public class ProjectMB extends AbstractWorkflowController {
 
 		// Process project via processService EJB
 		workitemItemCollection.replaceItemValue("$activityid", activityID);
+		
+		// inform Listeners...
+		fireProjectProcessEvent();
+
 		workitemItemCollection = projectService
 				.processProject(workitemItemCollection);
+		// inform Listeners...
+		fireProjectProcessCompletedEvent();
+
 
 		ItemCollection saveItem = workitemItemCollection;
 
@@ -964,6 +1048,11 @@ public class ProjectMB extends AbstractWorkflowController {
 
 		if (ectx.isUserInRole("org.imixs.ACCESSLEVEL.MANAGERACCESS")
 				|| ownerList.indexOf(remoteUser) > -1) {
+			
+			// inform Listeners...
+			fireProjectDeleteEvent();
+
+			
 			projectService.deleteProject(this.getWorkitem());
 			this.getProjectListMB().doReset(event);
 		}
@@ -1205,20 +1294,20 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * 
 	 * @return
 	 */
-	public TreeNodeImpl getProjectTree() {
+	public TreeNodeImpl getSubProjectTree() {
 
-		if (projectTree == null) {
+		if (subProjectTree == null) {
 			// create new TreeNode Instance....
-			projectTree = new TreeNodeImpl();
+			subProjectTree = new TreeNodeImpl();
 			// add the root node
 
 			SubProjectTreeNode nodeProcess = new SubProjectTreeNode(
 					getWorkitem(), SubProjectTreeNode.ROOT_PROJECT);
-			projectTree.addChild(getWorkitem().getItemValueString("$uniqueid"),
+			subProjectTree.addChild(getWorkitem().getItemValueString("$uniqueid"),
 					nodeProcess);
 		}
 
-		return projectTree;
+		return subProjectTree;
 
 	}
 
