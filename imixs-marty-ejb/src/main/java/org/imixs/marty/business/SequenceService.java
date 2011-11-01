@@ -42,8 +42,8 @@ import org.imixs.workflow.ItemCollection;
  * the ejb will throw an exception!
  * 
  * The Method getNextSequenceNumberByGroup computes the sequence number based on
- * a configuration entity with the name "BASIC". The configuration
- * provides a property 'sequencenumbers' with the current number range for each
+ * a configuration entity with the name "BASIC". The configuration provides a
+ * property 'sequencenumbers' with the current number range for each
  * workflowGroup.
  * 
  * This EJB should only run with manager access !
@@ -103,37 +103,41 @@ public class SequenceService {
 				+ " JOIN config.textItems AS t2"
 				+ " WHERE config.type = 'configuration'"
 				+ " AND t2.itemName = 'txtname'"
-				+ " AND t2.itemValue = 'BASIC'"
-				+ " ORDER BY t2.itemValue asc";
+				+ " AND t2.itemValue = 'BASIC'" + " ORDER BY t2.itemValue asc";
 		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
 				0, 1);
 
 		if (col.size() > 0) {
 			configItemCollection = col.iterator().next();
 
-			// read configuration and test if a corresponding configuration exists
-			String sWorkflowGroup=aworkitem.getItemValueString("txtWorkflowGroup");
-			Vector<String> vNumbers=configItemCollection.getItemValue("sequencenumbers");
-			for (int i=0;i<vNumbers.size();i++) {
-				String aNumber=vNumbers.elementAt(i);
-				if (aNumber.startsWith(sWorkflowGroup+"=")) {
+			// read configuration and test if a corresponding configuration
+			// exists
+			String sWorkflowGroup = aworkitem
+					.getItemValueString("txtWorkflowGroup");
+			Vector<String> vNumbers = configItemCollection
+					.getItemValue("sequencenumbers");
+			for (int i = 0; i < vNumbers.size(); i++) {
+				String aNumber = vNumbers.elementAt(i);
+				if (aNumber.startsWith(sWorkflowGroup + "=")) {
 					// we got the next number....
-					String sequcenceNumber=aNumber.substring(aNumber.indexOf('=')+1);
-					// 
-					int currentSequenceNumber=Integer.parseInt(sequcenceNumber);
-					int newSequenceNumber=currentSequenceNumber+1;
+					String sequcenceNumber = aNumber.substring(aNumber
+							.indexOf('=') + 1);
+					//
+					int currentSequenceNumber = Integer
+							.parseInt(sequcenceNumber);
+					int newSequenceNumber = currentSequenceNumber + 1;
 					// Save the new Number back into the config entity
-					aNumber=sWorkflowGroup+"="+newSequenceNumber;
-					vNumbers.set(i, sWorkflowGroup+"="+newSequenceNumber);
-					configItemCollection.replaceItemValue("sequencenumbers",vNumbers);
+					aNumber = sWorkflowGroup + "=" + newSequenceNumber;
+					vNumbers.set(i, sWorkflowGroup + "=" + newSequenceNumber);
+					configItemCollection.replaceItemValue("sequencenumbers",
+							vNumbers);
 					entityService.save(configItemCollection);
-					// return the new number 
+					// return the new number
 					return currentSequenceNumber;
 				}
-				
-				
+
 			}
-		
+
 		}
 
 		return 0;
@@ -143,18 +147,24 @@ public class SequenceService {
 	 * this method computes the next sequence number and updates the parent
 	 * workitem where the last sequence number will be stored.
 	 */
-	// @TransactionAttribute(value = TransactionAttributeType.REQUIRES_NEW)
-	public int getNextSequenceNumber(ItemCollection aworkitem) throws Exception {
+	public int getNextSequenceNumberByParent(ItemCollection aworkitem)
+			throws Exception {
 		// load current Number
-		ItemCollection sequenceNumberObject = loadSequenceNumberItemCollection(aworkitem);
-		int sequenceNumber = sequenceNumberObject
+		ItemCollection sequenceNumberObject = loadParentWorkitem(aworkitem);
+		int currentSequenceNumber = sequenceNumberObject
 				.getItemValueInteger(SEQUENCE_NAME);
+		
+		// skip number 0
+		if (currentSequenceNumber==0)
+			currentSequenceNumber=1;
+		
+		int sequenceNumber = currentSequenceNumber;
 		sequenceNumber++;
 		// Save new Number
 		sequenceNumberObject.replaceItemValue(SEQUENCE_NAME, new Integer(
 				sequenceNumber));
 		entityService.save(sequenceNumberObject);
-		return sequenceNumber;
+		return currentSequenceNumber;
 
 	}
 
@@ -165,7 +175,7 @@ public class SequenceService {
 	 */
 	public int getLastSequenceNumber(ItemCollection aworkitem) throws Exception {
 		// load current Number
-		ItemCollection sequenceNumberObject = loadSequenceNumberItemCollection(aworkitem);
+		ItemCollection sequenceNumberObject = loadParentWorkitem(aworkitem);
 		int sequenceNumber = sequenceNumberObject
 				.getItemValueInteger(SEQUENCE_NAME);
 		return sequenceNumber;
@@ -178,7 +188,7 @@ public class SequenceService {
 	public void setLastSequenceNumber(ItemCollection aworkitem, int aNewID)
 			throws Exception {
 		// load current Number
-		ItemCollection sequenceNumberObject = loadSequenceNumberItemCollection(aworkitem);
+		ItemCollection sequenceNumberObject = loadParentWorkitem(aworkitem);
 		// Save new Number
 		sequenceNumberObject.replaceItemValue(SEQUENCE_NAME,
 				new Integer(aNewID));
@@ -187,14 +197,13 @@ public class SequenceService {
 	}
 
 	/**
-	 * this method loads the SequenceNumber Entity form the parent workitem of
-	 * the given aworkitem
+	 * this method loads the parent Workitem of the given workitem
 	 * 
 	 * @return
 	 * @throws Exception
 	 */
-	private ItemCollection loadSequenceNumberItemCollection(
-			ItemCollection aworkitem) throws Exception {
+	private ItemCollection loadParentWorkitem(ItemCollection aworkitem)
+			throws Exception {
 		String sParentID = aworkitem.getItemValueString("$UniqueIDRef");
 
 		if ("".equals(sParentID))

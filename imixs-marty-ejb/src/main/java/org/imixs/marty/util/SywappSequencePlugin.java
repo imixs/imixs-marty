@@ -62,7 +62,7 @@ public class SywappSequencePlugin extends AbstractPlugin {
 		if (workitem.getItemValueInteger("numSequenceNummer") == 0) {
 			try {
 				// load next Number
-				sequenceNumber = sequenceService.getNextSequenceNumber(documentContext);
+				sequenceNumber = sequenceService.getNextSequenceNumberByParent(documentContext);
 
 				workitem.replaceItemValue("numSequenceNummer", new Integer(
 						sequenceNumber));
