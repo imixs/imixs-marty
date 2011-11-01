@@ -42,7 +42,7 @@ import org.imixs.workflow.ItemCollection;
  * the ejb will throw an exception!
  * 
  * The Method getNextSequenceNumberByGroup computes the sequence number based on
- * a configuration entity with the name "SYW_CONFIGURATION". The configuration
+ * a configuration entity with the name "BASIC". The configuration
  * provides a property 'sequencenumbers' with the current number range for each
  * workflowGroup.
  * 
@@ -88,7 +88,7 @@ public class SequenceService {
 
 	/**
 	 * This method computes the sequecne number based on a configuration entity
-	 * with the name "SYW_CONFIGURATION". The configuration provides a property
+	 * with the name "BASIC". The configuration provides a property
 	 * 'sequencenumbers' with the current number range for each workflowGroup.
 	 * If a Workitem have a WorklfowGroup with no corresponding entry the method
 	 * will not compute a new number.
@@ -103,7 +103,7 @@ public class SequenceService {
 				+ " JOIN config.textItems AS t2"
 				+ " WHERE config.type = 'configuration'"
 				+ " AND t2.itemName = 'txtname'"
-				+ " AND t2.itemValue = 'SYW_CONFIGURATION'"
+				+ " AND t2.itemValue = 'BASIC'"
 				+ " ORDER BY t2.itemValue asc";
 		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
 				0, 1);

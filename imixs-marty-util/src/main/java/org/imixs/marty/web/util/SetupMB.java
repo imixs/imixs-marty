@@ -48,7 +48,7 @@ public class SetupMB {
 	private boolean createDefaultProject = false;
 	private String defaultPage = "pages/notes";
 
-	public final static String SYW_CONFIGURATION = "SYW_CONFIGURATION";
+	public final static String CONFIGURATION_NAME = "BASIC";
 
 	private boolean setupOk = false;
 
@@ -82,13 +82,13 @@ public class SetupMB {
 	@PostConstruct
 	public void init() {
 		configItemCollection = configService
-				.loadConfiguration(SYW_CONFIGURATION);
+				.loadConfiguration(CONFIGURATION_NAME);
 
 		if (configItemCollection == null) {
 
 			try {
 				configItemCollection = configService
-						.createConfiguration(SYW_CONFIGURATION);
+						.createConfiguration(CONFIGURATION_NAME);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -150,7 +150,7 @@ public class SetupMB {
 	public void doSave(ActionEvent event) throws Exception {
 		// update write and read access
 		// configItemCollection.replaceItemValue("type", TYPE);
-		configItemCollection.replaceItemValue("txtname", SYW_CONFIGURATION);
+		configItemCollection.replaceItemValue("txtname", CONFIGURATION_NAME);
 		configItemCollection.replaceItemValue("$writeAccess",
 				"org.imixs.ACCESSLEVEL.MANAGERACCESS");
 		configItemCollection.replaceItemValue("$readAccess", "");
@@ -216,7 +216,7 @@ public class SetupMB {
 	 */
 	public void doReset(ActionEvent event) throws Exception {
 		configItemCollection = configService
-				.loadConfiguration(SYW_CONFIGURATION);
+				.loadConfiguration(CONFIGURATION_NAME);
 
 	}
 

@@ -14,7 +14,7 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
 /**
  * This Plugin handles a unique sequence number for all worktimes in a
  * WorkflowGroup. The sequencenumber will be stored in the configuration Entity
- * 'SYW_CONFIGURATION'. The configuration provides a property 'sequencenumbers'
+ * 'BASIC'. The configuration provides a property 'sequencenumbers'
  * with the current number range for each workflowGroup
  * 
  * If a Workitem have a WorklfowGroup with no corresponding entry the Plugin
