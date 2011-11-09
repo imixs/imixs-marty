@@ -230,14 +230,15 @@ public class ConfigMB {
 			for (Object aValue : valueList) {
 
 				// test if aValue has a | as an delimiter
+				// expected format in this case is:  label|value
 				String sValue = aValue.toString();
 				String sName = sValue;
 
 				if (sValue.indexOf("|") > -1) {
-					sValue = sValue.substring(0, sValue.indexOf("|"));
-					sName = sName.substring(sName.indexOf("|") + 1);
+					sName = sValue.substring(0, sValue.indexOf("|"));
+					sValue = sValue.substring(sValue.indexOf("|") + 1);
 				}
-				selection.add(new SelectItem(sName.trim(), sValue.trim()));
+				selection.add(new SelectItem( sValue.trim(),sName.trim()));
 
 			}
 
