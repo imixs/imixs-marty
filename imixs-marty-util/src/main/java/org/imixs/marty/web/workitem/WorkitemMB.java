@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -49,10 +50,8 @@ import org.imixs.marty.business.WorkitemService;
 import org.imixs.marty.web.profile.NameLookupMB;
 import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.util.SetupMB;
-import org.imixs.marty.web.util.FileUploadBean;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.AbstractWorkflowController;
-import org.imixs.workflow.jee.faces.BLOBWorkitemController;
 
 /**
  * This class provides methods to access a single workitem controlled by the
@@ -89,6 +88,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 	private ArrayList<ItemCollection> processList = null;
 
 	private Collection<WorkitemListener> workitemListeners = new ArrayList<WorkitemListener>();
+
+	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
 	/* WorkItem Services */
 	@EJB
@@ -199,7 +200,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	}
 
 	/**
-	 * returns the workflowEditorID for the current workitem if no attribute
+	 * returns the workflowEditorID for the current workItem. If no attribute
 	 * with the name "txtWorkflowEditorid" is available then the method return
 	 * the DEFAULT_EDITOR_ID.
 	 * 
@@ -234,7 +235,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * This method provides a HashMap with EditorSections. The Method is used to
 	 * test if a specific Section is defined within the current Process Entity.
 	 * 
-	 * EditorSections are provided by the workitem property
+	 * EditorSections are provided by the workItem property
 	 * 'txtWorkflowEditorid' marked with the '#' character and separated with
 	 * charater '|'. Editors can evaluate this additional information to change
 	 * the behaivor of a form. The map provides booleans (true) per each section
@@ -258,11 +259,29 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * be provided by the workitem property 'txtWorkflowEditorid' marked with
 	 * the '#' character and separated with charater '|'.
 	 * 
+	 * e.g.: form_tab#basic_project|sub_timesheet[owner,manager]
+	 * 
+	 * This example provides the editor sections 'basic_project' and
+	 * 'sub_timesheet'. The optional marker after the second section in []
+	 * defines the user membership to access this action. In this example the
+	 * second section is only visible if the current user is member of the
+	 * project owner or manager list.
+	 * 
+	 * The following example illustrates how to iterate over the section array
+	 * from a JSF fragment:
+	 * 
 	 * <code>
-	 * <ui:repeat value="#{workitemMB.editorSections}" var="asection">
+	 * <ui:repeat value="#{workitemMB.editorSections}" var="section">
 	 *   ....
-	 *       #{asection.url}
+	 *      <ui:include src="/pages/workitems/forms/#{section.url}.xhtml" />
 	 * </code>
+	 * 
+	 * 
+	 * The array of EditorSections also contains information about the name for
+	 * a section. This name is read from the resouce bundle 'bundle.forms'. The
+	 * '/' character will be replaced with '_'. So for example the section url
+	 * myforms/sub_timesheet will result in resoure bundle lookup for the name
+	 * 'myforms_sub_timersheet'
 	 * 
 	 * @return
 	 */
@@ -282,26 +301,91 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 				StringTokenizer st = new StringTokenizer(liste, "|");
 				while (st.hasMoreTokens()) {
-					String sURL = st.nextToken();
-					String sName = null;
-					// compute name from ressource Bundle....
 					try {
-						ResourceBundle rb = null;
-						if (locale != null)
-							rb = ResourceBundle.getBundle("bundle.forms",
-									locale);
-						else
-							rb = ResourceBundle.getBundle("bundle.forms");
+						String sURL = st.nextToken();
 
-						String sResouceURL = sURL.replace('/', '_');
-						sName = rb.getString(sResouceURL);
-					} catch (java.util.MissingResourceException eb) {
-						sName = "";
-						System.out.println(eb.getMessage());
+						// if the URL contains a [] section test the defined
+						// user
+						// permissions
+						if (sURL.indexOf('[') > -1 || sURL.indexOf(']') > -1) {
+							boolean bPermissionGranted = false;
+							// yes - cut the permissions
+							String sPermissions = sURL.substring(
+									sURL.indexOf('[') + 1, sURL.indexOf(']'));
+
+							// cut the permissions from the URL
+							sURL = sURL.substring(0,sURL.indexOf('['));
+							StringTokenizer stPermission = new StringTokenizer(
+									sPermissions, ",");
+							while (stPermission.hasMoreTokens()) {
+								String aPermission = stPermission.nextToken();
+								// test for user role
+								ExternalContext ectx = FacesContext
+										.getCurrentInstance()
+										.getExternalContext();
+								if (ectx.isUserInRole(aPermission)) {
+									bPermissionGranted = true;
+									break;
+								}
+								// test if user is project member
+								if ("owner".equalsIgnoreCase(aPermission)
+										&& this.getProjectBean()
+												.isProjectOwner()) {
+									bPermissionGranted = true;
+									break;
+								}
+								if ("manager".equalsIgnoreCase(aPermission)
+										&& this.getProjectBean()
+												.isProjectManager()) {
+									bPermissionGranted = true;
+									break;
+								}
+								if ("team".equalsIgnoreCase(aPermission)
+										&& this.getProjectBean()
+												.isProjectTeam()) {
+									bPermissionGranted = true;
+									break;
+								}
+								if ("assist".equalsIgnoreCase(aPermission)
+										&& this.getProjectBean()
+												.isProjectAssist()) {
+									bPermissionGranted = true;
+									break;
+								}
+
+							}
+
+							// if not permission is granted - skip this section
+							if (!bPermissionGranted)
+								continue;
+
+						}
+
+						String sName = null;
+						// compute name from ressource Bundle....
+						try {
+							ResourceBundle rb = null;
+							if (locale != null)
+								rb = ResourceBundle.getBundle("bundle.forms",
+										locale);
+							else
+								rb = ResourceBundle.getBundle("bundle.forms");
+
+							String sResouceURL = sURL.replace('/', '_');
+							sName = rb.getString(sResouceURL);
+						} catch (java.util.MissingResourceException eb) {
+							sName = "";
+							System.out.println(eb.getMessage());
+						}
+
+						EditorSection aSection = new EditorSection(sURL, sName);
+						sections.add(aSection);
+
+					} catch (Exception est) {
+						logger.severe("[WorkitemMB] can not parse EditorSections : '"
+								+ sEditor + "'");
+						logger.severe(est.getMessage());
 					}
-
-					EditorSection aSection = new EditorSection(sURL, sName);
-					sections.add(aSection);
 				}
 			}
 		}
@@ -1003,6 +1087,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * result is found open_workitem will be returned.
 	 * 
 	 * The property 'action' is computed by teh result plugin
+	 * 
 	 * @return
 	 */
 	public String getAction() {
