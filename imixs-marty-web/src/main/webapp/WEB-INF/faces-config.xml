@@ -122,7 +122,7 @@
 	<managed-bean>
 		<managed-bean-name>setupMB</managed-bean-name>
 		<managed-bean-class>org.imixs.marty.web.util.SetupMB</managed-bean-class>
-		<managed-bean-scope>application</managed-bean-scope>
+		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 	
 	<managed-bean>
