@@ -183,6 +183,7 @@ public class SetupMB {
 		epm.addIndex("$modelversion", EntityIndex.TYP_TEXT);
 
 		// app
+		epm.addIndex("txtworkitemref", EntityIndex.TYP_TEXT);
 		epm.addIndex("txtname", EntityIndex.TYP_TEXT);
 		epm.addIndex("txtemail", EntityIndex.TYP_TEXT);
 		epm.addIndex("namteam", EntityIndex.TYP_TEXT);
