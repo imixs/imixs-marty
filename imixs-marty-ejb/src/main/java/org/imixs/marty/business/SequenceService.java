@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Imixs IX Workflow Technology
+ *  Imixs Workflow Technology
  *  Copyright (C) 2003, 2008 Imixs Software Solutions GmbH,  
  *  http://www.imixs.com
  *  

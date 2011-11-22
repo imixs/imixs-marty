@@ -179,7 +179,6 @@ public class SetupMB {
 		epm.addIndex("txtworkflowgroup", EntityIndex.TYP_TEXT);
 		epm.addIndex("txtworkflowsummary", EntityIndex.TYP_TEXT);
 		epm.addIndex("namcreator", EntityIndex.TYP_TEXT);
-
 		epm.addIndex("$modelversion", EntityIndex.TYP_TEXT);
 
 		// app
@@ -188,7 +187,13 @@ public class SetupMB {
 		epm.addIndex("txtemail", EntityIndex.TYP_TEXT);
 		epm.addIndex("namteam", EntityIndex.TYP_TEXT);
 		epm.addIndex("namowner", EntityIndex.TYP_TEXT);
-		epm.addIndex("dattermin", EntityIndex.TYP_CALENDAR);
+		epm.addIndex("datdate", EntityIndex.TYP_CALENDAR);
+		epm.addIndex("datfrom", EntityIndex.TYP_CALENDAR);
+		epm.addIndex("datto", EntityIndex.TYP_CALENDAR);
+		epm.addIndex("numsequencenumber", EntityIndex.TYP_INT);
+		
+		
+		
 
 		epm.addIndex("txtProjectName", EntityIndex.TYP_TEXT);
 		epm.addIndex("txtUsername", EntityIndex.TYP_TEXT);
