@@ -410,9 +410,7 @@ public class ProjectlistMB {
 	 * @return
 	 */
 	public void doReset(ActionEvent event) {
-		getProjectBean().setWorkitem(null);
-		projects = null;
-		myProjectSelection = null;
+		doRefresh(event);
 		row = 0;
 	}
 
@@ -430,7 +428,6 @@ public class ProjectlistMB {
 		projects = null;
 		myProjectSelection = null;
 		doResetProjectTree(event);
-		// row = 0;
 	}
 
 	public void doLoadNext(ActionEvent event) {

@@ -741,9 +741,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		ItemCollection saveItem = workitemItemCollection;
 
 		this.getProjectListMB().doRefresh(event);
-		this.getProjectListMB().resetProcessList();
 		this.getProfileBean().clearCache();
-
 		this.setWorkitem(saveItem);
 
 	}
@@ -1051,8 +1049,6 @@ public class ProjectMB extends AbstractWorkflowController {
 			
 			// inform Listeners...
 			fireProjectDeleteEvent();
-
-			
 			projectService.deleteProject(this.getWorkitem());
 			this.getProjectListMB().doReset(event);
 		}
