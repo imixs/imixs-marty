@@ -126,12 +126,7 @@ public class ProjectService  {
 	org.imixs.workflow.jee.ejb.WorkflowService wm;
 	ItemCollection workItem = null;
 
-	@PostConstruct
-	private void init_index() throws Exception {
-		entityService.addIndex("txtname", EntityIndex.TYP_TEXT);
-		entityService.addIndex("namteam", EntityIndex.TYP_TEXT);
-		entityService.addIndex("namowner", EntityIndex.TYP_TEXT);
-	}
+	
 
 	/**
 	 * Updates a Team Entity

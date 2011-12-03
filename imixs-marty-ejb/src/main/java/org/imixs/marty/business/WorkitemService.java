@@ -79,11 +79,6 @@ public class WorkitemService {
 
 	ItemCollection workItem = null;
 
-	@PostConstruct
-	private void initIndex() throws Exception {
-		entityService.addIndex("dattermin", EntityIndex.TYP_CALENDAR);
-		entityService.addIndex("$uniqueidref", EntityIndex.TYP_TEXT);
-	}
 
 	/**
 	 * This method creates a new workItem. The workItem becomes a response

@@ -107,11 +107,7 @@ public class ConfigService  {
 
 	final String TYPE = "configuration";
 
-	@PostConstruct
-	private void init_index() throws Exception {
-		entityService.addIndex("txtname", EntityIndex.TYP_TEXT);
-		entityService.addIndex("namteam", EntityIndex.TYP_TEXT);
-	}
+	
 
 	/**
 	 * creates a new configuration object for a specified name
