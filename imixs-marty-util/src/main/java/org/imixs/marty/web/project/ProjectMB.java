@@ -1,6 +1,6 @@
 /*******************************************************************************
- *  Imixs IX Workflow Technology
- *  Copyright (C) 2003, 2008 Imixs Software Solutions GmbH,  
+ *  Imixs Workflow 
+ *  Copyright (C) 2001, 2011 Imixs Software Solutions GmbH,  
  *  http://www.imixs.com
  *  
  *  This program is free software; you can redistribute it and/or 
@@ -16,16 +16,19 @@
  *  You can receive a copy of the GNU General Public
  *  License at http://www.gnu.org/licenses/gpl.html
  *  
+ *  Project: 
+ *  	http://www.imixs.org
+ *  	http://java.net/projects/imixs-workflow
+ *  
  *  Contributors:  
  *  	Imixs Software Solutions GmbH - initial API and implementation
- *  	Ralph Soika
- *  
+ *  	Ralph Soika - Software Developer
  *******************************************************************************/
+
 package org.imixs.marty.web.project;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -52,7 +55,6 @@ import org.imixs.marty.model.ModelData;
 import org.imixs.marty.web.profile.MyProfileMB;
 import org.imixs.marty.web.profile.NameLookupMB;
 import org.imixs.marty.web.util.SetupMB;
-import org.imixs.marty.web.workitem.WorkitemListener;
 import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;

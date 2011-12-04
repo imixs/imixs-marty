@@ -1,6 +1,6 @@
 /*******************************************************************************
- *  Imixs IX Workflow Technology
- *  Copyright (C) 2001, 2008 Imixs Software Solutions GmbH,  
+ *  Imixs Workflow 
+ *  Copyright (C) 2001, 2011 Imixs Software Solutions GmbH,  
  *  http://www.imixs.com
  *  
  *  This program is free software; you can redistribute it and/or 
@@ -16,17 +16,21 @@
  *  You can receive a copy of the GNU General Public
  *  License at http://www.gnu.org/licenses/gpl.html
  *  
+ *  Project: 
+ *  	http://www.imixs.org
+ *  	http://java.net/projects/imixs-workflow
+ *  
  *  Contributors:  
  *  	Imixs Software Solutions GmbH - initial API and implementation
- *  	Ralph Soika
+ *  	Ralph Soika - Software Developer
  *******************************************************************************/
+
 package org.imixs.marty.util;
 
 import java.util.HashMap;
 
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpSession;
 
 /**
  * This is a helper Class to check access level of a user

@@ -1,6 +1,6 @@
 /*******************************************************************************
-d *  Imixs IX Workflow Technology
- *  Copyright (C) 2003, 2008 Imixs Software Solutions GmbH,  
+ *  Imixs Workflow 
+ *  Copyright (C) 2001, 2011 Imixs Software Solutions GmbH,  
  *  http://www.imixs.com
  *  
  *  This program is free software; you can redistribute it and/or 
@@ -16,17 +16,19 @@ d *  Imixs IX Workflow Technology
  *  You can receive a copy of the GNU General Public
  *  License at http://www.gnu.org/licenses/gpl.html
  *  
+ *  Project: 
+ *  	http://www.imixs.org
+ *  	http://java.net/projects/imixs-workflow
+ *  
  *  Contributors:  
  *  	Imixs Software Solutions GmbH - initial API and implementation
- *  	Ralph Soika
- *  
+ *  	Ralph Soika - Software Developer
  *******************************************************************************/
+
 package org.imixs.marty.web.profile;
 
 import java.text.Collator;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -40,7 +42,6 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
-import javax.faces.component.UIData;
 import javax.faces.component.UIParameter;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
@@ -54,7 +55,6 @@ import org.imixs.marty.model.ModelVersionHandler;
 import org.imixs.marty.util.LoginMB;
 import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.util.SetupMB;
-
 import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.AbstractWorkflowController;
