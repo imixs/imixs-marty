@@ -104,7 +104,11 @@ public class SetupMB {
 	}
 
 	/**
-	 * This method tries to load the config entity to read default values
+	 * This method tries to load the config entity to read default values. If no
+	 * configuration exists the method creates a new config entity. Next the
+	 * method verifies if the system models are available and if the doSetup()
+	 * method was triggered once before. The method set the boolean 'setupOk'. This Booelan 
+	 * indicates if the user need to start a doSetup() method call (see layout.xhtml)
 	 */
 	@PostConstruct
 	public void init() {
@@ -153,8 +157,10 @@ public class SetupMB {
 
 		}
 
-		setupOk = configItemCollection
-				.getItemValueBoolean("keySystemSetupCompleted");
+		// now test if system model exists and if the systemSetup was
+		// successfully completed.
+		setupOk = (hasSystemModel() && configItemCollection
+				.getItemValueBoolean("keySystemSetupCompleted") == true);
 
 	}
 
@@ -193,6 +199,8 @@ public class SetupMB {
 	 * @throws Exception
 	 */
 	public void doSetup(ActionEvent event) throws Exception {
+		
+		
 		logger.info("[SetupMB] starting System Setup...");
 		// model
 		epm.addIndex("numprocessid", EntityIndex.TYP_INT);
@@ -204,7 +212,13 @@ public class SetupMB {
 		epm.addIndex("$workitemid", EntityIndex.TYP_TEXT);
 		epm.addIndex("$processid", EntityIndex.TYP_INT);
 		epm.addIndex("txtworkflowgroup", EntityIndex.TYP_TEXT);
-		epm.addIndex("txtworkflowsummary", EntityIndex.TYP_TEXT);
+		
+		
+		// remove txtworkflowSummary (deprecated index field!)
+		// this field was only for an older search feature which is no longer necessary.
+		//epm.addIndex("txtworkflowsummary", EntityIndex.TYP_TEXT);
+		epm.removeIndex("txtworkflowsummary");
+		
 		epm.addIndex("namcreator", EntityIndex.TYP_TEXT);
 		epm.addIndex("$modelversion", EntityIndex.TYP_TEXT);
 
@@ -218,16 +232,12 @@ public class SetupMB {
 		epm.addIndex("datfrom", EntityIndex.TYP_CALENDAR);
 		epm.addIndex("datto", EntityIndex.TYP_CALENDAR);
 		epm.addIndex("numsequencenumber", EntityIndex.TYP_INT);
-		
-		
-		
 
 		epm.addIndex("txtProjectName", EntityIndex.TYP_TEXT);
 		epm.addIndex("txtUsername", EntityIndex.TYP_TEXT);
 
-		
 		logger.info("[SetupMB] index configuration - ok");
-		
+
 		// update System configuration.....
 		getWorkitem().replaceItemValue("keySystemSetupCompleted", true);
 		doSave(event);
@@ -267,19 +277,9 @@ public class SetupMB {
 
 		logger.info("[SetupMB] searching system model...");
 		try {
-			List<String> col = modelService.getAllModelVersions();
-			// check if system model is available
-			for (String sversion : col) {
-
-				String sModelDomain = sversion.substring(0,
-						sversion.indexOf("-"));
-
-				if ("system".equals(sModelDomain)) {
-
-					logger.info("[SetupMB] system model '" + sversion + "' found - skip loading default models");
-					return;
-
-				}
+			if (hasSystemModel()) {
+				logger.info("[SetupMB] system model found - skip loading default models");
+				return;
 			}
 
 			logger.info("[SetupMB] loading default model configuration from 'configuration/model.properties'...");
@@ -292,7 +292,8 @@ public class SetupMB {
 				String sKey = enkeys.nextElement();
 				// try to load this model
 				String filePath = r.getString(sKey);
-				logger.info("[SetupMB] loading model configuration '" + sKey+"=" + filePath + "'");
+				logger.info("[SetupMB] loading model configuration '" + sKey
+						+ "=" + filePath + "'");
 
 				InputStream inputStream = SetupMB.class.getClassLoader()
 						.getResourceAsStream(filePath);
@@ -314,9 +315,32 @@ public class SetupMB {
 			}
 		} catch (Exception e) {
 			logger.severe("[SetupMB] unable to load model configuration - please check configuration/model.properties file!");
-			throw new RuntimeException("[SetupMB] unable to load model configuration - please check configuration/model.properties file!");
+			throw new RuntimeException(
+					"[SetupMB] unable to load model configuration - please check configuration/model.properties file!");
 		}
 
+	}
+
+	/**
+	 * determine if a system model is available
+	 * 
+	 * @return true if a system model was found
+	 */
+	public boolean hasSystemModel() {
+		List<String> col = modelService.getAllModelVersions();
+		// check if system model is available
+		for (String sversion : col) {
+
+			String sModelDomain = sversion.substring(0, sversion.indexOf("-"));
+
+			if ("system".equals(sModelDomain)) {
+
+				// system model found
+				return true;
+
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -374,7 +398,8 @@ public class SetupMB {
 				}
 				// now remove old model entries....
 				for (String aModelVersion : vModelVersions) {
-					logger.info("[SetupMB] removing existing configuration for model version '" + aModelVersion+ "'");
+					logger.info("[SetupMB] removing existing configuration for model version '"
+							+ aModelVersion + "'");
 					modelService.removeModelVersion(aModelVersion);
 				}
 				// save new entities into database and update modelversion.....
@@ -386,7 +411,7 @@ public class SetupMB {
 					entityService.save(itemCollection);
 				}
 
-				logger.info("[SetupMB] "+ecol.getEntity().length
+				logger.info("[SetupMB] " + ecol.getEntity().length
 						+ " entries sucessfull imported");
 			}
 

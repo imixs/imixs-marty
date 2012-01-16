@@ -159,6 +159,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 					.getELResolver()
 					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "setupMB");
+			
 			if (systemSetupMB != null && !systemSetupMB.isSetupOk())
 				systemSetupMB.doSetup(null);
 			

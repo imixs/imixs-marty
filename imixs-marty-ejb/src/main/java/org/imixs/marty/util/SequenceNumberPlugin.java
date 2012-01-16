@@ -118,6 +118,11 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 				if (sequenceNumber > 0)
 					workitem.replaceItemValue("numsequencenumber", new Integer(
 							sequenceNumber));
+				else {
+					// to avoid problems with incorrect data values we remove the
+					// property numsequencenumber in this case
+					workitem.removeItem("numsequencenumber");
+				}
 
 			} catch (Exception ee) {
 				ee.printStackTrace();
@@ -125,7 +130,8 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 				return Plugin.PLUGIN_ERROR;
 			}
 
-		}
+		} 
+
 		return Plugin.PLUGIN_OK;
 	}
 
