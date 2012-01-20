@@ -850,7 +850,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 			// inform Listeners...
 			fireChildDeleteEvent();
 
-			workitemService.deleteWorkItem(childWorkitemItemCollection);
+			if ("childworkitem".equals(childWorkitemItemCollection.getItemValueString("type")))
+				workitemService.deleteWorkItem(childWorkitemItemCollection);
 
 			doResetChildWorkitems(event);
 
