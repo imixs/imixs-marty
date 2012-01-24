@@ -864,8 +864,7 @@ public class WorklistMB implements WorkitemListener {
 	}
 
 	public void onWorkitemDeleteCompleted() {
-		// TODO Auto-generated method stub
-
+		doReset(null);
 	}
 
 	public void onWorkitemSoftDelete(ItemCollection e) {
@@ -874,8 +873,7 @@ public class WorklistMB implements WorkitemListener {
 	}
 
 	public void onWorkitemSoftDeleteCompleted(ItemCollection e) {
-		// TODO Auto-generated method stub
-
+		doReset(null);
 	}
 
 	public void onChildProcess(ItemCollection e) {
