@@ -244,8 +244,8 @@ public class WorklistMB implements WorkitemListener {
 		// reset view
 //		doReset(null);
 		
-		this.setProcessFilter(0);
-		this.setWorkflowGroupFilter(null);
+//		this.setProcessFilter(0);
+//		this.setWorkflowGroupFilter(null);
 	}
 
 	public String getViewTitle() {
@@ -280,6 +280,19 @@ public class WorklistMB implements WorkitemListener {
 		// reset process filter now
 		setProcessFilter(0);
 	}
+	
+	/**
+	 * returns the name of the current workflowGroupFileter (right part of |)
+	 * @return
+	 */
+	public String getWorkflowGroupFilterName() {
+		if (workflowGroupFilter==null || !workflowGroupFilter.contains("|"))
+			return "";
+		else  
+			return workflowGroupFilter.substring(workflowGroupFilter.indexOf('|')+1);
+	}
+	
+	
 
 	public int getProcessFilter() {
 		if (workflowGroupFilter==null || "-".equals(workflowGroupFilter))
@@ -446,6 +459,49 @@ public class WorklistMB implements WorkitemListener {
 		workitems = null;
 	}
 
+	
+	/**
+	 * selects the task-list for a specific workflow group
+	 * 
+	 * @param event - containging the model and workflowGroup
+	 */
+	public void doSwitchToWorklistByWorkflowGroup(ActionEvent event) {
+		ItemCollection currentSelection = null;
+		
+		// reset current project selection
+		this.getProjectMB().setWorkitem(null);
+		setProjectFilter(null);
+		
+			// find current data row....
+		UIComponent component = event.getComponent();
+		for (UIComponent parent = component.getParent(); parent != null; parent = parent
+						.getParent()) {
+
+			if (!(parent instanceof UIData))
+						continue;
+
+					try {
+						// get current project from row
+						currentSelection = (ItemCollection) ((UIData) parent)
+								.getRowData();
+
+						setWorkflowGroupFilter(currentSelection.getItemValueString("txtName"));
+						
+						break;
+					} catch (Exception e) {
+						// unable to select data
+					}
+				}
+
+				
+				
+		//setWorkflowGroupFilter(workflowGroupFilter)
+		
+		//setQueryType(QUERY_WORKLIST_BY_AUTHOR);
+	}
+
+	
+	
 	/**
 	 * selects the task-list for the current user
 	 * 

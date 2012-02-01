@@ -44,8 +44,10 @@ import javax.faces.model.SelectItem;
 
 import org.imixs.marty.util.SelectItemComparator;
 import org.imixs.marty.web.profile.MyProfileMB;
+import org.imixs.marty.web.project.SubProjectTreeNode;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.ModelService;
+import org.richfaces.model.TreeNodeImpl;
 
 /**
  * This backing beans provides informations about the Models provided in the
@@ -82,6 +84,8 @@ public class ModelMB {
 
 	private HashMap modelVersionCache = null;
 	private HashMap processEntityCache = null;
+
+	private TreeNodeImpl workflowGroupTree = null;
 
 	/* Model Service */
 	@EJB
@@ -124,7 +128,7 @@ public class ModelMB {
 	public void init() {
 
 		modelVersionCache = new HashMap();
-		processEntityCache= new ProcessCache();
+		processEntityCache = new ProcessCache();
 
 		List<String> col;
 		try {
@@ -230,7 +234,61 @@ public class ModelMB {
 
 			}
 		}
+		
+		Collections.sort(workflowGroupSelection, new SelectItemComparator(
+				FacesContext.getCurrentInstance().getViewRoot().getLocale(),
+				true));
+
 		return workflowGroupSelection;
+
+	}
+
+	/**
+	 * returns a richFacess TreeNode implementation containing a tree structure
+	 * of all workflowGroups. The tree has no hierarchy
+	 * 
+	 * @see getWorkflowGroups()
+	 * 
+	 * @return
+	 */
+	public TreeNodeImpl getWorkflowGroupTree() {
+
+		if (workflowGroupTree == null) {
+			// create new TreeNode Instance....
+			workflowGroupTree = new TreeNodeImpl();
+			
+			
+			// fetch workflow groups
+			ArrayList<SelectItem> groupLlist = getWorkflowGroups();
+			
+			// add each group as a root node (flat tree)
+			try {
+
+				int count = 0;
+				for (SelectItem aitem : groupLlist) {
+					// add project id to the tree node....
+					// SubProjectTreeNode nodeProcess = new SubProjectTreeNode(
+					// aitem, SubProjectTreeNode.ROOT_PROJECT);
+					TreeNodeImpl nodeImpl = new TreeNodeImpl();
+					
+					ItemCollection itemCol=new ItemCollection();
+					itemCol.replaceItemValue("txtname", aitem.getValue());
+					itemCol.replaceItemValue("txtWorkflowGroup", aitem.getLabel());
+					
+					nodeImpl.setData(itemCol);
+					workflowGroupTree.addChild(aitem.getValue(), nodeImpl);
+
+					count++;
+
+				}
+			} catch (Exception ee) {
+
+				ee.printStackTrace();
+			}
+
+		}
+
+		return workflowGroupTree;
 
 	}
 
@@ -364,20 +422,15 @@ public class ModelMB {
 		return myProfileMB;
 
 	}
-	
-	
-	
-	
+
 	/**
-	 * returns the internal cache map to lookup a process entity 
+	 * returns the internal cache map to lookup a process entity
+	 * 
 	 * @return
 	 */
 	public HashMap getProcessEntity() {
 		return processEntityCache;
 	}
-
-
-
 
 	/**
 	 * This class implements an internal Cache for Process Entities. The Class
@@ -434,7 +487,10 @@ public class ModelMB {
 							Integer.parseInt(sProcessID), sProcessModelVersion);
 
 				} else
-					throw new RuntimeException(" ModelMB invalid Process Identitfier: " + sProcessKey + " - modellversion|processid expected!");
+					throw new RuntimeException(
+							" ModelMB invalid Process Identitfier: "
+									+ sProcessKey
+									+ " - modellversion|processid expected!");
 			} catch (NumberFormatException e) {
 				e.printStackTrace();
 				process = null;

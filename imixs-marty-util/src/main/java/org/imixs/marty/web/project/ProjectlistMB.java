@@ -202,6 +202,9 @@ public class ProjectlistMB {
 						"project")) {
 					getProjectBean().setWorkitem(currentSelection);
 					break;
+				} else {
+					getProjectBean().setWorkitem(null);
+					break;
 				}
 			} catch (Exception e) {
 				// unable to select data
