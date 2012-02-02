@@ -29,15 +29,18 @@ package org.imixs.marty.web.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
 
+import org.imixs.marty.util.SelectItemComparator;
 import org.imixs.workflow.ItemCollection;
 
 /**
@@ -78,7 +81,7 @@ public class ConfigMB {
 	private String name = "CONFIGURATION";
 
 	private ItemCollection configItemCollection = null;
-	
+
 	@EJB
 	org.imixs.workflow.jee.ejb.EntityService entityService;
 
@@ -95,7 +98,7 @@ public class ConfigMB {
 	public void init() {
 		doLoadConfiguration(null);
 	}
-	
+
 	/**
 	 * Returns the name of the configuration entity
 	 * 
@@ -114,13 +117,10 @@ public class ConfigMB {
 		this.name = name;
 	}
 
-	
-
 	public ItemCollection getWorkitem() {
 		return this.configItemCollection;
 	}
-	
-	
+
 	/**
 	 * save method tries to load the config entity. if not availabe. the method
 	 * will create the entity the first time
@@ -138,7 +138,6 @@ public class ConfigMB {
 		// save entity
 		configItemCollection = entityService.save(configItemCollection);
 
-		
 	}
 
 	/**
@@ -146,12 +145,13 @@ public class ConfigMB {
 	 * entity. If no configuration is found for this configuration name the
 	 * Method creates an empty configuration object.
 	 * 
-	 * The method reloads the configuration. This is used by the nav.xhtml to garantie that the 
-	 * config workitem will be reloaded (even if things like the sequence number have changed)
+	 * The method reloads the configuration. This is used by the nav.xhtml to
+	 * garantie that the config workitem will be reloaded (even if things like
+	 * the sequence number have changed)
 	 * 
 	 */
 	public void doLoadConfiguration(ActionEvent event) {
-		
+
 		String sQuery = "SELECT config FROM Entity AS config "
 				+ " JOIN config.textItems AS t2" + " WHERE config.type = '"
 				+ TYPE + "'" + " AND t2.itemName = 'txtname'"
@@ -176,7 +176,7 @@ public class ConfigMB {
 			}
 
 		}
-		
+
 	}
 
 	public ArrayList<SelectItem> getLocaleSelection() {
@@ -185,8 +185,9 @@ public class ConfigMB {
 	}
 
 	/**
-	 * SelectItem getter Method provides a getter method to an 
-	 * ArrayList of <SelectItem> objects for a specific param stored in the configuration entity.
+	 * SelectItem getter Method provides a getter method to an ArrayList of
+	 * <SelectItem> objects for a specific param stored in the configuration
+	 * entity.
 	 * 
 	 * <code>
 	 * <f:selectItems value="#{configMB.selectItems['txtMyParam2']}" />
@@ -204,11 +205,19 @@ public class ConfigMB {
 		return selectItemAdapter;
 	}
 
+	@SuppressWarnings("unchecked")
+	public Map getSelectItemsSorted() throws Exception {
+
+		SelectItemsAdapter selectItemAdapter = new SelectItemsAdapter(
+				configItemCollection, true);
+
+		return selectItemAdapter;
+	}
+
 	public ItemCollection getItemCollection() {
 		return this.configItemCollection;
 	}
 
-	
 	/**
 	 * This class helps to adapt the behavior of a singel value item to be used
 	 * in a jsf page using a expression language like this:
@@ -222,6 +231,7 @@ public class ConfigMB {
 	@SuppressWarnings({ "serial", "unchecked" })
 	class SelectItemsAdapter extends HashMap {
 		ItemCollection itemCollection;
+		boolean bSorted = false;
 
 		public SelectItemsAdapter() {
 			itemCollection = new ItemCollection();
@@ -229,6 +239,11 @@ public class ConfigMB {
 
 		public SelectItemsAdapter(ItemCollection acol) {
 			itemCollection = acol;
+		}
+
+		public SelectItemsAdapter(ItemCollection acol, boolean sorted) {
+			itemCollection = acol;
+			bSorted = sorted;
 		}
 
 		/**
@@ -257,7 +272,7 @@ public class ConfigMB {
 			for (Object aValue : valueList) {
 
 				// test if aValue has a | as an delimiter
-				// expected format in this case is:  label|value
+				// expected format in this case is: label|value
 				String sValue = aValue.toString();
 				String sName = sValue;
 
@@ -265,9 +280,15 @@ public class ConfigMB {
 					sName = sValue.substring(0, sValue.indexOf("|"));
 					sValue = sValue.substring(sValue.indexOf("|") + 1);
 				}
-				selection.add(new SelectItem( sValue.trim(),sName.trim()));
+				selection.add(new SelectItem(sValue.trim(), sName.trim()));
 
 			}
+
+			// sort result?
+			if (bSorted)
+				Collections.sort(selection, new SelectItemComparator(
+						FacesContext.getCurrentInstance().getViewRoot()
+								.getLocale(), true));
 
 			return selection;
 		}
