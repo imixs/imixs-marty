@@ -34,8 +34,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.imixs.marty.business.ProfileService;
-import org.imixs.marty.business.ProjectService;
+import org.imixs.marty.ejb.ProfileService;
+import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.workflow.ItemCollection;

@@ -82,7 +82,7 @@ public class WorklistMB implements WorkitemListener {
 
 	java.util.EventObject eo;
 	@EJB
-	org.imixs.marty.business.WorkitemService workitemService;
+	org.imixs.marty.ejb.WorkitemService workitemService;
 
 	/* Backing Beans */
 	private WorkitemMB workitemBean = null;

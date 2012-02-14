@@ -58,6 +58,12 @@
 		<managed-bean-class>org.imixs.marty.model.ModelMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>	
+	
+	<managed-bean>
+		<managed-bean-name>modelManagerMB</managed-bean-name>
+		<managed-bean-class>org.imixs.marty.model.ModelManagerMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean> 
 	<managed-bean>
 		<managed-bean-name>myProfileMB</managed-bean-name>
 		<managed-bean-class>org.imixs.marty.web.profile.MyProfileMB</managed-bean-class>
@@ -248,12 +254,7 @@
 			<from-outcome>open_my_profile</from-outcome>
 			<to-view-id>/pages/profile/myprofile.xhtml</to-view-id>
 		</navigation-case>
-		<navigation-case>
-			<from-outcome>open_my_settings</from-outcome>
-			<to-view-id>/pages/profile/settings.xhtml</to-view-id>
-		</navigation-case>
-
-
+	
 
 
 

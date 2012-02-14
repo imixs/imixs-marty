@@ -25,7 +25,7 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.util;
+package org.imixs.marty.plugins;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -33,13 +33,13 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.imixs.marty.business.ProfileService;
+import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
-import org.imixs.workflow.plugins.jee.MailPlugin;
 
-public class SywappMailPlugin extends MailPlugin {
+
+public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
 	private ProfileService profileService = null;
 	private boolean hasMailSession = false;
@@ -57,7 +57,7 @@ public class SywappMailPlugin extends MailPlugin {
 		}
 
 		// lookup profile service EJB
-		String jndiName = "ejb/ProfileServiceBean";
+		String jndiName = "ejb/ProfileService";
 		InitialContext ictx = new InitialContext();
 		Context ctx = (Context) ictx.lookup("java:comp/env");
 		profileService = (ProfileService) ctx.lookup(jndiName);
@@ -102,13 +102,13 @@ public class SywappMailPlugin extends MailPlugin {
 		try {
 			aAddr = fetchEmail(aAddr);
 			if (aAddr.indexOf('@') == -1) {
-				System.out.println("[SywAppMailPlugin] smtp mail address for '" + aAddr
+				System.out.println("[MartyMailPlugin] smtp mail address for '" + aAddr
 						+ "' could not be resolved!");
 				return null;
 			}
 		} catch (NamingException e) {
 			// no valid email was found!
-			System.out.println("[SywAppMailPlugin] mail for '" + aAddr
+			System.out.println("[MartyMailPlugin] mail for '" + aAddr
 					+ "' could not be resolved!");
 			// e.printStackTrace();
 			// avoid sending mail to this address!
@@ -135,7 +135,7 @@ public class SywappMailPlugin extends MailPlugin {
 
 		if (itemColProfile == null)
 			throw new NamingException(
-					"[SywAppMailPlugin] No Profile found for: " + aOpenID);
+					"[MartyMailPlugin] No Profile found for: " + aOpenID);
 
 		String sEmail = itemColProfile.getItemValueString("txtEmail");
 
@@ -145,14 +145,14 @@ public class SywappMailPlugin extends MailPlugin {
 		if (sEmail != null && !"".equals(sEmail)) {
 			if (sEmail.indexOf("http") > -1 || sEmail.indexOf("//") > -1)
 				throw new NamingException(
-						"[SywAppMailPlugin] Invalid Email: ID=" + aOpenID
+						"[MartyMailPlugin] Invalid Email: ID=" + aOpenID
 								+ " Email=" + sEmail);
 			return sEmail;
 		}
 
 		// test if account contains protokoll information - this
 		if (aOpenID.indexOf("http") > -1 || aOpenID.indexOf("//") > -1)
-			throw new NamingException("[SywAppMailPlugin] Invalid Email: ID="
+			throw new NamingException("[MartyMailPlugin] Invalid Email: ID="
 					+ aOpenID);
 
 		return aOpenID;

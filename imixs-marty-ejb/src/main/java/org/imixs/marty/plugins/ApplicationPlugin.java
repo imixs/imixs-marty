@@ -25,11 +25,11 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.util;
+package org.imixs.marty.plugins;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowContext;
-import org.imixs.workflow.plugins.ApplicationPlugin;
+
 
 /**
  * This plugin overwrites the Application Plugin and updates sywapp informations
@@ -38,7 +38,7 @@ import org.imixs.workflow.plugins.ApplicationPlugin;
  * @author rsoika
  * 
  */
-public class SywappApplicationPlugin extends ApplicationPlugin {
+public class ApplicationPlugin extends org.imixs.workflow.plugins.ApplicationPlugin {
 	ItemCollection documentContext;
 
 	@Override

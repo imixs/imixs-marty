@@ -25,7 +25,7 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.business;
+package org.imixs.marty.ejb;
 
 import java.util.ArrayList;
 import java.util.Calendar;

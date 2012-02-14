@@ -44,7 +44,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
 
-import org.imixs.marty.business.ProjectService;
+import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.web.profile.MyProfileMB;
 import org.imixs.marty.web.util.SetupMB;
 import org.imixs.marty.web.workitem.WorkitemMB;

@@ -25,13 +25,13 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.util;
+package org.imixs.marty.plugins;
 
 import javax.mail.internet.AddressException;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 
-import org.imixs.marty.business.SequenceService;
+import org.imixs.marty.ejb.SequenceService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;

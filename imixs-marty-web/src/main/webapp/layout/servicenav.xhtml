@@ -17,46 +17,41 @@
 				<c:choose>
 					<!--  Singed in user -->
 					<c:when test="#{loginMB.authenticated}">
-						<li><b><h:outputText
-							value="#{global.signed_in}: #{myProfileMB.workitem.item['txtUserName']}" /></b>
-						<a
+						<li><h:commandLink action="open_my_profile"><h:outputText
+									value="#{myProfileMB.workitem.item['txtUserName']}" /></h:commandLink></li>
+						<li><a
 							href="#{facesContext.externalContext.requestContextPath}/logout.jsp">
-						<h:outputText value="#{global.sign_out}" /></a></li>
-					</c:when>					
+								<h:outputText value="#{global.sign_out}" />
+						</a></li>
+					</c:when>
 				</c:choose>
-			
-				<li><a
-					href="http://www.shareyourwork.org"><h:outputText value="#{global.about}"/></a>
-				</li>
+
 				
-				<li><a
-					href="http://www.imixs.com"><h:outputText value="Imixs.com"/></a>
-				</li>
-				
+
 				<!-- Different for signed in and anoymous users -->
 				<c:choose>
 					<!--  Singed in user -->
 					<c:when test="#{loginMB.authenticated}">
-						<li><h:commandLink action="open_my_settings">
-							<h:graphicImage url="/layout/icons/flag_#{loginMB.locale}.gif"
-								alt="#{global.swich_language}"
-								style="border:0px;vertical-align: text-top;margin-right:0.5em"></h:graphicImage>
-						</h:commandLink></li>
+						<li><h:commandLink action="open_my_profile">
+								<h:graphicImage url="/layout/icons/flag_#{loginMB.locale}.gif"
+									alt="#{global.swich_language}"
+									style="border:0px;vertical-align: text-top;margin-right:0.5em"></h:graphicImage>
+							</h:commandLink></li>
 
 					</c:when>
 					<!-- Ananymous User -->
 					<c:otherwise>
 						<li><a4j:commandLink id="change_language_link">
-							<h:graphicImage url="/layout/icons/flag_#{loginMB.locale}.gif"
-								alt="#{global.swich_language}"
-								style="border:0px;vertical-align: text-top;margin-right:0.5em"></h:graphicImage>
-						</a4j:commandLink> <rich:componentControl for="language_panel"
-							attachTo="change_language_link" operation="show" event="onclick" />
+								<h:graphicImage url="/layout/icons/flag_#{loginMB.locale}.gif"
+									alt="#{global.swich_language}"
+									style="border:0px;vertical-align: text-top;margin-right:0.5em"></h:graphicImage>
+							</a4j:commandLink> <rich:componentControl for="language_panel"
+								attachTo="change_language_link" operation="show" event="onclick" />
 						</li>
 					</c:otherwise>
 				</c:choose>
-				
-				
+
+
 			</ul>
 		</h:form>
 
@@ -90,11 +85,12 @@
 				<br />
 				<br />
 				<a href="#" onclick="#{rich:component('language_panel')}.hide()">
-				<h:outputText value="#{global.cancel}" /></a>
+					<h:outputText value="#{global.cancel}" />
+				</a>
 
 				<rich:spacer width="24px" />
 				<a4j:commandLink actionListener="#{loginMB.doChangeLanguage}"
-				action="home">
+					action="home">
 					<h:outputText value="#{global.ok}" />
 				</a4j:commandLink>
 			</a4j:form>

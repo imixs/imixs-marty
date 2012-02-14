@@ -25,14 +25,14 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.util;
+package org.imixs.marty.plugins;
 
 import java.util.List;
 import java.util.Vector;
 
 import javax.naming.InitialContext;
 
-import org.imixs.marty.business.ProjectService;
+import org.imixs.marty.ejb.ProjectService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
@@ -51,7 +51,7 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * @author rsoika
  * 
  */
-public class SywappTeamPlugin extends AbstractPlugin {
+public class TeamPlugin extends AbstractPlugin {
 
 	private ProjectService projectService = null;
 	private EntityService entityService = null;

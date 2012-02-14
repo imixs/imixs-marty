@@ -49,8 +49,8 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.validator.ValidatorException;
 
-import org.imixs.marty.business.ProfileService;
-import org.imixs.marty.business.ProjectService;
+import org.imixs.marty.ejb.ProfileService;
+import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.model.ModelVersionHandler;
 import org.imixs.marty.util.LoginMB;
 import org.imixs.marty.web.project.ProjectMB;
@@ -101,7 +101,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 	/* WorkItem Services */
 	@EJB
-	private org.imixs.marty.business.WorkitemService workitemService;
+	private org.imixs.marty.ejb.WorkitemService workitemService;
 
 	public final static int MAX_PRIMARY_ENTRIES = 5;
 	public final static int START_PROFILE_PROCESS_ID = 200;
