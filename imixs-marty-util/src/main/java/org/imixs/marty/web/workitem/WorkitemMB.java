@@ -80,9 +80,6 @@ public class WorkitemMB extends AbstractWorkflowController {
 	private WorklistMB worklistBean = null;
 	private SetupMB setupMB = null;
 	private NameLookupMB nameLookupMB = null;
-	// private BLOBWorkitemController workitemLobMB = null;
-	// private FileUploadBean fileUploadMB = null;
-	private MicroBlogMB microBlogMB = null;
 
 	/* Child Process */
 	protected ItemCollection childWorkitemItemCollection = null;
@@ -168,41 +165,9 @@ public class WorkitemMB extends AbstractWorkflowController {
 		return nameLookupMB;
 	}
 
-	/*
-	 * 
-	 * Blob Controler
-	 */
+	
 
-	/*
-	 * public BLOBWorkitemController getWorkitemBlobBean() { if (workitemLobMB
-	 * == null) workitemLobMB = (BLOBWorkitemController) FacesContext
-	 * .getCurrentInstance() .getApplication() .getELResolver()
-	 * .getValue(FacesContext.getCurrentInstance().getELContext(), null,
-	 * "workitemBlobMB"); return workitemLobMB;
-	 * 
-	 * }
-	 */
-	/*
-	 * private FileUploadBean getFileUploadMB() { if (fileUploadMB == null)
-	 * fileUploadMB = (FileUploadBean) FacesContext .getCurrentInstance()
-	 * .getApplication() .getELResolver()
-	 * .getValue(FacesContext.getCurrentInstance().getELContext(), null,
-	 * "fileUploadBean"); return fileUploadMB; }
-	 */
-
-	public MicroBlogMB getMicroBlogBean() {
-		if (microBlogMB == null)
-			microBlogMB = (MicroBlogMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "microBlogMB");
-
-		return microBlogMB;
-
-	}
-
+	
 	/**
 	 * returns the workflowEditorID for the current workItem. If no attribute
 	 * with the name "txtWorkflowEditorid" is available then the method return
@@ -436,22 +401,6 @@ public class WorkitemMB extends AbstractWorkflowController {
 		// reset processlist
 		processList = null;
 
-		try {
-
-			// load microBlog Workitem if uniqueid changed since last update
-			if (getConfigBean().getWorkitem().getItemValueBoolean(
-					"enableMicroBlogging")) {
-				if (!workitemItemCollection.getItemValueString("$UniqueID")
-						.equals(this.getMicroBlogBean().getWorkitem()
-								.getItemValueString("$UniqueIDRef"))) {
-					this.getMicroBlogBean().load(workitemItemCollection);
-
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 		// inform listeners
 		fireWorkitemChangedEvent();
 	}
@@ -574,8 +523,6 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * this method a bean should register as a workitemListener and implement
 	 * the method onWorkitemProcessCompleted
 	 * 
-	 * Additional the method also calls the save method for the BlobWorkitemMB
-	 * and the MicroBlogMB
 	 * 
 	 * @param event
 	 * @return
@@ -628,22 +575,6 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 		// inform Listeners...
 		fireWorkitemProcessCompletedEvent();
-
-		// save micorBlogMB
-		if (getConfigBean().getWorkitem().getItemValueBoolean(
-				"enableMicroBlogging")) {
-			getMicroBlogBean().update(workitemItemCollection);
-			// add the last workflow history entry
-			Vector vList = workitemItemCollection
-					.getItemValue("txtworkflowhistorylog");
-			getMicroBlogBean().doCreateBlogEntry(null);
-			getMicroBlogBean().getBlogEntry().replaceItemValue("txtComment",
-					vList.elementAt(0));
-			// add and save the microblog
-			getMicroBlogBean().doAddEntry(null);
-
-		}
-
 		// update workitemcollection and reset childs
 		this.setWorkitem(workitemItemCollection);
 		getWorklistBean().doRefresh(event);

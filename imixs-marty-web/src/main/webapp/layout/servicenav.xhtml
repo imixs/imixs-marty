@@ -38,7 +38,7 @@
 					<!--  Singed in user -->
 					<c:when test="#{loginMB.authenticated}">
 						<li><h:commandLink action="open_my_settings">
-							<h:graphicImage url="/layout/img/flag_#{loginMB.locale}.gif"
+							<h:graphicImage url="/layout/icons/flag_#{loginMB.locale}.gif"
 								alt="#{global.swich_language}"
 								style="border:0px;vertical-align: text-top;margin-right:0.5em"></h:graphicImage>
 						</h:commandLink></li>
@@ -47,7 +47,7 @@
 					<!-- Ananymous User -->
 					<c:otherwise>
 						<li><a4j:commandLink id="change_language_link">
-							<h:graphicImage url="/layout/img/flag_#{loginMB.locale}.gif"
+							<h:graphicImage url="/layout/icons/flag_#{loginMB.locale}.gif"
 								alt="#{global.swich_language}"
 								style="border:0px;vertical-align: text-top;margin-right:0.5em"></h:graphicImage>
 						</a4j:commandLink> <rich:componentControl for="language_panel"
@@ -69,7 +69,7 @@
 			</f:facet>
 			<f:facet name="controls">
 				<h:panelGroup>
-					<h:graphicImage value="/layout/img/close.png"
+					<h:graphicImage value="/layout/icons/close.png"
 						style="cursor:pointer" id="hidelink" />
 					<rich:componentControl for="language_panel" attachTo="hidelink"
 						operation="hide" event="onclick" />

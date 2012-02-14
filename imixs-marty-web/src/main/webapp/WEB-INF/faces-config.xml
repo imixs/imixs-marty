@@ -44,12 +44,6 @@
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
 	<managed-bean>
-		<managed-bean-name>microBlogMB</managed-bean-name>
-		<managed-bean-class>org.imixs.marty.web.workitem.MicroBlogMB</managed-bean-class>
-		<managed-bean-scope>session</managed-bean-scope>
-	</managed-bean>
-	
-	<managed-bean>
 		<managed-bean-name>IsUserInRole</managed-bean-name>
 		<managed-bean-class>org.imixs.marty.util.SecurityHashMap</managed-bean-class>
 		<managed-bean-scope>none</managed-bean-scope>
@@ -70,11 +64,7 @@
 		<managed-bean-scope>session</managed-bean-scope>		
 	</managed-bean>
 	
-	<managed-bean>
-		<managed-bean-name>newsMB</managed-bean-name>
-		<managed-bean-class>org.imixs.marty.web.news.NewsMB</managed-bean-class>
-		<managed-bean-scope>session</managed-bean-scope>
-	</managed-bean>
+	
 
 	<managed-bean>
 		<managed-bean-name>urlControllerMB</managed-bean-name>
@@ -113,11 +103,7 @@
 		<managed-bean-class>org.imixs.marty.web.profile.NameLookupMB</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
-	<managed-bean>
-		<managed-bean-name>projectNotesMB</managed-bean-name>
-		<managed-bean-class>org.imixs.marty.web.project.ProjectNotesMB</managed-bean-class>
-		<managed-bean-scope>session</managed-bean-scope>
-	</managed-bean>
+	
 	
 	<managed-bean>
 		<managed-bean-name>setupMB</managed-bean-name>
@@ -130,13 +116,22 @@
 		<managed-bean-class>org.imixs.marty.web.util.FileUploadBean</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
+	 
+	<managed-bean>
+		<managed-bean-name>commentMB</managed-bean-name>
+		<managed-bean-class>org.imixs.marty.web.util.CommentMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
 	
-
+	
+	<managed-bean>
+		<managed-bean-name>searchMB</managed-bean-name>
+		<managed-bean-class>org.imixs.marty.web.workitem.SearchMB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
 	
 	
-	<!--
-		**************************************** * Converters
-		****************************************
+	<!-- Converters
 	-->
 	<converter>
 		<display-name>imixs.VectorConverter</display-name>

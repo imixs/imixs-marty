@@ -8,33 +8,44 @@
 	template="/layout/template.xhtml">
 
 
+	<ui:define name="commandbox">
+		<ui:include src="/layout/commandbox.xhtml" />
+		
 
+		<c:if test="#{! empty projectMB.workitem.item['txtname']}">
+			<ui:include src="/layout/commandbox_worklist.xhtml" />
+		</c:if>
+
+	</ui:define>
+	
+	<!-- History Nav -->  
+	<ui:define name="historynav">
+			<ui:include src="/layout/historynav_workitem.xhtml" />
+	</ui:define>
+	
+	
 	<ui:define name="content">
-	<!-- Documentinfo: $UniqueID= #{workitemMB.workitem.item['$uniqueid']}-->
+		<!-- Documentinfo: $UniqueID= #{workitemMB.workitem.item['$uniqueid']}-->
 
 		<f:view>
 			<f:loadBundle basename="bundle.workitem" var="messages" />
-		
+
 
 			<h:form id="workitem_form">
-			<div class="sywapp-form sywapp-workitem">
-				<!-- *** Header **** -->
-				<div class="sywapp-form-header sywapp-workitem-header">
-					<ui:include src="/pages/workitems/workitem_header.xhtml" />
-					<!-- ########## Error ########## -->
-					<ui:include src="/pages/error_message.xhtml" />
-				</div>
-		
-				
+				<div class="sywapp-form sywapp-workitem"><!-- *** Header **** -->
+				<div class="sywapp-form-header sywapp-workitem-header"><ui:include
+					src="/pages/workitems/workitem_header.xhtml" /> <!-- ########## Error ########## -->
+				<ui:include src="/pages/error_message.xhtml" /></div>
+
+
 				<!-- *** Form *** -->
-				<div class="sywapp-form-body sywapp-workitem-body">
-				<ui:include
-					src="/pages/workitems/forms/#{workitemMB.editor}.xhtml" />
-				</div>
-				
+				<div class="sywapp-form-body sywapp-workitem-body"><ui:include
+					src="/pages/workitems/forms/#{workitemMB.editor}.xhtml" /></div>
+
 				<!-- *** Footer **** -->
 				<ui:include src="/pages/workitems/workitem_footer.xhtml" />
-			</div>
+				
+				</div>
 
 			</h:form>
 		</f:view>
