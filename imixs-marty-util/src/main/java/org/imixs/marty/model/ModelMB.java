@@ -42,8 +42,11 @@ import javax.ejb.EJB;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 
+import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.util.SelectItemComparator;
 import org.imixs.marty.web.profile.MyProfileMB;
+import org.imixs.marty.web.project.ProjectMB;
+import org.imixs.marty.web.project.ProjectlistMB;
 import org.imixs.marty.web.project.SubProjectTreeNode;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.ModelService;
@@ -77,19 +80,26 @@ import org.richfaces.model.TreeNodeImpl;
  */
 public class ModelMB {
 	private MyProfileMB myProfileMB = null;
+	private ProjectlistMB projectlist = null;
+	private ProjectMB projectMB = null;
 	private String latestSystemModelVersion = null;
 
 	private ArrayList<SelectItem> workflowGroupSelection = null;
+	private ArrayList<SelectItem> workflowGroupSelectionByProfile = null;
 	private ArrayList<SelectItem> startProcessSelection = null;
 
 	private HashMap modelVersionCache = null;
 	private HashMap processEntityCache = null;
 
 	private TreeNodeImpl workflowGroupTree = null;
+	private TreeNodeImpl workflowGroupTreeByUser = null;
 
 	/* Model Service */
 	@EJB
 	ModelService modelService;
+
+	@EJB
+	ProjectService projectService;
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
@@ -205,8 +215,10 @@ public class ModelMB {
 	}
 
 	/**
-	 * returns a SelctItem Array containing all ProcessGroups from all general
-	 * model files
+	 * returns a SelctItem Array containing all WorkflowGroups from all general
+	 * model files.
+	 * The method returns all WorkflowGroups independent if the user is able to start such a process.
+	 * @see getWorkflowGroupsByUser
 	 * 
 	 * @return
 	 */
@@ -234,12 +246,107 @@ public class ModelMB {
 
 			}
 		}
-		
+
 		Collections.sort(workflowGroupSelection, new SelectItemComparator(
 				FacesContext.getCurrentInstance().getViewRoot().getLocale(),
 				true));
 
 		return workflowGroupSelection;
+
+	}
+
+	/**
+	 * returns a SelctItem Array containing all ProcessGroups contained by
+	 * Projects where the current user is member of.
+	 * 
+	 * A possible scenario is, that a WorkflowGroup is part of more than one
+	 * projects. In this case the method returns the WorkflowGoup only once.
+	 * This is the reason why this method is a little bit longer ;-)
+	 * 
+	 * @return
+	 */
+	public ArrayList<SelectItem> getWorkflowGroupsByUser() {
+
+		if (workflowGroupSelectionByProfile == null) {
+			// build new groupSelection
+			workflowGroupSelectionByProfile = new ArrayList<SelectItem>();
+
+			Vector<String> vWorkflowGroupCache = new Vector<String>();
+
+			// first we fetch all Projects from the current user
+			List<ItemCollection> col = null;
+			col = projectService.findAllProjects(0, -1);
+			// now we iterate over all projects and test if a processList is
+			// available...
+			for (ItemCollection aworkitem : col) {
+				String sProjectName = aworkitem.getItemValueString("txtName");
+				// get the ProcessList and test if the user is a member of this
+				// project. The ProcessList conatins values like
+				// 'public-de-0.0.1|1000'
+				Vector<String> vprojectList = aworkitem
+						.getItemValue("txtprocesslist");
+				if (vprojectList.size() > 0
+						&& this.getProjectMB().isMember(aworkitem)) {
+					try {
+						// next iterate over the processlist and fetch the
+						// coresponding WorkflowGroups
+						for (String process : vprojectList) {
+							if (process.indexOf('|') > -1) {
+								String modelversion = process.substring(0,
+										process.indexOf('|'));
+								String sProcessID = process.substring(process
+										.indexOf('|') + 1);
+
+								// now search for the processEntity....
+								ItemCollection processEntity = modelService
+										.getProcessEntityByVersion(new Integer(
+												sProcessID), modelversion);
+								// extract the groupname
+								String aGroupName = processEntity
+										.getItemValueString("txtworkflowgroup");
+
+								// test if the group name is already known and
+								// part of our workflowGroupSelectionByProfile
+								if (!aGroupName.contains("~")
+										&& vWorkflowGroupCache
+												.indexOf(modelversion + "|"
+														+ aGroupName) == -1) {
+									// ad a new select item.
+									workflowGroupSelectionByProfile
+											.add(new SelectItem(modelversion
+													+ "|" + aGroupName,
+													aGroupName));
+									// remember that this group is already
+									// stored
+									vWorkflowGroupCache.add(modelversion + "|"
+											+ aGroupName);
+								}
+
+							}
+
+						}
+
+					} catch (NumberFormatException e) {
+						logger.severe("ModelMB getWorkflowGroupsByProfile - unable to read processlist from project: "
+								+ sProjectName);
+						e.printStackTrace();
+					} catch (Exception e) {
+						logger.severe("ModelMB getWorkflowGroupsByProfile - unable to read processlist from project: "
+								+ sProjectName);
+						e.printStackTrace();
+					}
+
+				}
+
+			}
+
+		}
+
+		Collections.sort(workflowGroupSelectionByProfile,
+				new SelectItemComparator(FacesContext.getCurrentInstance()
+						.getViewRoot().getLocale(), true));
+
+		return workflowGroupSelectionByProfile;
 
 	}
 
@@ -256,11 +363,10 @@ public class ModelMB {
 		if (workflowGroupTree == null) {
 			// create new TreeNode Instance....
 			workflowGroupTree = new TreeNodeImpl();
-			
-			
+
 			// fetch workflow groups
 			ArrayList<SelectItem> groupLlist = getWorkflowGroups();
-			
+
 			// add each group as a root node (flat tree)
 			try {
 
@@ -270,11 +376,12 @@ public class ModelMB {
 					// SubProjectTreeNode nodeProcess = new SubProjectTreeNode(
 					// aitem, SubProjectTreeNode.ROOT_PROJECT);
 					TreeNodeImpl nodeImpl = new TreeNodeImpl();
-					
-					ItemCollection itemCol=new ItemCollection();
+
+					ItemCollection itemCol = new ItemCollection();
 					itemCol.replaceItemValue("txtname", aitem.getValue());
-					itemCol.replaceItemValue("txtWorkflowGroup", aitem.getLabel());
-					
+					itemCol.replaceItemValue("txtWorkflowGroup",
+							aitem.getLabel());
+
 					nodeImpl.setData(itemCol);
 					workflowGroupTree.addChild(aitem.getValue(), nodeImpl);
 
@@ -285,13 +392,58 @@ public class ModelMB {
 
 				ee.printStackTrace();
 			}
-
 		}
-
 		return workflowGroupTree;
-
 	}
 
+	
+	
+	/**
+	 * returns a richFacess TreeNode implementation containing a tree structure
+	 * of all workflowGroups which can be started by the current user. The tree has no hierarchy.
+	 * @see getWorkflowGroupsByUser()
+	 * 
+	 * @return
+	 */
+	public TreeNodeImpl getWorkflowGroupTreeByUser() {
+
+		if (workflowGroupTreeByUser == null) {
+			// create new TreeNode Instance....
+			workflowGroupTreeByUser = new TreeNodeImpl();
+
+			// fetch workflow groups
+			ArrayList<SelectItem> groupLlist = getWorkflowGroupsByUser();
+
+			// add each group as a root node (flat tree)
+			try {
+
+				int count = 0;
+				for (SelectItem aitem : groupLlist) {
+					// add project id to the tree node....
+					// SubProjectTreeNode nodeProcess = new SubProjectTreeNode(
+					// aitem, SubProjectTreeNode.ROOT_PROJECT);
+					TreeNodeImpl nodeImpl = new TreeNodeImpl();
+
+					ItemCollection itemCol = new ItemCollection();
+					itemCol.replaceItemValue("txtname", aitem.getValue());
+					itemCol.replaceItemValue("txtWorkflowGroup",
+							aitem.getLabel());
+
+					nodeImpl.setData(itemCol);
+					workflowGroupTreeByUser.addChild(aitem.getValue(), nodeImpl);
+
+					count++;
+
+				}
+			} catch (Exception ee) {
+
+				ee.printStackTrace();
+			}
+		}
+		return workflowGroupTreeByUser;
+	}
+	
+	
 	/**
 	 * returns a SelctItem Array containing all StartProcess Ids from all
 	 * ProcessGroups from all general model files
@@ -303,7 +455,7 @@ public class ModelMB {
 
 	/**
 	 * returns a SelctItem Array containing all StartProcess Ids from
-	 * ProcessGroups containging the current user domain
+	 * ProcessGroups containing the current user domain
 	 * 
 	 **/
 	public ArrayList<SelectItem> getStartProcessListByUserProfile() {
@@ -421,6 +573,30 @@ public class ModelMB {
 
 		return myProfileMB;
 
+	}
+
+	public ProjectlistMB getProjectListMB() {
+		// get WorklistMB instance
+		if (projectlist == null)
+			projectlist = (ProjectlistMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
+							null, "projectlistMB");
+
+		return projectlist;
+	}
+
+	public ProjectMB getProjectMB() {
+		if (projectMB == null)
+			projectMB = (ProjectMB) FacesContext
+					.getCurrentInstance()
+					.getApplication()
+					.getELResolver()
+					.getValue(FacesContext.getCurrentInstance().getELContext(),
+							null, "projectMB");
+		return projectMB;
 	}
 
 	/**
