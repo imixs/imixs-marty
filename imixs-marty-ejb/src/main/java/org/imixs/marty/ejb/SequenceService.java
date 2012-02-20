@@ -212,7 +212,7 @@ public class SequenceService {
 
 		if ("".equals(sParentID))
 			throw new Exception(
-					"WARNING: SequenceServiceBean : No $UniqueIDRef defined");
+					"WARNING: SequenceService : No $UniqueIDRef defined");
 
 		ItemCollection parent = entityService.load(sParentID);
 

@@ -76,7 +76,7 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 		super.init(actx);
 
 		// lookup profile service EJB
-		String jndiName = "ejb/SequenceServiceBean";
+		String jndiName = "ejb/SequenceService";
 		InitialContext ictx = new InitialContext();
 		Context ctx = (Context) ictx.lookup("java:comp/env");
 		sequenceService = (SequenceService) ctx.lookup(jndiName);
