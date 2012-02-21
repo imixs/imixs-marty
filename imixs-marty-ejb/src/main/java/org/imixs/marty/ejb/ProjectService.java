@@ -47,34 +47,8 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.jpa.EntityIndex;
 
 /**
-  * Manik is a subproject of the IX JEE Workflow Server Project. This Project
- * supports different general business objects which are useful building a
- * workflow application. So using the manik components there is no need to
- * implement typical business service object which are used in many simmilar
- * projects. So manik is a kind of DRY 'dont repeat yourself' pattern.
- * 
- * Maven: Each manik component is implemented using the maven artifact concept.
- * So in a maven project it is realy easy to add functionallity to a workflow
- * project using the mani components!
- * 
- * Each manik component consits of a service Interface for the business object
- * and a stateless session ejb as a serviceBean implementation. manik uses the
- * ejb 3.0 model
- * 
- * Individual business objects (WorkItem) should not be implementet by a manik
- * componet. This is because only the applicaiton itself knows how the indidual
- * business object (typical the workitem) makes use of standard business
- * objects. For example you can use manik to implement an Project Workflow
- * Object to manage projects and projectteams. But your workitem from your
- * individual workflow application have to decide which team should bes stored
- * to a worktiem during processing. So this job can not be done by a manik
- * component.
- * 
- * 
- * Project Management ================== This Service Facade encapsulates the
- * magement of project business objects A Project is represented by a
- * ItemCollection with the following Attributes:
- * 
+ * This Service Facade encapsulates the magement of project business objects. A
+ * Project is represented by a ItemCollection with the following Attributes:
  * 
  * txtName - Name of the Project (required) namteam - List of Teammembers
  * (required)
@@ -82,15 +56,10 @@ import org.imixs.workflow.jee.jpa.EntityIndex;
  * txtProjectReaders - list of readers (computed) txtProjectAuthors - list of
  * authors (computed)
  * 
- * keypublic - boolean indicates if readaccess is required (false = yes)
- * keymanagement - 1|0 indicates how writeaccess is restricted '0' = namcreator
- * '1' = namteam
+ * keyPublic - boolean indicates if Project should be treated as a public
+ * project (used by Plugsin)
  * 
- * Following attributes are defined:
- * 
- * txtname - namOwner - Namelist of owner namTeam - Namelist of team members
- * 
- * Projects can be managed in a hirarchical structure. Therefor a Project can
+ * Projects can be managed in a hirarchical structure. There for a Project can
  * become a SubProject to ParentProject. A ParentProject is referenced by the
  * $UnqiueIDRef.
  * 
@@ -105,19 +74,19 @@ import org.imixs.workflow.jee.jpa.EntityIndex;
  * 
  */
 
-@DeclareRoles( { "org.imixs.ACCESSLEVEL.NOACCESS",
+@DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
 		"org.imixs.ACCESSLEVEL.READERACCESS",
 		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
 		"org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
-@RolesAllowed( { "org.imixs.ACCESSLEVEL.NOACCESS",
+@RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS",
 		"org.imixs.ACCESSLEVEL.READERACCESS",
 		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
 		"org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Stateless
 @LocalBean
-public class ProjectService  {
+public class ProjectService {
 
 	@Resource
 	SessionContext ctx;
@@ -129,8 +98,6 @@ public class ProjectService  {
 	@EJB
 	org.imixs.workflow.jee.ejb.WorkflowService wm;
 	ItemCollection workItem = null;
-
-	
 
 	/**
 	 * Updates a Team Entity
@@ -158,7 +125,7 @@ public class ProjectService  {
 	 * org.imixs.ACCESSLEVEL.MANAGERACCESS!
 	 * 
 	 */
-	@RolesAllowed( { "org.imixs.ACCESSLEVEL.MANAGERACCESS" })
+	@RolesAllowed({ "org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 	public void deleteProject(ItemCollection aproject) throws Exception {
 		workItem = aproject;
 		deleteChilds(workItem);
@@ -194,7 +161,7 @@ public class ProjectService  {
 	 * 
 	 * @param aProject
 	 */
-	@RolesAllowed( { "org.imixs.ACCESSLEVEL.MANAGERACCESS" })
+	@RolesAllowed({ "org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 	public void analyseProject(ItemCollection aProject) throws Exception {
 		workItem = aProject;
 		// reset count of workitems
@@ -392,7 +359,7 @@ public class ProjectService  {
 	 * @param row
 	 * @param count
 	 * @return
-	 */ 
+	 */
 	public List<ItemCollection> findAllProjectsByMember(int row, int count) {
 		String aname = ctx.getCallerPrincipal().getName();
 
@@ -459,46 +426,32 @@ public class ProjectService  {
 	 * These fields can be used in a corresponding workflow model to set the
 	 * read and write Access. The Values of namProjectAuthors will be mapped to
 	 * the namOwner attribute. The Values of namProjectReaders will be mapped to
-	 * the namTeam + namOwner attriubte.
+	 * the namTeam + namOwner attribute.
 	 * 
-	 * If no namOwner was set - namcreator will be added as default Owner
+	 * If no namOwner was set - namCreator will be added as default Owner
 	 * 
 	 * If the Project holds a reference to a ParentProject the properties
 	 * namTeam and namOwner of the parent Project will be mapped to the
-	 * attributes
-	 * 
-	 * namParentTeam and namParentOwner
+	 * attributes 'namParentTeam' and 'namParentOwner'
 	 * 
 	 * A ParentProject is identified by the $UniqueIDRef attribute. The values
 	 * of these attributes will also be added to the namProjectAuthors and
 	 * namProjectReaders. So a ParentProjectTeam will become reader of the
 	 * project and the ParentProjectOwners will become author of the project
 	 * 
-	 * if keyPublic is set to 'true' now read access will be granted. so
-	 * namProjectReaders will be empty.
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public ItemCollection processProject(ItemCollection aeditproject)
 			throws Exception {
 
 		workItem = aeditproject;
 
-		// Set txtProjectReadAccess to "" if keyPublic is set to "true"
-		boolean bPublic = false;
-		try {
-			Boolean booleanPublic = (Boolean) workItem
-					.getItemValue("keyPublic").elementAt(0);
-			bPublic = booleanPublic.booleanValue();
-
-		} catch (Exception epublic) {
-			bPublic = false;
-		}
-
 		String sParentProjectID = workItem.getItemValueString("$uniqueidRef");
 		if (sParentProjectID != null && !"".equals(sParentProjectID))
 			updateParentProjectInformations(sParentProjectID);
 		else
-			workItem.replaceItemValue("txtName", workItem
-					.getItemValueString("txtProjectName"));
+			workItem.replaceItemValue("txtName",
+					workItem.getItemValueString("txtProjectName"));
 
 		// set namfields for access handling (txtProjectReaders
 		// txtProjectAuthors)
@@ -512,22 +465,17 @@ public class ProjectService  {
 		if (vProjectAuthors.size() == 0)
 			vProjectAuthors.add(workItem.getItemValueString("namCreator"));
 
-		// if Public Project leave ReadAccess empty
-		if (bPublic == false) {
-			vProjectReaders.addAll(workItem.getItemValue("namteam"));
-			vProjectReaders.addAll(workItem.getItemValue("namParentTeam"));
-			vProjectReaders.addAll(workItem.getItemValue("namOwner"));
-			vProjectReaders.addAll(workItem.getItemValue("namParentOwner"));
+		// compute ReadAccess
+		vProjectReaders.addAll(workItem.getItemValue("namteam"));
+		vProjectReaders.addAll(workItem.getItemValue("namParentTeam"));
+		vProjectReaders.addAll(workItem.getItemValue("namOwner"));
+		vProjectReaders.addAll(workItem.getItemValue("namParentOwner"));
 
-			vProjectReaders.addAll(workItem.getItemValue("namManager"));
-			vProjectReaders.addAll(workItem.getItemValue("namAssist"));
-			if (vProjectReaders.size() == 0)
-				vProjectReaders.add(workItem.getItemValueString("namCreator"));
-
-		} else {
-			// keine lese felder!
-			vProjectReaders = new Vector();
-		}
+		vProjectReaders.addAll(workItem.getItemValue("namManager"));
+		vProjectReaders.addAll(workItem.getItemValue("namAssist"));
+		// test if at lease one reader is defined....
+		if (vProjectReaders.size() == 0)
+			vProjectReaders.add(workItem.getItemValueString("namCreator"));
 
 		workItem.replaceItemValue("namProjectReaders", vProjectReaders);
 		workItem.replaceItemValue("namProjectAuthors", vProjectAuthors);
@@ -538,8 +486,8 @@ public class ProjectService  {
 
 		// now test if the parentName property of subprojects need to be updated
 		// this is only necesarry if subprojects are found.
-		List<ItemCollection> childProjectList = findAllSubProjects(workItem
-				.getItemValueString("$Uniqueid"), 0, -1);
+		List<ItemCollection> childProjectList = findAllSubProjects(
+				workItem.getItemValueString("$Uniqueid"), 0, -1);
 		String sProjectName = workItem.getItemValueString("txtName");
 		for (ItemCollection aSubProject : childProjectList) {
 			if (!sProjectName.equals(aSubProject
@@ -581,10 +529,10 @@ public class ProjectService  {
 
 		workItem.replaceItemValue("txtName", sParentName + "." + sName);
 
-		workItem.replaceItemValue("namParentTeam", parentProject
-				.getItemValue("namTeam"));
-		workItem.replaceItemValue("namParentOwner", parentProject
-				.getItemValue("namOwner"));
+		workItem.replaceItemValue("namParentTeam",
+				parentProject.getItemValue("namTeam"));
+		workItem.replaceItemValue("namParentOwner",
+				parentProject.getItemValue("namOwner"));
 	}
 
 	/**
@@ -603,9 +551,8 @@ public class ProjectService  {
 				// recursive method call
 				moveIntoDeletions(achildworkitem);
 			}
-			workitem.replaceItemValue("type", workitem
-					.getItemValueString("type")
-					+ "deleted");
+			workitem.replaceItemValue("type",
+					workitem.getItemValueString("type") + "deleted");
 			workitem = entityService.save(workitem);
 		}
 
