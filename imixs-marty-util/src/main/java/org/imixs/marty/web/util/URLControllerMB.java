@@ -59,9 +59,9 @@ import org.imixs.workflow.ItemCollection;
  * 
  */
 public class URLControllerMB {
-	public final String COOKIE_PROJECT = "imixs.sywapp.project";
-	public final String COOKIE_PROCESS = "imixs.sywapp.process";
-	public final String COOKIE_WORKITEM = "imixs.sywapp.workitem";
+	public final String COOKIE_PROJECT = "imixs.marty.project";
+	public final String COOKIE_PROCESS = "imixs.marty.process";
+	public final String COOKIE_WORKITEM = "imixs.marty.workitem";
 
 	/* Profile Service */
 	@EJB

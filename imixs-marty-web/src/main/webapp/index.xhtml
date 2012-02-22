@@ -26,13 +26,17 @@
  	     Project=#{urlControllerMB.project} -->
 
  
- 
+ 	<meta http-equiv="expires" content="0" />
+	<meta http-equiv="cache-control" content="no-cache" />
+	<meta http-equiv="Pragma" content="no-cache" />
+	
 	<c:choose>
-		<!--  Singed in user -->
+		<!--  Singed in user and force a login ... -->
 		<c:when test="#{! loginMB.authenticated}"> 
 			<meta http-equiv="refresh" content="0; URL=pages/notes.jsf" />
 		</c:when>
 		<c:otherwise>
+			<!--  User is authenticated -->
 			<c:choose>
 				<!-- preselected project? -->
 				<c:when test="#{(!empty urlControllerMB.project) or (!empty urlControllerMB.workitem)}">
