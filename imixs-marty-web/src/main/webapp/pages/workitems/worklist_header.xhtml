@@ -38,10 +38,7 @@
 		<a4j:outputPanel layout="block" styleClass="sywapp-viewentry">
 		
 
-			<ui:include src="/pages/workitems/worklist_filter.xhtml" />
-			<!-- -->
-			<ui:include src="/pages/workitems/worklist_news.xhtml" />
-
+		
 
 			<rich:panel style="margin:10px 4px;"
 				rendered="#{! empty projectlistMB.processList[projectMB.workitem.item['$uniqueid']]}">
@@ -55,7 +52,7 @@
 				</rich:toggleControl>
 
 				<rich:togglePanel switchType="client" id="suggest_process_id"
-					stateOrder="processview_closed,processview_open">
+					stateOrder="processview_open,processview_closed">
 					<f:facet name="processview_closed">
 						<a4j:outputPanel>
 							<!-- closed -->
@@ -99,6 +96,11 @@
 
 
 			</rich:panel>
+			
+			
+			
+			<ui:include src="/pages/workitems/worklist_filter.xhtml" />
+		
 		</a4j:outputPanel>
 
 
