@@ -80,7 +80,7 @@
 				<h:outputText style="font-weight: bold;"
 					value="#{global.owner}: " />
 				<ui:repeat value="#{workitem.itemList['namowner']}" var="name">
-					<h:outputText value="#{name} " />
+					<h:outputText value="#{nameLookupMB.userName[name]} " />
 				</ui:repeat>
 			</a4j:outputPanel>
 
