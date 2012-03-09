@@ -260,6 +260,11 @@ public class ProfileService  {
 			throw new Exception(
 					"Username is already taken - verifiy txtname and txtusername");
 
+		if (!isValidEmail(aeditProfile))
+			throw new Exception(
+					"Email is already taken - verifiy txtemail");
+
+		
 		if (!isValidProfile(aeditProfile))
 			throw new Exception(
 					"ProfileServiceBean - invalid profile object! Attribute 'txtname' not found");
@@ -339,6 +344,41 @@ public class ProfileService  {
 					+ sID + "' AND  profile.type = 'profile' "
 					+ " AND n.itemName = 'txtname' " + " AND n.itemValue = '"
 					+ sName + "'";
+
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, 1);
+
+		return (col.size() == 0);
+
+	}
+	
+	
+	
+	
+	/**
+	 * verifies if the txtemail is available.
+	 * returns true if address isn't still taken by another object.
+	 * 
+	 * @param aprofile
+	 * @return
+	 */
+	private boolean isValidEmail(ItemCollection aprofile) {
+
+		String sEmail = aprofile.getItemValueString("txtEmail");
+		String sID = aprofile.getItemValueString("$uniqueid");
+
+		String sQuery;
+
+		// username provided?
+		if (!"".equals(sEmail)) 
+			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+					+ " JOIN profile.textItems AS n"
+					+ " WHERE  profile.type = 'profile' "
+					+ " AND (n.itemName = 'txtemail' " + " AND n.itemValue = '"
+					+ sEmail + "') "
+					+ " AND profile.id<>'"+ sID + "' ";
+		else
+			return false;
 
 		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
 				0, 1);

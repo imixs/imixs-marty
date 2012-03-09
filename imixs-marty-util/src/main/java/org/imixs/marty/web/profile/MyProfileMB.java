@@ -560,7 +560,12 @@ public class MyProfileMB extends AbstractWorkflowController {
 			else
 				rb = ResourceBundle.getBundle("bundle.profile");
 
-			String sMessage = rb.getString("displayname_error");
+			// depending on the messeage string we fetch the message
+			String sMessage="";
+			if (ee.getMessage().contains("txtemail"))
+				 sMessage = rb.getString("duplicateemail_error");
+			else	
+				sMessage = rb.getString("displayname_error");
 			FacesMessage message = new FacesMessage("* ", sMessage);
 			// add two messages to support the standard profile_form and also
 			// the verify Profile form
