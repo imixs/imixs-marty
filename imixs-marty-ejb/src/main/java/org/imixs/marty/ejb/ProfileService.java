@@ -378,7 +378,7 @@ public class ProfileService  {
 					+ sEmail + "') "
 					+ " AND profile.id<>'"+ sID + "' ";
 		else
-			return false;
+			return true;
 
 		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
 				0, 1);
