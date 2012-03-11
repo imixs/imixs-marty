@@ -455,7 +455,6 @@ public class ProjectService {
 
 		// set namfields for access handling (txtProjectReaders
 		// txtProjectAuthors)
-		// keypublic - true/false
 		Vector vProjectReaders = new Vector();
 		Vector vProjectAuthors = new Vector();
 
