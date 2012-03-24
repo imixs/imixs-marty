@@ -17,53 +17,59 @@
 	<h:form>
 		<rich:panel styleClass="sywapp-projecttree"
 			rendered="#{loginMB.authenticated}">
-			
+
+			<div class="rich-panel-header ">
+				<h:commandLink action="notes">
+					<h:outputText value="Home" />
+				</h:commandLink>
+			</div>
+
+			<hr />
+
 			<!-- *** Workfow Groups *** -->
-			
-			<f:facet name="header">
-				<h:outputText value="#{global.processtree}" />
-			</f:facet>
-			<rich:tree ajaxKeys="#{null}" value="#{modelMB.workflowGroupTree}"
-				var="node" switchType="ajax">
+			<a4j:outputPanel rendered="#{true}">
+				<div class="rich-panel-header ">#{app.processtree}</div>
+				<rich:tree ajaxKeys="#{null}"
+					value="#{modelMB.workflowGroupTreeByUser}" var="node"
+					switchType="ajax">
+					<!-- #### Root Node ##### -->
+					<rich:treeNode>
+						<h:commandLink
+							actionListener="#{worklistMB.doSwitchToWorklistByWorkflowGroup}"
+							action="open_worklist">
+							<h:outputText value="#{node.item['txtWorkflowGroup']}" />
+						</h:commandLink>
+					</rich:treeNode>
+				</rich:tree>
+
+			</a4j:outputPanel>
 
 
-				<!-- #### Root Node ##### -->
-				<rich:treeNode >
-					<h:commandLink actionListener="#{worklistMB.doSwitchToWorklistByWorkflowGroup}"
-						action="open_worklist">
-						<h:outputText value="#{node.item['txtWorkflowGroup']}" />
-					</h:commandLink>
-				</rich:treeNode>
-
-			
-			</rich:tree>
-			
-			
 			<!-- *** Project Tree *** -->
-			
-			<div class="rich-panel-header ">#{global.projecttree}</div>
-			<rich:tree ajaxKeys="#{null}" value="#{projectlistMB.projectTree}"
-				var="node" switchType="ajax"
-				nodeFace="#{node.item['project_node_type']}">
+			<a4j:outputPanel rendered="#{true}">
+				<div class="rich-panel-header ">#{app.projecttree}</div>
+				<rich:tree ajaxKeys="#{null}" value="#{projectlistMB.projectTree}"
+					var="node" switchType="ajax"
+					nodeFace="#{node.item['project_node_type']}">
 
 
-				<!-- #### Root Node ##### -->
-				<rich:treeNode type="0">
-					<h:commandLink actionListener="#{projectlistMB.doSwitchToProject}"
-						action="open_worklist">
-						<h:outputText value="#{node.item['txtname']}" />
-					</h:commandLink>
-				</rich:treeNode>
+					<!-- #### Root Node ##### -->
+					<rich:treeNode type="0">
+						<h:commandLink actionListener="#{projectlistMB.doSwitchToProject}"
+							action="open_worklist">
+							<h:outputText value="#{node.item['txtname']}" />
+						</h:commandLink>
+					</rich:treeNode>
 
-				<!-- #### SubProject Node ##### -->
-				<rich:treeNode type="1">
-					<h:commandLink actionListener="#{projectlistMB.doSwitchToProject}"
-						action="open_worklist">
-						<h:outputText value="#{node.item['txtProjectname']}" />
-					</h:commandLink>
-				</rich:treeNode>
-			</rich:tree>
-
+					<!-- #### SubProject Node ##### -->
+					<rich:treeNode type="1">
+						<h:commandLink actionListener="#{projectlistMB.doSwitchToProject}"
+							action="open_worklist">
+							<h:outputText value="#{node.item['txtProjectname']}" />
+						</h:commandLink>
+					</rich:treeNode>
+				</rich:tree>
+			</a4j:outputPanel>
 
 
 
