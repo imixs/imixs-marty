@@ -233,9 +233,19 @@ public class MyProfileMB extends AbstractWorkflowController {
 					logins++;
 					workitemItemCollection.replaceItemValue("numLoginCount",
 							logins);
-					workitemItemCollection = getEntityService().save(
-							workitemItemCollection);
+					
+					
+					
+					//workitemItemCollection = getEntityService().save(
+					//		workitemItemCollection);
 
+					// process profile to trigger ProfilePlugin (Invitations)...
+					workitemItemCollection.replaceItemValue("$ActivityID",
+							UPDATE_PROJECT_ACTIVITY_ID);
+					workitemItemCollection = profileService
+							.processProfile(workitemItemCollection);
+					
+					
 				}
 				// set max History & log length
 				workitemItemCollection.replaceItemValue(
