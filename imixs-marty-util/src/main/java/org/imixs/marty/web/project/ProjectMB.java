@@ -659,16 +659,6 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * Reference to a ParentProject is stored in the attribute $UniqueIDRef
 	 * 
 	 * 
-	 * If the attriubte namTeam or namOwner is empty this method will fill in
-	 * the current Username. This is necessary as long as a workflow model uses
-	 * the projektTeam or projectOwners from a project to manage read/write
-	 * access. If these fields are empty there are situations possible where the
-	 * readaccess is empty and everybody can read a workitem
-	 * 
-	 * If the attribute 'txtLocale' is provided by a project the method updates the 
-	 * $modelVersion to the current locale. With this feature it is possibel to change the 
-	 * language for a project. 
-	 * 
 	 * @param event
 	 * @throws Exception
 	 */
@@ -719,42 +709,12 @@ public class ProjectMB extends AbstractWorkflowController {
 					vProcessList);
 		}
 
-		// Verify if namTeam or namOwner is empty!
-		FacesContext context = FacesContext.getCurrentInstance();
-		ExternalContext externalContext = context.getExternalContext();
-		String remoteUser = externalContext.getRemoteUser();
-		Vector vTeam = workitemItemCollection.getItemValue("namTeam");
-		Vector vOwner = workitemItemCollection.getItemValue("namOwner");
-		if (vTeam.size() == 0) {
-			vTeam.add(remoteUser);
-			workitemItemCollection.replaceItemValue("namTeam", vTeam);
-		}
-		if (vOwner.size() == 0) {
-			vOwner.add(remoteUser);
-			workitemItemCollection.replaceItemValue("namOwner", vOwner);
-		}
+	
 
 		// Process project via processService EJB
 		workitemItemCollection.replaceItemValue("$activityid", activityID);
 		
-		
-		// test if the project provides a txtLocale
-		String sProjectLocale=workitemItemCollection.getItemValueString("txtLocale");
-		if (!"".equals(sProjectLocale)) {
-			try {
-				String sModelVersion=workitemItemCollection.getItemValueString("$modelVersion");
-				// replace the project locale
-				int iStart=sModelVersion.indexOf('-');
-				int iEnd=sModelVersion.indexOf('-', iStart);
-				
-				sModelVersion=sModelVersion.substring(0,iStart) + sProjectLocale + sModelVersion.substring(iEnd);
-				workitemItemCollection.replaceItemValue("$ModelVersion", sModelVersion);
-			} catch (Exception em) {
-				logger.severe("[ProjectMB] unable to determine project $modelVersion!");
-			}
-			
-		}
-		
+
 		// inform Listeners...
 		fireProjectProcessEvent();
 

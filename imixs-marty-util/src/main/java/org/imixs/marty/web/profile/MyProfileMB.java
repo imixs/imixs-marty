@@ -530,7 +530,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 			}
 		}
 
-		// provess workitem and verify txtname and txtusername
+		// validate workitem and verify txtname and txtusername
 		try {
 			// lowercase email to allow unique lookups
 			String sEmail = workitemItemCollection

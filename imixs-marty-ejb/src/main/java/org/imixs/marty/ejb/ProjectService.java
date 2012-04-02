@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -42,6 +43,8 @@ import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.jpa.EntityIndex;
@@ -98,6 +101,8 @@ public class ProjectService {
 	@EJB
 	org.imixs.workflow.jee.ejb.WorkflowService wm;
 	ItemCollection workItem = null;
+
+	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	/**
 	 * Updates a Team Entity
@@ -439,6 +444,17 @@ public class ProjectService {
 	 * namProjectReaders. So a ParentProjectTeam will become reader of the
 	 * project and the ParentProjectOwners will become author of the project
 	 * 
+	 * If the attribute 'txtLocale' is provided by a project the method updates
+	 * the $modelVersion to the current locale. With this feature it is possibel
+	 * to change the language for a project.
+	 * 
+	 * If the property namTeam or namOwner is empty this method will fill in the
+	 * current UserUame. This is necessary as long as a workflow model uses the
+	 * projektTeam or projectOwners from a project to manage read/write access.
+	 * If these fields are empty there are situations possible where the
+	 * readAccess is empty and everybody can read a workItem
+	 * 
+	 * 
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public ItemCollection processProject(ItemCollection aeditproject)
@@ -453,7 +469,20 @@ public class ProjectService {
 			workItem.replaceItemValue("txtName",
 					workItem.getItemValueString("txtProjectName"));
 
-		// set namfields for access handling (txtProjectReaders
+		// Verify if namTeam or namOwner is empty!
+		String remoteUser = ctx.getCallerPrincipal().getName();
+		Vector vTeam = workItem.getItemValue("namTeam");
+		Vector vOwner = workItem.getItemValue("namOwner");
+		if (vTeam.size() == 0) {
+			vTeam.add(remoteUser);
+			workItem.replaceItemValue("namTeam", vTeam);
+		}
+		if (vOwner.size() == 0) {
+			vOwner.add(remoteUser);
+			workItem.replaceItemValue("namOwner", vOwner);
+		}
+
+		// set namFields for access handling (txtProjectReaders
 		// txtProjectAuthors)
 		Vector vProjectReaders = new Vector();
 		Vector vProjectAuthors = new Vector();
@@ -479,6 +508,26 @@ public class ProjectService {
 		workItem.replaceItemValue("namProjectReaders", vProjectReaders);
 		workItem.replaceItemValue("namProjectAuthors", vProjectAuthors);
 		workItem.replaceItemValue("type", "project");
+
+		// test if the project provides a txtLocale
+		String sProjectLocale = workItem.getItemValueString("txtLocale");
+		if (!"".equals(sProjectLocale)) {
+			try {
+				String sModelVersion = workItem
+						.getItemValueString("$modelVersion");
+				// replace the project locale
+				int iStart = sModelVersion.indexOf('-');
+				int iEnd = sModelVersion.indexOf('-', iStart+1);
+
+				sModelVersion = sModelVersion.substring(0, iStart+1)
+						+ sProjectLocale + sModelVersion.substring(iEnd);
+				workItem.replaceItemValue("$ModelVersion", sModelVersion);
+			} catch (Exception em) {
+				logger.severe("[ProjectService] processProject: unable to compute new $modelVersion based on txtLocale="
+						+ sProjectLocale);
+			}
+
+		}
 
 		// Process workitem...
 		workItem = wm.processWorkItem(workItem);
