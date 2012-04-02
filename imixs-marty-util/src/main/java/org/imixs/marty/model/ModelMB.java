@@ -470,7 +470,7 @@ public class ModelMB {
 	 * 
 	 * @param bRestrictToUserProfile
 	 *            - boolean value indicating if all models (true) should be
-	 *            returned, or only models maching the language and domains form
+	 *            returned, or only models matching the language and domains form
 	 *            the current user profile
 	 * 
 	 * @return ArrayList<SelectItem>
@@ -540,8 +540,13 @@ public class ModelMB {
 
 					String sValue = sModelVersionName + "|" + iProccessID;
 
-					String sLabel = sGroupName + " (" + currentLanguage + " / "
-							+ currentDomain + ")";
+					//String sLabel = sGroupName + " (" + currentLanguage + " / "
+					//		+ currentDomain + ")";
+					
+					
+					String sLabel = sGroupName + " (" + sModelVersionName+ ")";
+					
+					
 					startProcessSelection.add(new SelectItem(sValue, sLabel));
 				}
 			}

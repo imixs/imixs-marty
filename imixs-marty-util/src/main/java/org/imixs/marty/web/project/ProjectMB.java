@@ -35,6 +35,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -87,6 +88,8 @@ public class ProjectMB extends AbstractWorkflowController {
 	private TreeNodeImpl subProjectTree = null;
 
 	private Collection<ProjectListener> projectListeners = new ArrayList<ProjectListener>();
+
+	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	
 	
@@ -662,6 +665,9 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * access. If these fields are empty there are situations possible where the
 	 * readaccess is empty and everybody can read a workitem
 	 * 
+	 * If the attribute 'txtLocale' is provided by a project the method updates the 
+	 * $modelVersion to the current locale. With this feature it is possibel to change the 
+	 * language for a project. 
 	 * 
 	 * @param event
 	 * @throws Exception
@@ -730,6 +736,24 @@ public class ProjectMB extends AbstractWorkflowController {
 
 		// Process project via processService EJB
 		workitemItemCollection.replaceItemValue("$activityid", activityID);
+		
+		
+		// test if the project provides a txtLocale
+		String sProjectLocale=workitemItemCollection.getItemValueString("txtLocale");
+		if (!"".equals(sProjectLocale)) {
+			try {
+				String sModelVersion=workitemItemCollection.getItemValueString("$modelVersion");
+				// replace the project locale
+				int iStart=sModelVersion.indexOf('-');
+				int iEnd=sModelVersion.indexOf('-', iStart);
+				
+				sModelVersion=sModelVersion.substring(0,iStart) + sProjectLocale + sModelVersion.substring(iEnd);
+				workitemItemCollection.replaceItemValue("$ModelVersion", sModelVersion);
+			} catch (Exception em) {
+				logger.severe("[ProjectMB] unable to determine project $modelVersion!");
+			}
+			
+		}
 		
 		// inform Listeners...
 		fireProjectProcessEvent();

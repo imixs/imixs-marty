@@ -17,7 +17,7 @@
 
 			<h:form id="project_form_id">
 			<div class="sywapp-form sywapp-project">
-				<h2><h:outputText value="#{messages.title_edit_project}" /></h2>
+				<h2><h:outputText value="#{messages.title_edit_project}: #{projectMB.workitem.item['txtProjectname']}" /></h2>
 
 				<!-- ########## Error ########## -->
 				<ui:include src="/pages/error_message.xhtml" />
@@ -263,29 +263,17 @@
 
 						<!-- ******** Process List ********* -->
 						<rich:tab label="#{messages.sub_title_processlist}">
-
-
 							<div class="sywapp-info-box">
 							<h:outputText value="#{messages.sub_help_processlist}" />
 							</div>
 							<a4j:outputPanel layout="block"
-								style="overflow: auto; width: 600px;">
-
-
-							 <rich:pickList sourceListWidth="200px" targetListWidth="200px" value="#{projectMB.processList}" >
+								style="overflow: auto; width: 720px;">
+							 <rich:pickList sourceListWidth="300px" targetListWidth="300px" value="#{projectMB.processList}" >
 									<f:selectItems value="#{modelMB.startProcessList}"/>
 							 </rich:pickList>
-
-
-
 							</a4j:outputPanel>
-
 							<div style="clear: both;" />
-
-
 						</rich:tab>
-						
-						
 									
 					</rich:tabPanel>
 				</rich:panel>
