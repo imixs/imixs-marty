@@ -40,6 +40,7 @@ import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
 
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
 		"org.imixs.ACCESSLEVEL.READERACCESS",
@@ -267,6 +268,13 @@ public class WorkitemService {
 					workitem.getItemValueString("type") + "archive");
 
 			workitem = entityService.save(workitem);
+			
+			// update search index
+			try {
+				LucenePlugin.addWorkitem(workitem);
+			} catch (Exception e) {
+				// no op
+			}
 		}
 
 		return workitem;
@@ -291,6 +299,13 @@ public class WorkitemService {
 					.getItemValueString("type")))
 				workitem.replaceItemValue("type", "childworkitem");
 			workitem = entityService.save(workitem);
+			
+			// update search index
+			try {
+				LucenePlugin.addWorkitem(workitem);
+			} catch (Exception e) {
+				// no op
+			}
 		}
 		return workitem;
 	}
@@ -313,6 +328,13 @@ public class WorkitemService {
 			workitem.replaceItemValue("type",
 					workitem.getItemValueString("type") + "deleted");
 			workitem = entityService.save(workitem);
+			
+			// update search index
+			try {
+				LucenePlugin.addWorkitem(workitem);
+			} catch (Exception e) {
+				// no op
+			}
 		}
 
 		return workitem;
@@ -337,6 +359,15 @@ public class WorkitemService {
 					.getItemValueString("type")))
 				workitem.replaceItemValue("type", "childworkitem");
 			workitem = entityService.save(workitem);
+			
+
+			// update search index
+			try {
+				LucenePlugin.addWorkitem(workitem);
+			} catch (Exception e) {
+				// no op
+				
+			}
 		}
 
 		return workitem;
