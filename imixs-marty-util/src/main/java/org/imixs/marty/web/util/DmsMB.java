@@ -494,17 +494,17 @@ public class DmsMB extends FileUploadBean {
 		doLazyLoading();
 
 		// get the $file map from the Blob Workitem....
-		Vector vFiles = getWorkitemBlobBean().getWorkitem().getItemValue(
+		List vFiles = getWorkitemBlobBean().getWorkitem().getItemValue(
 				"$file");
 		if (vFiles != null && vFiles.size() > 0)
-			fileMapBlob = (HashMap) vFiles.elementAt(0);
+			fileMapBlob = (HashMap) vFiles.get(0);
 		else
 			fileMapBlob = new HashMap();
 
 		// now get the $file map from the DMS Workitem...
 		vFiles = dmsItemCollection.getItemValue("$file");
 		if (vFiles != null && vFiles.size() > 0)
-			fileMapDMS = (HashMap) vFiles.elementAt(0);
+			fileMapDMS = (HashMap) vFiles.get(0);
 		else
 			fileMapDMS = new HashMap();
 

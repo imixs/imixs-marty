@@ -27,14 +27,19 @@
 
 package org.imixs.marty.plugins;
 
+import java.util.logging.Logger;
+
 import javax.mail.internet.AddressException;
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 import org.imixs.marty.ejb.SequenceService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
@@ -71,16 +76,24 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 
 	int sequenceNumber = -1;
 	ItemCollection workitem = null;
+	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
-	public void init(WorkflowContext actx) throws Exception {
+	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
 
 		// lookup profile service EJB
 		String jndiName = "ejb/SequenceService";
-		InitialContext ictx = new InitialContext();
-		Context ctx = (Context) ictx.lookup("java:comp/env");
-		sequenceService = (SequenceService) ctx.lookup(jndiName);
+		InitialContext ictx;
+		try {
+			ictx = new InitialContext();
 
+			Context ctx = (Context) ictx.lookup("java:comp/env");
+			sequenceService = (SequenceService) ctx.lookup(jndiName);
+		} catch (NamingException e) {
+			throw new PluginException(
+					"[SequenceNumberPlugin] unable to lookup sequenceService: ",
+					e);
+		}
 	}
 
 	/**
@@ -95,7 +108,7 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 	 */
 	@Override
 	public int run(ItemCollection documentContext,
-			ItemCollection documentActivity) throws Exception {
+			ItemCollection documentActivity) throws PluginException {
 
 		workitem = documentContext;
 
@@ -107,36 +120,35 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 		/* check if worktitem still have a sequence number? */
 		if (workitem.getItemValueInteger("numsequencenumber") == 0) {
 			try {
-				// load next Number based on the type of workitem
-				if ("workitem".equals(sType))
+			// load next Number based on the type of workitem
+			if ("workitem".equals(sType))
+				
 					sequenceNumber = sequenceService
 							.getNextSequenceNumberByGroup(documentContext);
-				else
-					sequenceNumber = sequenceService
-							.getNextSequenceNumberByParent(documentContext);
+				
+			else
+				sequenceNumber = sequenceService
+						.getNextSequenceNumberByParent(documentContext);
 
-				if (sequenceNumber > 0)
-					workitem.replaceItemValue("numsequencenumber", new Integer(
-							sequenceNumber));
-				else {
-					// to avoid problems with incorrect data values we remove the
-					// property numsequencenumber in this case
-					workitem.removeItem("numsequencenumber");
-				}
-
-			} catch (Exception ee) {
-				ee.printStackTrace();
-				// no action
-				return Plugin.PLUGIN_ERROR;
+			} catch (AccessDeniedException e) {
+				throw new PluginException("[SequenceNumberPlugin] error ",e);
+			}
+			if (sequenceNumber > 0)
+				workitem.replaceItemValue("numsequencenumber", new Integer(
+						sequenceNumber));
+			else {
+				// to avoid problems with incorrect data values we remove the
+				// property numsequencenumber in this case
+				workitem.removeItem("numsequencenumber");
 			}
 
-		} 
+		}
 
 		return Plugin.PLUGIN_OK;
 	}
 
 	@Override
-	public void close(int status) throws Exception {
+	public void close(int status) throws PluginException {
 
 	}
 

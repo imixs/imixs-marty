@@ -245,7 +245,7 @@ public class ProjectlistMB {
 			if (currentSelection.hasItem("a4j:showProcessList")) {
 				try {
 					boolean bTogleCurrent = (Boolean) currentSelection
-							.getItemValue("a4j:showProcessList").firstElement();
+							.getItemValue("a4j:showProcessList").get(0);
 					bTogle = !bTogleCurrent;
 				} catch (Exception e) {
 					bTogle = true;
@@ -286,7 +286,7 @@ public class ProjectlistMB {
 			if (currentSelection.hasItem("a4j:showTeam")) {
 				try {
 					boolean bTogleCurrent = (Boolean) currentSelection
-							.getItemValue("a4j:showTeam").firstElement();
+							.getItemValue("a4j:showTeam").get(0);
 					bTogle = !bTogleCurrent;
 				} catch (Exception e) {
 					bTogle = true;
@@ -540,7 +540,7 @@ public class ProjectlistMB {
 				endOfList = col.size() < count;
 				for (ItemCollection aworkitem : col) {
 					// test if Project contains a ProcessList
-					Vector<String> vprojectList = aworkitem
+					List<String> vprojectList = aworkitem
 							.getItemValue("txtprocesslist");
 					if (vprojectList.size() > 0
 							&& this.getProjectBean().isMember(aworkitem))
@@ -820,7 +820,7 @@ public class ProjectlistMB {
 			if (aProject == null)
 				return startProcessList;
 
-			Vector<String> vprojectList = aProject
+			List<String> vprojectList = aProject
 					.getItemValue("txtprocesslist");
 
 			// load ModelVersion

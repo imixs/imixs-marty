@@ -1006,7 +1006,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		if (workitemItemCollection.hasItem("a4j:showHistory")) {
 			try {
 				boolean bTogleCurrent = (Boolean) workitemItemCollection
-						.getItemValue("a4j:showHistory").firstElement();
+						.getItemValue("a4j:showHistory").get(0);
 				bTogle = !bTogleCurrent;
 			} catch (Exception e) {
 				bTogle = true;

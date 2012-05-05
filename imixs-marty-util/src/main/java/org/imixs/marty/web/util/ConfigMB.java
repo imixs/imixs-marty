@@ -31,8 +31,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -267,7 +267,7 @@ public class ConfigMB {
 			}
 
 			// get value list first value from vector if size >0
-			Vector valueList = itemCollection.getItemValue(key.toString());
+			List valueList = itemCollection.getItemValue(key.toString());
 
 			for (Object aValue : valueList) {
 

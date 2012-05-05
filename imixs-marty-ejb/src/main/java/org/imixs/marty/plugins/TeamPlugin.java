@@ -29,13 +29,16 @@ package org.imixs.marty.plugins;
 
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 import org.imixs.marty.ejb.ProjectService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.plugins.ResultPlugin;
@@ -55,9 +58,10 @@ public class TeamPlugin extends AbstractPlugin {
 
 	private ProjectService projectService = null;
 	private EntityService entityService = null;
+	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	@Override
-	public void init(WorkflowContext actx) throws Exception {
+	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
 		// check for an instance of WorkflowService
 		if (actx instanceof WorkflowService) {
@@ -67,17 +71,13 @@ public class TeamPlugin extends AbstractPlugin {
 			entityService = ws.getEntityService();
 		}
 
-		// lookup profile service EJB
-		// String jndiName = "ejb/ProjectServiceBean";
-		// InitialContext ictx = new InitialContext();
-
-		// FooBean foo = (FooBean) new
-		// InitialContext().lookup("java:module/FooBean");
-
-		// Context ctx = (Context) ictx.lookup("java:comp/env");
-		// projectService = (ProjectService) ctx.lookup(jndiName);
-		projectService = (ProjectService) new InitialContext()
-				.lookup("java:module/ProjectService");
+		try {
+			projectService = (ProjectService) new InitialContext()
+					.lookup("java:module/ProjectService");
+		} catch (NamingException e) {
+			throw new PluginException(
+					"[TeamPlugin] unable to lookup ProjectService ", e);
+		}
 
 	}
 
@@ -117,7 +117,7 @@ public class TeamPlugin extends AbstractPlugin {
 	@SuppressWarnings("unchecked")
 	@Override
 	public int run(ItemCollection workItem, ItemCollection documentActivity)
-			throws Exception {
+			throws PluginException {
 
 		String sProjectName = null;
 		String sResult = null;
@@ -135,26 +135,22 @@ public class TeamPlugin extends AbstractPlugin {
 			// Read workflow result directly from the activity definition
 			sResult = documentActivity.getItemValueString("txtActivityResult");
 
-			ItemCollection evalItemCollection=new ItemCollection();
+			ItemCollection evalItemCollection = new ItemCollection();
 			ResultPlugin.evaluate(sResult, evalItemCollection);
-			
-			
+
 			// check for old pattern 'project=....' (deprecated!)
 			/*
-			if (sResult.indexOf("project=") > -1) {
-				sResult = replaceDynamicValues(sResult, workItem);
-				sProjectName = sResult
-						.substring(sResult.indexOf("project=") + 8);
-				// cut next newLine
-				if (sProjectName.indexOf("\n") > -1)
-					sProjectName = sProjectName.substring(0,
-							sProjectName.indexOf("\n"));
-
-			} else {
-			*/
-				// new Pattern
-				sProjectName = evalItemCollection.getItemValueString("project");
-			//}
+			 * if (sResult.indexOf("project=") > -1) { sResult =
+			 * replaceDynamicValues(sResult, workItem); sProjectName = sResult
+			 * .substring(sResult.indexOf("project=") + 8); // cut next newLine
+			 * if (sProjectName.indexOf("\n") > -1) sProjectName =
+			 * sProjectName.substring(0, sProjectName.indexOf("\n"));
+			 * 
+			 * } else {
+			 */
+			// new Pattern
+			sProjectName = evalItemCollection.getItemValueString("project");
+			// }
 
 			if (!"".equals(sProjectName)) {
 				System.out
@@ -197,19 +193,19 @@ public class TeamPlugin extends AbstractPlugin {
 
 		ItemCollection itemColProject = entityService.load(sParentID);
 		if (itemColProject != null) {
-			Vector vTeam = new Vector();
-			Vector vOwner = new Vector();
-			Vector vManager = new Vector();
-			Vector vAssist = new Vector();
-			Vector vParentTeam = new Vector();
-			Vector vParentOwner = new Vector();
-			Vector vParentManager = new Vector();
-			Vector vParentAssist = new Vector();
-			Vector vSubTeams = new Vector();
-			Vector vSubOwner = new Vector();
-			Vector vSubAssist = new Vector();
-			Vector vSubManager = new Vector();
-			 sProjectName = "";
+			List vTeam = new Vector();
+			List vOwner = new Vector();
+			List vManager = new Vector();
+			List vAssist = new Vector();
+			List vParentTeam = new Vector();
+			List vParentOwner = new Vector();
+			List vParentManager = new Vector();
+			List vParentAssist = new Vector();
+			List vSubTeams = new Vector();
+			List vSubOwner = new Vector();
+			List vSubAssist = new Vector();
+			List vSubManager = new Vector();
+			sProjectName = "";
 
 			String parentType = itemColProject.getItemValueString("type");
 			if ("project".equals(parentType)) {
@@ -257,7 +253,9 @@ public class TeamPlugin extends AbstractPlugin {
 			}
 
 			// update team lists
+
 			workItem.replaceItemValue("namProjectTeam", vTeam);
+
 			workItem.replaceItemValue("namProjectOwner", vOwner);
 			workItem.replaceItemValue("namParentProjectTeam", vParentTeam);
 			workItem.replaceItemValue("namParentProjectOwner", vParentOwner);
@@ -279,7 +277,7 @@ public class TeamPlugin extends AbstractPlugin {
 	}
 
 	@Override
-	public void close(int arg0) throws Exception {
+	public void close(int arg0) throws PluginException {
 		// no op
 
 	}

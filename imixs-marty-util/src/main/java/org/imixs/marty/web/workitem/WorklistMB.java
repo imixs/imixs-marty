@@ -399,7 +399,7 @@ public class WorklistMB implements WorkitemListener {
 				try {
 					boolean bTogleCurrent = (Boolean) currentSelection
 
-					.getItemValue("a4j:showDetails").firstElement();
+					.getItemValue("a4j:showDetails").get(0);
 					bTogle = !bTogleCurrent;
 				} catch (Exception e) {
 					bTogle = true;
@@ -428,7 +428,7 @@ public class WorklistMB implements WorkitemListener {
 				try {
 					boolean bTogleCurrent = (Boolean) currentSelection
 
-					.getItemValue("a4j:showHistory").firstElement();
+					.getItemValue("a4j:showHistory").get(0);
 					bTogle = !bTogleCurrent;
 				} catch (Exception e) {
 					bTogle = true;

@@ -196,7 +196,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 							getConfigBean().getWorkitem().getItemValueString(
 									"DefaultPage"));
 
-					Vector defaultProcessList = getConfigBean().getWorkitem()
+					List defaultProcessList = getConfigBean().getWorkitem()
 							.getItemValue("defaultprojectprocesslist");
 
 					// create a default project
@@ -289,7 +289,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 * 
 	 */
-	private void createUserDefaultProject(Vector<String> defaultProcectList)
+	private void createUserDefaultProject(List<String> defaultProcectList)
 			throws Exception {
 		// test if project list is empty...
 		List<ItemCollection> projectList = projectService
@@ -398,13 +398,13 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 			List<String> col = getModelService().getAllModelVersions();
 
-			Vector modelDomains = workitemItemCollection
+			List modelDomains = workitemItemCollection
 					.getItemValue("txtModelDomain");
 			// add default model domain if empty or first entry is '' (could be
 			// happen :-/)
 			if (modelDomains.size() == 0
 					|| (modelDomains.size() == 1 && "".equals(modelDomains
-							.firstElement().toString())))
+							.get(0).toString())))
 				modelDomains.add("public");
 
 			for (String sversion : col) {
@@ -675,7 +675,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 			sAttributeName = "txtPrimary" + sDragType + "List";
 
 			// get current Primary Project list
-			Vector<String> vPrimaryProjectList = workitemItemCollection
+			List<String> vPrimaryProjectList = workitemItemCollection
 					.getItemValue(sAttributeName);
 
 			if (vPrimaryProjectList.indexOf(sUniqueID) > -1)
@@ -743,7 +743,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 			sAttributeName = "txtPrimary" + sDragType + "List";
 
 			// get current Primary Project list
-			Vector<String> vPrimaryProjectList = workitemItemCollection
+			List<String> vPrimaryProjectList = workitemItemCollection
 					.getItemValue(sAttributeName);
 
 			if (vPrimaryProjectList.indexOf(sUniqueID) == -1)

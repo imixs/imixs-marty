@@ -83,7 +83,7 @@ public class DmsSchedulerService {
 	final static public String DROP_FOLDER = "imixs_dms";
 	final static public long MAX_FILE_SIZE = 10485760; // 10 MB
 
-	private static Logger logger = Logger.getLogger("org.imixs.workflow");
+	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	@EJB
 	private EntityService entityService;

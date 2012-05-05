@@ -27,6 +27,8 @@
 
 package org.imixs.marty.plugins;
 
+import java.util.logging.Logger;
+
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.naming.Context;
@@ -37,42 +39,44 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
-
+import org.imixs.workflow.exceptions.PluginException;
 
 public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
 	private ProfileService profileService = null;
 	private boolean hasMailSession = false;
+	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	@Override
-	public void init(WorkflowContext actx) throws Exception {
+	public void init(WorkflowContext actx) throws PluginException {
 
-		try {
-
-			super.init(actx);
-			hasMailSession = true;
-
-		} catch (Exception e) {
-			System.out.println("WARNING: Mail session not found: " + e);
-		}
-
+		super.init(actx);
+		hasMailSession = true;
 		// lookup profile service EJB
 		String jndiName = "ejb/ProfileService";
-		InitialContext ictx = new InitialContext();
-		Context ctx = (Context) ictx.lookup("java:comp/env");
-		profileService = (ProfileService) ctx.lookup(jndiName);
+		InitialContext ictx;
+		try {
+			ictx = new InitialContext();
 
+			Context ctx = (Context) ictx.lookup("java:comp/env");
+			profileService = (ProfileService) ctx.lookup(jndiName);
+		} catch (NamingException e) {
+			throw new PluginException(
+					"[MailPlugin] unable to lookup ProfileService", e);
+
+		}
 	}
 
 	@Override
-	public void close(int arg0) throws Exception {
+	public void close(int arg0) throws PluginException {
 
 		if (hasMailSession)
 			super.close(arg0);
 	}
 
 	@Override
-	public int run(ItemCollection arg0, ItemCollection arg1) throws Exception {
+	public int run(ItemCollection arg0, ItemCollection arg1)
+			throws PluginException {
 
 		if (hasMailSession)
 			return super.run(arg0, arg1);
@@ -102,8 +106,8 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		try {
 			aAddr = fetchEmail(aAddr);
 			if (aAddr.indexOf('@') == -1) {
-				System.out.println("[MartyMailPlugin] smtp mail address for '" + aAddr
-						+ "' could not be resolved!");
+				System.out.println("[MartyMailPlugin] smtp mail address for '"
+						+ aAddr + "' could not be resolved!");
 				return null;
 			}
 		} catch (NamingException e) {

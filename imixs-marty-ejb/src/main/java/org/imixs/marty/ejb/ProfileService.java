@@ -40,7 +40,7 @@ import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 
 import org.imixs.workflow.ItemCollection;
-
+ 
 /**
  * 
  * This Service Facade encapsulates the management of a User Profile. The

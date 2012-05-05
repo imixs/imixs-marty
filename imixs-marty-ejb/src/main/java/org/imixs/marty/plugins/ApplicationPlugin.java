@@ -27,9 +27,11 @@
 
 package org.imixs.marty.plugins;
 
+import java.util.logging.Logger;
+
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowContext;
-
+import org.imixs.workflow.exceptions.PluginException;
 
 /**
  * This plugin overwrites the Application Plugin and updates sywapp informations
@@ -38,22 +40,25 @@ import org.imixs.workflow.WorkflowContext;
  * @author rsoika
  * 
  */
-public class ApplicationPlugin extends org.imixs.workflow.plugins.ApplicationPlugin {
+public class ApplicationPlugin extends
+		org.imixs.workflow.plugins.ApplicationPlugin {
 	ItemCollection documentContext;
+	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	@Override
-	public void init(WorkflowContext actx) throws Exception {
+	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
 	}
 
 	@Override
 	public int run(ItemCollection adocumentContext,
-			ItemCollection documentActivity) throws Exception {
+			ItemCollection documentActivity) throws PluginException {
 
 		documentContext = adocumentContext;
 
 		// Update Subject
 		if (!documentContext.hasItem("txtSubject"))
+
 			documentContext.replaceItemValue("txtSubject", " - no subject - ");
 
 		int iResult = super.run(documentContext, documentActivity);
@@ -62,20 +67,17 @@ public class ApplicationPlugin extends org.imixs.workflow.plugins.ApplicationPlu
 	}
 
 	@Override
-	public void close(int arg0) throws Exception {
+	public void close(int arg0) throws PluginException {
 		super.close(arg0);
 
-		try { // now cut txtworkflowgroup if ~ is available
-			String sGroupName = documentContext
-					.getItemValueString("txtWorkflowGroup");
-			if (sGroupName.indexOf('~') > -1) {
-				sGroupName = sGroupName.substring(sGroupName.indexOf('~') + 1);
+		// now cut txtworkflowgroup if ~ is available
+		String sGroupName = documentContext
+				.getItemValueString("txtWorkflowGroup");
+		if (sGroupName.indexOf('~') > -1) {
+			sGroupName = sGroupName.substring(sGroupName.indexOf('~') + 1);
 
-				documentContext
-						.replaceItemValue("txtWorkflowGroup", sGroupName);
-			}
-		} catch (Exception e) {			
-			e.printStackTrace();
+			documentContext.replaceItemValue("txtWorkflowGroup", sGroupName);
 		}
+
 	}
 }

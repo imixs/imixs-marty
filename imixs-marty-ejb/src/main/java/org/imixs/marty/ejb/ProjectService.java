@@ -49,7 +49,7 @@ import javax.faces.context.FacesContext;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.jpa.EntityIndex;
 
-/**
+/** 
  * This Service Facade encapsulates the magement of project business objects. A
  * Project is represented by a ItemCollection with the following Attributes:
  * 
@@ -397,8 +397,8 @@ public class ProjectService {
 	 * @return String collection of Names (Team Members)
 	 * 
 	 */
-	public Collection<String> getProjectTeam(String aproject) {
-		Vector<String> team = null;
+	public List<String> getProjectTeam(String aproject) {
+		List<String> team = null;
 		ItemCollection aworkitem = entityService.load(aproject);
 		if (aworkitem != null)
 			team = aworkitem.getItemValue("namteam");
@@ -471,8 +471,8 @@ public class ProjectService {
 
 		// Verify if namTeam or namOwner is empty!
 		String remoteUser = ctx.getCallerPrincipal().getName();
-		Vector vTeam = workItem.getItemValue("namTeam");
-		Vector vOwner = workItem.getItemValue("namOwner");
+		List vTeam = workItem.getItemValue("namTeam");
+		List vOwner = workItem.getItemValue("namOwner");
 		if (vTeam.size() == 0) {
 			vTeam.add(remoteUser);
 			workItem.replaceItemValue("namTeam", vTeam);

@@ -283,7 +283,7 @@ public class ModelMB {
 				// get the ProcessList and test if the user is a member of this
 				// project. The ProcessList conatins values like
 				// 'public-de-0.0.1|1000'
-				Vector<String> vprojectList = aworkitem
+				List<String> vprojectList = aworkitem
 						.getItemValue("txtprocesslist");
 				if (vprojectList.size() > 0
 						&& this.getProjectMB().isMember(aworkitem)) {
@@ -482,7 +482,7 @@ public class ModelMB {
 			startProcessSelection = new ArrayList<SelectItem>();
 
 			// read userProfile Domain (add public if no domain specified
-			Vector userDomains = this.getProfileBean().getWorkitem()
+			List userDomains = this.getProfileBean().getWorkitem()
 					.getItemValue("txtmodeldomain");
 			if (userDomains.size() == 0
 					|| "".equals(this.getProfileBean().getWorkitem()

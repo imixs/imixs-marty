@@ -313,14 +313,14 @@ public class ProjectMB extends AbstractWorkflowController {
 		ExternalContext externalContext = context.getExternalContext();
 		String remoteUser = externalContext.getRemoteUser();
 
-		Vector<String> vOwner = aProject.getItemValue("namOwner");
-		Vector<String> vTeam = aProject.getItemValue("namTeam");
-		Vector<String> vAssist = aProject.getItemValue("namAssist");
-		Vector<String> vManager = aProject.getItemValue("namManager");
-		Vector<String> vPOwner = aProject.getItemValue("namParentOwner");
-		Vector<String> vPTeam = aProject.getItemValue("namParentTeam");
-		Vector<String> vPAssist = aProject.getItemValue("namParentAssist");
-		Vector<String> vPManager = aProject.getItemValue("namParentManager");
+		List<String> vOwner = aProject.getItemValue("namOwner");
+		List<String> vTeam = aProject.getItemValue("namTeam");
+		List<String> vAssist = aProject.getItemValue("namAssist");
+		List<String> vManager = aProject.getItemValue("namManager");
+		List<String> vPOwner = aProject.getItemValue("namParentOwner");
+		List<String> vPTeam = aProject.getItemValue("namParentTeam");
+		List<String> vPAssist = aProject.getItemValue("namParentAssist");
+		List<String> vPManager = aProject.getItemValue("namParentManager");
 
 		return (vTeam.indexOf(remoteUser) > -1
 				|| vOwner.indexOf(remoteUser) > -1
@@ -343,7 +343,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		ExternalContext externalContext = FacesContext.getCurrentInstance()
 				.getExternalContext();
 		String remoteUser = externalContext.getRemoteUser();
-		Vector<String> vTeam = workitemItemCollection.getItemValue("namTeam");
+		List<String> vTeam = workitemItemCollection.getItemValue("namTeam");
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
 
@@ -357,7 +357,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		ExternalContext externalContext = FacesContext.getCurrentInstance()
 				.getExternalContext();
 		String remoteUser = externalContext.getRemoteUser();
-		Vector<String> vTeam = workitemItemCollection.getItemValue("namOwner");
+		List<String> vTeam = workitemItemCollection.getItemValue("namOwner");
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
 
@@ -372,7 +372,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		ExternalContext externalContext = FacesContext.getCurrentInstance()
 				.getExternalContext();
 		String remoteUser = externalContext.getRemoteUser();
-		Vector<String> vTeam = workitemItemCollection
+		List<String> vTeam = workitemItemCollection
 				.getItemValue("namManager");
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
@@ -387,7 +387,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		ExternalContext externalContext = FacesContext.getCurrentInstance()
 				.getExternalContext();
 		String remoteUser = externalContext.getRemoteUser();
-		Vector<String> vTeam = workitemItemCollection.getItemValue("namAssist");
+		List<String> vTeam = workitemItemCollection.getItemValue("namAssist");
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
 
@@ -396,19 +396,19 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * 
 	 * @return
 	 */
-	public Vector<String> getMemberList() {
+	public List<String> getMemberList() {
 		return getMemberList(workitemItemCollection);
 	}
 
-	public Vector<String> getMemberList(ItemCollection aProject) {
-		Vector<String> vTeam = aProject.getItemValue("namTeam");
-		Vector<String> vOwner = aProject.getItemValue("namOwner");
-		Vector<String> vAssist = aProject.getItemValue("namAssist");
-		Vector<String> vManager = aProject.getItemValue("namManager");
-		Vector<String> vPOwner = aProject.getItemValue("namParentOwner");
-		Vector<String> vPTeam = aProject.getItemValue("namParentTeam");
-		Vector<String> vPAssist = aProject.getItemValue("namParentAssist");
-		Vector<String> vPManager = aProject.getItemValue("namParentManager");
+	public List<String> getMemberList(ItemCollection aProject) {
+		List<String> vTeam = aProject.getItemValue("namTeam");
+		List<String> vOwner = aProject.getItemValue("namOwner");
+		List<String> vAssist = aProject.getItemValue("namAssist");
+		List<String> vManager = aProject.getItemValue("namManager");
+		List<String> vPOwner = aProject.getItemValue("namParentOwner");
+		List<String> vPTeam = aProject.getItemValue("namParentTeam");
+		List<String> vPAssist = aProject.getItemValue("namParentAssist");
+		List<String> vPManager = aProject.getItemValue("namParentManager");
 
 		// make one vector...
 		for (String aitem : vOwner) {
@@ -571,7 +571,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		if (workitemItemCollection.hasItem("a4j:showProcessList")) {
 			try {
 				boolean bTogleCurrent = (Boolean) workitemItemCollection
-						.getItemValue("a4j:showProcessList").firstElement();
+						.getItemValue("a4j:showProcessList").get(0);
 				bTogle = !bTogleCurrent;
 			} catch (Exception e) {
 				bTogle = true;
@@ -600,7 +600,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		if (workitemItemCollection.hasItem("a4j:showTeamList")) {
 			try {
 				boolean bTogleCurrent = (Boolean) workitemItemCollection
-						.getItemValue("a4j:showTeamList").firstElement();
+						.getItemValue("a4j:showTeamList").get(0);
 				bTogle = !bTogleCurrent;
 			} catch (Exception e) {
 				bTogle = true;
@@ -625,7 +625,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		if (workitemItemCollection.hasItem("a4j:showSearchFilter")) {
 			try {
 				boolean bTogleCurrent = (Boolean) workitemItemCollection
-						.getItemValue("a4j:showSearchFilter").firstElement();
+						.getItemValue("a4j:showSearchFilter").get(0);
 				bTogle = !bTogleCurrent;
 			} catch (Exception e) {
 				bTogle = true;
@@ -781,7 +781,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	public void doAddUser(ActionEvent event) throws Exception {
 		String sUserField;
 		String sNewValue = "";
-		Vector<String> vEntries;
+		List<String> vEntries;
 		String sErrorMessage = "";
 
 		// determine field (owner or team)....
@@ -880,7 +880,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	public void doAddUserImmediate(ActionEvent event) throws Exception {
 		String sUserField;
 		String sNewValue = "";
-		Vector<String> vEntries;
+		List<String> vEntries;
 		String sErrorMessage = "";
 
 		// determine field (owner or team)....
@@ -981,7 +981,7 @@ public class ProjectMB extends AbstractWorkflowController {
 				sUserField = "namTeam";
 			}
 			// remove entry
-			Vector vEntries = workitemItemCollection.getItemValue(sUserField);
+			List vEntries = workitemItemCollection.getItemValue(sUserField);
 			vEntries.remove(currentSelection);
 			workitemItemCollection.replaceItemValue(sUserField, vEntries);
 		}
@@ -1029,7 +1029,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		ExternalContext ectx = FacesContext.getCurrentInstance()
 				.getExternalContext();
 		String remoteUser = ectx.getRemoteUser();
-		Vector ownerList = this.getWorkitem().getItemValue("namOwner");
+		List ownerList = this.getWorkitem().getItemValue("namOwner");
 
 		if (ectx.isUserInRole("org.imixs.ACCESSLEVEL.MANAGERACCESS")
 				|| ownerList.indexOf(remoteUser) > -1) {
@@ -1105,7 +1105,7 @@ public class ProjectMB extends AbstractWorkflowController {
 			// Create Process Tree Selection from current txtprocesslist
 			processTreeSelection = new TreeNodeImpl();
 
-			Vector<String> vProcessList = workitemItemCollection
+			List<String> vProcessList = workitemItemCollection
 					.getItemValue("txtprocesslist");
 
 			// processSelection = new Vector<String>();
@@ -1195,7 +1195,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		if (team != null)
 			return team;
 		team = new ArrayList<ItemCollection>();
-		Vector<String> vTeam = this.getWorkitem().getItemValue("namTeam");
+		List<String> vTeam = this.getWorkitem().getItemValue("namTeam");
 		for (String sName : vTeam) {
 			ItemCollection profile = profileService
 					.findProfileByUserName(sName);
@@ -1213,7 +1213,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * @return
 	 */
 	public ArrayList<SelectItem> getTeamSelection() throws Exception {
-		Vector<String> vOwners = this.getWorkitem().getItemValue("namTeam");
+		List<String> vOwners = this.getWorkitem().getItemValue("namTeam");
 		ArrayList<SelectItem> nameSelection = new ArrayList<SelectItem>();
 		for (String sName : vOwners)
 			nameSelection.add(new SelectItem(sName, getNameLookupBean()
@@ -1229,7 +1229,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * @return
 	 */
 	public ArrayList<SelectItem> getManagerSelection() throws Exception {
-		Vector<String> vOwners = this.getWorkitem().getItemValue("namManager");
+		List<String> vOwners = this.getWorkitem().getItemValue("namManager");
 		ArrayList<SelectItem> nameSelection = new ArrayList<SelectItem>();
 		for (String sName : vOwners)
 			nameSelection.add(new SelectItem(sName, getNameLookupBean()
@@ -1245,7 +1245,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * @return
 	 */
 	public ArrayList<SelectItem> getAssistSelection() throws Exception {
-		Vector<String> vOwners = this.getWorkitem().getItemValue("namAssist");
+		List<String> vOwners = this.getWorkitem().getItemValue("namAssist");
 		ArrayList<SelectItem> nameSelection = new ArrayList<SelectItem>();
 		for (String sName : vOwners)
 			nameSelection.add(new SelectItem(sName, getNameLookupBean()
@@ -1261,7 +1261,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * @return
 	 */
 	public ArrayList<SelectItem> getOwnerSelection() throws Exception {
-		Vector<String> vOwners = this.getWorkitem().getItemValue("namowner");
+		List<String> vOwners = this.getWorkitem().getItemValue("namowner");
 		ArrayList<SelectItem> nameSelection = new ArrayList<SelectItem>();
 		for (String sName : vOwners)
 			nameSelection.add(new SelectItem(sName, getNameLookupBean()
@@ -1359,7 +1359,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	public List<Object> getProcessList() {
 		List<Object> aList = new ArrayList<Object>();
 		if (workitemItemCollection != null) {
-			Vector v = workitemItemCollection.getItemValue("txtprocesslist");
+			List v = workitemItemCollection.getItemValue("txtprocesslist");
 			for (Object aEntryValue : v) {
 				aList.add(aEntryValue);
 			}
@@ -1371,7 +1371,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	public void setProcessList(List<Object> aList) {
 		if (aList != null) {
 			// convert List<Object> into Vector
-			Vector v = new Vector();
+			List v = new Vector();
 			for (Object aEntryValue : aList)
 				v.add(aEntryValue);
 

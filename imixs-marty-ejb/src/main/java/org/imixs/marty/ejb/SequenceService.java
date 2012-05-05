@@ -28,7 +28,7 @@
 package org.imixs.marty.ejb;
 
 import java.util.Collection;
-import java.util.Vector;
+import java.util.List;
 
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
@@ -38,6 +38,8 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.PluginException;
 
 /**
  * This EJB handles a unique Sequence Number over a group of workitems.
@@ -96,10 +98,12 @@ public class SequenceService {
 	 * 'sequencenumbers' with the current number range for each workflowGroup.
 	 * If a Workitem have a WorklfowGroup with no corresponding entry the method
 	 * will not compute a new number.
+	 * @throws InvalidWorkitemException 
+	 * @throws AccessDeniedException 
 	 * 
 	 */
-	public int getNextSequenceNumberByGroup(ItemCollection aworkitem)
-			throws Exception {
+	public int getNextSequenceNumberByGroup(ItemCollection aworkitem) throws AccessDeniedException
+			 {
 
 		ItemCollection configItemCollection = null;
 
@@ -118,10 +122,10 @@ public class SequenceService {
 			// exists
 			String sWorkflowGroup = aworkitem
 					.getItemValueString("txtWorkflowGroup");
-			Vector<String> vNumbers = configItemCollection
+			List<String> vNumbers = configItemCollection
 					.getItemValue("sequencenumbers");
 			for (int i = 0; i < vNumbers.size(); i++) {
-				String aNumber = vNumbers.elementAt(i);
+				String aNumber = vNumbers.get(i);
 				if (aNumber.startsWith(sWorkflowGroup + "=")) {
 					// we got the next number....
 					String sequcenceNumber = aNumber.substring(aNumber
@@ -150,9 +154,12 @@ public class SequenceService {
 	/**
 	 * this method computes the next sequence number and updates the parent
 	 * workitem where the last sequence number will be stored.
+	 * @throws InvalidWorkitemException 
+	 * @throws AccessDeniedException 
+	 * @throws Exception 
 	 */
-	public int getNextSequenceNumberByParent(ItemCollection aworkitem)
-			throws Exception {
+	public int getNextSequenceNumberByParent(ItemCollection aworkitem) throws  AccessDeniedException 
+			 {
 		// load current Number
 		ItemCollection sequenceNumberObject = loadParentWorkitem(aworkitem);
 		int currentSequenceNumber = sequenceNumberObject
@@ -204,14 +211,15 @@ public class SequenceService {
 	 * this method loads the parent Workitem of the given workitem
 	 * 
 	 * @return
+	 * @throws InvalidWorkitemException 
 	 * @throws Exception
 	 */
-	private ItemCollection loadParentWorkitem(ItemCollection aworkitem)
-			throws Exception {
+	private ItemCollection loadParentWorkitem(ItemCollection aworkitem)  
+			{
 		String sParentID = aworkitem.getItemValueString("$UniqueIDRef");
 
 		if ("".equals(sParentID))
-			throw new Exception(
+			throw new PluginException(
 					"WARNING: SequenceService : No $UniqueIDRef defined");
 
 		ItemCollection parent = entityService.load(sParentID);
