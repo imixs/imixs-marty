@@ -33,7 +33,7 @@
 			<dependency>
 				<groupId>org.imixs.workflow</groupId>
 				<artifactId>imixs-workflow-core</artifactId>
-				<version>3.0.2-SNAPSHOT</version>
+				<version>3.0.2</version>
 				<scope>provided</scope>
 				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
 			</dependency>
@@ -41,7 +41,7 @@
 			<dependency>
 				<groupId>org.imixs.workflow</groupId>
 				<artifactId>imixs-workflow-engine</artifactId>
-				<version>3.0.2-SNAPSHOT</version>
+				<version>3.0.2</version>
 				<scope>provided</scope>
 				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
 			</dependency>
@@ -49,7 +49,7 @@
 			<dependency>
 				<groupId>org.imixs.workflow</groupId>
 				<artifactId>imixs-workflow-faces</artifactId>
-				<version>3.0.1-SNAPSHOT</version>
+				<version>3.0.2</version>
 			</dependency>
 
 			<!-- RichFaces -->
