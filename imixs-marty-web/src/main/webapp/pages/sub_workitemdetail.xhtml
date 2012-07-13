@@ -26,7 +26,7 @@
 				<h:outputText style="font-weight: bold;" value="#{workitem.item['txtWorkflowSummary']}"/>
 				
 				<h:outputText style="font-weight: bold;" value="- no title -"
-				 redered="#{empty workitem.item['txtWorkflowSummary']}"/>
+				 rendered="#{empty workitem.item['txtWorkflowSummary']}"/>
 			</h:commandLink>
 		</a4j:outputPanel>
 		
@@ -34,7 +34,7 @@
 		<a4j:outputPanel rendered="#{! workitem.item['$isAuthor']}">
 				<h:outputText style="font-weight: bold;" value="#{workitem.item['txtWorkflowSummary']}"/>
 					<h:outputText style="font-weight: bold;" value="- no title -"
-				 redered="#{empty workitem.item['txtWorkflowSummary']}"/>
+				 rendered="#{empty workitem.item['txtWorkflowSummary']}"/>
 		</a4j:outputPanel>
 		
 		
