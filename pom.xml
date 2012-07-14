@@ -5,7 +5,7 @@
 	<artifactId>imixs-marty</artifactId>
 	<packaging>pom</packaging>
 	<name>Imixs Workflow - Marty</name>
-	<version>1.1.1-RC-3</version>
+	<version>1.1.1-FINAL</version>
 	<organization>
 		<name>Imixs Software Solutions GmbH</name>
 		<url>http://www.imixs.com</url>
@@ -15,10 +15,15 @@
 		<module>imixs-marty-ejb</module>
 		<module>imixs-marty-util</module>
 	</modules>
+	
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 	<build>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
