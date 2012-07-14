@@ -382,7 +382,7 @@ public class WorkflowSchedulerService {
 	}
 
 	/**
-	 * collects all scheduled workflow activities. An scheduled worklfow
+	 * collects all scheduled workflow activities. An scheduled workflow
 	 * activity is identified by the attribute keyScheduledActivity="1"
 	 * 
 	 * The method goes through the latest or a specific Model Version

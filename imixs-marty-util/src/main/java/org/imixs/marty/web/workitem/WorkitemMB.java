@@ -1066,7 +1066,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	}
 
 	/**
-	 * returns a report name provided by teh WorklfowProperty
+	 * returns a report name provided by teh WorkflowProperty
 	 * 'txtworkflowresultmessage'. The report must be defined by the präfix the
 	 * tag:
 	 * 
