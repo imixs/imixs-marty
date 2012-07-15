@@ -49,7 +49,7 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * configuration entity provides a property named 'sequencenumbers' with the
  * current number range for each workflowGroup.
  * 
- * If a WorkItem is assigned to a WorklfowGroup with no corresponding entry in
+ * If a WorkItem is assigned to a WorkflowGroup with no corresponding entry in
  * the BASIC configuration, the Plugin will not compute a new number for the
  * workitem.
  * 
