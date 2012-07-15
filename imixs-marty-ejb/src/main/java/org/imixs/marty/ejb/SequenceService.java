@@ -96,7 +96,7 @@ public class SequenceService {
 	 * This method computes the sequecne number based on a configuration entity
 	 * with the name "BASIC". The configuration provides a property
 	 * 'sequencenumbers' with the current number range for each workflowGroup.
-	 * If a Workitem have a WorklfowGroup with no corresponding entry the method
+	 * If a Workitem have a WorkflowGroup with no corresponding entry the method
 	 * will not compute a new number.
 	 * @throws InvalidWorkitemException 
 	 * @throws AccessDeniedException 
