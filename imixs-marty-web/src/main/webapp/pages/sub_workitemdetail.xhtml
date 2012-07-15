@@ -16,7 +16,6 @@
 				style="max-height: 24px; margin: 4px;" />
 		</h:commandLink>
 	</a4j:outputPanel>
-
 	<!-- *** Standard Info *** -->
 	<a4j:outputPanel layout="block" style="" id="standard_infoblock_id">
 		
@@ -25,12 +24,17 @@
 			<h:commandLink actionListener="#{worklistMB.doEdit}"
 				action="open_workitem">
 				<h:outputText style="font-weight: bold;" value="#{workitem.item['txtWorkflowSummary']}"/>
+				
+				<h:outputText style="font-weight: bold;" value="- no title -"
+				 rendered="#{empty workitem.item['txtWorkflowSummary']}"/>
 			</h:commandLink>
 		</a4j:outputPanel>
 		
 		<!-- *** reader modus -->
 		<a4j:outputPanel rendered="#{! workitem.item['$isAuthor']}">
 				<h:outputText style="font-weight: bold;" value="#{workitem.item['txtWorkflowSummary']}"/>
+					<h:outputText style="font-weight: bold;" value="- no title -"
+				 rendered="#{empty workitem.item['txtWorkflowSummary']}"/>
 		</a4j:outputPanel>
 		
 		
