@@ -46,7 +46,7 @@ import javax.faces.validator.ValidatorException;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.faces.AbstractWorkflowController;
+import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
 public class ProfileMB extends AbstractWorkflowController {
 
@@ -62,11 +62,14 @@ public class ProfileMB extends AbstractWorkflowController {
 	public void init() {
 		setType("profile");
 		doSwitchToWorklistAll(null);
+	
+	
 	}
+	
 
 	/**
 	 * This method creates a new Profile with the txtName attribute as username
-	 * This method is used to allow the manual createion of profiles for
+	 * This method is used to allow the manual creation of profiles for
 	 * administrative issues
 	 * 
 	 * @param event
@@ -74,20 +77,19 @@ public class ProfileMB extends AbstractWorkflowController {
 	 */
 	public void doCreateProfile(ActionEvent event) throws Exception {
 
-		// provess workitem and verify txtname and txtusername
+		// prove workitem and verify txtname and txtusername
 		try {
 			// lowercase email to allow unique lookups
-			String sName = workitemItemCollection.getItemValueString("txtName");
-			// sName = sName.toLowerCase();
-
-			workitemItemCollection = profileService.createProfile(
+			String sName = getWorkitem().getItemValueString("txtName");
+		
+			ItemCollection newProfile= profileService.createProfile(
 					START_PROFILE_PROCESS_ID, sName);
 
-			workitemItemCollection.replaceItemValue("$ActivityID",
+			newProfile.replaceItemValue("$ActivityID",
 					CREATE_PROFILE_ACTIVITY_ID);
-			workitemItemCollection=profileService.processProfile(workitemItemCollection);
+			newProfile=profileService.processProfile(newProfile);
 			//  the Workitem Reference for the ItemCollectionAdapter....
-			this.setWorkitem(workitemItemCollection);
+			this.setWorkitem(newProfile);
 			// reset views
 			doReset(event);
 		} catch (Exception ee) {
@@ -106,8 +108,7 @@ public class ProfileMB extends AbstractWorkflowController {
 			String sMessage = rb.getString("displayname_error");
 			FacesMessage message = new FacesMessage("* ", sMessage);
 			context.addMessage("profile_form_id:user_id", message);
-			//  the Workitem Reference for the ItemCollectionAdapter....
-			this.setWorkitem(workitemItemCollection);
+			
 			throw new ValidatorException(message);
 		}
 
@@ -124,6 +125,7 @@ public class ProfileMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doProcess(ActionEvent event) throws Exception {
+		ItemCollection profile=null;
 		// Activity ID raussuchen und in activityID speichern
 		List children = event.getComponent().getChildren();
 		int activityID = -1;
@@ -144,13 +146,14 @@ public class ProfileMB extends AbstractWorkflowController {
 		// provess workitem and verify txtname and txtusername
 		try {
 			// lowercase email to allow unique lookups
-			String sEmail = workitemItemCollection
+			 profile=getWorkitem();
+			String sEmail = profile
 					.getItemValueString("txtEmail");
 			sEmail = sEmail.toLowerCase();
-			workitemItemCollection.replaceItemValue("txtEmail", sEmail);
-			workitemItemCollection.replaceItemValue("$ActivityID", activityID);
-			workitemItemCollection = profileService
-					.processProfile(workitemItemCollection);
+			profile.replaceItemValue("txtEmail", sEmail);
+			profile.replaceItemValue("$ActivityID", activityID);
+			profile = profileService
+					.processProfile(profile);
 		} catch (Exception ee) {
 
 			// Generate Error message
@@ -173,7 +176,7 @@ public class ProfileMB extends AbstractWorkflowController {
 
 		// and finally update the Workitem Reference for the
 		// ItemCollectionAdapter....
-		this.setWorkitem(workitemItemCollection);
+		this.setWorkitem(profile);
 		// reset views
 		doReset(event);
 
@@ -195,9 +198,9 @@ public class ProfileMB extends AbstractWorkflowController {
 			}
 		}
 		if (profileID != null) {
-			workitemItemCollection = this.profileService
-					.findProfileByName(profileID);
-			this.setWorkitem(workitemItemCollection);
+			
+			this.setWorkitem(this.profileService
+					.findProfileByName(profileID));
 		}
 	}
 
@@ -210,12 +213,12 @@ public class ProfileMB extends AbstractWorkflowController {
 	 */
 	public void doDeleteProfile(ActionEvent event) throws Exception {
 
-		if (workitemItemCollection != null) {
+		
 			// delete current selection
 			System.out.println("Deleting Profile: "
-					+ workitemItemCollection.getItemValueString("$Uniqueid"));
-			getEntityService().remove(workitemItemCollection);
-		}
+					+ getWorkitem().getItemValueString("$Uniqueid"));
+			getEntityService().remove(getWorkitem());
+		
 		doReset(event);
 	}
 
@@ -246,12 +249,12 @@ public class ProfileMB extends AbstractWorkflowController {
 		}
 
 		if (currentSelection != null) {
-			// Set status to 200 and clear AGB Flag
-			workitemItemCollection.replaceItemValue("keyagb", false);
+			ItemCollection profile=getWorkitem();
+			profile.replaceItemValue("keyagb", false);
 
-			workitemItemCollection.replaceItemValue("$ActivityID", 80);
+			profile.replaceItemValue("$ActivityID", 80);
 
-			getWorkflowService().processWorkItem(workitemItemCollection);
+			getWorkflowService().processWorkItem(profile);
 
 		}
 		doReset(event);

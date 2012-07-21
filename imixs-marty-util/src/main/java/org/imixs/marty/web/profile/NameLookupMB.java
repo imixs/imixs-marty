@@ -44,7 +44,7 @@ import org.imixs.workflow.ItemCollection;
  * profileService EJB to lookup a name and holds a Cache to prevent repeatable
  * lookups.
  * 
- * @author rsoika
+ * @author rsoika 
  * 
  */
 public class NameLookupMB {

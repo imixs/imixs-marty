@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
@@ -59,6 +60,7 @@ import org.imixs.workflow.ItemCollection;
  * @author rsoika
  */
 public class CommentMB implements WorkitemListener {
+	@ManagedProperty(value = "#{workitemMB}")
 	private WorkitemMB workitemMB = null;
 	private ItemCollection workitem = null;
 
@@ -72,30 +74,15 @@ public class CommentMB implements WorkitemListener {
 	 * 
 	 */
 	@PostConstruct
-	public void init() {
+	public void init() { 
 		// register this Bean as a workitemListener to the current WorktieMB
-		this.getWorkitemBean().addWorkitemListener(this);
+		workitemMB.addWorkitemListener(this);
 
 		// set workitem
-		workitem=this.getWorkitemBean().getWorkitem();
+		workitem=workitemMB.getWorkitem();
 	}
 
-	/**
-	 * helper method to get the current instance of the WorkitemMB
-	 * 
-	 * @return
-	 */
-	private WorkitemMB getWorkitemBean() {
-		if (workitemMB == null)
-			workitemMB = (WorkitemMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "workitemMB");
-		return workitemMB;
-	}
-
+	
 	public void onWorkitemChanged(ItemCollection arg0) {
 		workitem = arg0;
 	}

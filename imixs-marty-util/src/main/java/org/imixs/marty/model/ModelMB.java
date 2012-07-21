@@ -47,7 +47,6 @@ import org.imixs.marty.util.SelectItemComparator;
 import org.imixs.marty.web.profile.MyProfileMB;
 import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.project.ProjectlistMB;
-
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.ModelService;
 

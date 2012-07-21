@@ -41,7 +41,6 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
-import javax.faces.component.UIComponent;
 import javax.faces.component.UIParameter;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
@@ -57,7 +56,7 @@ import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.util.SetupMB;
 import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.faces.AbstractWorkflowController;
+import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
 
 /**
@@ -176,22 +175,22 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 			try {
 				// try to load the profile for the current user
-				workitemItemCollection = profileService.findProfileByName(null);
-				if (workitemItemCollection == null) {
+				ItemCollection profile = profileService.findProfileByName(null);
+				if (profile == null) {
 
 					// create new Profile for current user
-					workitemItemCollection = profileService
+					profile = profileService
 							.createProfile(START_PROFILE_PROCESS_ID);
 
-					workitemItemCollection.replaceItemValue("$modelversion",
+					profile.replaceItemValue("$modelversion",
 							sModelVersion);
 
 					// now set default values for locale
-					workitemItemCollection.replaceItemValue("txtLocale",
+					profile.replaceItemValue("txtLocale",
 							getLoginBean().getLocale());
 
 					// set default launch page
-					workitemItemCollection.replaceItemValue(
+					profile.replaceItemValue(
 							"keyStartpage",
 							getConfigBean().getWorkitem().getItemValueString(
 									"DefaultPage"));
@@ -209,29 +208,29 @@ public class MyProfileMB extends AbstractWorkflowController {
 						ecp.printStackTrace();
 					}
 					// process new profile...
-					workitemItemCollection.replaceItemValue("$ActivityID",
+					profile.replaceItemValue("$ActivityID",
 							CREATE_PROFILE_ACTIVITY_ID);
-					workitemItemCollection = profileService
-							.processProfile(workitemItemCollection);
+					profile = profileService
+							.processProfile(profile);
 
 				} else {
 					// Update Workitem to store last Login Time and logincount
 					Calendar cal = Calendar.getInstance();
 
-					Date datpenultimateLogin = workitemItemCollection
+					Date datpenultimateLogin = profile
 							.getItemValueDate("datLastLogin");
 					if (datpenultimateLogin == null)
 						datpenultimateLogin = cal.getTime();
 
-					workitemItemCollection.replaceItemValue(
+					profile.replaceItemValue(
 							"datpenultimateLogin", datpenultimateLogin);
 
-					workitemItemCollection.replaceItemValue("datLastLogin",
+					profile.replaceItemValue("datLastLogin",
 							cal.getTime());
-					int logins = workitemItemCollection
+					int logins = profile
 							.getItemValueInteger("numLoginCount");
 					logins++;
-					workitemItemCollection.replaceItemValue("numLoginCount",
+					profile.replaceItemValue("numLoginCount",
 							logins);
 					
 					
@@ -240,24 +239,24 @@ public class MyProfileMB extends AbstractWorkflowController {
 					//		workitemItemCollection);
 
 					// process profile to trigger ProfilePlugin (Invitations)...
-					workitemItemCollection.replaceItemValue("$ActivityID",
+					profile.replaceItemValue("$ActivityID",
 							UPDATE_PROJECT_ACTIVITY_ID);
-					workitemItemCollection = profileService
-							.processProfile(workitemItemCollection);
+					profile = profileService
+							.processProfile(profile);
 					
 					
 				}
 				// set max History & log length
-				workitemItemCollection.replaceItemValue(
+				profile.replaceItemValue(
 						"numworkflowHistoryLength",
 						getConfigBean().getWorkitem().getItemValueInteger(
 								"MaxProfileHistoryLength"));
-				workitemItemCollection.replaceItemValue(
+				profile.replaceItemValue(
 						"numworkflowLogLength",
 						getConfigBean().getWorkitem().getItemValueInteger(
 								"MaxProfileHistoryLength"));
 
-				this.setWorkitem(workitemItemCollection);
+				this.setWorkitem(profile);
 
 				profileLoaded = true;
 
@@ -303,7 +302,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 			// selected user locale
 			Locale userLocale = FacesContext.getCurrentInstance().getViewRoot()
 					.getLocale();
-			String sUserLanguage = workitemItemCollection
+			String sUserLanguage = getWorkitem()
 					.getItemValueString("txtLocale");
 
 			// Set System Model Version for this Project to user Language
@@ -358,9 +357,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 			itemColProject = projectService.processProject(itemColProject);
 
-			// update primary project List
-			workitemItemCollection.replaceItemValue("txtprimaryprojectlist",
-					itemColProject.getItemValueString("$uniqueid"));
+			
 		}
 
 	}
@@ -398,7 +395,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 			List<String> col = getModelService().getAllModelVersions();
 
-			List modelDomains = workitemItemCollection
+			List modelDomains = getWorkitem()
 					.getItemValue("txtModelDomain");
 			// add default model domain if empty or first entry is '' (could be
 			// happen :-/)
@@ -488,27 +485,28 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 		// validate workitem and verify txtname and txtusername
 		try {
+			ItemCollection profile=getWorkitem();
 			// lowercase email to allow unique lookups
-			String sEmail = workitemItemCollection
+			String sEmail = profile
 					.getItemValueString("txtEmail");
 			sEmail = sEmail.toLowerCase();
-			workitemItemCollection.replaceItemValue("txtEmail", sEmail);
+			profile.replaceItemValue("txtEmail", sEmail);
 
 			// Now update the Model version to the current User Setting
 			// determine user language and set Modelversion depending on
 			// the selected user locale
 			String sModelVersion = this.getModelVersionHandler()
 					.getLatestSystemVersion(
-							workitemItemCollection
+							profile
 									.getItemValueString("txtLocale"));
-			workitemItemCollection.replaceItemValue("$modelversion",
+			profile.replaceItemValue("$modelversion",
 					sModelVersion);
 
-			workitemItemCollection.replaceItemValue("$ActivityID", activityID);
-			workitemItemCollection = profileService
-					.processProfile(workitemItemCollection);
+			profile.replaceItemValue("$ActivityID", activityID);
+			profile = profileService
+					.processProfile(profile);
 
-			setWorkitem(workitemItemCollection);
+			setWorkitem(profile);
 
 			// clear primary lists and invitations
 			clearCache();
@@ -603,10 +601,10 @@ public class MyProfileMB extends AbstractWorkflowController {
 	private void updateLocale() throws Exception {
 
 		// Verify if Locale is available in profile
-		String sLocale = workitemItemCollection.getItemValueString("txtLocale");
+		String sLocale = getWorkitem().getItemValueString("txtLocale");
 		if ("".equals(sLocale)) {
 			sLocale = getLoginBean().getLocale();
-			workitemItemCollection.replaceItemValue("txtLocale", sLocale);
+			getWorkitem().replaceItemValue("txtLocale", sLocale);
 
 		}
 		// reset locale to update cookie

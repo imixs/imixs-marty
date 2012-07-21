@@ -36,11 +36,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.SessionScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.component.UIParameter;
@@ -55,7 +57,7 @@ import org.imixs.marty.web.profile.NameLookupMB;
 import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.util.SetupMB;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.faces.AbstractWorkflowController;
+import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
 /**
  * This class provides methods to access a single workitem controlled by the
@@ -68,6 +70,8 @@ import org.imixs.workflow.jee.faces.AbstractWorkflowController;
  * @author rsoika
  * 
  */
+@ManagedBean
+@SessionScoped
 public class WorkitemMB extends AbstractWorkflowController {
 
 	public final static String DEFAULT_EDITOR_ID = "default";
@@ -76,9 +80,16 @@ public class WorkitemMB extends AbstractWorkflowController {
 	private HashMap processCache;
 
 	/* Project Backing Bean */
-	private ProjectMB projectBean = null;
-	private WorklistMB worklistBean = null;
+	@ManagedProperty(value = "#{projectMB}")
+	private ProjectMB projectMB = null;
+	
+	@ManagedProperty(value = "#{worklistMB}")
+	private WorklistMB worklistMB = null;
+	
+	@ManagedProperty(value = "#{setupMB}")
 	private SetupMB setupMB = null;
+	
+	@ManagedProperty(value = "#{nameLookupMB}")
 	private NameLookupMB nameLookupMB = null;
 
 	/* Child Process */
@@ -106,65 +117,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		workitemListeners = new ArrayList<WorkitemListener>();
 	}
 
-	/**
-	 * returns an instance of the PorjectMB
-	 * 
-	 * @return
-	 */
-	public ProjectMB getProjectBean() {
-		if (projectBean == null)
-			projectBean = (ProjectMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "projectMB");
-		return projectBean;
-	}
-
-	private SetupMB getConfigBean() {
-		if (setupMB == null)
-			setupMB = (SetupMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "setupMB");
-		return setupMB;
-	}
-
-	/**
-	 * returns an instance of the WorklitsMB
-	 * 
-	 * @return
-	 */
-	public WorklistMB getWorklistBean() {
-		if (worklistBean == null)
-			worklistBean = (WorklistMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "worklistMB");
-		return worklistBean;
-	}
-
-	/**
-	 * returns an instance of the NameLookupMB
-	 * 
-	 * @return
-	 */
-	public NameLookupMB getNameLookupBean() {
-		if (nameLookupMB == null)
-			nameLookupMB = (NameLookupMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "nameLookupMB");
-		return nameLookupMB;
-	}
-
+	
 	
 
 	
@@ -185,8 +138,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 */
 	public String getEditor() {
 		// if (isAvailable()) {
-		if (workitemItemCollection != null) {
-			String sEditor = workitemItemCollection
+		
+			String sEditor = getWorkitem()
 					.getItemValueString("txtWorkflowEditorid");
 			if (!"".equals(sEditor)) {
 				// test if # is provides to indicate optinal section
@@ -196,8 +149,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 				return sEditor;
 			} else
 				return DEFAULT_EDITOR_ID;
-		} else
-			return DEFAULT_EDITOR_ID;
+		
 	}
 
 	/**
@@ -257,13 +209,12 @@ public class WorkitemMB extends AbstractWorkflowController {
 	public ArrayList<EditorSection> getEditorSections() {
 		ArrayList<EditorSection> sections = new ArrayList<EditorSection>();
 
-		if (workitemItemCollection != null) {
-
+		
 			UIViewRoot viewRoot = FacesContext.getCurrentInstance()
 					.getViewRoot();
 			Locale locale = viewRoot.getLocale();
 
-			String sEditor = workitemItemCollection
+			String sEditor = getWorkitem()
 					.getItemValueString("txtWorkflowEditorid");
 			if (sEditor.indexOf('#') > -1) {
 				String liste = sEditor.substring(sEditor.indexOf('#') + 1);
@@ -298,25 +249,25 @@ public class WorkitemMB extends AbstractWorkflowController {
 								}
 								// test if user is project member
 								if ("owner".equalsIgnoreCase(aPermission)
-										&& this.getProjectBean()
+										&& this.projectMB
 												.isProjectOwner()) {
 									bPermissionGranted = true;
 									break;
 								}
 								if ("manager".equalsIgnoreCase(aPermission)
-										&& this.getProjectBean()
+										&& this.projectMB
 												.isProjectManager()) {
 									bPermissionGranted = true;
 									break;
 								}
 								if ("team".equalsIgnoreCase(aPermission)
-										&& this.getProjectBean()
+										&& this.projectMB
 												.isProjectTeam()) {
 									bPermissionGranted = true;
 									break;
 								}
 								if ("assist".equalsIgnoreCase(aPermission)
-										&& this.getProjectBean()
+										&& this.projectMB
 												.isProjectAssist()) {
 									bPermissionGranted = true;
 									break;
@@ -343,7 +294,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 							String sResouceURL = sURL.replace('/', '_');
 							sName = rb.getString(sResouceURL);
 						} catch (java.util.MissingResourceException eb) {
-							sName = "";
+									sName = "";
 							System.out.println(eb.getMessage());
 						}
 
@@ -357,7 +308,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 					}
 				}
 			}
-		}
+		
 		return sections;
 
 	}
@@ -477,11 +428,11 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 			// if a project was refred switch to this project
 			if (projectIdentifier != null && !"".equals(projectIdentifier)) {
-				ItemCollection currentProject = this.getProjectBean()
+				ItemCollection currentProject = this.projectMB
 						.getEntityService().load(projectIdentifier);
-				getProjectBean().setWorkitem(currentProject);
+				projectMB.setWorkitem(currentProject);
 				// reset worklist
-				getProjectBean().getworkListMB().doReset(null);
+				worklistMB.doReset(null);
 			}
 
 			// find ProcessEntity the Worktiem should be started at
@@ -490,16 +441,16 @@ public class WorkitemMB extends AbstractWorkflowController {
 			String sProcessID = processEntityIdentifier
 					.substring(processEntityIdentifier.indexOf('|') + 1);
 
-			workitemItemCollection = workitemService.createWorkItem(
-					getProjectBean().getWorkitem(), sProcessModelVersion,
+			ItemCollection workitem = workitemService.createWorkItem(
+					projectMB.getWorkitem(), sProcessModelVersion,
 					Integer.parseInt(sProcessID));
 
-			this.setWorkitem(workitemItemCollection);
+			this.setWorkitem(workitem);
 
 			// inform Listeners...
 			fireWorkitemCreatedEvent();
 
-			getWorklistBean().doReset(null);
+			worklistMB.doReset(null);
 
 		}
 	}
@@ -545,39 +496,36 @@ public class WorkitemMB extends AbstractWorkflowController {
 			}
 		}
 
-		// remove a4j: attributes generated inside the viewentries by the UI
-		workitemItemCollection.removeItem("a4j:showhistory");
-		workitemItemCollection.removeItem("a4j:showdetails");
-
+		ItemCollection workitem=getWorkitem();
 		// remove last workflow result properties......
-		workitemItemCollection.removeItem("action");
-		workitemItemCollection.removeItem("project");
+		workitem.removeItem("action");
+		workitem.removeItem("project");
 
 		// set max History & log length
-		workitemItemCollection.replaceItemValue(
+		workitem.replaceItemValue(
 				"numworkflowHistoryLength",
-				getConfigBean().getWorkitem().getItemValueInteger(
+				setupMB.getWorkitem().getItemValueInteger(
 						"MaxWorkitemHistoryLength"));
-		workitemItemCollection.replaceItemValue(
+		workitem.replaceItemValue(
 				"numworkflowLogLength",
-				getConfigBean().getWorkitem().getItemValueInteger(
+				setupMB.getWorkitem().getItemValueInteger(
 						"MaxWorkitemHistoryLength"));
 
-		workitemItemCollection.replaceItemValue("$ActivityID", activityID);
+		workitem.replaceItemValue("$ActivityID", activityID);
 
-		updateDisplayNameFields(workitemItemCollection);
+		updateDisplayNameFields(workitem);
 
 		// inform Listeners...
 		fireWorkitemProcessEvent();
 
-		workitemItemCollection = workitemService
-				.processWorkItem(workitemItemCollection);
+		workitem = workitemService
+				.processWorkItem(workitem);
 
 		// inform Listeners...
 		fireWorkitemProcessCompletedEvent();
 		// update workitemcollection and reset childs
-		this.setWorkitem(workitemItemCollection);
-		getWorklistBean().doRefresh(event);
+		this.setWorkitem(workitem);
+		worklistMB.doRefresh(event);
 	}
 
 	/**
@@ -592,19 +540,19 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doDelete(ActionEvent event) throws Exception {
-		if (workitemItemCollection != null) {
+		
 			// inform Listeners...
 			fireWorkitemDeleteEvent();
 
-			workitemService.deleteWorkItem(workitemItemCollection);
+			workitemService.deleteWorkItem(getWorkitem());
 			this.setWorkitem(null);
 			// getFileUploadMB().reset();
 
 			// inform Listeners...
 			fireWorkitemDeleteCompletedEvent();
 
-			getWorklistBean().doRefresh(event);
-		}
+			worklistMB.doRefresh(event);
+		
 	}
 
 	/**
@@ -616,19 +564,18 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doSoftDelete(ActionEvent event) throws Exception {
-		if (workitemItemCollection != null) {
-
+	
 			// inform Listeners...
 			fireWorkitemSoftDeleteEvent();
 
-			workitemItemCollection = workitemService
-					.moveIntoDeletions(workitemItemCollection);
+			workitemService
+					.moveIntoDeletions(getWorkitem());
 
 			// inform Listeners...
 			fireWorkitemSoftDeleteCompletedEvent();
 
-			getWorklistBean().doRefresh(event);
-		}
+			worklistMB.doRefresh(event);
+		
 	}
 
 	/**
@@ -665,7 +612,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 					.substring(processEntityIdentifier.indexOf('|') + 1);
 
 			childWorkitemItemCollection = workitemService.createWorkItem(
-					workitemItemCollection, sProcessModelVersion,
+					getWorkitem(), sProcessModelVersion,
 					Integer.parseInt(sProcessID));
 
 			this.setChildWorkitem(childWorkitemItemCollection);
@@ -728,11 +675,11 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 		// set max History & log length
 		childWorkitemItemCollection.replaceItemValue(
-				"numworkflowHistoryLength", getConfigBean().getWorkitem()
+				"numworkflowHistoryLength", setupMB.getWorkitem()
 						.getItemValueInteger("MaxWorkitemHistoryLength"));
 		childWorkitemItemCollection.replaceItemValue(
 				"numworkflowLogLength",
-				getConfigBean().getWorkitem().getItemValueInteger(
+				setupMB.getWorkitem().getItemValueInteger(
 						"MaxWorkitemHistoryLength"));
 
 		childWorkitemItemCollection.replaceItemValue("$ActivityID", activityID);
@@ -860,11 +807,11 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 		// get current project
 		ItemCollection itemColProject = projectService
-				.findProject(workitemItemCollection
+				.findProject(getWorkitem()
 						.getItemValueString("$uniqueidRef"));
-		getProjectBean().setWorkitem(itemColProject);
+		projectMB.setWorkitem(itemColProject);
 
-		getWorklistBean().doReset(event);
+		worklistMB.doReset(event);
 	}
 
 	/**
@@ -876,17 +823,11 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doMoveIntoArchive(ActionEvent event) throws Exception {
-
-		if (workitemItemCollection != null) {
-
-			// remove a4j: attributes generated inside the viewentries by the UI
-			workitemItemCollection.getAllItems().remove("a4j:showhistory");
-			workitemItemCollection.getAllItems().remove("a4j:showdetails");
-
-			workitemItemCollection = workitemService
-					.moveIntoArchive(workitemItemCollection);
-			this.getWorklistBean().doRefresh(event);
-		}
+		ItemCollection workitem=workitemService
+					.moveIntoArchive(getWorkitem());
+		setWorkitem(workitem);
+			this.worklistMB.doRefresh(event);
+		
 	}
 
 	/**
@@ -898,17 +839,13 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doMoveIntoDeletions(ActionEvent event) throws Exception {
-		if (workitemItemCollection != null) {
+		
+		ItemCollection workitem=
+			 workitemService
+					.moveIntoDeletions(getWorkitem());
+		setWorkitem(workitem);	this.worklistMB.doRefresh(event);
 
-			// remove a4j: attributes generated inside the viewentries by the UI
-			workitemItemCollection.getAllItems().remove("a4j:showhistory");
-			workitemItemCollection.getAllItems().remove("a4j:showdetails");
-
-			workitemItemCollection = workitemService
-					.moveIntoDeletions(workitemItemCollection);
-			this.getWorklistBean().doRefresh(event);
-
-		}
+		
 	}
 
 	/**
@@ -920,17 +857,11 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doRestoreFromArchive(ActionEvent event) throws Exception {
-		if (workitemItemCollection != null) {
+	ItemCollection workitem=
+			 workitemService.restoreFromArchive(getWorkitem());
 
-			// remove a4j: attributes generated inside the viewentries by the UI
-			workitemItemCollection.getAllItems().remove("a4j:showhistory");
-			workitemItemCollection.getAllItems().remove("a4j:showdetails");
-
-			workitemItemCollection = workitemService
-					.restoreFromArchive(workitemItemCollection);
-
-			this.getWorklistBean().doRefresh(event);
-		}
+	setWorkitem(workitem);	this.worklistMB.doRefresh(event);
+		
 	}
 
 	/**
@@ -942,15 +873,12 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doRestoreFromDeletions(ActionEvent event) throws Exception {
-		if (workitemItemCollection != null) {
-			// remove a4j: attributes generated inside the viewentries by the UI
-			workitemItemCollection.getAllItems().remove("a4j:showhistory");
-			workitemItemCollection.getAllItems().remove("a4j:showdetails");
-			workitemItemCollection = workitemService
-					.restoreFromDeletions(workitemItemCollection);
-
-			this.getWorklistBean().doRefresh(event);
-		}
+		ItemCollection workitem=
+			 workitemService
+					.restoreFromDeletions(getWorkitem());
+		setWorkitem(workitem);
+			this.worklistMB.doRefresh(event);
+		
 	}
 
 	/**
@@ -968,7 +896,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 */
 	public void doChangeProcessID(ActionEvent event) throws Exception {
 
-		String aProcessIdentifier = workitemItemCollection
+		String aProcessIdentifier = getWorkitem()
 				.getItemValueString("txtNewStratProcessEntity");
 
 		/*
@@ -985,38 +913,15 @@ public class WorkitemMB extends AbstractWorkflowController {
 						sProcessModelVersion);
 
 		if (itemColProcessEntity != null) {
-			workitemItemCollection = workitemService.changeProcess(
-					workitemItemCollection, itemColProcessEntity);
-			this.setWorkitem(workitemItemCollection);
-			this.getWorklistBean().doRefresh(event);
+			ItemCollection workitem= workitemService.changeProcess(
+					getWorkitem(), itemColProcessEntity);
+			this.setWorkitem(workitem);
+			this.worklistMB.doRefresh(event);
 		}
 
 	}
 
-	/**
-	 * this method toogles the ajax attribute a4j:showHistory. This Attribute is
-	 * used to display the History inside the Workitem Form.
-	 * 
-	 * 
-	 **/
-	public void doToggleHistory(ActionEvent event) throws Exception {
-
-		// now try to read current toogle state and switch state
-		boolean bTogle = false;
-		if (workitemItemCollection.hasItem("a4j:showHistory")) {
-			try {
-				boolean bTogleCurrent = (Boolean) workitemItemCollection
-						.getItemValue("a4j:showHistory").get(0);
-				bTogle = !bTogleCurrent;
-			} catch (Exception e) {
-				bTogle = true;
-			}
-		} else
-			// item did not exist yet....
-			bTogle = true;
-		workitemItemCollection.replaceItemValue("a4j:showHistory", bTogle);
-
-	}
+	
 
 	/**
 	 * returns the last workflow result to control the navigation flow if no
@@ -1027,10 +932,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @return
 	 */
 	public String getAction() {
-		if (workitemItemCollection == null)
-			return "open_workitem";
-
-		String sResult = workitemItemCollection.getItemValueString("action");
+	
+		String sResult = getWorkitem().getItemValueString("action");
 		if ("".equals(sResult))
 			return "open_workitem";
 		else
@@ -1044,23 +947,18 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @return a help text
 	 */
 	public String getProcessDescription() {
-		if (workitemItemCollection == null)
-			return "";
-		try {
-			String sModelVersion = this.workitemItemCollection
+		
+		
+			String sModelVersion = getWorkitem()
 					.getItemValueString("$modelversion");
-			int iPID = this.workitemItemCollection
+			int iPID =  getWorkitem()
 					.getItemValueInteger("$ProcessID");
 
 			ItemCollection processEntity = this.getModelService()
 					.getProcessEntityByVersion(iPID, sModelVersion);
 			if (processEntity != null)
 				return processEntity.getItemValueString("rtfdescription");
-		} catch (Exception e) {
-
-			e.printStackTrace();
-
-		}
+		
 		return "";
 
 	}
@@ -1080,10 +978,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @return
 	 */
 	public String getWorkflowReport() {
-		if (workitemItemCollection == null)
-			return "";
-
-		String sResult = workitemItemCollection
+	
+		String sResult =  getWorkitem()
 				.getItemValueString("txtworkflowresultmessage");
 		if (sResult != null && !"".equals(sResult)) {
 			// test if result contains "report="
@@ -1098,51 +994,25 @@ public class WorkitemMB extends AbstractWorkflowController {
 			return "";
 	}
 
-	/**
-	 * returns a project name provided by the WorklfowProperty
-	 * 'txtworkflowresultmessage'. The project name must be defined by the
-	 * präfix the tag:
-	 * 
-	 * <ul>
-	 * <li>project=
-	 * </ul>
-	 * 
-	 * If this präfix is available the string followed by 'project=' will be
-	 * returned
-	 * 
-	 * @return
-	 */
-	/*
-	 * <code> public String getWorkflowProject() { if (workitemItemCollection ==
-	 * null) return "";
-	 * 
-	 * String sResult = workitemItemCollection
-	 * .getItemValueString("txtworkflowresultmessage"); if (sResult != null &&
-	 * !"".equals(sResult)) { // test if result contains "report=" if
-	 * (sResult.indexOf("project=") > -1) { sResult =
-	 * sResult.substring(sResult.indexOf("project=") + 8); // cut next newLine
-	 * if (sResult.indexOf("\n") > -1) sResult = sResult.substring(0,
-	 * sResult.indexOf("\n")); } return sResult; } else return ""; } </code>
-	 */
+	
+	
 	/***
 	 * This method finds the corresponding Project of the curreent workitem and
 	 * updates the ProjectMB with this project
 	 */
 	public void updateProjectMB() {
-		if (workitemItemCollection == null)
-			return;
-
-		String projectID = workitemItemCollection
+		
+		String projectID =  getWorkitem()
 				.getItemValueString("$uniqueidRef");
 
-		if (getProjectBean().getWorkitem() == null
-				|| !projectID.equals(getProjectBean().getWorkitem()
+		if (projectMB.getWorkitem() == null
+				|| !projectID.equals(projectMB.getWorkitem()
 						.getItemValueString("$uniqueid"))) {
 			// update projectMB
 			System.out.println("Updating ProjectMB....");
 			ItemCollection itemColProject = projectService
 					.findProject(projectID);
-			getProjectBean().setWorkitem(itemColProject);
+			projectMB.setWorkitem(itemColProject);
 		}
 	}
 
@@ -1223,12 +1093,12 @@ public class WorkitemMB extends AbstractWorkflowController {
 			return;
 		Collection<ItemCollection> col = null;
 		try {
-			String sRefUniqueID = workitemItemCollection
+			String sRefUniqueID =  getWorkitem()
 					.getItemValueString("$uniqueid");
 
 			col = workitemService.findAllWorkitems(sRefUniqueID, null, null, 0,
-					0, -1, this.getWorklistBean().getSortby(), this
-							.getWorklistBean().getSortorder());
+					0, -1, this.worklistMB.getSortby(), this
+							.worklistMB.getSortorder());
 			for (ItemCollection aworkitem : col) {
 				childs.add((aworkitem));
 			}
@@ -1298,7 +1168,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 			return;
 		Collection<ItemCollection> col = null;
 		try {
-			String sRefID = workitemItemCollection
+			String sRefID =  getWorkitem()
 					.getItemValueString("$workitemId");
 			String refQuery = "SELECT entity FROM Entity entity "
 					+ " JOIN entity.textItems AS t"
@@ -1338,7 +1208,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemCreated(workitemItemCollection);
+			l.onWorkitemCreated( getWorkitem());
 		}
 	}
 
@@ -1349,7 +1219,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemChanged(workitemItemCollection);
+			l.onWorkitemChanged( getWorkitem());
 		}
 	}
 
@@ -1360,7 +1230,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemProcess(workitemItemCollection);
+			l.onWorkitemProcess( getWorkitem());
 		}
 	}
 
@@ -1371,7 +1241,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemProcessCompleted(workitemItemCollection);
+			l.onWorkitemProcessCompleted( getWorkitem());
 		}
 	}
 
@@ -1404,7 +1274,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemSoftDelete(workitemItemCollection);
+			l.onWorkitemSoftDelete( getWorkitem());
 		}
 	}
 
@@ -1415,7 +1285,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemSoftDeleteCompleted(workitemItemCollection);
+			l.onWorkitemSoftDeleteCompleted( getWorkitem());
 		}
 	}
 
@@ -1426,7 +1296,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemDelete(workitemItemCollection);
+			l.onWorkitemDelete( getWorkitem());
 		}
 	}
 
@@ -1516,16 +1386,16 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 			// update current editor / remote user
 			acol.replaceItemValue("dspnamcurrenteditor", this
-					.getNameLookupBean().findUserName(remoteUser));
+					.nameLookupMB.findUserName(remoteUser));
 
 			// test if creator was still right translated
 			String sNamCreator = acol.getItemValueString("namCreator");
 			String sDspNamCreator = acol.getItemValueString("dspnamCreator");
 			if ("".equals(sDspNamCreator)
-					|| !this.getNameLookupBean().findUserName(sNamCreator)
+					|| !this.nameLookupMB.findUserName(sNamCreator)
 							.equals(sDspNamCreator)) {
 				// update dsp name for creator
-				acol.replaceItemValue("dspnamCreator", this.getNameLookupBean()
+				acol.replaceItemValue("dspnamCreator", this.nameLookupMB
 						.findUserName(sNamCreator));
 			}
 

@@ -32,7 +32,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Vector;
 import java.util.logging.Logger;
@@ -40,6 +39,7 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.component.UIInput;
@@ -52,14 +52,13 @@ import javax.faces.model.SelectItem;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.ProjectService;
-import org.imixs.marty.model.ModelData;
 import org.imixs.marty.web.profile.MyProfileMB;
 import org.imixs.marty.web.profile.NameLookupMB;
 import org.imixs.marty.web.util.SetupMB;
 import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.faces.AbstractWorkflowController;
+import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
 public class ProjectMB extends AbstractWorkflowController {
 
@@ -72,12 +71,27 @@ public class ProjectMB extends AbstractWorkflowController {
 	@EJB
 	ProfileService profileService;
 
+	@ManagedProperty(value = "#{myProfileMB}")
 	private MyProfileMB myProfileMB = null;
+	
+	
+	
+	@ManagedProperty(value = "#{setupMB}")
 	private SetupMB setupMB = null;
-	private ProjectlistMB projectlist = null;
+	
+	@ManagedProperty(value = "#{projectlistMB}")
+	private ProjectlistMB projectlistMB = null;
+	
+	@ManagedProperty(value = "#{worklistMB}")
 	private WorklistMB worklistMB = null;
+	
+	@ManagedProperty(value = "#{workitemMB}")
 	private WorkitemMB workitemMB = null;
-	private NameLookupMB nameLookup = null;
+	
+	@ManagedProperty(value = "#{nameLookupMB}")
+	private NameLookupMB nameLookupMB = null;
+	
+	 
 	private ArrayList<ItemCollection> team = null;
 	private ArrayList<ItemCollection> projectSiblingList = null;
 
@@ -111,7 +125,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
 				.hasNext();) {
 			ProjectListener l = i.next();
-			l.onProjectCreated(workitemItemCollection);
+			l.onProjectCreated(getWorkitem());
 		}
 	}
 
@@ -122,7 +136,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
 				.hasNext();) {
 			ProjectListener l = i.next();
-			l.onProjectChanged(workitemItemCollection);
+			l.onProjectChanged(getWorkitem());
 		}
 	}
 
@@ -133,7 +147,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
 				.hasNext();) {
 			ProjectListener l = i.next();
-			l.onProjectProcess(workitemItemCollection);
+			l.onProjectProcess(getWorkitem());
 		}
 	}
 
@@ -144,7 +158,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
 				.hasNext();) {
 			ProjectListener l = i.next();
-			l.onProjectProcessCompleted(workitemItemCollection);
+			l.onProjectProcessCompleted(getWorkitem());
 		}
 	}
 
@@ -155,90 +169,12 @@ public class ProjectMB extends AbstractWorkflowController {
 		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
 				.hasNext();) {
 			ProjectListener l = i.next();
-			l.onProjectDelete(workitemItemCollection);
+			l.onProjectDelete(getWorkitem());
 		}
 	}
 	
-	/**
-	 * Returns a instance of the MBProfileMB. This ManagedBean can not be find
-	 * during the constructor because the referenece of this bean is queried
-	 * form the MyProfielMB itself
-	 * 
-	 * @return
-	 */
-	public MyProfileMB getProfileBean() {
-		if (myProfileMB == null)
-			myProfileMB = (MyProfileMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "myProfileMB");
 
-		return myProfileMB;
 
-	}
-
-	private SetupMB getConfigBean() {
-		if (setupMB == null)
-			setupMB = (SetupMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "setupMB");
-		return setupMB;
-	}
-
-	public ProjectlistMB getProjectListMB() {
-		// get WorklistMB instance
-		if (projectlist == null)
-			projectlist = (ProjectlistMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "projectlistMB");
-
-		return projectlist;
-	}
-
-	public WorklistMB getworkListMB() {
-		// get WorklistMB instance
-		if (worklistMB == null)
-			worklistMB = (WorklistMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "worklistMB");
-
-		return worklistMB;
-	}
-
-	public WorkitemMB getWorkitemBean() {
-		if (workitemMB == null)
-			workitemMB = (WorkitemMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "workitemMB");
-		return workitemMB;
-	}
-
-	public NameLookupMB getNameLookupBean() {
-		// get WorklistMB instance
-		if (nameLookup == null)
-			nameLookup = (NameLookupMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "nameLookupMB");
-
-		return nameLookup;
-	}
 
 	public ProjectService getProjectService() {
 		return projectService;
@@ -264,19 +200,15 @@ public class ProjectMB extends AbstractWorkflowController {
 
 		try {
 			// reset worklist
-			this.getworkListMB().doReset(null);
+			worklistMB.doReset(null);
 
 			// reset view filters
-			this.getworkListMB().setProcessFilter(0);
-			this.getworkListMB().setWorkflowGroupFilter(null);
-			this.getworkListMB().setProjectFilter(
-					workitemItemCollection.getItemValueString("$uniqueid"));
+			worklistMB.setProcessFilter(0);
+			worklistMB.setWorkflowGroupFilter(null);
+			worklistMB.setProjectFilter(
+					getWorkitem().getItemValueString("$uniqueid"));
 
-			// disable toogle switch for searchfilter and process list
-			workitemItemCollection.replaceItemValue("a4j:showSearchFilter",
-					false);
-			workitemItemCollection.replaceItemValue("a4j:showprocessList",
-					false);
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -292,7 +224,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * @return
 	 */
 	public boolean isMember() {
-		return isMember(workitemItemCollection);
+		return isMember(getWorkitem());
 	}
 
 	/**
@@ -335,7 +267,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		ExternalContext externalContext = FacesContext.getCurrentInstance()
 				.getExternalContext();
 		String remoteUser = externalContext.getRemoteUser();
-		List<String> vTeam = workitemItemCollection.getItemValue("namTeam");
+		List<String> vTeam = getWorkitem().getItemValue("namTeam");
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
 
@@ -349,7 +281,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		ExternalContext externalContext = FacesContext.getCurrentInstance()
 				.getExternalContext();
 		String remoteUser = externalContext.getRemoteUser();
-		List<String> vTeam = workitemItemCollection.getItemValue("namOwner");
+		List<String> vTeam = getWorkitem().getItemValue("namOwner");
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
 
@@ -364,7 +296,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		ExternalContext externalContext = FacesContext.getCurrentInstance()
 				.getExternalContext();
 		String remoteUser = externalContext.getRemoteUser();
-		List<String> vTeam = workitemItemCollection
+		List<String> vTeam = getWorkitem()
 				.getItemValue("namManager");
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
@@ -379,7 +311,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		ExternalContext externalContext = FacesContext.getCurrentInstance()
 				.getExternalContext();
 		String remoteUser = externalContext.getRemoteUser();
-		List<String> vTeam = workitemItemCollection.getItemValue("namAssist");
+		List<String> vTeam = getWorkitem().getItemValue("namAssist");
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
 
@@ -389,7 +321,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * @return
 	 */
 	public List<String> getMemberList() {
-		return getMemberList(workitemItemCollection);
+		return getMemberList(getWorkitem());
 	}
 
 	public List<String> getMemberList(ItemCollection aProject) {
@@ -444,7 +376,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	 */
 	public void doCreate(ActionEvent event) throws Exception {
 
-		workitemItemCollection = projectService
+		ItemCollection project = projectService
 				.createProject(START_PROJECT_PROCESS_ID);
 
 		// determine user language and set Model version depending on the
@@ -454,7 +386,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		String sUserLanguage = userLocale.getLanguage();
 
 		// Set System Model Version for this Project to user Language
-		String sModelVersion = this.getProfileBean().getModelVersionHandler()
+		String sModelVersion = myProfileMB.getModelVersionHandler()
 				.getLatestSystemVersion(sUserLanguage);
 
 		if (sModelVersion == null)
@@ -462,7 +394,7 @@ public class ProjectMB extends AbstractWorkflowController {
 					"Warning - no system model found for language '"
 							+ sUserLanguage + "'");
 
-		workitemItemCollection.replaceItemValue("$modelversion", sModelVersion);
+		project.replaceItemValue("$modelversion", sModelVersion);
 
 		// We do no longer check if the user lanaguage is supported by one of
 		// the
@@ -488,25 +420,26 @@ public class ProjectMB extends AbstractWorkflowController {
 		 * "' found! Check user profile"); }
 		 */
 
-		workitemItemCollection.replaceItemValue("txtModelLanguage",
+		project.replaceItemValue("txtModelLanguage",
 				sModelLanguage);
 
 		// add current user to team and owner lists
 		FacesContext context = FacesContext.getCurrentInstance();
 		ExternalContext externalContext = context.getExternalContext();
 		String remoteUser = externalContext.getRemoteUser();
-		workitemItemCollection.replaceItemValue("namTeam", remoteUser);
-		workitemItemCollection.replaceItemValue("namOwner", remoteUser);
-		workitemItemCollection.replaceItemValue("namAssist", new Vector());
-		workitemItemCollection.replaceItemValue("namManager", new Vector());
+		project.replaceItemValue("namTeam", remoteUser);
+		project.replaceItemValue("namOwner", remoteUser);
+		project.replaceItemValue("namAssist", new Vector());
+		project.replaceItemValue("namManager", new Vector());
 
 		// add a default process
-		workitemItemCollection.replaceItemValue(
+		project.replaceItemValue(
 				"txtprocesslist",
-				this.getConfigBean().getWorkitem()
+				this.setupMB.getWorkitem()
 						.getItemValue("defaultprojectprocesslist"));
 		
 		
+		setWorkitem(project);
 		// inform Listeners...
 					fireProjectCreatedEvent();
 
@@ -531,113 +464,33 @@ public class ProjectMB extends AbstractWorkflowController {
 	public void doCreateSubproject(ActionEvent event) throws Exception {
 
 		// save project name from current project
-		String sParentProjectName = workitemItemCollection
+		String sParentProjectName = getWorkitem()
 				.getItemValueString("txtName");
 
-		String sParentProjektID = workitemItemCollection
+		String sParentProjektID = getWorkitem()
 				.getItemValueString("$UniqueID");
 
 		doCreate(event);
 
 		// set Parent Name and Reference
-		workitemItemCollection.replaceItemValue("txtParentname",
+		getWorkitem().replaceItemValue("txtParentname",
 				sParentProjectName);
-		workitemItemCollection.replaceItemValue("$UniqueIDRef",
+		getWorkitem().replaceItemValue("$UniqueIDRef",
 				sParentProjektID);
 
 	}
 
-	/**
-	 * this method toogles the ajax attribute a4j:showProcessList. This
-	 * Attriubte is used to display the StartProcesList inside the Workitem
-	 * View.
-	 * 
-	 * The list of StartProcesses was preloaded by the ProjectListMB during the
-	 * Method doSwitchToProject
-	 * 
-	 **/
-	public void doToggleProcessList(ActionEvent event) throws Exception {
+	
 
-		// now try to read current toogle state and switch state
-		boolean bTogle = false;
-		if (workitemItemCollection.hasItem("a4j:showProcessList")) {
-			try {
-				boolean bTogleCurrent = (Boolean) workitemItemCollection
-						.getItemValue("a4j:showProcessList").get(0);
-				bTogle = !bTogleCurrent;
-			} catch (Exception e) {
-				bTogle = true;
-			}
-		} else
-			// item did not exist yet....
-			bTogle = true;
-		workitemItemCollection.replaceItemValue("a4j:showprocessList", bTogle);
+	
 
-		// disable searchfilter
-		workitemItemCollection.replaceItemValue("a4j:showSearchFilter", false);
-	}
-
-	/**
-	 * this method toogles the ajax attribute a4j:showTeamList. This Attriubte
-	 * is used to display the Team inside the Workitem View.
-	 * 
-	 * The list of StartProcesses was preloaded by the ProjectListMB during the
-	 * Method doSwitchToProject
-	 * 
-	 **/
-	public void doToggleTeamList(ActionEvent event) throws Exception {
-
-		// now try to read current toogle state and switch state
-		boolean bTogle = false;
-		if (workitemItemCollection.hasItem("a4j:showTeamList")) {
-			try {
-				boolean bTogleCurrent = (Boolean) workitemItemCollection
-						.getItemValue("a4j:showTeamList").get(0);
-				bTogle = !bTogleCurrent;
-			} catch (Exception e) {
-				bTogle = true;
-			}
-		} else
-			// item did not exist yet....
-			bTogle = true;
-		workitemItemCollection.replaceItemValue("a4j:showTeamList", bTogle);
-
-		// disable searchfilter
-		workitemItemCollection.replaceItemValue("a4j:showSearchFilter", false);
-	}
-
-	/**
-	 * this method toogles the ajax attribute a4j:showSearchFilter. This
-	 * Attriubte is used to display the SearchFilter inside the Workitem View.
-	 **/
-	public void doToggleSearchFilter(ActionEvent event) throws Exception {
-
-		// now try to read current toogle state and switch state
-		boolean bTogle = false;
-		if (workitemItemCollection.hasItem("a4j:showSearchFilter")) {
-			try {
-				boolean bTogleCurrent = (Boolean) workitemItemCollection
-						.getItemValue("a4j:showSearchFilter").get(0);
-				bTogle = !bTogleCurrent;
-			} catch (Exception e) {
-				bTogle = true;
-			}
-		} else
-			// item did not exist yet....
-			bTogle = true;
-		workitemItemCollection.replaceItemValue("a4j:showSearchFilter", bTogle);
-
-		// disable processlist
-		workitemItemCollection.replaceItemValue("a4j:showprocessList", false);
-
-	}
 
 	/**
 	 * refreshes the current workitem list. so the list will be loaded again.
 	 */
 	public void doRefresh(ActionEvent event) {
 		// projectSelection = null;
-		workitemItemCollection = null;
+		//workitemItemCollection = null;
 	}
 
 	/**
@@ -670,20 +523,17 @@ public class ProjectMB extends AbstractWorkflowController {
 			}
 		}
 
+		ItemCollection project=getWorkitem();
 		// remove a4j: attributes generated inside the viewentries by the UI
-		workitemItemCollection.getAllItems().remove("a4j:showprocesslist");
-		workitemItemCollection.getAllItems().remove("a4j:showteam");
-		workitemItemCollection.getAllItems().remove("a4j:showteamlist");
-		workitemItemCollection.getAllItems().remove("a4j:showsearchfilter");
-
+		
 		// set max History & log length
-		workitemItemCollection.replaceItemValue(
+		project.replaceItemValue(
 				"numworkflowHistoryLength",
-				getConfigBean().getWorkitem().getItemValueInteger(
+				setupMB.getWorkitem().getItemValueInteger(
 						"MaxProjectHistoryLength"));
-		workitemItemCollection.replaceItemValue(
+		project.replaceItemValue(
 				"numworkflowLogLength",
-				getConfigBean().getWorkitem().getItemValueInteger(
+				setupMB.getWorkitem().getItemValueInteger(
 						"MaxProjectHistoryLength"));
 
 	
@@ -691,23 +541,23 @@ public class ProjectMB extends AbstractWorkflowController {
 	
 
 		// Process project via processService EJB
-		workitemItemCollection.replaceItemValue("$activityid", activityID);
+		project.replaceItemValue("$activityid", activityID);
 		
 
 		// inform Listeners...
 		fireProjectProcessEvent();
 
-		workitemItemCollection = projectService
-				.processProject(workitemItemCollection);
+		project = projectService
+				.processProject(project);
 		// inform Listeners...
 		fireProjectProcessCompletedEvent();
 
 
-		ItemCollection saveItem = workitemItemCollection;
+		ItemCollection saveItem = project;
 
-		this.getProjectListMB().doRefresh(event);
-		this.getProjectListMB().resetProcessList();
-		this.getProfileBean().clearCache();
+		projectlistMB.doRefresh(event);
+		projectlistMB.resetProcessList();
+		myProfileMB.clearCache();
 		this.setWorkitem(saveItem);
 
 	}
@@ -783,10 +633,10 @@ public class ProjectMB extends AbstractWorkflowController {
 			// clear Input field
 			input.setValue("");
 			// add Value to NameList
-			vEntries = workitemItemCollection.getItemValue(sUserField);
+			vEntries = getWorkitem().getItemValue(sUserField);
 			if (vEntries.indexOf(sAccount) == -1) {
 				vEntries.add(sAccount);
-				workitemItemCollection.replaceItemValue(sUserField, vEntries);
+				getWorkitem().replaceItemValue(sUserField, vEntries);
 			}
 		} else {
 			try {
@@ -885,10 +735,10 @@ public class ProjectMB extends AbstractWorkflowController {
 			// clear Input field
 			input.setValue("");
 			// add Value to NameList
-			vEntries = workitemItemCollection.getItemValue(sUserField);
+			vEntries = getWorkitem().getItemValue(sUserField);
 			if (vEntries.indexOf(sAccount) == -1) {
 				vEntries.add(sAccount);
-				workitemItemCollection.replaceItemValue(sUserField, vEntries);
+				getWorkitem().replaceItemValue(sUserField, vEntries);
 			}
 		}
 	}
@@ -929,9 +779,9 @@ public class ProjectMB extends AbstractWorkflowController {
 				sUserField = "namTeam";
 			}
 			// remove entry
-			List vEntries = workitemItemCollection.getItemValue(sUserField);
+			List vEntries = getWorkitem().getItemValue(sUserField);
 			vEntries.remove(currentSelection);
-			workitemItemCollection.replaceItemValue(sUserField, vEntries);
+			getWorkitem().replaceItemValue(sUserField, vEntries);
 		}
 
 	}
@@ -985,7 +835,7 @@ public class ProjectMB extends AbstractWorkflowController {
 			// inform Listeners...
 			fireProjectDeleteEvent();
 			projectService.deleteProject(this.getWorkitem());
-			this.getProjectListMB().doReset(event);
+			projectlistMB.doReset(event);
 		}
 	}
 
@@ -998,11 +848,11 @@ public class ProjectMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doSoftDelete(ActionEvent event) throws Exception {
-		if (workitemItemCollection != null) {
-			projectService.moveIntoDeletions(workitemItemCollection);
+		
+			projectService.moveIntoDeletions(getWorkitem());
 
-			this.getProjectListMB().doReset(event);
-		}
+			this.projectlistMB.doReset(event);
+		
 	}
 
 	/**
@@ -1055,7 +905,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		List<String> vOwners = this.getWorkitem().getItemValue("namTeam");
 		ArrayList<SelectItem> nameSelection = new ArrayList<SelectItem>();
 		for (String sName : vOwners)
-			nameSelection.add(new SelectItem(sName, getNameLookupBean()
+			nameSelection.add(new SelectItem(sName, nameLookupMB
 					.findUserName(sName)));
 		return nameSelection;
 	}
@@ -1071,7 +921,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		List<String> vOwners = this.getWorkitem().getItemValue("namManager");
 		ArrayList<SelectItem> nameSelection = new ArrayList<SelectItem>();
 		for (String sName : vOwners)
-			nameSelection.add(new SelectItem(sName, getNameLookupBean()
+			nameSelection.add(new SelectItem(sName, nameLookupMB
 					.findUserName(sName)));
 		return nameSelection;
 	}
@@ -1087,7 +937,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		List<String> vOwners = this.getWorkitem().getItemValue("namAssist");
 		ArrayList<SelectItem> nameSelection = new ArrayList<SelectItem>();
 		for (String sName : vOwners)
-			nameSelection.add(new SelectItem(sName, getNameLookupBean()
+			nameSelection.add(new SelectItem(sName, nameLookupMB
 					.findUserName(sName)));
 		return nameSelection;
 	}
@@ -1103,7 +953,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		List<String> vOwners = this.getWorkitem().getItemValue("namowner");
 		ArrayList<SelectItem> nameSelection = new ArrayList<SelectItem>();
 		for (String sName : vOwners)
-			nameSelection.add(new SelectItem(sName, getNameLookupBean()
+			nameSelection.add(new SelectItem(sName, nameLookupMB
 					.findUserName(sName)));
 		return nameSelection;
 	}
@@ -1176,12 +1026,12 @@ public class ProjectMB extends AbstractWorkflowController {
 	 */
 	public List<Object> getProcessList() {
 		List<Object> aList = new ArrayList<Object>();
-		if (workitemItemCollection != null) {
-			List v = workitemItemCollection.getItemValue("txtprocesslist");
+		
+			List v = getWorkitem().getItemValue("txtprocesslist");
 			for (Object aEntryValue : v) {
 				aList.add(aEntryValue);
 			}
-		}
+		
 		return aList;
 
 	}
@@ -1194,7 +1044,7 @@ public class ProjectMB extends AbstractWorkflowController {
 				v.add(aEntryValue);
 
 			try {
-				workitemItemCollection.replaceItemValue("txtprocesslist", v);
+				getWorkitem().replaceItemValue("txtprocesslist", v);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

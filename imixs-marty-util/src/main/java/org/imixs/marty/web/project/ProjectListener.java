@@ -35,7 +35,7 @@ import org.imixs.workflow.ItemCollection;
  * This interface can be implemented by a managed bean to observe the status of
  * the wokitemMB. The WorkitemMB will fire different events on specific program
  * situations.
- * 
+ *  
  * @author rsoika
  * 
  */

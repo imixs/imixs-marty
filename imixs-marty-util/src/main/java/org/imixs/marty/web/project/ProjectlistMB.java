@@ -38,6 +38,7 @@ import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.context.FacesContext;
@@ -87,9 +88,16 @@ public class ProjectlistMB {
 	EntityService entityService;
 
 	/* Backing Beans */
+	@ManagedProperty(value = "#{workitemMB}")
 	private WorkitemMB workitemMB = null;
+	
+	@ManagedProperty(value = "#{projectMB}")
 	private ProjectMB projectMB = null;
+	
+	@ManagedProperty(value = "#{myProfileMB}")
 	private MyProfileMB myProfileMB = null;
+	
+	@ManagedProperty(value = "#{setupMB}")
 	private SetupMB setupMB = null;
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
@@ -99,7 +107,7 @@ public class ProjectlistMB {
 		startProcessList = new StartProcessCache();
 		subProcessList = new SubProcessCache();
 
-		count = this.getConfigBean().getWorkitem()
+		count = this.setupMB.getWorkitem()
 				.getItemValueInteger("MaxviewEntriesPerPage");
 	}
 
@@ -115,58 +123,8 @@ public class ProjectlistMB {
 		this.row = row;
 	}
 
-	private SetupMB getConfigBean() {
-		if (setupMB == null)
-			setupMB = (SetupMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "setupMB");
-		return setupMB;
-	}
 
-	/**
-	 * Returns a instance of the MBProfileMB. This ManagedBean can not be find
-	 * during the constructor because the referenece of this bean is queried
-	 * form the MyProfielMB itself
-	 * 
-	 * @return
-	 */
-	public MyProfileMB getProfileBean() {
-		if (myProfileMB == null)
-			myProfileMB = (MyProfileMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "myProfileMB");
 
-		return myProfileMB;
-
-	}
-
-	public WorkitemMB getWorkitemBean() {
-		if (workitemMB == null)
-			workitemMB = (WorkitemMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "workitemMB");
-		return workitemMB;
-	}
-
-	public ProjectMB getProjectBean() {
-		if (projectMB == null)
-			projectMB = (ProjectMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "projectMB");
-		return projectMB;
-	}
 
 	/**
 	 * This Method Selects the current project and refreshes the Worklist Bean
@@ -177,7 +135,7 @@ public class ProjectlistMB {
 	public void doSwitchToProject(ActionEvent event) {
 
 		if (event == null) {
-			getProjectBean().setWorkitem(null);
+			projectMB.setWorkitem(null);
 			return;
 		}
 
@@ -198,10 +156,10 @@ public class ProjectlistMB {
 
 				if (currentSelection.getItemValueString("type").equals(
 						"project")) {
-					getProjectBean().setWorkitem(currentSelection);
+					projectMB.setWorkitem(currentSelection);
 					break;
 				} else {
-					getProjectBean().setWorkitem(null);
+					projectMB.setWorkitem(null);
 					break;
 				}
 			} catch (Exception e) {
@@ -253,7 +211,7 @@ public class ProjectlistMB {
 				bTogle = true;
 
 			// update projectMB
-			getProjectBean().setWorkitem(currentSelection);
+			projectMB.setWorkitem(currentSelection);
 
 			currentSelection.replaceItemValue("a4j:showprocesslist", bTogle);
 			break;
@@ -337,12 +295,12 @@ public class ProjectlistMB {
 
 			// determine user language and set Modelversion depending on the
 			// selected user locale
-			String sModelVersion = this.getProfileBean()
+			String sModelVersion = myProfileMB
 					.getModelVersionHandler()
 					.getLatestSystemVersion(userLocale.getLanguage());
 			currentSelection.replaceItemValue("$modelversion", sModelVersion);
 
-			getProjectBean().setWorkitem(currentSelection);
+			projectMB.setWorkitem(currentSelection);
 			break;
 
 		}
@@ -369,7 +327,7 @@ public class ProjectlistMB {
 			// Zeile gefunden
 			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
 
-			this.getProjectBean().getProjectService()
+			this.projectMB.getProjectService()
 					.moveIntoDeletions(currentSelection);
 
 			this.doReset(event);
@@ -399,8 +357,8 @@ public class ProjectlistMB {
 
 			// Zeile gefunden
 			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
-			getProjectBean().setWorkitem(currentSelection);
-			getProjectBean().doCreateSubproject(event);
+			projectMB.setWorkitem(currentSelection);
+			projectMB.doCreateSubproject(event);
 			break;
 
 		}
@@ -428,7 +386,7 @@ public class ProjectlistMB {
 	 * @return
 	 */
 	public void doRefresh(ActionEvent event) {
-		getProjectBean().setWorkitem(null);
+		projectMB.setWorkitem(null);
 		projects = null;
 		myProjectSelection = null;
 		
@@ -541,7 +499,7 @@ public class ProjectlistMB {
 					List<String> vprojectList = aworkitem
 							.getItemValue("txtprocesslist");
 					if (vprojectList.size() > 0
-							&& this.getProjectBean().isMember(aworkitem))
+							&& this.projectMB.isMember(aworkitem))
 						startProjects.add((aworkitem));
 				}
 			} catch (Exception ee) {
@@ -883,7 +841,7 @@ public class ProjectlistMB {
 			// neede.
 
 			// find workitem
-			ItemCollection workitem = getWorkitemBean().getWorkitem();
+			ItemCollection workitem = workitemMB.getWorkitem();
 			if (workitem == null
 					|| !key.toString().equals(
 							workitem.getItemValueString("$uniqueid"))) {

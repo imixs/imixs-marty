@@ -36,7 +36,7 @@ import org.imixs.workflow.ItemCollection;
  * the wokitemMB. The WorkitemMB will fire different events on specific program
  * situations.
  * 
- * @author rsoika
+ * @author rsoika 
  * 
  */
 public interface WorkitemListener extends EventListener {

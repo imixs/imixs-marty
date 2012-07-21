@@ -37,18 +37,23 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.SessionScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
-import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.event.ValueChangeEvent;
 import javax.faces.model.SelectItem;
 
 import org.imixs.marty.util.LoginMB;
 import org.imixs.marty.web.project.ProjectMB;
+import org.imixs.marty.web.project.ProjectlistMB;
 import org.imixs.marty.web.util.SetupMB;
 import org.imixs.workflow.ItemCollection;
 
+@ManagedBean
+@SessionScoped
 public class WorklistMB implements WorkitemListener {
 
 	ItemCollection currentProjectSelection = null; // current selected project
@@ -85,9 +90,20 @@ public class WorklistMB implements WorkitemListener {
 	org.imixs.marty.ejb.WorkitemService workitemService;
 
 	/* Backing Beans */
-	private WorkitemMB workitemBean = null;
-	private ProjectMB projectBean = null;
+	
+	@ManagedProperty(value = "#{workitemMB}")
+	private WorkitemMB workitemMB = null;
+	
+	@ManagedProperty(value = "#{projectMB}")
+	private ProjectMB projectMB = null;
+	
+	@ManagedProperty(value = "#{projectlistMB}")
+	private ProjectlistMB projectlistMB = null;
+	
+	@ManagedProperty(value = "#{setupMB}")
 	private SetupMB setupMB = null;
+	
+	@ManagedProperty(value = "#{loginMB}")
 	private LoginMB loginMB = null;
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
@@ -102,75 +118,31 @@ public class WorklistMB implements WorkitemListener {
 	public void init() {
 
 		// register this Bean as a workitemListener to the current WorktieMB
-		this.getWorkitemMB().addWorkitemListener(this);
+		workitemMB.addWorkitemListener(this);
 
 		// set default view if not set
 		if (queryType == -1)
-			setQueryType(this.getConfigBean().getWorkitem()
+			setQueryType(setupMB.getWorkitem()
 					.getItemValueInteger("defaultworklistview"));
 
 		// read configurations for the max count. This value can be also set via
 		// faces-config-custom.xml
 		if (count == 0)
-			count = this.getConfigBean().getWorkitem()
+			count = setupMB.getWorkitem()
 					.getItemValueInteger("Maxviewentriesperpage");
 		// read configuration for the sort order
 		if (sortby == -1)
-			sortby = this.getConfigBean().getWorkitem()
+			sortby = setupMB.getWorkitem()
 					.getItemValueInteger("Sortby");
 		if (sortorder == -1)
-			sortorder = this.getConfigBean().getWorkitem()
+			sortorder = setupMB.getWorkitem()
 					.getItemValueInteger("Sortorder");
 	}
 
-	public ProjectMB getProjectMB() {
-		if (projectBean == null) {
-			projectBean = (ProjectMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "projectMB");
-		}
+	
+	
+	
 
-		return projectBean;
-
-	}
-
-	public WorkitemMB getWorkitemMB() {
-		if (workitemBean == null) {
-			workitemBean = (WorkitemMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "workitemMB");
-		}
-		return workitemBean;
-
-	}
-
-	private SetupMB getConfigBean() {
-		if (setupMB == null)
-			setupMB = (SetupMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "setupMB");
-		return setupMB;
-	}
-
-	private LoginMB getLoginBean() {
-		if (loginMB == null)
-			loginMB = (LoginMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "loginMB");
-		return loginMB;
-	}
 
 	public int getCount() {
 		return count;
@@ -253,7 +225,7 @@ public class WorklistMB implements WorkitemListener {
 	}
 
 	public void setViewTitle(String viewTitle) {
-		Locale locale = new Locale(this.getLoginBean().getLocale());
+		Locale locale = new Locale(loginMB.getLocale());
 		ResourceBundle rb = null;
 		rb = ResourceBundle.getBundle("bundle.workitem", locale);
 
@@ -330,7 +302,7 @@ public class WorklistMB implements WorkitemListener {
 			sWorkflowGroup = workflowGroupFilter.substring(workflowGroupFilter
 					.indexOf("|") + 1);
 
-			List<ItemCollection> processList = this.getWorkitemMB()
+			List<ItemCollection> processList =workitemMB
 					.getModelService()
 					.getAllProcessEntitiesByGroupByVersion(sWorkflowGroup,sModel);
 			for (ItemCollection process : processList) {
@@ -374,10 +346,10 @@ public class WorklistMB implements WorkitemListener {
 			currentSelection.getAllItems().remove("a4j:showhistory");
 			currentSelection.getAllItems().remove("a4j:showdetails");
 
-			getWorkitemMB().setWorkitem(currentSelection);
+			workitemMB.setWorkitem(currentSelection);
 
 			// update projectMB if necessary
-			getWorkitemMB().updateProjectMB();
+			workitemMB.updateProjectMB();
 
 		}
 	}
@@ -469,7 +441,7 @@ public class WorklistMB implements WorkitemListener {
 		ItemCollection currentSelection = null;
 		
 		// reset current project selection
-		this.getProjectMB().setWorkitem(null);
+		this.projectMB.setWorkitem(null);
 		setProjectFilter(null);
 		
 			// find current data row....
@@ -509,7 +481,7 @@ public class WorklistMB implements WorkitemListener {
 	 */
 	public void doSwitchToWorklistByAuthor(ActionEvent event) {
 		// reset project selection
-		this.getProjectMB().setWorkitem(null);
+		this.projectMB.setWorkitem(null);
 		setProjectFilter(null);
 		setQueryType(QUERY_WORKLIST_BY_AUTHOR);
 	}
@@ -521,7 +493,7 @@ public class WorklistMB implements WorkitemListener {
 	 */
 	public void doSwitchToWorklistByOwner(ActionEvent event) {
 		// reset project selection
-		this.getProjectMB().setWorkitem(null);
+		projectMB.setWorkitem(null);
 		setProjectFilter(null);
 
 		setQueryType(QUERY_WORKLIST_BY_OWNER);
@@ -534,7 +506,7 @@ public class WorklistMB implements WorkitemListener {
 	 */
 	public void doSwitchToWorklistByCreator(ActionEvent event) {
 		// reset project selection
-		this.getProjectMB().setWorkitem(null);
+		projectMB.setWorkitem(null);
 		setProjectFilter(null);
 
 		setQueryType(QUERY_WORKLIST_BY_CREATOR);
@@ -547,7 +519,7 @@ public class WorklistMB implements WorkitemListener {
 	 */
 	public void doSwitchToWorklistArchive(ActionEvent event) {
 		// reset project selection
-		this.getProjectMB().setWorkitem(null);
+		projectMB.setWorkitem(null);
 		setProjectFilter(null);
 
 		setQueryType(QUERY_WORKLIST_ARCHIVE);
@@ -560,7 +532,7 @@ public class WorklistMB implements WorkitemListener {
 	 */
 	public void doSwitchToWorklistDeletions(ActionEvent event) {
 		// reset project selection
-		this.getProjectMB().setWorkitem(null);
+		projectMB.setWorkitem(null);
 		setProjectFilter(null);
 
 		setQueryType(QUERY_WORKLIST_DELETIONS);
@@ -573,7 +545,7 @@ public class WorklistMB implements WorkitemListener {
 	 */
 	public void doSwitchToWorklistAll(ActionEvent event) {
 		// reset project selection
-		this.getProjectMB().setWorkitem(null);
+		projectMB.setWorkitem(null);
 		setProjectFilter(null);
 
 		setQueryType(QUERY_WORKLIST_ALL);
@@ -586,7 +558,7 @@ public class WorklistMB implements WorkitemListener {
 	 */
 	public void doSwitchToWorklistSearch(ActionEvent event) {
 		// reset project selection
-		this.getProjectMB().setWorkitem(null);
+		projectMB.setWorkitem(null);
 		setProjectFilter(null);
 
 		setQueryType(QUERY_SEARCH);
@@ -600,10 +572,10 @@ public class WorklistMB implements WorkitemListener {
 	 */
 	public void doSwitchToProjectWorklistByAuthor(ActionEvent event) {
 		// switch to project
-		this.getProjectMB().getProjectListMB().doSwitchToProject(event);
+		projectlistMB.doSwitchToProject(event);
 		
-		if (getProjectMB().getWorkitem()!=null)
-			setProjectFilter(getProjectMB().getWorkitem().getItemValueString("$uniqueid"));
+		if (projectMB.getWorkitem()!=null)
+			setProjectFilter(projectMB.getWorkitem().getItemValueString("$uniqueid"));
 		else
 			setProjectFilter(null);
 		
@@ -612,9 +584,9 @@ public class WorklistMB implements WorkitemListener {
 
 	public void doSwitchToProjectWorklistByOwner(ActionEvent event) {
 		// switch to project
-		this.getProjectMB().getProjectListMB().doSwitchToProject(event);
-		if (getProjectMB().getWorkitem()!=null)
-			setProjectFilter(getProjectMB().getWorkitem().getItemValueString("$uniqueid"));
+		projectlistMB.doSwitchToProject(event);
+		if (projectMB.getWorkitem()!=null)
+			setProjectFilter(projectMB.getWorkitem().getItemValueString("$uniqueid"));
 		else
 			setProjectFilter(null);
 
@@ -623,9 +595,9 @@ public class WorklistMB implements WorkitemListener {
 
 	public void doSwitchToProjectWorklistByCreator(ActionEvent event) {
 		// switch to project
-		this.getProjectMB().getProjectListMB().doSwitchToProject(event);
-		if (getProjectMB().getWorkitem()!=null)
-			setProjectFilter(getProjectMB().getWorkitem().getItemValueString("$uniqueid"));
+		projectlistMB.doSwitchToProject(event);
+		if (projectMB.getWorkitem()!=null)
+			setProjectFilter(projectMB.getWorkitem().getItemValueString("$uniqueid"));
 		else
 			setProjectFilter(null);
 
@@ -634,9 +606,9 @@ public class WorklistMB implements WorkitemListener {
 
 	public void doSwitchToProjectWorklistAll(ActionEvent event) {
 		// switch to project
-		this.getProjectMB().getProjectListMB().doSwitchToProject(event);
-		if (getProjectMB().getWorkitem()!=null)
-			setProjectFilter(getProjectMB().getWorkitem().getItemValueString("$uniqueid"));
+		projectlistMB.doSwitchToProject(event);
+		if (projectMB.getWorkitem()!=null)
+			setProjectFilter(projectMB.getWorkitem().getItemValueString("$uniqueid"));
 		else
 			setProjectFilter(null);
 
@@ -873,7 +845,7 @@ public class WorklistMB implements WorkitemListener {
 		}
 
 		// reset current workitem for detail views
-		getWorkitemMB().setWorkitem(null);
+		workitemMB.setWorkitem(null);
 	}
 
 	/***************************************************************************

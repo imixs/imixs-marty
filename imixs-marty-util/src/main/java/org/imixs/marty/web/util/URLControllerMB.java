@@ -28,6 +28,7 @@
 package org.imixs.marty.web.util;
 
 import javax.ejb.EJB;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.Cookie;
@@ -38,6 +39,7 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.workitem.WorkitemMB;
+import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
 
 /**
@@ -71,7 +73,16 @@ public class URLControllerMB {
 	@EJB
 	ProjectService projectService;
 
+	
+	
+	
+	@ManagedProperty(value = "#{worklistMB}")
+	private WorklistMB worklistMB = null;
+	
+	@ManagedProperty(value = "#{projectMB}")
 	private ProjectMB projectMB = null;
+	
+	@ManagedProperty(value = "#{workitemMB}")
 	private WorkitemMB workitemMB = null;
 
 	private String project = null;
@@ -159,7 +170,7 @@ public class URLControllerMB {
 			getProjectBean().setWorkitem(itemColProject);
 
 			// reset worklist
-			getProjectBean().getworkListMB().doReset(null);
+			worklistMB.doReset(null);
 			System.out.println("URLControllerMB - Project '" + project
 					+ "' selected");
 		} else {
@@ -380,7 +391,7 @@ public class URLControllerMB {
 							+ sIDRef + "' ");
 					getProjectBean().setWorkitem(itemColProject);
 					// reset worklist
-					getProjectBean().getworkListMB().doReset(null);
+					worklistMB.doReset(null);
 				}
 			}
 		} catch (Exception e) {

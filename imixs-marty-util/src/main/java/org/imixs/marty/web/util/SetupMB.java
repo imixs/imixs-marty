@@ -60,7 +60,7 @@ import org.imixs.workflow.xml.XMLItemCollectionAdapter;
  * @author rsoika
  * 
  */
-public class SetupMB {
+public class SetupMB { 
 
 	/**
 	 * Default values for maximum history entries are currently hard coded

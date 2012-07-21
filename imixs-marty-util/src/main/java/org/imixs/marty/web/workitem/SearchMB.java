@@ -90,28 +90,7 @@ public class SearchMB  {
 		doResetSearchFilter(null);
 	}
 
-	/**
-	 * helper method to get the current instance of the WorkitemMB
-	 * 
-	 * @return
-	 */
-	private WorkitemMB getWorkitemBean() {
-		if (workitemMB == null)
-			workitemMB = (WorkitemMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
-							null, "workitemMB");
-		return workitemMB;
-	}
-
-	private WorklistMB getWorkListBean() {
-		if (worklistMB == null)
-			worklistMB = (WorklistMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
-							null, "worklistMB");
-		return worklistMB;
-	}
+	
 
 	public ItemCollection getSearchFilter() {
 		return searchFilter;

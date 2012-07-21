@@ -29,14 +29,11 @@ package org.imixs.marty.model;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import org.imixs.workflow.ItemCollection;
 
-
-/**
+/** 
  * This Class handles the different model versions used in SYWAPPs. 
  * Versions can be added with the method addVersion().
  * 
