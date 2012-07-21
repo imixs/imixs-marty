@@ -34,8 +34,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import org.imixs.workflow.ItemCollection;
-import org.richfaces.model.TreeNode;
-import org.richfaces.model.TreeNodeImpl;
+
 
 /**
  * This Class handles the different model versions used in SYWAPPs. 
@@ -84,7 +83,6 @@ public class ModelVersionHandler {
 	private String currentNumber;
 	private HashMap<String, String> latestSystemModelVersion = null;
 
-	private TreeNodeImpl modelTree = null;
 
 	public ModelVersionHandler() {
 		versions = new Vector<String>();
@@ -127,8 +125,7 @@ public class ModelVersionHandler {
 		// parse version string
 		parseModelVersion(aVersion);
 
-		addModelTreeNode(getModelTree(), aVersion, null);
-
+		
 		if (versions.indexOf(aVersion) == -1)
 			versions.add(aVersion);
 
@@ -230,166 +227,7 @@ public class ModelVersionHandler {
 
 	}
 
-	/**
-	 * returns a richFacess TreeNode containing all Model informations The tree
-	 * is build during the addVersion() method.
-	 * 
-	 * 
-	 * @return
-	 */
-	public TreeNodeImpl getModelTree() {
-		if (modelTree != null)
-			return modelTree;
-
-		// create new TreeNode Instance....
-		modelTree = new TreeNodeImpl();
-		return modelTree;
-	}
-
-	/**
-	 * This method is called by the addVersion method and adds all corresponding
-	 * TreeNode Elements for a ModelVersion into the given root modelTree
-	 * 
-	 * If a startProcess ItemCollection is supported the method adds also a leaf
-	 * for the StartProcess under the ModelTypeNode. If no startProcess
-	 * ItemCollection is supported the method will generate a dynamic list of
-	 * start processTress per default. Therefore the method creates Nodes of the
-	 * type 'ProcessGroupsTreeNode' This is a dynamic implementation of a
-	 * treeNode containing all StartProcess Nodes. The ProcessNodes are only
-	 * computed if the node is expanded by the user during a ajax request.
-	 * 
-	 * The method adds nodes for each element of a model version - domain -
-	 * language - type
-	 * 
-	 * The method is called by addVersion method of this class to generate the
-	 * ProcessTree Node Selection for a project and also by the ProjectMB to
-	 * generate a ProcessTree of selected StartProcesses for a specific Project
-	 * 
-	 * 
-	 * @param amodelTree
-	 *            - the root model tree node where the nodes should be added
-	 * @param aVersion
-	 *            - the version string for a node set
-	 * @param aStartProcess
-	 *            - optional ItemCollection of a StartProcess Entity to be added
-	 *            as a leaf in the processNodetree
-	 * 
-	 * @throws Exception
-	 */
-	public void addModelTreeNode(TreeNode amodelTree, String aVersion,
-			ItemCollection processEntity) throws Exception {
-
-		StringTokenizer st = new StringTokenizer(aVersion, "-", false);
-		if (st.countTokens() != 4)
-			throw new Exception(
-					"Illegal ModelVersion - expectd format=domain-lang-type-version");
-
-		String domain = st.nextToken();
-		String aLanguage = st.nextToken();
-		String aType = st.nextToken();
-
-		// try to find Domain node
-		ModelData mdDomain = new ModelData(ModelData.MODEL_DOMAIN, aVersion,
-				null, -1);
-		TreeNode nodeDomain = amodelTree.getChild(mdDomain.getNodeID());
-		if (nodeDomain == null) {
-			// add new domain Node
-			nodeDomain = new TreeNodeImpl();
-			nodeDomain.setData(mdDomain);
-			amodelTree.addChild(mdDomain.getNodeID(), nodeDomain);
-
-		}
-
-		// try to find Language node
-		ModelData mdLanguage = new ModelData(ModelData.MODEL_LANGUAGE,
-				aVersion, null, -1);
-		TreeNode nodeLanguage = nodeDomain.getChild(mdLanguage.getNodeID());
-		if (nodeLanguage == null) {
-			// add new language Node
-			nodeLanguage = new TreeNodeImpl();
-			nodeLanguage.setData(mdLanguage);
-			nodeDomain.addChild(mdLanguage.getNodeID(), nodeLanguage);
-
-		}
-
-		// try to find Type node
-		// if aStartProcessID ==-1 the node will be added as a dynamic
-		// ProcessGroupsTreeNode which
-		// expands dynamically the start processes under this node
-		ModelData mdType = new ModelData(ModelData.MODEL_TYPE, aVersion, null,
-				-1);
-		TreeNode nodeType = nodeLanguage.getChild(mdType.getNodeID());
-		if (nodeType == null) {
-
-			if (processEntity == null) {
-				// add new ProcessGroups Node
-				nodeType = new ProcessGroupsTreeNode();
-				nodeType.setData(mdType);
-				nodeLanguage.addChild(mdType.getNodeID(), nodeType);
-			} else {
-				// add a normal typ node to add later the start process as a
-				// leaf node for this processID
-
-				// add new language Node
-				nodeType = new TreeNodeImpl();
-				nodeType.setData(mdType);
-				nodeLanguage.addChild(mdType.getNodeID(), nodeType);
-
-			}
-		}
-
-		// add ProcessNode as a leaf if (processEntity!=null)
-		if (processEntity != null) {
-			String sGroupName = processEntity
-					.getItemValueString("txtWorkflowGroup");
-			Integer iProccessID = processEntity
-					.getItemValueInteger("numProcessID");
-
-			// add new language Node
-			TreeNode nodeProcess = new TreeNodeImpl();
-
-			// optimize groupName with (version)
-			sGroupName = sGroupName + " ("
-					+ aVersion.substring(aVersion.lastIndexOf("-") + 1) + ")";
-
-			ModelData mdProcess = new ModelData(ModelData.MODEL_PROCESS,
-					aVersion, sGroupName, iProccessID);
-			nodeProcess.setData(mdProcess);
-
-			nodeType.addChild(mdProcess.getNodeID(), nodeProcess);
-
-		}
-
-	}
-
-	/**
-	 * This method removes a specific TreeNode form a TreeRootNode. The treenode
-	 * to be removed is identified by the corresponding ModelData object
-	 * 
-	 * @param aNodeRoot
-	 * @param adata
-	 */
-	@SuppressWarnings("unchecked")
-	public void removeModelTreeNode(TreeNode aNodeRoot, ModelData adata) {
-		java.util.Iterator<java.util.Map.Entry> iterChilds = aNodeRoot
-				.getChildren();
-		while (iterChilds.hasNext()) {
-			Map.Entry aEntry = iterChilds.next();
-			TreeNode childNode = (TreeNode) aEntry.getValue();
-			// check if dataobject is equal...
-			ModelData childData = (ModelData) childNode.getData();
-			if (childData.equals(adata)) {
-				// aNodeRoot.removeChild(adata.getNodeID());
-				// aNodeRoot.removeChild(childNode);
-				aNodeRoot.removeChild(aEntry.getKey());
-				break;
-			}
-			// if not a leaf call method recursively
-			if (!childNode.isLeaf())
-				removeModelTreeNode(childNode, adata);
-		}
-
-	}
+	
 
 	/**
 	 * ModelVersions are expected in the format

@@ -15,8 +15,7 @@ import org.imixs.marty.web.project.ProjectlistMB;
 import org.imixs.marty.web.util.SetupMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
-import org.richfaces.event.UploadEvent;
-import org.richfaces.model.UploadItem;
+
 
 /**
  * This Backingbean provides methods to upload model files from the UI. 
@@ -44,26 +43,6 @@ public class ModelManagerMB {
 
 	}
 
-	/**
-	 * adds a uploaded file. Imports the entities form a xml file into the
-	 * database
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void listener(UploadEvent event) throws Exception {
-		UploadItem item = event.getUploadItem();
-		try {
-			System.out
-					.println("ModelManagerMB - starting xml model file upload");
-			this.getSetupBean().importXmlEntityData(item.getData());
-			// reset start process list
-			getProjectlistBean().resetProcessList();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-	}
 
 	/**
 	 * This method returns a list of available models. The model descriptions

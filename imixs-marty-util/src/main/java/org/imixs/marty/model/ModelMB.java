@@ -47,10 +47,10 @@ import org.imixs.marty.util.SelectItemComparator;
 import org.imixs.marty.web.profile.MyProfileMB;
 import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.project.ProjectlistMB;
-import org.imixs.marty.web.project.SubProjectTreeNode;
+
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.ModelService;
-import org.richfaces.model.TreeNodeImpl;
+
 
 /**
  * This backing beans provides informations about the Models provided in the
@@ -91,9 +91,7 @@ public class ModelMB {
 	private HashMap modelVersionCache = null;
 	private HashMap processEntityCache = null;
 
-	private TreeNodeImpl workflowGroupTree = null;
-	private TreeNodeImpl workflowGroupTreeByUser = null;
-
+	
 	/* Model Service */
 	@EJB
 	ModelService modelService;
@@ -350,100 +348,6 @@ public class ModelMB {
 
 	}
 
-	/**
-	 * returns a richFacess TreeNode implementation containing a tree structure
-	 * of all workflowGroups. The tree has no hierarchy
-	 * 
-	 * @see getWorkflowGroups()
-	 * 
-	 * @return
-	 */
-	public TreeNodeImpl getWorkflowGroupTree() {
-
-		if (workflowGroupTree == null) {
-			// create new TreeNode Instance....
-			workflowGroupTree = new TreeNodeImpl();
-
-			// fetch workflow groups
-			ArrayList<SelectItem> groupLlist = getWorkflowGroups();
-
-			// add each group as a root node (flat tree)
-			try {
-
-				int count = 0;
-				for (SelectItem aitem : groupLlist) {
-					// add project id to the tree node....
-					// SubProjectTreeNode nodeProcess = new SubProjectTreeNode(
-					// aitem, SubProjectTreeNode.ROOT_PROJECT);
-					TreeNodeImpl nodeImpl = new TreeNodeImpl();
-
-					ItemCollection itemCol = new ItemCollection();
-					itemCol.replaceItemValue("txtname", aitem.getValue());
-					itemCol.replaceItemValue("txtWorkflowGroup",
-							aitem.getLabel());
-
-					nodeImpl.setData(itemCol);
-					workflowGroupTree.addChild(aitem.getValue(), nodeImpl);
-
-					count++;
-
-				}
-			} catch (Exception ee) {
-
-				ee.printStackTrace();
-			}
-		}
-		return workflowGroupTree;
-	}
-
-	
-	
-	/**
-	 * returns a richFacess TreeNode implementation containing a tree structure
-	 * of all workflowGroups which can be started by the current user. The tree has no hierarchy.
-	 * @see getWorkflowGroupsByUser()
-	 * 
-	 * @return
-	 */
-	public TreeNodeImpl getWorkflowGroupTreeByUser() {
-
-		if (workflowGroupTreeByUser == null) {
-			// create new TreeNode Instance....
-			workflowGroupTreeByUser = new TreeNodeImpl();
-
-			// fetch workflow groups
-			ArrayList<SelectItem> groupLlist = getWorkflowGroupsByUser();
-
-			// add each group as a root node (flat tree)
-			try {
-
-				int count = 0;
-				for (SelectItem aitem : groupLlist) {
-					// add project id to the tree node....
-					// SubProjectTreeNode nodeProcess = new SubProjectTreeNode(
-					// aitem, SubProjectTreeNode.ROOT_PROJECT);
-					TreeNodeImpl nodeImpl = new TreeNodeImpl();
-
-					ItemCollection itemCol = new ItemCollection();
-					itemCol.replaceItemValue("txtname", aitem.getValue());
-					itemCol.replaceItemValue("txtWorkflowGroup",
-							aitem.getLabel());
-
-					nodeImpl.setData(itemCol);
-					workflowGroupTreeByUser.addChild(aitem.getValue(), nodeImpl);
-
-					count++;
-
-				}
-			} catch (Exception ee) {
-
-				ee.printStackTrace();
-			}
-		}
-		return workflowGroupTreeByUser;
-	}
-	
-	
 	/**
 	 * returns a SelctItem Array containing all StartProcess Ids from all
 	 * ProcessGroups from all general model files
