@@ -60,9 +60,6 @@ import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.AbstractWorkflowController;
-import org.richfaces.event.DropEvent;
-import org.richfaces.model.TreeNode;
-import org.richfaces.model.TreeNodeImpl;
 
 public class ProjectMB extends AbstractWorkflowController {
 
@@ -75,7 +72,6 @@ public class ProjectMB extends AbstractWorkflowController {
 	@EJB
 	ProfileService profileService;
 
-	private TreeNode processTreeSelection = null;
 	private MyProfileMB myProfileMB = null;
 	private SetupMB setupMB = null;
 	private ProjectlistMB projectlist = null;
@@ -85,8 +81,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	private ArrayList<ItemCollection> team = null;
 	private ArrayList<ItemCollection> projectSiblingList = null;
 
-	private TreeNodeImpl subProjectTree = null;
-
+	
 	private Collection<ProjectListener> projectListeners = new ArrayList<ProjectListener>();
 
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
@@ -261,10 +256,7 @@ public class ProjectMB extends AbstractWorkflowController {
 		// clear inivtations and team
 		
 		team = null;
-		// clear ProcessTree Selection
-		processTreeSelection = null;
-		// clear SubprojectTree Selection
-		subProjectTree = null;
+	
 		// clear sibling list
 		projectSiblingList = null;
 
@@ -694,20 +686,7 @@ public class ProjectMB extends AbstractWorkflowController {
 				getConfigBean().getWorkitem().getItemValueInteger(
 						"MaxProjectHistoryLength"));
 
-		/*
-		 * now generate the ProcessList out from the processTreeSelection The
-		 * processTreeSelection can be used in JSF Pages. Check if
-		 * processTreeSelection is null. Object is null if no treeSelector is
-		 * used by the JSF Page
-		 */
-		if (processTreeSelection != null) {
-			Vector<String> vProcessList = new Vector<String>();
-			addProcessTreeSelectionToVector(this.processTreeSelection,
-					vProcessList);
-			// System.out.println("doProcess list="+vProcessList);
-			workitemItemCollection.replaceItemValue("txtprocesslist",
-					vProcessList);
-		}
+	
 
 	
 
@@ -733,38 +712,7 @@ public class ProjectMB extends AbstractWorkflowController {
 
 	}
 
-	/**
-	 * This method iterates over the ProcessTreeSelection to get all selected
-	 * ProcessEntity nodes. The Results are stored into the aVector object as
-	 * String values in the format
-	 * 
-	 * MODELVERSION|ID
-	 * 
-	 * e.g. :
-	 * 
-	 * public-de-default-0.0.1|1500 ...
-	 * 
-	 * The method is called by the doProcess method to update the txtProcessList
-	 * attribute of a project.
-	 * 
-	 */
-	@SuppressWarnings("unchecked")
-	private void addProcessTreeSelectionToVector(TreeNode aNode,
-			Vector<String> aVector) {
-		java.util.Iterator<java.util.Map.Entry> iterChilds = aNode
-				.getChildren();
-		while (iterChilds.hasNext()) {
-			Map.Entry aEntry = iterChilds.next();
-			TreeNode childNode = (TreeNode) aEntry.getValue();
-			if (!childNode.isLeaf())
-				addProcessTreeSelectionToVector(childNode, aVector);
-			else {
-				ModelData childData = (ModelData) childNode.getData();
-				aVector.add(childData.getVersion() + "|" + childData.getId());
-			}
-		}
-
-	}
+	
 
 	/**
 	 * This Method adds an user entry to the owner or team list. The method is
@@ -1078,115 +1026,6 @@ public class ProjectMB extends AbstractWorkflowController {
 	}
 
 	/**
-	 * This method generates a RichFaces TreeNode for the provided Model
-	 * Versions. The Tree is structured by language and domains. The process
-	 * Group is the leaf of each subtree. A Process group will only be included
-	 * if the processgroup is no subgroup indicated by notation:
-	 * maingroup.subgroup
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public TreeNode getModelTree() throws Exception {
-		return this.getProfileBean().getModelVersionHandler().getModelTree();
-	}
-
-	/**
-	 * Property which holds a TreeNode Implementation of the current process
-	 * selection. The method parses the attribute txtprocesslist to generate the
-	 * current process tree selection if the method is called the first time
-	 * 
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public TreeNode getModelTreeSelection() throws Exception {
-		if (processTreeSelection == null) {
-			// Create Process Tree Selection from current txtprocesslist
-			processTreeSelection = new TreeNodeImpl();
-
-			List<String> vProcessList = workitemItemCollection
-					.getItemValue("txtprocesslist");
-
-			// processSelection = new Vector<String>();
-			Iterator<String> iterat = vProcessList.iterator();
-			while (iterat.hasNext()) {
-				String sPID = (String) iterat.next();
-				// PID should be in format 'modelversion|processid'
-				if (sPID.indexOf("|") > -1) {
-					String sModelVersion = sPID.substring(0, sPID.indexOf("|"))
-							.trim();
-					String sProcessID = sPID.substring(sPID.indexOf("|") + 1)
-							.trim();
-
-					// find corresponding start process entity...
-					ItemCollection processEntity = getModelService()
-							.getProcessEntityByVersion(
-									Integer.parseInt(sProcessID), sModelVersion);
-					// ...add ProcessTreeNode
-					if (processEntity != null) {
-						this.getProfileBean()
-								.getModelVersionHandler()
-								.addModelTreeNode(processTreeSelection,
-										sModelVersion, processEntity);
-					}
-				}
-
-			}
-		}
-		return processTreeSelection;
-	}
-
-	/**
-	 * This method handles DropEvents generated by the process treeSelector. The
-	 * expected drag object must be an instance of ModelData. The method adds
-	 * the corresponding StartProcess Entity or the full tree of a TreeNode.
-	 * 
-	 * The method is used in both cases. either a process node was dropped to
-	 * the process SelectionTree or the process node was dropped to the trash
-	 * symbol. If a ProcessTree should be dropped on the trash the drop_type
-	 * starts with 'delete_'
-	 * 
-	 */
-	public void processDropProcessSelection(DropEvent event) {
-		try {
-			ModelData modelData = (ModelData) event.getDragValue();
-			if (event.getDragType().startsWith("delete_")) {
-				// delete process node from current process selection
-				this.getProfileBean().getModelVersionHandler()
-						.removeModelTreeNode(processTreeSelection, modelData);
-			} else {
-
-				// simply add the dropped version to the ProcessTreeSelection
-				// First check if a StartProcessEntiy was dropped... ?
-				if (modelData.getId() > -1) {
-					// yes - so get ProcessEntity....
-					ItemCollection processEntity = getModelService()
-							.getProcessEntityByVersion(modelData.getId(),
-									modelData.getVersion());
-					// and add the ProcessEntity
-					this.getProfileBean()
-							.getModelVersionHandler()
-							.addModelTreeNode(processTreeSelection,
-									modelData.getVersion(), processEntity);
-				} else {
-					// no - a node form the model version was dropped.
-					// so simply add the full tree...
-					this.getProfileBean()
-							.getModelVersionHandler()
-							.addModelTreeNode(processTreeSelection,
-									modelData.getVersion(), null);
-				}
-			}
-
-		} catch (Exception e) {
-			System.out
-					.println("ProcectMB Unable to process Drop Event of ProcessTree Selection");
-			e.printStackTrace();
-		}
-	}
-
-	/**
 	 * returns the list of ItemCollectionAdapter Objects for each Team member
 	 * 
 	 * @return
@@ -1271,28 +1110,7 @@ public class ProjectMB extends AbstractWorkflowController {
 
 	
 
-	/**
-	 * returns a richFacess TreeNode implementation containing a tree structure
-	 * of sub projects contained by the current project.
-	 * 
-	 * @return
-	 */
-	public TreeNodeImpl getSubProjectTree() {
 
-		if (subProjectTree == null) {
-			// create new TreeNode Instance....
-			subProjectTree = new TreeNodeImpl();
-			// add the root node
-
-			SubProjectTreeNode nodeProcess = new SubProjectTreeNode(
-					getWorkitem(), SubProjectTreeNode.ROOT_PROJECT);
-			subProjectTree.addChild(getWorkitem().getItemValueString("$uniqueid"),
-					nodeProcess);
-		}
-
-		return subProjectTree;
-
-	}
 
 	/**
 	 * Returns a list of project siblings to the current project. if the current

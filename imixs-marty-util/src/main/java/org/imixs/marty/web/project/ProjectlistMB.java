@@ -51,7 +51,6 @@ import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.ModelService;
-import org.richfaces.model.TreeNodeImpl;
 
 /**
  * The ProjectlistMB is the Backing Bean for the sywapps UI Frontend. The class
@@ -78,7 +77,6 @@ public class ProjectlistMB {
 	private int row = 0;
 	private boolean endOfList = false;
 	private boolean selectMainProjects = false;
-	private TreeNodeImpl projectTree = null;
 
 	/* EJBs */
 	@EJB
@@ -433,7 +431,7 @@ public class ProjectlistMB {
 		getProjectBean().setWorkitem(null);
 		projects = null;
 		myProjectSelection = null;
-		doResetProjectTree(event);
+		
 	}
 
 	public void doLoadNext(ActionEvent event) {
@@ -554,58 +552,7 @@ public class ProjectlistMB {
 
 	}
 
-	/**
-	 * returns a richFacess TreeNode implementation containing a tree structure
-	 * of all Projects visible to the current user
-	 * 
-	 * @return
-	 */
-	public TreeNodeImpl getProjectTree() {
-
-		if (projectTree == null) {
-			// create new TreeNode Instance....
-			projectTree = new TreeNodeImpl();
-			// add the root nodes (main projects)....
-			try {
-				List<ItemCollection> col = null;
-				long l = System.currentTimeMillis();
-				// load main projects for tree root nodes...
-				col = projectService.findAllMainProjects(0, -1);
-
-				logger.fine("  loadProjectTree ("
-						+ (System.currentTimeMillis() - l) + " ms) ");
-
-				endOfList = col.size() < count;
-				for (ItemCollection aworkitem : col) {
-					// add project id to the tree node....
-					SubProjectTreeNode nodeProcess = new SubProjectTreeNode(
-							aworkitem, SubProjectTreeNode.ROOT_PROJECT);
-					projectTree.addChild(
-							aworkitem.getItemValueString("$uniqueid"),
-							nodeProcess);
-
-				}
-			} catch (Exception ee) {
-				projects = null;
-				ee.printStackTrace();
-			}
-
-		}
-
-		return projectTree;
-
-	}
-
-	/**
-	 * Resets the project tree - so a new load will be forced next time the tree
-	 * is shown to the user
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void doResetProjectTree(ActionEvent event) {
-		projectTree = null;
-	}
+	
 
 	/**
 	 * Loads the project list
