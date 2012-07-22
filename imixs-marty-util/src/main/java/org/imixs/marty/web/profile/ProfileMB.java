@@ -35,6 +35,8 @@ import java.util.ResourceBundle;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.component.UIParameter;
@@ -48,6 +50,9 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
+
+@ManagedBean
+@SessionScoped
 public class ProfileMB extends AbstractWorkflowController {
 
 	public final static int START_PROFILE_PROCESS_ID = 200;

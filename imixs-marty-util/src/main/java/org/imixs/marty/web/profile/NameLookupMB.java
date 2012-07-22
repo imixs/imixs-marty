@@ -33,6 +33,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ejb.EJB;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.util.Cache;
@@ -47,6 +49,8 @@ import org.imixs.workflow.ItemCollection;
  * @author rsoika 
  * 
  */
+@ManagedBean
+@SessionScoped
 public class NameLookupMB {
 
 	final int MAX_CACHE_SIZE = 20;

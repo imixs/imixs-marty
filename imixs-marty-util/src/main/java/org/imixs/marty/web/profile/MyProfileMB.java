@@ -41,6 +41,9 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.SessionScoped;
 import javax.faces.component.UIParameter;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
@@ -88,6 +91,8 @@ import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
  * @author rsoika
  * 
  */
+@ManagedBean
+@SessionScoped
 public class MyProfileMB extends AbstractWorkflowController {
 
 	/* Profile Service */
@@ -110,15 +115,17 @@ public class MyProfileMB extends AbstractWorkflowController {
 	private boolean profileLoaded = false;
 
 	
-	private String lastDropType; // stores the last drop type event
 
 	private ModelVersionHandler modelVersionHandler = null;
 
+	
+	@ManagedProperty(value = "#{loginMB}")
 	private LoginMB loginMB = null;
-	private ProjectMB projectMB = null;
-	private WorkitemMB workitemMB = null;
+	
+	@ManagedProperty(value = "#{setupMB}")
 	private SetupMB setupMB = null;
-
+	
+	
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
 	
@@ -151,22 +158,14 @@ public class MyProfileMB extends AbstractWorkflowController {
 		if (!profileLoaded) {
 
 			// if SystemSetup is not yet completed - start System Setup now
-
-			SetupMB systemSetupMB = (SetupMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "setupMB");
-			
-			if (systemSetupMB != null && !systemSetupMB.isSetupOk())
-				systemSetupMB.doSetup(null);
+			if (!setupMB.isSetupOk())
+				setupMB.doSetup(null);
 			
 			
 			// determine user language and set Modelversion depending on
 			// the selected user locale
 			String sModelVersion = this.getModelVersionHandler()
-					.getLatestSystemVersion(getLoginBean().getLocale());
+					.getLatestSystemVersion(loginMB.getLocale());
 			// terminate excecution if no system model ist defined
 			if (sModelVersion==null) {
 				throw new RuntimeException(" No System Model found!");
@@ -187,20 +186,20 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 					// now set default values for locale
 					profile.replaceItemValue("txtLocale",
-							getLoginBean().getLocale());
+							loginMB.getLocale());
 
 					// set default launch page
 					profile.replaceItemValue(
 							"keyStartpage",
-							getConfigBean().getWorkitem().getItemValueString(
+							setupMB.getWorkitem().getItemValueString(
 									"DefaultPage"));
 
-					List defaultProcessList = getConfigBean().getWorkitem()
+					List defaultProcessList = setupMB.getWorkitem()
 							.getItemValue("defaultprojectprocesslist");
 
 					// create a default project
 					try {
-						if (getConfigBean().getWorkitem().getItemValueBoolean(
+						if (setupMB.getWorkitem().getItemValueBoolean(
 								"CreateDefaultProject") == true)
 							createUserDefaultProject(defaultProcessList);
 					} catch (Exception ecp) {
@@ -249,11 +248,11 @@ public class MyProfileMB extends AbstractWorkflowController {
 				// set max History & log length
 				profile.replaceItemValue(
 						"numworkflowHistoryLength",
-						getConfigBean().getWorkitem().getItemValueInteger(
+						setupMB.getWorkitem().getItemValueInteger(
 								"MaxProfileHistoryLength"));
 				profile.replaceItemValue(
 						"numworkflowLogLength",
-						getConfigBean().getWorkitem().getItemValueInteger(
+						setupMB.getWorkitem().getItemValueInteger(
 								"MaxProfileHistoryLength"));
 
 				this.setWorkitem(profile);
@@ -269,6 +268,32 @@ public class MyProfileMB extends AbstractWorkflowController {
 		}
 
 	}
+	
+	
+
+	public SetupMB getSetupMB() {
+		return setupMB;
+	}
+
+
+
+	public void setSetupMB(SetupMB setupMB) {
+		this.setupMB = setupMB;
+	}
+
+
+
+	public LoginMB getLoginMB() {
+		return loginMB;
+	}
+
+
+
+	public void setLoginMB(LoginMB loginMB) {
+		this.loginMB = loginMB;
+	}
+
+
 
 	/**
 	 * This method creates a UserDefault Project. The Method is called only if a
@@ -603,61 +628,20 @@ public class MyProfileMB extends AbstractWorkflowController {
 		// Verify if Locale is available in profile
 		String sLocale = getWorkitem().getItemValueString("txtLocale");
 		if ("".equals(sLocale)) {
-			sLocale = getLoginBean().getLocale();
+			sLocale = loginMB.getLocale();
 			getWorkitem().replaceItemValue("txtLocale", sLocale);
 
 		}
 		// reset locale to update cookie
-		getLoginBean().setLocale(sLocale);
+		loginMB.setLocale(sLocale);
 		// set locale for context
 		FacesContext.getCurrentInstance().getViewRoot()
 				.setLocale(new Locale(sLocale));
 
 	}
 
-	private LoginMB getLoginBean() {
-		if (loginMB == null)
-			loginMB = (LoginMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "loginMB");
-		return loginMB;
-	}
+	
 
-	private SetupMB getConfigBean() {
-		if (setupMB == null)
-			setupMB = (SetupMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "setupMB");
-		return setupMB;
-	}
 
-	public WorkitemMB getWorkitemBean() {
-
-		if (workitemMB == null)
-			workitemMB = (WorkitemMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "workitemMB");
-		return workitemMB;
-	}
-
-	public ProjectMB getProjectBean() {
-		if (projectMB == null)
-			projectMB = (ProjectMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "projectMB");
-		return projectMB;
-	}
 
 }
