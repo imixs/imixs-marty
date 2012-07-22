@@ -6,6 +6,8 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.context.FacesContext;
@@ -23,6 +25,9 @@ import org.imixs.workflow.jee.ejb.EntityService;
  * 
  * @author rsoika
  */
+
+@ManagedBean
+@SessionScoped
 public class ModelManagerMB {
 	@EJB
 	EntityService entityService;
@@ -31,9 +36,6 @@ public class ModelManagerMB {
 
 	private final String DEPRECATED_NO_VERSION = "DEPRECATED-NO-VERSION";
 	private String currentModelVersion;
-	private int maxAttachments = 10;
-	private SetupMB setupMB = null;
-	private ProjectlistMB projectlistMB = null;
 
 	/**
 	 * This method register the bean as an workitemListener
@@ -156,33 +158,10 @@ public class ModelManagerMB {
 			}
 		}
 
-		// reset start list
-		getProjectlistBean().resetProcessList();
-
+		
 	}
 
-	private SetupMB getSetupBean() {
-		if (setupMB == null)
-			setupMB = (SetupMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "setupMB");
+	
 
-		return setupMB;
-	}
-
-	private ProjectlistMB getProjectlistBean() {
-		if (projectlistMB == null)
-			projectlistMB = (ProjectlistMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "projectlistMB");
-
-		return projectlistMB;
-	}
 
 }
