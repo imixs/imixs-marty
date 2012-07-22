@@ -38,6 +38,8 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
 import javax.faces.event.ActionEvent;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -60,6 +62,8 @@ import org.imixs.workflow.xml.XMLItemCollectionAdapter;
  * @author rsoika
  * 
  */
+@ManagedBean
+@SessionScoped
 public class SetupMB { 
 
 	/**

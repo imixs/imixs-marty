@@ -39,7 +39,9 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.SessionScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.component.UIInput;
@@ -60,6 +62,9 @@ import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
+
+@ManagedBean
+@SessionScoped
 public class ProjectMB extends AbstractWorkflowController {
 
 	public final static int START_PROJECT_PROCESS_ID = 100;
@@ -79,14 +84,7 @@ public class ProjectMB extends AbstractWorkflowController {
 	@ManagedProperty(value = "#{setupMB}")
 	private SetupMB setupMB = null;
 	
-	@ManagedProperty(value = "#{projectlistMB}")
-	private ProjectlistMB projectlistMB = null;
 	
-	@ManagedProperty(value = "#{worklistMB}")
-	private WorklistMB worklistMB = null;
-	
-	@ManagedProperty(value = "#{workitemMB}")
-	private WorkitemMB workitemMB = null;
 	
 	@ManagedProperty(value = "#{nameLookupMB}")
 	private NameLookupMB nameLookupMB = null;
@@ -105,6 +103,33 @@ public class ProjectMB extends AbstractWorkflowController {
 	@PostConstruct
 	public void init() {
 		projectListeners = new ArrayList<ProjectListener>();
+	}
+
+	public MyProfileMB getMyProfileMB() {
+		return myProfileMB;
+	}
+
+	public void setMyProfileMB(MyProfileMB myProfileMB) {
+		this.myProfileMB = myProfileMB;
+	}
+
+	public SetupMB getSetupMB() {
+		return setupMB;
+	}
+
+	public void setSetupMB(SetupMB setupMB) {
+		this.setupMB = setupMB;
+	}
+
+	
+
+	
+	public NameLookupMB getNameLookupMB() {
+		return nameLookupMB;
+	}
+
+	public void setNameLookupMB(NameLookupMB nameLookupMB) {
+		this.nameLookupMB = nameLookupMB;
 	}
 
 	public synchronized void addProjectistener(ProjectListener l) {
@@ -200,6 +225,10 @@ public class ProjectMB extends AbstractWorkflowController {
 
 		try {
 			// reset worklist
+			
+			System.out.println(" Hier fehlt der FireEvent mechanismus um die worklist zu resetten");
+			
+			/*
 			worklistMB.doReset(null);
 
 			// reset view filters
@@ -207,7 +236,7 @@ public class ProjectMB extends AbstractWorkflowController {
 			worklistMB.setWorkflowGroupFilter(null);
 			worklistMB.setProjectFilter(
 					getWorkitem().getItemValueString("$uniqueid"));
-
+*/
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -555,8 +584,7 @@ public class ProjectMB extends AbstractWorkflowController {
 
 		ItemCollection saveItem = project;
 
-		projectlistMB.doRefresh(event);
-		projectlistMB.resetProcessList();
+		
 		myProfileMB.clearCache();
 		this.setWorkitem(saveItem);
 
@@ -835,7 +863,7 @@ public class ProjectMB extends AbstractWorkflowController {
 			// inform Listeners...
 			fireProjectDeleteEvent();
 			projectService.deleteProject(this.getWorkitem());
-			projectlistMB.doReset(event);
+			
 		}
 	}
 
@@ -851,7 +879,6 @@ public class ProjectMB extends AbstractWorkflowController {
 		
 			projectService.moveIntoDeletions(getWorkitem());
 
-			this.projectlistMB.doReset(event);
 		
 	}
 

@@ -32,12 +32,10 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.context.FacesContext;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
 import javax.faces.event.ActionEvent;
 
-import org.imixs.marty.web.project.ProjectMB;
-import org.imixs.marty.web.workitem.WorkitemMB;
-import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
@@ -61,13 +59,12 @@ import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
  * @author rsoika
  * 
  */
+@ManagedBean
+@SessionScoped
 public class SearchMB  {
-	private WorkitemMB workitemMB = null;
-	private WorklistMB worklistMB = null;
-	private ProjectMB projectMB = null;
+	
 	private ItemCollection searchFilter;
 	private List<ItemCollection> workitems = null;
-	private int count = 30;
 	private int row = 0;
 	private boolean endOfList = false;
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
@@ -191,14 +188,7 @@ public class SearchMB  {
 	}
 
 	
-	public ProjectMB getProjectBean() {
-		if (projectMB == null)
-			projectMB = (ProjectMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
-							null, "projectMB");
-		return projectMB;
-	}
+	
 
 	
 	

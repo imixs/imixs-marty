@@ -35,7 +35,9 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
+import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
@@ -59,10 +61,20 @@ import org.imixs.workflow.ItemCollection;
  * 
  * @author rsoika
  */
+@ManagedBean
+@SessionScoped
 public class CommentMB implements WorkitemListener {
 	@ManagedProperty(value = "#{workitemMB}")
 	private WorkitemMB workitemMB = null;
+	
+	
 	private ItemCollection workitem = null;
+
+	public CommentMB() {
+		super();
+		
+	}
+
 
 	/**
 	 * This method register the bean as an workitemListener
@@ -83,6 +95,16 @@ public class CommentMB implements WorkitemListener {
 	}
 
 	
+	public WorkitemMB getWorkitemMB() {
+		return workitemMB;
+	}
+
+
+	public void setWorkitemMB(WorkitemMB workitemMB) {
+		this.workitemMB = workitemMB;
+	}
+
+
 	public void onWorkitemChanged(ItemCollection arg0) {
 		workitem = arg0;
 	}

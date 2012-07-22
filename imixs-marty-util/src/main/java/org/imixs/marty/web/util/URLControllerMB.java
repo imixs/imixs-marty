@@ -28,7 +28,10 @@
 package org.imixs.marty.web.util;
 
 import javax.ejb.EJB;
+import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.Cookie;
@@ -60,6 +63,8 @@ import org.imixs.workflow.ItemCollection;
  * @author rsoika
  * 
  */
+@ManagedBean
+@RequestScoped
 public class URLControllerMB {
 	public final String COOKIE_PROJECT = "imixs.marty.project";
 	public final String COOKIE_PROCESS = "imixs.marty.process";
@@ -88,6 +93,49 @@ public class URLControllerMB {
 	private String project = null;
 	private String process = null;
 	private String workitem = null;
+
+	
+	
+	
+	
+	
+	
+	
+	public URLControllerMB() {
+		super();
+		
+	}
+	
+
+	public WorklistMB getWorklistMB() {
+		return worklistMB;
+	}
+
+
+	public void setWorklistMB(WorklistMB worklistMB) {
+		this.worklistMB = worklistMB;
+	}
+
+
+	public ProjectMB getProjectMB() {
+		return projectMB;
+	}
+
+
+	public void setProjectMB(ProjectMB projectMB) {
+		this.projectMB = projectMB;
+	}
+
+
+	public WorkitemMB getWorkitemMB() {
+		return workitemMB;
+	}
+
+
+	public void setWorkitemMB(WorkitemMB workitemMB) {
+		this.workitemMB = workitemMB;
+	}
+
 
 	/**
 	 * Property for Project pre selection. Can be used to define a primary
@@ -167,7 +215,7 @@ public class URLControllerMB {
 		itemColProject = projectService.findProject(project);
 		// update the ProjectMB
 		if (itemColProject != null) {
-			getProjectBean().setWorkitem(itemColProject);
+			projectMB.setWorkitem(itemColProject);
 
 			// reset worklist
 			worklistMB.doReset(null);
@@ -271,14 +319,14 @@ public class URLControllerMB {
 
 		// user is authenticated....
 		// Start a Process ?
-		itemColProject = getProjectBean().getWorkitem();
+		itemColProject =projectMB.getWorkitem();
 		// update the ProjectMB
 		if (itemColProject != null) {
 			// ??
 			System.out.println("URLControllerMB - Start Process '" + process
 					+ "' ");
 			try {
-				getWorkitemBean().doCreateWorkitem(process, null);
+				workitemMB.doCreateWorkitem(process, null);
 			} catch (Exception e) {
 
 				e.printStackTrace();
@@ -375,12 +423,12 @@ public class URLControllerMB {
 		System.out.println("URLControllerMB - Select Workitem '" + workitem
 				+ "' ");
 		try {
-			ItemCollection aworkitem = getWorkitemBean().getEntityService()
+			ItemCollection aworkitem = workitemMB.getEntityService()
 					.load(workitem);
-			getWorkitemBean().setWorkitem(aworkitem);
+			workitemMB.setWorkitem(aworkitem);
 			String sIDRef = aworkitem.getItemValueString("$uniqueidRef");
 			// try now to update the project if no project is selected
-			itemColProject = getProjectBean().getWorkitem();
+			itemColProject = projectMB.getWorkitem();
 			// update the ProjectMB
 			if (itemColProject == null
 					|| !sIDRef.equals(itemColProject
@@ -389,7 +437,7 @@ public class URLControllerMB {
 				if (itemColProject != null) {
 					System.out.println("URLControllerMB - Select Project '"
 							+ sIDRef + "' ");
-					getProjectBean().setWorkitem(itemColProject);
+					projectMB.setWorkitem(itemColProject);
 					// reset worklist
 					worklistMB.doReset(null);
 				}
@@ -416,23 +464,7 @@ public class URLControllerMB {
 
 	}
 
-	private ProjectMB getProjectBean() {
-		if (projectMB == null)
-			projectMB = (ProjectMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
-							null, "projectMB");
-		return projectMB;
-	}
 
-	private WorkitemMB getWorkitemBean() {
-		if (workitemMB == null)
-			workitemMB = (WorkitemMB) FacesContext.getCurrentInstance()
-					.getApplication().getELResolver().getValue(
-							FacesContext.getCurrentInstance().getELContext(),
-							null, "workitemMB");
-		return workitemMB;
-	}
 
 	/**
 	 * indicates if the user is authenticated

@@ -37,8 +37,11 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Logger;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.SessionScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.context.FacesContext;
@@ -66,6 +69,8 @@ import org.imixs.workflow.jee.ejb.ModelService;
  * @author rsoika
  * 
  */
+@ManagedBean
+@SessionScoped
 public class ProjectlistMB {
 
 	private ArrayList<SelectItem> myProjectSelection = null;
@@ -90,25 +95,61 @@ public class ProjectlistMB {
 	/* Backing Beans */
 	@ManagedProperty(value = "#{workitemMB}")
 	private WorkitemMB workitemMB = null;
-	
+
 	@ManagedProperty(value = "#{projectMB}")
 	private ProjectMB projectMB = null;
-	
+
 	@ManagedProperty(value = "#{myProfileMB}")
 	private MyProfileMB myProfileMB = null;
-	
+
 	@ManagedProperty(value = "#{setupMB}")
 	private SetupMB setupMB = null;
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
 	public ProjectlistMB() {
+		super();
+	}
 
+	@PostConstruct
+	public void init() {
 		startProcessList = new StartProcessCache();
 		subProcessList = new SubProcessCache();
 
-		count = this.setupMB.getWorkitem()
-				.getItemValueInteger("MaxviewEntriesPerPage");
+		count = this.setupMB.getWorkitem().getItemValueInteger(
+				"MaxviewEntriesPerPage");
+	}
+
+	public WorkitemMB getWorkitemMB() {
+		return workitemMB;
+	}
+
+	public void setWorkitemMB(WorkitemMB workitemMB) {
+		this.workitemMB = workitemMB;
+	}
+
+	public ProjectMB getProjectMB() {
+		return projectMB;
+	}
+
+	public void setProjectMB(ProjectMB projectMB) {
+		this.projectMB = projectMB;
+	}
+
+	public MyProfileMB getMyProfileMB() {
+		return myProfileMB;
+	}
+
+	public void setMyProfileMB(MyProfileMB myProfileMB) {
+		this.myProfileMB = myProfileMB;
+	}
+
+	public SetupMB getSetupMB() {
+		return setupMB;
+	}
+
+	public void setSetupMB(SetupMB setupMB) {
+		this.setupMB = setupMB;
 	}
 
 	public int getCount() {
@@ -122,9 +163,6 @@ public class ProjectlistMB {
 	public void setRow(int row) {
 		this.row = row;
 	}
-
-
-
 
 	/**
 	 * This Method Selects the current project and refreshes the Worklist Bean
@@ -295,8 +333,7 @@ public class ProjectlistMB {
 
 			// determine user language and set Modelversion depending on the
 			// selected user locale
-			String sModelVersion = myProfileMB
-					.getModelVersionHandler()
+			String sModelVersion = myProfileMB.getModelVersionHandler()
 					.getLatestSystemVersion(userLocale.getLanguage());
 			currentSelection.replaceItemValue("$modelversion", sModelVersion);
 
@@ -327,8 +364,8 @@ public class ProjectlistMB {
 			// Zeile gefunden
 			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
 
-			this.projectMB.getProjectService()
-					.moveIntoDeletions(currentSelection);
+			this.projectMB.getProjectService().moveIntoDeletions(
+					currentSelection);
 
 			this.doReset(event);
 
@@ -389,7 +426,7 @@ public class ProjectlistMB {
 		projectMB.setWorkitem(null);
 		projects = null;
 		myProjectSelection = null;
-		
+
 	}
 
 	public void doLoadNext(ActionEvent event) {
@@ -509,8 +546,6 @@ public class ProjectlistMB {
 		return startProjects;
 
 	}
-
-	
 
 	/**
 	 * Loads the project list
@@ -725,8 +760,7 @@ public class ProjectlistMB {
 			if (aProject == null)
 				return startProcessList;
 
-			List<String> vprojectList = aProject
-					.getItemValue("txtprocesslist");
+			List<String> vprojectList = aProject.getItemValue("txtprocesslist");
 
 			// load ModelVersion
 			// String sProcessModelVersion = aProject

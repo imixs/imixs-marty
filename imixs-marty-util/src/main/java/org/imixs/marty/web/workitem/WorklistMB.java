@@ -51,6 +51,7 @@ import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.project.ProjectlistMB;
 import org.imixs.marty.web.util.SetupMB;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
 
 @ManagedBean
 @SessionScoped
@@ -108,6 +109,17 @@ public class WorklistMB implements WorkitemListener {
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
+	
+	@ManagedProperty(value = "#{fileUploadController}")
+	private FileUploadController fileUploadMB;
+	
+	
+	public WorklistMB() {
+		super();
+		// empty constructor
+	}
+
+
 	/**
 	 * This method initializes the view type an view settings like sort order
 	 * and max entries per page. These properties can be set through the
@@ -116,15 +128,17 @@ public class WorklistMB implements WorkitemListener {
 	 */
 	@PostConstruct
 	public void init() {
-
+	
+	
+		
 		// register this Bean as a workitemListener to the current WorktieMB
 		workitemMB.addWorkitemListener(this);
-
+	
 		// set default view if not set
 		if (queryType == -1)
 			setQueryType(setupMB.getWorkitem()
 					.getItemValueInteger("defaultworklistview"));
-
+	
 		// read configurations for the max count. This value can be also set via
 		// faces-config-custom.xml
 		if (count == 0)
@@ -139,9 +153,73 @@ public class WorklistMB implements WorkitemListener {
 					.getItemValueInteger("Sortorder");
 	}
 
-	
-	
-	
+
+	public FileUploadController getFileUploadMB() {
+		return fileUploadMB;
+	}
+
+	public void setFileUploadMB(FileUploadController fileUploadMB) {
+		this.fileUploadMB = fileUploadMB;
+	}
+
+
+	public WorkitemMB getWorkitemMB() {
+		return workitemMB;
+	}
+
+
+	public void setWorkitemMB(WorkitemMB workitemMB) {
+		this.workitemMB = workitemMB;
+	}
+
+
+
+	public ProjectMB getProjectMB() {
+		return projectMB;
+	}
+
+
+
+	public void setProjectMB(ProjectMB projectMB) {
+		this.projectMB = projectMB;
+	}
+
+
+	public ProjectlistMB getProjectlistMB() {
+		return projectlistMB;
+	}
+
+
+
+	public void setProjectlistMB(ProjectlistMB projectlistMB) {
+		this.projectlistMB = projectlistMB;
+	}
+
+
+	public SetupMB getSetupMB() {
+		return setupMB;
+	}
+
+
+	public void setSetupMB(SetupMB setupMB) {
+		this.setupMB = setupMB;
+	}
+
+
+
+	public LoginMB getLoginMB() {
+		return loginMB;
+	}
+
+
+
+	public void setLoginMB(LoginMB loginMB) {
+		this.loginMB = loginMB;
+	}
+
+
+
+
 
 
 	public int getCount() {
@@ -221,10 +299,13 @@ public class WorklistMB implements WorkitemListener {
 	}
 
 	public String getViewTitle() {
-		return viewTitle;
+		return viewTitle+  loginMB.getRemoteUser();
 	}
 
 	public void setViewTitle(String viewTitle) {
+		if (loginMB==null)
+			return;
+		
 		Locale locale = new Locale(loginMB.getLocale());
 		ResourceBundle rb = null;
 		rb = ResourceBundle.getBundle("bundle.workitem", locale);

@@ -31,6 +31,8 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
 import javax.faces.event.ActionEvent;
 
 import org.imixs.workflow.ItemCollection;
@@ -43,6 +45,8 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
  * @author rsoika
  * 
  */
+@ManagedBean
+@SessionScoped
 public class WorkflowSchedulerMB  {
 
 	private ItemCollection configItemCollection = null;

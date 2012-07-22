@@ -75,20 +75,18 @@ import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 public class WorkitemMB extends AbstractWorkflowController {
 
 	public final static String DEFAULT_EDITOR_ID = "default";
-
+	private int sortby = -1;
+	private int sortorder = -1;
 	/* Workflow Model & Caching objects */
 	private HashMap processCache;
 
 	/* Project Backing Bean */
 	@ManagedProperty(value = "#{projectMB}")
 	private ProjectMB projectMB = null;
-	
-	@ManagedProperty(value = "#{worklistMB}")
-	private WorklistMB worklistMB = null;
-	
+
 	@ManagedProperty(value = "#{setupMB}")
 	private SetupMB setupMB = null;
-	
+
 	@ManagedProperty(value = "#{nameLookupMB}")
 	private NameLookupMB nameLookupMB = null;
 
@@ -115,12 +113,39 @@ public class WorkitemMB extends AbstractWorkflowController {
 	public void init() {
 		processCache = new HashMap();
 		workitemListeners = new ArrayList<WorkitemListener>();
+
+	
+		// read configuration for the sort order
+		if (sortby == -1)
+			sortby = setupMB.getWorkitem().getItemValueInteger("Sortby");
+		if (sortorder == -1)
+			sortorder = setupMB.getWorkitem().getItemValueInteger("Sortorder");
 	}
 
-	
-	
+	public ProjectMB getProjectMB() {
+		return projectMB;
+	}
 
-	
+	public void setProjectMB(ProjectMB projectMB) {
+		this.projectMB = projectMB;
+	}
+
+	public SetupMB getSetupMB() {
+		return setupMB;
+	}
+
+	public void setSetupMB(SetupMB setupMB) {
+		this.setupMB = setupMB;
+	}
+
+	public NameLookupMB getNameLookupMB() {
+		return nameLookupMB;
+	}
+
+	public void setNameLookupMB(NameLookupMB nameLookupMB) {
+		this.nameLookupMB = nameLookupMB;
+	}
+
 	/**
 	 * returns the workflowEditorID for the current workItem. If no attribute
 	 * with the name "txtWorkflowEditorid" is available then the method return
@@ -138,18 +163,18 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 */
 	public String getEditor() {
 		// if (isAvailable()) {
-		
-			String sEditor = getWorkitem()
-					.getItemValueString("txtWorkflowEditorid");
-			if (!"".equals(sEditor)) {
-				// test if # is provides to indicate optinal section
-				// informations
-				if (sEditor.indexOf('#') > -1)
-					sEditor = sEditor.substring(0, sEditor.indexOf('#'));
-				return sEditor;
-			} else
-				return DEFAULT_EDITOR_ID;
-		
+
+		String sEditor = getWorkitem()
+				.getItemValueString("txtWorkflowEditorid");
+		if (!"".equals(sEditor)) {
+			// test if # is provides to indicate optinal section
+			// informations
+			if (sEditor.indexOf('#') > -1)
+				sEditor = sEditor.substring(0, sEditor.indexOf('#'));
+			return sEditor;
+		} else
+			return DEFAULT_EDITOR_ID;
+
 	}
 
 	/**
@@ -209,106 +234,99 @@ public class WorkitemMB extends AbstractWorkflowController {
 	public ArrayList<EditorSection> getEditorSections() {
 		ArrayList<EditorSection> sections = new ArrayList<EditorSection>();
 
-		
-			UIViewRoot viewRoot = FacesContext.getCurrentInstance()
-					.getViewRoot();
-			Locale locale = viewRoot.getLocale();
+		UIViewRoot viewRoot = FacesContext.getCurrentInstance().getViewRoot();
+		Locale locale = viewRoot.getLocale();
 
-			String sEditor = getWorkitem()
-					.getItemValueString("txtWorkflowEditorid");
-			if (sEditor.indexOf('#') > -1) {
-				String liste = sEditor.substring(sEditor.indexOf('#') + 1);
+		String sEditor = getWorkitem()
+				.getItemValueString("txtWorkflowEditorid");
+		if (sEditor.indexOf('#') > -1) {
+			String liste = sEditor.substring(sEditor.indexOf('#') + 1);
 
-				StringTokenizer st = new StringTokenizer(liste, "|");
-				while (st.hasMoreTokens()) {
-					try {
-						String sURL = st.nextToken();
+			StringTokenizer st = new StringTokenizer(liste, "|");
+			while (st.hasMoreTokens()) {
+				try {
+					String sURL = st.nextToken();
 
-						// if the URL contains a [] section test the defined
-						// user
-						// permissions
-						if (sURL.indexOf('[') > -1 || sURL.indexOf(']') > -1) {
-							boolean bPermissionGranted = false;
-							// yes - cut the permissions
-							String sPermissions = sURL.substring(
-									sURL.indexOf('[') + 1, sURL.indexOf(']'));
+					// if the URL contains a [] section test the defined
+					// user
+					// permissions
+					if (sURL.indexOf('[') > -1 || sURL.indexOf(']') > -1) {
+						boolean bPermissionGranted = false;
+						// yes - cut the permissions
+						String sPermissions = sURL.substring(
+								sURL.indexOf('[') + 1, sURL.indexOf(']'));
 
-							// cut the permissions from the URL
-							sURL = sURL.substring(0,sURL.indexOf('['));
-							StringTokenizer stPermission = new StringTokenizer(
-									sPermissions, ",");
-							while (stPermission.hasMoreTokens()) {
-								String aPermission = stPermission.nextToken();
-								// test for user role
-								ExternalContext ectx = FacesContext
-										.getCurrentInstance()
-										.getExternalContext();
-								if (ectx.isUserInRole(aPermission)) {
-									bPermissionGranted = true;
-									break;
-								}
-								// test if user is project member
-								if ("owner".equalsIgnoreCase(aPermission)
-										&& this.projectMB
-												.isProjectOwner()) {
-									bPermissionGranted = true;
-									break;
-								}
-								if ("manager".equalsIgnoreCase(aPermission)
-										&& this.projectMB
-												.isProjectManager()) {
-									bPermissionGranted = true;
-									break;
-								}
-								if ("team".equalsIgnoreCase(aPermission)
-										&& this.projectMB
-												.isProjectTeam()) {
-									bPermissionGranted = true;
-									break;
-								}
-								if ("assist".equalsIgnoreCase(aPermission)
-										&& this.projectMB
-												.isProjectAssist()) {
-									bPermissionGranted = true;
-									break;
-								}
-
+						// cut the permissions from the URL
+						sURL = sURL.substring(0, sURL.indexOf('['));
+						StringTokenizer stPermission = new StringTokenizer(
+								sPermissions, ",");
+						while (stPermission.hasMoreTokens()) {
+							String aPermission = stPermission.nextToken();
+							// test for user role
+							ExternalContext ectx = FacesContext
+									.getCurrentInstance().getExternalContext();
+							if (ectx.isUserInRole(aPermission)) {
+								bPermissionGranted = true;
+								break;
+							}
+							// test if user is project member
+							if ("owner".equalsIgnoreCase(aPermission)
+									&& this.projectMB.isProjectOwner()) {
+								bPermissionGranted = true;
+								break;
+							}
+							if ("manager".equalsIgnoreCase(aPermission)
+									&& this.projectMB.isProjectManager()) {
+								bPermissionGranted = true;
+								break;
+							}
+							if ("team".equalsIgnoreCase(aPermission)
+									&& this.projectMB.isProjectTeam()) {
+								bPermissionGranted = true;
+								break;
+							}
+							if ("assist".equalsIgnoreCase(aPermission)
+									&& this.projectMB.isProjectAssist()) {
+								bPermissionGranted = true;
+								break;
 							}
 
-							// if not permission is granted - skip this section
-							if (!bPermissionGranted)
-								continue;
-
 						}
 
-						String sName = null;
-						// compute name from ressource Bundle....
-						try {
-							ResourceBundle rb = null;
-							if (locale != null)
-								rb = ResourceBundle.getBundle("bundle.forms",
-										locale);
-							else
-								rb = ResourceBundle.getBundle("bundle.forms");
+						// if not permission is granted - skip this section
+						if (!bPermissionGranted)
+							continue;
 
-							String sResouceURL = sURL.replace('/', '_');
-							sName = rb.getString(sResouceURL);
-						} catch (java.util.MissingResourceException eb) {
-									sName = "";
-							System.out.println(eb.getMessage());
-						}
-
-						EditorSection aSection = new EditorSection(sURL, sName);
-						sections.add(aSection);
-
-					} catch (Exception est) {
-						logger.severe("[WorkitemMB] can not parse EditorSections : '"
-								+ sEditor + "'");
-						logger.severe(est.getMessage());
 					}
+
+					String sName = null;
+					// compute name from ressource Bundle....
+					try {
+						ResourceBundle rb = null;
+						if (locale != null)
+							rb = ResourceBundle.getBundle("bundle.forms",
+									locale);
+						else
+							rb = ResourceBundle.getBundle("bundle.forms");
+
+						String sResouceURL = sURL.replace('/', '_');
+						sName = rb.getString(sResouceURL);
+					} catch (java.util.MissingResourceException eb) {
+						sName = "";
+						System.out.println(eb.getMessage());
+					}
+
+					EditorSection aSection = new EditorSection(sURL, sName);
+					sections.add(aSection);
+
+				} catch (Exception est) {
+					logger.severe("[WorkitemMB] can not parse EditorSections : '"
+							+ sEditor + "'");
+					logger.severe(est.getMessage());
 				}
 			}
-		
+		}
+
 		return sections;
 
 	}
@@ -431,8 +449,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 				ItemCollection currentProject = this.projectMB
 						.getEntityService().load(projectIdentifier);
 				projectMB.setWorkitem(currentProject);
-				// reset worklist
-				worklistMB.doReset(null);
+
 			}
 
 			// find ProcessEntity the Worktiem should be started at
@@ -449,8 +466,6 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 			// inform Listeners...
 			fireWorkitemCreatedEvent();
-
-			worklistMB.doReset(null);
 
 		}
 	}
@@ -496,20 +511,16 @@ public class WorkitemMB extends AbstractWorkflowController {
 			}
 		}
 
-		ItemCollection workitem=getWorkitem();
+		ItemCollection workitem = getWorkitem();
 		// remove last workflow result properties......
 		workitem.removeItem("action");
 		workitem.removeItem("project");
 
 		// set max History & log length
-		workitem.replaceItemValue(
-				"numworkflowHistoryLength",
-				setupMB.getWorkitem().getItemValueInteger(
-						"MaxWorkitemHistoryLength"));
-		workitem.replaceItemValue(
-				"numworkflowLogLength",
-				setupMB.getWorkitem().getItemValueInteger(
-						"MaxWorkitemHistoryLength"));
+		workitem.replaceItemValue("numworkflowHistoryLength", setupMB
+				.getWorkitem().getItemValueInteger("MaxWorkitemHistoryLength"));
+		workitem.replaceItemValue("numworkflowLogLength", setupMB.getWorkitem()
+				.getItemValueInteger("MaxWorkitemHistoryLength"));
 
 		workitem.replaceItemValue("$ActivityID", activityID);
 
@@ -518,14 +529,13 @@ public class WorkitemMB extends AbstractWorkflowController {
 		// inform Listeners...
 		fireWorkitemProcessEvent();
 
-		workitem = workitemService
-				.processWorkItem(workitem);
+		workitem = workitemService.processWorkItem(workitem);
 
 		// inform Listeners...
 		fireWorkitemProcessCompletedEvent();
 		// update workitemcollection and reset childs
 		this.setWorkitem(workitem);
-		worklistMB.doRefresh(event);
+
 	}
 
 	/**
@@ -540,19 +550,17 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doDelete(ActionEvent event) throws Exception {
-		
-			// inform Listeners...
-			fireWorkitemDeleteEvent();
 
-			workitemService.deleteWorkItem(getWorkitem());
-			this.setWorkitem(null);
-			// getFileUploadMB().reset();
+		// inform Listeners...
+		fireWorkitemDeleteEvent();
 
-			// inform Listeners...
-			fireWorkitemDeleteCompletedEvent();
+		workitemService.deleteWorkItem(getWorkitem());
+		this.setWorkitem(null);
+		// getFileUploadMB().reset();
 
-			worklistMB.doRefresh(event);
-		
+		// inform Listeners...
+		fireWorkitemDeleteCompletedEvent();
+
 	}
 
 	/**
@@ -564,18 +572,15 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doSoftDelete(ActionEvent event) throws Exception {
-	
-			// inform Listeners...
-			fireWorkitemSoftDeleteEvent();
 
-			workitemService
-					.moveIntoDeletions(getWorkitem());
+		// inform Listeners...
+		fireWorkitemSoftDeleteEvent();
 
-			// inform Listeners...
-			fireWorkitemSoftDeleteCompletedEvent();
+		workitemService.moveIntoDeletions(getWorkitem());
 
-			worklistMB.doRefresh(event);
-		
+		// inform Listeners...
+		fireWorkitemSoftDeleteCompletedEvent();
+
 	}
 
 	/**
@@ -728,7 +733,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 			// inform Listeners...
 			fireChildDeleteEvent();
 
-			if ("childworkitem".equals(childWorkitemItemCollection.getItemValueString("type")))
+			if ("childworkitem".equals(childWorkitemItemCollection
+					.getItemValueString("type")))
 				workitemService.deleteWorkItem(childWorkitemItemCollection);
 
 			doResetChildWorkitems(event);
@@ -807,11 +813,9 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 		// get current project
 		ItemCollection itemColProject = projectService
-				.findProject(getWorkitem()
-						.getItemValueString("$uniqueidRef"));
+				.findProject(getWorkitem().getItemValueString("$uniqueidRef"));
 		projectMB.setWorkitem(itemColProject);
 
-		worklistMB.doReset(event);
 	}
 
 	/**
@@ -823,11 +827,10 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doMoveIntoArchive(ActionEvent event) throws Exception {
-		ItemCollection workitem=workitemService
-					.moveIntoArchive(getWorkitem());
+		ItemCollection workitem = workitemService
+				.moveIntoArchive(getWorkitem());
 		setWorkitem(workitem);
-			this.worklistMB.doRefresh(event);
-		
+
 	}
 
 	/**
@@ -839,13 +842,11 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doMoveIntoDeletions(ActionEvent event) throws Exception {
-		
-		ItemCollection workitem=
-			 workitemService
-					.moveIntoDeletions(getWorkitem());
-		setWorkitem(workitem);	this.worklistMB.doRefresh(event);
 
-		
+		ItemCollection workitem = workitemService
+				.moveIntoDeletions(getWorkitem());
+		setWorkitem(workitem);
+
 	}
 
 	/**
@@ -857,11 +858,11 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doRestoreFromArchive(ActionEvent event) throws Exception {
-	ItemCollection workitem=
-			 workitemService.restoreFromArchive(getWorkitem());
+		ItemCollection workitem = workitemService
+				.restoreFromArchive(getWorkitem());
 
-	setWorkitem(workitem);	this.worklistMB.doRefresh(event);
-		
+		setWorkitem(workitem);
+
 	}
 
 	/**
@@ -873,12 +874,10 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @throws Exception
 	 */
 	public void doRestoreFromDeletions(ActionEvent event) throws Exception {
-		ItemCollection workitem=
-			 workitemService
-					.restoreFromDeletions(getWorkitem());
+		ItemCollection workitem = workitemService
+				.restoreFromDeletions(getWorkitem());
 		setWorkitem(workitem);
-			this.worklistMB.doRefresh(event);
-		
+
 	}
 
 	/**
@@ -896,8 +895,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 */
 	public void doChangeProcessID(ActionEvent event) throws Exception {
 
-		String aProcessIdentifier = getWorkitem()
-				.getItemValueString("txtNewStratProcessEntity");
+		String aProcessIdentifier = getWorkitem().getItemValueString(
+				"txtNewStratProcessEntity");
 
 		/*
 		 * System.out
@@ -913,15 +912,13 @@ public class WorkitemMB extends AbstractWorkflowController {
 						sProcessModelVersion);
 
 		if (itemColProcessEntity != null) {
-			ItemCollection workitem= workitemService.changeProcess(
+			ItemCollection workitem = workitemService.changeProcess(
 					getWorkitem(), itemColProcessEntity);
 			this.setWorkitem(workitem);
-			this.worklistMB.doRefresh(event);
+
 		}
 
 	}
-
-	
 
 	/**
 	 * returns the last workflow result to control the navigation flow if no
@@ -932,7 +929,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @return
 	 */
 	public String getAction() {
-	
+
 		String sResult = getWorkitem().getItemValueString("action");
 		if ("".equals(sResult))
 			return "open_workitem";
@@ -947,18 +944,16 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @return a help text
 	 */
 	public String getProcessDescription() {
-		
-		
-			String sModelVersion = getWorkitem()
-					.getItemValueString("$modelversion");
-			int iPID =  getWorkitem()
-					.getItemValueInteger("$ProcessID");
 
-			ItemCollection processEntity = this.getModelService()
-					.getProcessEntityByVersion(iPID, sModelVersion);
-			if (processEntity != null)
-				return processEntity.getItemValueString("rtfdescription");
-		
+		String sModelVersion = getWorkitem()
+				.getItemValueString("$modelversion");
+		int iPID = getWorkitem().getItemValueInteger("$ProcessID");
+
+		ItemCollection processEntity = this.getModelService()
+				.getProcessEntityByVersion(iPID, sModelVersion);
+		if (processEntity != null)
+			return processEntity.getItemValueString("rtfdescription");
+
 		return "";
 
 	}
@@ -978,9 +973,9 @@ public class WorkitemMB extends AbstractWorkflowController {
 	 * @return
 	 */
 	public String getWorkflowReport() {
-	
-		String sResult =  getWorkitem()
-				.getItemValueString("txtworkflowresultmessage");
+
+		String sResult = getWorkitem().getItemValueString(
+				"txtworkflowresultmessage");
 		if (sResult != null && !"".equals(sResult)) {
 			// test if result contains "report="
 			if (sResult.indexOf("report=") > -1) {
@@ -994,16 +989,13 @@ public class WorkitemMB extends AbstractWorkflowController {
 			return "";
 	}
 
-	
-	
 	/***
 	 * This method finds the corresponding Project of the curreent workitem and
 	 * updates the ProjectMB with this project
 	 */
 	public void updateProjectMB() {
-		
-		String projectID =  getWorkitem()
-				.getItemValueString("$uniqueidRef");
+
+		String projectID = getWorkitem().getItemValueString("$uniqueidRef");
 
 		if (projectMB.getWorkitem() == null
 				|| !projectID.equals(projectMB.getWorkitem()
@@ -1093,12 +1085,10 @@ public class WorkitemMB extends AbstractWorkflowController {
 			return;
 		Collection<ItemCollection> col = null;
 		try {
-			String sRefUniqueID =  getWorkitem()
-					.getItemValueString("$uniqueid");
+			String sRefUniqueID = getWorkitem().getItemValueString("$uniqueid");
 
 			col = workitemService.findAllWorkitems(sRefUniqueID, null, null, 0,
-					0, -1, this.worklistMB.getSortby(), this
-							.worklistMB.getSortorder());
+					0, -1, getSortby(), getSortorder());
 			for (ItemCollection aworkitem : col) {
 				childs.add((aworkitem));
 			}
@@ -1168,8 +1158,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 			return;
 		Collection<ItemCollection> col = null;
 		try {
-			String sRefID =  getWorkitem()
-					.getItemValueString("$workitemId");
+			String sRefID = getWorkitem().getItemValueString("$workitemId");
 			String refQuery = "SELECT entity FROM Entity entity "
 					+ " JOIN entity.textItems AS t"
 					+ "  WHERE entity.type='workitem'"
@@ -1208,7 +1197,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemCreated( getWorkitem());
+			l.onWorkitemCreated(getWorkitem());
 		}
 	}
 
@@ -1219,7 +1208,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemChanged( getWorkitem());
+			l.onWorkitemChanged(getWorkitem());
 		}
 	}
 
@@ -1230,7 +1219,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemProcess( getWorkitem());
+			l.onWorkitemProcess(getWorkitem());
 		}
 	}
 
@@ -1241,7 +1230,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemProcessCompleted( getWorkitem());
+			l.onWorkitemProcessCompleted(getWorkitem());
 		}
 	}
 
@@ -1274,7 +1263,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemSoftDelete( getWorkitem());
+			l.onWorkitemSoftDelete(getWorkitem());
 		}
 	}
 
@@ -1285,7 +1274,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemSoftDeleteCompleted( getWorkitem());
+			l.onWorkitemSoftDeleteCompleted(getWorkitem());
 		}
 	}
 
@@ -1296,7 +1285,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
 				.hasNext();) {
 			WorkitemListener l = i.next();
-			l.onWorkitemDelete( getWorkitem());
+			l.onWorkitemDelete(getWorkitem());
 		}
 	}
 
@@ -1385,24 +1374,40 @@ public class WorkitemMB extends AbstractWorkflowController {
 			String remoteUser = externalContext.getRemoteUser();
 
 			// update current editor / remote user
-			acol.replaceItemValue("dspnamcurrenteditor", this
-					.nameLookupMB.findUserName(remoteUser));
+			acol.replaceItemValue("dspnamcurrenteditor",
+					this.nameLookupMB.findUserName(remoteUser));
 
 			// test if creator was still right translated
 			String sNamCreator = acol.getItemValueString("namCreator");
 			String sDspNamCreator = acol.getItemValueString("dspnamCreator");
 			if ("".equals(sDspNamCreator)
-					|| !this.nameLookupMB.findUserName(sNamCreator)
-							.equals(sDspNamCreator)) {
+					|| !this.nameLookupMB.findUserName(sNamCreator).equals(
+							sDspNamCreator)) {
 				// update dsp name for creator
-				acol.replaceItemValue("dspnamCreator", this.nameLookupMB
-						.findUserName(sNamCreator));
+				acol.replaceItemValue("dspnamCreator",
+						this.nameLookupMB.findUserName(sNamCreator));
 			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
+	}
+
+	public int getSortby() {
+		return sortby;
+	}
+
+	public void setSortby(int sortby) {
+		this.sortby = sortby;
+	}
+
+	public int getSortorder() {
+		return sortorder;
+	}
+
+	public void setSortorder(int sortorder) {
+		this.sortorder = sortorder;
 	}
 
 	/**
