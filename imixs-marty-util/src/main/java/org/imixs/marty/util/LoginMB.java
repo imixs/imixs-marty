@@ -33,6 +33,8 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
@@ -51,6 +53,8 @@ import javax.servlet.http.HttpSession;
  * @author rsoika
  * 
  */
+@ManagedBean
+@SessionScoped
 public class LoginMB {
 	public final String COOKIE_LOCALE = "imixs.sywapp.locale";
 	
@@ -60,6 +64,11 @@ public class LoginMB {
 	
 
 	
+	public LoginMB() {
+		super();
+		// empty constructor
+	}
+
 	public boolean isAuthenticated() {
 		return (getUserPrincipal() != null);
 	}
