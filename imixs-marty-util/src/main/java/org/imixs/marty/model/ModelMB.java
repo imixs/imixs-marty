@@ -45,10 +45,10 @@ import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 
 import org.imixs.marty.ejb.ProjectService;
+import org.imixs.marty.profile.MyProfileMB;
+import org.imixs.marty.project.ProjectMB;
+import org.imixs.marty.project.ProjectlistMB;
 import org.imixs.marty.util.SelectItemComparator;
-import org.imixs.marty.web.profile.MyProfileMB;
-import org.imixs.marty.web.project.ProjectMB;
-import org.imixs.marty.web.project.ProjectlistMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.ModelService;
 
@@ -75,7 +75,7 @@ import org.imixs.workflow.jee.ejb.ModelService;
  * MyProfileMB is different from this format and was used in earlier versions of
  * ShareYourWork. We hope that we can drop the ModelVersionHandler sometimes....
  * 
- * @see org.imixs.marty.web.profile.MyProfileMB
+ * @see org.imixs.marty.profile.MyProfileMB
  * @author rsoika
  * 
  */

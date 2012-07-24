@@ -13,8 +13,8 @@ import javax.faces.component.UIData;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 
-import org.imixs.marty.web.project.ProjectlistMB;
-import org.imixs.marty.web.util.SetupMB;
+import org.imixs.marty.config.SetupMB;
+import org.imixs.marty.project.ProjectlistMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 

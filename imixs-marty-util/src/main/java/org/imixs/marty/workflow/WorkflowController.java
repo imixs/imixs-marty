@@ -25,8 +25,9 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.web.workitem;
+package org.imixs.marty.workflow;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,11 +52,11 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 
+import org.imixs.marty.config.SetupMB;
 import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.ejb.WorkitemService;
-import org.imixs.marty.web.profile.NameLookupMB;
-import org.imixs.marty.web.project.ProjectMB;
-import org.imixs.marty.web.util.SetupMB;
+import org.imixs.marty.profile.NameLookupMB;
+import org.imixs.marty.project.ProjectMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
@@ -72,7 +73,10 @@ import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
  */
 @ManagedBean
 @SessionScoped
-public class WorkitemMB extends AbstractWorkflowController {
+public class WorkflowController extends AbstractWorkflowController implements Serializable {
+
+	
+	private static final long serialVersionUID = 1L;
 
 	public final static String DEFAULT_EDITOR_ID = "default";
 	private int sortby = -1;
@@ -109,6 +113,14 @@ public class WorkitemMB extends AbstractWorkflowController {
 	@EJB
 	ProjectService projectService;
 
+	
+	
+	public WorkflowController() {
+		super();
+		// empty constructor
+	}
+
+	
 	@PostConstruct
 	public void init() {
 		processCache = new HashMap();

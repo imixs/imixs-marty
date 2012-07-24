@@ -25,8 +25,9 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.web.workitem;
+package org.imixs.marty.workflow;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -46,16 +47,19 @@ import javax.faces.event.ActionEvent;
 import javax.faces.event.ValueChangeEvent;
 import javax.faces.model.SelectItem;
 
+import org.imixs.marty.config.SetupMB;
+import org.imixs.marty.project.ProjectMB;
+import org.imixs.marty.project.ProjectlistMB;
 import org.imixs.marty.util.LoginMB;
-import org.imixs.marty.web.project.ProjectMB;
-import org.imixs.marty.web.project.ProjectlistMB;
-import org.imixs.marty.web.util.SetupMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
 
 @ManagedBean
 @SessionScoped
-public class WorklistMB implements WorkitemListener {
+public class WorklistController implements WorkitemListener, Serializable {
+
+	
+	private static final long serialVersionUID = 1L;
 
 	ItemCollection currentProjectSelection = null; // current selected project
 
@@ -92,8 +96,8 @@ public class WorklistMB implements WorkitemListener {
 
 	/* Backing Beans */
 	
-	@ManagedProperty(value = "#{workitemMB}")
-	private WorkitemMB workitemMB = null;
+	@ManagedProperty(value = "#{workflowController}")
+	private WorkflowController workflowController = null;
 	
 	@ManagedProperty(value = "#{projectMB}")
 	private ProjectMB projectMB = null;
@@ -114,7 +118,7 @@ public class WorklistMB implements WorkitemListener {
 	private FileUploadController fileUploadMB;
 	
 	
-	public WorklistMB() {
+	public WorklistController() {
 		super();
 		// empty constructor
 	}
@@ -132,7 +136,7 @@ public class WorklistMB implements WorkitemListener {
 	
 		
 		// register this Bean as a workitemListener to the current WorktieMB
-		workitemMB.addWorkitemListener(this);
+		workflowController.addWorkitemListener(this);
 	
 		// set default view if not set
 		if (queryType == -1)
@@ -163,13 +167,13 @@ public class WorklistMB implements WorkitemListener {
 	}
 
 
-	public WorkitemMB getWorkitemMB() {
-		return workitemMB;
+	public WorkflowController getWorkflowController() {
+		return workflowController;
 	}
 
 
-	public void setWorkitemMB(WorkitemMB workitemMB) {
-		this.workitemMB = workitemMB;
+	public void setWorkflowController(WorkflowController workitemMB) {
+		this.workflowController = workitemMB;
 	}
 
 
@@ -383,7 +387,7 @@ public class WorklistMB implements WorkitemListener {
 			sWorkflowGroup = workflowGroupFilter.substring(workflowGroupFilter
 					.indexOf("|") + 1);
 
-			List<ItemCollection> processList =workitemMB
+			List<ItemCollection> processList =workflowController
 					.getModelService()
 					.getAllProcessEntitiesByGroupByVersion(sWorkflowGroup,sModel);
 			for (ItemCollection process : processList) {
@@ -427,10 +431,10 @@ public class WorklistMB implements WorkitemListener {
 			currentSelection.getAllItems().remove("a4j:showhistory");
 			currentSelection.getAllItems().remove("a4j:showdetails");
 
-			workitemMB.setWorkitem(currentSelection);
+			workflowController.setWorkitem(currentSelection);
 
 			// update projectMB if necessary
-			workitemMB.updateProjectMB();
+			workflowController.updateProjectMB();
 
 		}
 	}
@@ -926,7 +930,7 @@ public class WorklistMB implements WorkitemListener {
 		}
 
 		// reset current workitem for detail views
-		workitemMB.setWorkitem(null);
+		workflowController.setWorkitem(null);
 	}
 
 	/***************************************************************************

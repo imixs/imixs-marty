@@ -21,7 +21,7 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.marty.web.workitem;
+package org.imixs.marty.workflow;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

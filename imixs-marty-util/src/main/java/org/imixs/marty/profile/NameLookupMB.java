@@ -25,7 +25,7 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.web.profile;
+package org.imixs.marty.profile;
 
 import java.util.Collection;
 import java.util.Iterator;

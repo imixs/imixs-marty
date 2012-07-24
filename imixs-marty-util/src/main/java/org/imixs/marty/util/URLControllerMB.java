@@ -25,7 +25,7 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.web.util;
+package org.imixs.marty.util;
 
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
@@ -40,9 +40,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.ProjectService;
-import org.imixs.marty.web.project.ProjectMB;
-import org.imixs.marty.web.workitem.WorkitemMB;
-import org.imixs.marty.web.workitem.WorklistMB;
+import org.imixs.marty.project.ProjectMB;
+import org.imixs.marty.workflow.WorkflowController;
+import org.imixs.marty.workflow.WorklistController;
 import org.imixs.workflow.ItemCollection;
 
 /**
@@ -81,14 +81,14 @@ public class URLControllerMB {
 	
 	
 	
-	@ManagedProperty(value = "#{worklistMB}")
-	private WorklistMB worklistMB = null;
+	@ManagedProperty(value = "#{WorklistController}")
+	private WorklistController worklistController = null;
 	
 	@ManagedProperty(value = "#{projectMB}")
 	private ProjectMB projectMB = null;
 	
-	@ManagedProperty(value = "#{workitemMB}")
-	private WorkitemMB workitemMB = null;
+	@ManagedProperty(value = "#{workflowController}")
+	private WorkflowController workflowController = null;
 
 	private String project = null;
 	private String process = null;
@@ -107,13 +107,13 @@ public class URLControllerMB {
 	}
 	
 
-	public WorklistMB getWorklistMB() {
-		return worklistMB;
+	public WorklistController getWorklistController() {
+		return worklistController;
 	}
 
 
-	public void setWorklistMB(WorklistMB worklistMB) {
-		this.worklistMB = worklistMB;
+	public void setWorklistController(WorklistController worklistMB) {
+		this.worklistController = worklistMB;
 	}
 
 
@@ -127,13 +127,13 @@ public class URLControllerMB {
 	}
 
 
-	public WorkitemMB getWorkitemMB() {
-		return workitemMB;
+	public WorkflowController getWorkflowController() {
+		return workflowController;
 	}
 
 
-	public void setWorkitemMB(WorkitemMB workitemMB) {
-		this.workitemMB = workitemMB;
+	public void setWorkflowController(WorkflowController workitemMB) {
+		this.workflowController = workitemMB;
 	}
 
 
@@ -218,7 +218,7 @@ public class URLControllerMB {
 			projectMB.setWorkitem(itemColProject);
 
 			// reset worklist
-			worklistMB.doReset(null);
+			worklistController.doReset(null);
 			System.out.println("URLControllerMB - Project '" + project
 					+ "' selected");
 		} else {
@@ -326,7 +326,7 @@ public class URLControllerMB {
 			System.out.println("URLControllerMB - Start Process '" + process
 					+ "' ");
 			try {
-				workitemMB.doCreateWorkitem(process, null);
+				workflowController.doCreateWorkitem(process, null);
 			} catch (Exception e) {
 
 				e.printStackTrace();
@@ -423,9 +423,9 @@ public class URLControllerMB {
 		System.out.println("URLControllerMB - Select Workitem '" + workitem
 				+ "' ");
 		try {
-			ItemCollection aworkitem = workitemMB.getEntityService()
+			ItemCollection aworkitem = workflowController.getEntityService()
 					.load(workitem);
-			workitemMB.setWorkitem(aworkitem);
+			workflowController.setWorkitem(aworkitem);
 			String sIDRef = aworkitem.getItemValueString("$uniqueidRef");
 			// try now to update the project if no project is selected
 			itemColProject = projectMB.getWorkitem();
@@ -439,7 +439,7 @@ public class URLControllerMB {
 							+ sIDRef + "' ");
 					projectMB.setWorkitem(itemColProject);
 					// reset worklist
-					worklistMB.doReset(null);
+					worklistController.doReset(null);
 				}
 			}
 		} catch (Exception e) {

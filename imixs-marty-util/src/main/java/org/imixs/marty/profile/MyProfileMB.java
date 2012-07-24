@@ -25,7 +25,7 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.web.profile;
+package org.imixs.marty.profile;
 
 import java.text.Collator;
 import java.util.Calendar;
@@ -51,13 +51,13 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.validator.ValidatorException;
 
+import org.imixs.marty.config.SetupMB;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.model.ModelVersionHandler;
+import org.imixs.marty.project.ProjectMB;
 import org.imixs.marty.util.LoginMB;
-import org.imixs.marty.web.project.ProjectMB;
-import org.imixs.marty.web.util.SetupMB;
-import org.imixs.marty.web.workitem.WorkitemMB;
+import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 

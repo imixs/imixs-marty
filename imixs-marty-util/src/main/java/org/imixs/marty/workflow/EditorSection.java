@@ -25,49 +25,55 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.web.workitem;
-
-import java.util.EventListener;
-
-import org.imixs.workflow.ItemCollection;
+package org.imixs.marty.workflow;
 
 /**
- * This interface can be implemented by a managed bean to observe the status of
- * the wokitemMB. The WorkitemMB will fire different events on specific program
- * situations.
+ * This Class is provided as a property of the WorkitemMB to provide informations about EditorSections 
+ * defined in the Model (txtWorkflowEditorID) 
  * 
- * @author rsoika 
+ * <code>
+ *     <c:forEach items="#{workitemMB.editorSections}" var="section">
+ *         <ui:include src="/pages/workitems/forms/#{section.url}.xhtml" />
+ *         .....
+ *         
+ *         
+ *  other Example:   
+ *     
+ *      rendered="#{! empty workitemMB.editorSection['prototyp/files']}"
+ *      
+ *      
+ * </code>
  * 
+ * @see WorkflowController.getEditorSections
+ * @see WorkflowController.getEditorSection
+ * 
+ * @author rsoika
+ *
  */
-public interface WorkitemListener extends EventListener {
+public class EditorSection {
+	String url;
+	String name;
 
-	public void onWorkitemCreated(ItemCollection e);
+	public EditorSection(String url, String name) {
+		super();
+		this.url = url;
+		this.name = name;
+	}
 
-	public void onWorkitemChanged(ItemCollection e);
+	public String getUrl() {
+		return url;
+	}
 
-	public void onWorkitemProcess(ItemCollection e);
+	public void setUrl(String url) {
+		this.url = url;
+	}
 
-	public void onWorkitemProcessCompleted(ItemCollection e);
-	
-	public void onWorkitemDelete(ItemCollection e);
+	public String getName() {
+		return name;
+	}
 
-	public void onWorkitemDeleteCompleted();
-	
-	public void onWorkitemSoftDelete(ItemCollection e);
+	public void setName(String name) {
+		this.name = name;
+	}
 
-	public void onWorkitemSoftDeleteCompleted(ItemCollection e);
-
-	public void onChildProcess(ItemCollection e);
-
-	public void onChildProcessCompleted(ItemCollection e);
-
-	public void onChildCreated(ItemCollection e);
-
-	public void onChildDelete(ItemCollection e);
-
-	public void onChildDeleteCompleted();
-	
-	public void onChildSoftDelete(ItemCollection e);
-
-	public void onChildSoftDeleteCompleted(ItemCollection e);
 }

@@ -25,7 +25,7 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.web.util;
+package org.imixs.marty.config;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

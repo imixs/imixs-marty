@@ -25,7 +25,7 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.web.util;
+package org.imixs.marty.util;
 
 import java.util.logging.Logger;
 

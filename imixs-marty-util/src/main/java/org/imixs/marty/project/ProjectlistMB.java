@@ -25,8 +25,9 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.web.project;
+package org.imixs.marty.project;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -48,10 +49,10 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
 
+import org.imixs.marty.config.SetupMB;
 import org.imixs.marty.ejb.ProjectService;
-import org.imixs.marty.web.profile.MyProfileMB;
-import org.imixs.marty.web.util.SetupMB;
-import org.imixs.marty.web.workitem.WorkitemMB;
+import org.imixs.marty.profile.MyProfileMB;
+import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.ModelService;
@@ -71,7 +72,10 @@ import org.imixs.workflow.jee.ejb.ModelService;
  */
 @ManagedBean
 @SessionScoped
-public class ProjectlistMB {
+public class ProjectlistMB implements Serializable{
+
+	
+	private static final long serialVersionUID = 1L;
 
 	private ArrayList<SelectItem> myProjectSelection = null;
 
@@ -93,8 +97,8 @@ public class ProjectlistMB {
 	EntityService entityService;
 
 	/* Backing Beans */
-	@ManagedProperty(value = "#{workitemMB}")
-	private WorkitemMB workitemMB = null;
+	@ManagedProperty(value = "#{workflowController}")
+	private WorkflowController workflowController = null;
 
 	@ManagedProperty(value = "#{projectMB}")
 	private ProjectMB projectMB = null;
@@ -120,12 +124,12 @@ public class ProjectlistMB {
 				"MaxviewEntriesPerPage");
 	}
 
-	public WorkitemMB getWorkitemMB() {
-		return workitemMB;
+	public WorkflowController getWorkflowController() {
+		return workflowController;
 	}
 
-	public void setWorkitemMB(WorkitemMB workitemMB) {
-		this.workitemMB = workitemMB;
+	public void setWorkflowController(WorkflowController workitemMB) {
+		this.workflowController = workitemMB;
 	}
 
 	public ProjectMB getProjectMB() {
@@ -875,7 +879,7 @@ public class ProjectlistMB {
 			// neede.
 
 			// find workitem
-			ItemCollection workitem = workitemMB.getWorkitem();
+			ItemCollection workitem = workflowController.getWorkitem();
 			if (workitem == null
 					|| !key.toString().equals(
 							workitem.getItemValueString("$uniqueid"))) {

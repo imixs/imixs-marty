@@ -25,55 +25,33 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.web.workitem;
+package org.imixs.marty.project;
+
+import java.util.EventListener;
+
+import org.imixs.workflow.ItemCollection;
 
 /**
- * This Class is provided as a property of the WorkitemMB to provide informations about EditorSections 
- * defined in the Model (txtWorkflowEditorID) 
- * 
- * <code>
- *     <c:forEach items="#{workitemMB.editorSections}" var="section">
- *         <ui:include src="/pages/workitems/forms/#{section.url}.xhtml" />
- *         .....
- *         
- *         
- *  other Example:   
- *     
- *      rendered="#{! empty workitemMB.editorSection['prototyp/files']}"
- *      
- *      
- * </code>
- * 
- * @see WorkitemMB.getEditorSections
- * @see WorkitemMB.getEditorSection
- * 
+ * This interface can be implemented by a managed bean to observe the status of
+ * the wokitemMB. The WorkitemMB will fire different events on specific program
+ * situations.
+ *  
  * @author rsoika
- *
+ * 
  */
-public class EditorSection {
-	String url;
-	String name;
+public interface ProjectListener extends EventListener {
 
-	public EditorSection(String url, String name) {
-		super();
-		this.url = url;
-		this.name = name;
-	}
+	public void onProjectCreated(ItemCollection e);
 
-	public String getUrl() {
-		return url;
-	}
+	public void onProjectChanged(ItemCollection e);
 
-	public void setUrl(String url) {
-		this.url = url;
-	}
+	public void onProjectProcess(ItemCollection e);
 
-	public String getName() {
-		return name;
-	}
+	public void onProjectProcessCompleted(ItemCollection e);
+	
+	public void onProjectDelete(ItemCollection e);
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
+	
+	
+	
 }

@@ -25,7 +25,7 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.web.util;
+package org.imixs.marty.workflow;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -41,8 +41,6 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
-import org.imixs.marty.web.workitem.WorkitemListener;
-import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.workflow.ItemCollection;
 
 /**
@@ -64,8 +62,8 @@ import org.imixs.workflow.ItemCollection;
 @ManagedBean
 @SessionScoped
 public class CommentMB implements WorkitemListener {
-	@ManagedProperty(value = "#{workitemMB}")
-	private WorkitemMB workitemMB = null;
+	@ManagedProperty(value = "#{WorkflowController}")
+	private WorkflowController workflowController = null;
 	
 	
 	private ItemCollection workitem = null;
@@ -88,20 +86,20 @@ public class CommentMB implements WorkitemListener {
 	@PostConstruct
 	public void init() { 
 		// register this Bean as a workitemListener to the current WorktieMB
-		workitemMB.addWorkitemListener(this);
+		workflowController.addWorkitemListener(this);
 
 		// set workitem
-		workitem=workitemMB.getWorkitem();
+		workitem=workflowController.getWorkitem();
 	}
 
 	
-	public WorkitemMB getWorkitemMB() {
-		return workitemMB;
+	public WorkflowController getWorkflowController() {
+		return workflowController;
 	}
 
 
-	public void setWorkitemMB(WorkitemMB workitemMB) {
-		this.workitemMB = workitemMB;
+	public void setWorkflowController(WorkflowController workitemMB) {
+		this.workflowController = workitemMB;
 	}
 
 

@@ -25,7 +25,7 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.web.project;
+package org.imixs.marty.workflow;
 
 import java.util.EventListener;
 
@@ -35,23 +35,39 @@ import org.imixs.workflow.ItemCollection;
  * This interface can be implemented by a managed bean to observe the status of
  * the wokitemMB. The WorkitemMB will fire different events on specific program
  * situations.
- *  
- * @author rsoika
+ * 
+ * @author rsoika 
  * 
  */
-public interface ProjectListener extends EventListener {
+public interface WorkitemListener extends EventListener {
 
-	public void onProjectCreated(ItemCollection e);
+	public void onWorkitemCreated(ItemCollection e);
 
-	public void onProjectChanged(ItemCollection e);
+	public void onWorkitemChanged(ItemCollection e);
 
-	public void onProjectProcess(ItemCollection e);
+	public void onWorkitemProcess(ItemCollection e);
 
-	public void onProjectProcessCompleted(ItemCollection e);
+	public void onWorkitemProcessCompleted(ItemCollection e);
 	
-	public void onProjectDelete(ItemCollection e);
+	public void onWorkitemDelete(ItemCollection e);
 
+	public void onWorkitemDeleteCompleted();
 	
+	public void onWorkitemSoftDelete(ItemCollection e);
+
+	public void onWorkitemSoftDeleteCompleted(ItemCollection e);
+
+	public void onChildProcess(ItemCollection e);
+
+	public void onChildProcessCompleted(ItemCollection e);
+
+	public void onChildCreated(ItemCollection e);
+
+	public void onChildDelete(ItemCollection e);
+
+	public void onChildDeleteCompleted();
 	
-	
+	public void onChildSoftDelete(ItemCollection e);
+
+	public void onChildSoftDeleteCompleted(ItemCollection e);
 }
