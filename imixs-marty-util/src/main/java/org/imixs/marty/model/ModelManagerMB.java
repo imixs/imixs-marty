@@ -1,20 +1,18 @@
 package org.imixs.marty.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
-import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
+import javax.inject.Named;
 
-import org.imixs.marty.config.SetupMB;
-import org.imixs.marty.project.ProjectlistMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 
@@ -26,9 +24,11 @@ import org.imixs.workflow.jee.ejb.EntityService;
  * @author rsoika
  */
 
-@ManagedBean
+@Named("modelManagerMB")
 @SessionScoped
-public class ModelManagerMB {
+public class ModelManagerMB implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 	@EJB
 	EntityService entityService;
 	@EJB

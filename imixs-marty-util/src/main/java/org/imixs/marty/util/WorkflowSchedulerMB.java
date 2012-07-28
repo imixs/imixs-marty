@@ -27,13 +27,14 @@
 
 package org.imixs.marty.util;
 
+import java.io.Serializable;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.event.ActionEvent;
+import javax.inject.Named;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
@@ -45,9 +46,11 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
  * @author rsoika
  * 
  */
-@ManagedBean
+@Named("workflowSchedulerMB")
 @SessionScoped
-public class WorkflowSchedulerMB  {
+public class WorkflowSchedulerMB  implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private ItemCollection configItemCollection = null;
 	

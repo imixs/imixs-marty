@@ -27,14 +27,15 @@
 
 package org.imixs.marty.profile;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.SessionScoped;
+import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.util.Cache;
@@ -49,9 +50,11 @@ import org.imixs.workflow.ItemCollection;
  * @author rsoika 
  * 
  */
-@ManagedBean
+@Named("nameLookupMB")
 @SessionScoped
-public class NameLookupMB {
+public class NameLookupMB  implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	final int MAX_CACHE_SIZE = 20;
 	private Cache cache;

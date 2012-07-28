@@ -27,6 +27,7 @@
 
 package org.imixs.marty.config;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,11 +37,11 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
+import javax.inject.Named;
 
 import org.imixs.marty.util.SelectItemComparator;
 import org.imixs.workflow.ItemCollection;
@@ -77,9 +78,11 @@ import org.imixs.workflow.ItemCollection;
  * @author rsoika
  * 
  */
-@ManagedBean
+@Named("configMB")
 @SessionScoped
-public class ConfigMB {
+public class ConfigMB implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 	final static public String TYPE = "configuration";
 
 	private String name = "CONFIGURATION";

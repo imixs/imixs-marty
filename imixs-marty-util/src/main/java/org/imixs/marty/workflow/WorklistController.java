@@ -38,14 +38,14 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.event.ActionEvent;
 import javax.faces.event.ValueChangeEvent;
 import javax.faces.model.SelectItem;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.imixs.marty.config.SetupMB;
 import org.imixs.marty.project.ProjectMB;
@@ -54,7 +54,7 @@ import org.imixs.marty.util.LoginMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
 
-@ManagedBean
+@Named("worklistController")
 @SessionScoped
 public class WorklistController implements WorkitemListener, Serializable {
 
@@ -96,25 +96,25 @@ public class WorklistController implements WorkitemListener, Serializable {
 
 	/* Backing Beans */
 	
-	@ManagedProperty(value = "#{workflowController}")
+	@Inject
 	private WorkflowController workflowController = null;
 	
-	@ManagedProperty(value = "#{projectMB}")
+	@Inject
 	private ProjectMB projectMB = null;
 	
-	@ManagedProperty(value = "#{projectlistMB}")
+	@Inject
 	private ProjectlistMB projectlistMB = null;
 	
-	@ManagedProperty(value = "#{setupMB}")
+	@Inject
 	private SetupMB setupMB = null;
 	
-	@ManagedProperty(value = "#{loginMB}")
+	@Inject
 	private LoginMB loginMB = null;
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
 	
-	@ManagedProperty(value = "#{fileUploadController}")
+	@Inject
 	private FileUploadController fileUploadMB;
 	
 	
@@ -303,7 +303,7 @@ public class WorklistController implements WorkitemListener, Serializable {
 	}
 
 	public String getViewTitle() {
-		return viewTitle+  loginMB.getRemoteUser();
+		return viewTitle;
 	}
 
 	public void setViewTitle(String viewTitle) {

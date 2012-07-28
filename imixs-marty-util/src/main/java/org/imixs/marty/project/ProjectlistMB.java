@@ -35,19 +35,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.imixs.marty.config.SetupMB;
 import org.imixs.marty.ejb.ProjectService;
@@ -70,9 +69,9 @@ import org.imixs.workflow.jee.ejb.ModelService;
  * @author rsoika
  * 
  */
-@ManagedBean
+@Named("projectlistMB")
 @SessionScoped
-public class ProjectlistMB implements Serializable{
+public class ProjectlistMB implements Serializable {
 
 	
 	private static final long serialVersionUID = 1L;
@@ -97,16 +96,16 @@ public class ProjectlistMB implements Serializable{
 	EntityService entityService;
 
 	/* Backing Beans */
-	@ManagedProperty(value = "#{workflowController}")
+	@Inject
 	private WorkflowController workflowController = null;
 
-	@ManagedProperty(value = "#{projectMB}")
+	@Inject
 	private ProjectMB projectMB = null;
 
-	@ManagedProperty(value = "#{myProfileMB}")
+	@Inject
 	private MyProfileMB myProfileMB = null;
 
-	@ManagedProperty(value = "#{setupMB}")
+	@Inject
 	private SetupMB setupMB = null;
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");

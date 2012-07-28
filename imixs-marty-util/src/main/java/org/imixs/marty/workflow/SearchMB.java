@@ -23,6 +23,7 @@
  *******************************************************************************/
 package org.imixs.marty.workflow;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,9 +33,9 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.event.ActionEvent;
+import javax.inject.Named;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
@@ -59,10 +60,11 @@ import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
  * @author rsoika
  * 
  */
-@ManagedBean
+@Named("searchMB")
 @SessionScoped
-public class SearchMB  {
-	
+public class SearchMB implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 	private ItemCollection searchFilter;
 	private List<ItemCollection> workitems = null;
 	private int row = 0;

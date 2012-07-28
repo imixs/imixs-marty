@@ -27,13 +27,14 @@
 
 package org.imixs.marty.util;
 
+import java.io.Serializable;
+
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.RequestScoped;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -63,42 +64,37 @@ import org.imixs.workflow.ItemCollection;
  * @author rsoika
  * 
  */
-@ManagedBean
+@Named("urlControlerMB")
 @RequestScoped
-public class URLControllerMB {
-	public final String COOKIE_PROJECT = "imixs.marty.project";
-	public final String COOKIE_PROCESS = "imixs.marty.process";
-	public final String COOKIE_WORKITEM = "imixs.marty.workitem";
+public class URLControllerMB  implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+	private final String COOKIE_PROJECT = "imixs.marty.project";
+	private final String COOKIE_PROCESS = "imixs.marty.process";
+	private final String COOKIE_WORKITEM = "imixs.marty.workitem";
 
 	/* Profile Service */
 	@EJB
-	ProfileService profileService;
+	private ProfileService profileService;
 
 	/* Project Service */
 	@EJB
-	ProjectService projectService;
+	private ProjectService projectService;
 
 	
-	
-	
-	@ManagedProperty(value = "#{WorklistController}")
+	@Inject
 	private WorklistController worklistController = null;
 	
-	@ManagedProperty(value = "#{projectMB}")
+	@Inject
 	private ProjectMB projectMB = null;
 	
-	@ManagedProperty(value = "#{workflowController}")
+	@Inject
 	private WorkflowController workflowController = null;
 
 	private String project = null;
 	private String process = null;
 	private String workitem = null;
 
-	
-	
-	
-	
-	
 	
 	
 	public URLControllerMB() {

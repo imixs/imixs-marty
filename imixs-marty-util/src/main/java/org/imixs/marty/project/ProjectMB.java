@@ -27,6 +27,7 @@
 
 package org.imixs.marty.project;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -38,10 +39,8 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.component.UIInput;
@@ -51,21 +50,24 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.imixs.marty.config.SetupMB;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.profile.MyProfileMB;
 import org.imixs.marty.profile.NameLookupMB;
-import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.marty.workflow.WorklistController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
 
-@ManagedBean
+@Named("projectMB")
 @SessionScoped
-public class ProjectMB extends AbstractWorkflowController {
+public class ProjectMB extends AbstractWorkflowController implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	public final static int START_PROJECT_PROCESS_ID = 100;
 
@@ -76,17 +78,17 @@ public class ProjectMB extends AbstractWorkflowController {
 	@EJB
 	ProfileService profileService;
 
-	@ManagedProperty(value = "#{myProfileMB}")
+	@Inject
 	private MyProfileMB myProfileMB = null;
 	
 	
 	
-	@ManagedProperty(value = "#{setupMB}")
+	@Inject
 	private SetupMB setupMB = null;
 	
 	
 	
-	@ManagedProperty(value = "#{nameLookupMB}")
+	@Inject
 	private NameLookupMB nameLookupMB = null;
 	
 	 

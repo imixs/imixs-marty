@@ -27,6 +27,7 @@
 
 package org.imixs.marty.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,10 +40,10 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
+import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.profile.MyProfileMB;
@@ -79,9 +80,11 @@ import org.imixs.workflow.jee.ejb.ModelService;
  * @author rsoika
  * 
  */
-@ManagedBean
+@Named("modelMB")
 @SessionScoped
-public class ModelMB {
+public class ModelMB implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 	private MyProfileMB myProfileMB = null;
 	private ProjectlistMB projectlist = null;
 	private ProjectMB projectMB = null;

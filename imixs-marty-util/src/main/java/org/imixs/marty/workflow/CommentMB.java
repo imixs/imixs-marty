@@ -27,6 +27,7 @@
 
 package org.imixs.marty.workflow;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -35,11 +36,11 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.imixs.workflow.ItemCollection;
 
@@ -59,10 +60,12 @@ import org.imixs.workflow.ItemCollection;
  * 
  * @author rsoika
  */
-@ManagedBean
+@Named("commentMB")
 @SessionScoped
-public class CommentMB implements WorkitemListener {
-	@ManagedProperty(value = "#{WorkflowController}")
+public class CommentMB implements WorkitemListener , Serializable {
+
+	private static final long serialVersionUID = 1L;
+	@Inject
 	private WorkflowController workflowController = null;
 	
 	

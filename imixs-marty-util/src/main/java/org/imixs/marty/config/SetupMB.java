@@ -30,6 +30,7 @@ package org.imixs.marty.config;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -38,9 +39,9 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.event.ActionEvent;
+import javax.inject.Named;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
@@ -62,9 +63,11 @@ import org.imixs.workflow.xml.XMLItemCollectionAdapter;
  * @author rsoika
  * 
  */
-@ManagedBean
+@Named("setupMB")
 @SessionScoped
-public class SetupMB { 
+public class SetupMB implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Default values for maximum history entries are currently hard coded

@@ -27,6 +27,7 @@
 
 package org.imixs.marty.profile;
 
+import java.io.Serializable;
 import java.text.Collator;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -40,16 +41,16 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
 import javax.faces.component.UIParameter;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.validator.ValidatorException;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.imixs.marty.config.SetupMB;
 import org.imixs.marty.ejb.ProfileService;
@@ -57,7 +58,6 @@ import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.model.ModelVersionHandler;
 import org.imixs.marty.project.ProjectMB;
 import org.imixs.marty.util.LoginMB;
-import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
@@ -91,9 +91,11 @@ import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
  * @author rsoika
  * 
  */
-@ManagedBean
+@Named("myProfileMB")
 @SessionScoped
-public class MyProfileMB extends AbstractWorkflowController {
+public class MyProfileMB extends AbstractWorkflowController implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	/* Profile Service */
 	@EJB
@@ -119,10 +121,10 @@ public class MyProfileMB extends AbstractWorkflowController {
 	private ModelVersionHandler modelVersionHandler = null;
 
 	
-	@ManagedProperty(value = "#{loginMB}")
+	@Inject
 	private LoginMB loginMB = null;
 	
-	@ManagedProperty(value = "#{setupMB}")
+	@Inject
 	private SetupMB setupMB = null;
 	
 	

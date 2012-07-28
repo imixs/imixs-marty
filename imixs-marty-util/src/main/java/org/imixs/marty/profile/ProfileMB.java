@@ -27,6 +27,7 @@
 
 package org.imixs.marty.profile;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -34,9 +35,8 @@ import java.util.ResourceBundle;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.component.UIParameter;
@@ -45,15 +45,18 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.validator.ValidatorException;
+import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
 
-@ManagedBean
+@Named("profileMB")
 @SessionScoped
-public class ProfileMB extends AbstractWorkflowController {
+public class ProfileMB extends AbstractWorkflowController  implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	public final static int START_PROFILE_PROCESS_ID = 200;
 	public final static int CREATE_PROFILE_ACTIVITY_ID = 5;

@@ -41,9 +41,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.component.UIParameter;
@@ -51,6 +49,8 @@ import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.imixs.marty.config.SetupMB;
 import org.imixs.marty.ejb.ProjectService;
@@ -71,7 +71,7 @@ import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
  * @author rsoika
  * 
  */
-@ManagedBean
+@Named("workflowController")
 @SessionScoped
 public class WorkflowController extends AbstractWorkflowController implements Serializable {
 
@@ -85,13 +85,13 @@ public class WorkflowController extends AbstractWorkflowController implements Se
 	private HashMap processCache;
 
 	/* Project Backing Bean */
-	@ManagedProperty(value = "#{projectMB}")
+	@Inject
 	private ProjectMB projectMB = null;
 
-	@ManagedProperty(value = "#{setupMB}")
+	@Inject
 	private SetupMB setupMB = null;
 
-	@ManagedProperty(value = "#{nameLookupMB}")
+	@Inject
 	private NameLookupMB nameLookupMB = null;
 
 	/* Child Process */

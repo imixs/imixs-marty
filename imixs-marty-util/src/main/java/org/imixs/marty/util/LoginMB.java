@@ -27,18 +27,19 @@
 
 package org.imixs.marty.util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
+import javax.inject.Named;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -53,10 +54,12 @@ import javax.servlet.http.HttpSession;
  * @author rsoika
  * 
  */
-@ManagedBean
+@Named("userLoginMB")
 @SessionScoped
-public class LoginMB {
-	public final String COOKIE_LOCALE = "imixs.sywapp.locale";
+public class LoginMB  implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+	private final String COOKIE_LOCALE = "imixs.sywapp.locale";
 	
 	private String locale;
 	private String anonymouslocale;
@@ -87,20 +90,6 @@ public class LoginMB {
 		return remoteUser;
 	}
 
-	
-	/*
-	public String getServerURI() {
-		HttpServletRequest servletRequest = (HttpServletRequest) FacesContext
-				.getCurrentInstance().getExternalContext().getRequest();
-
-		
-		String port=""+servletRequest.getLocalPort();
-		
-		String server = servletRequest.getServerName();
-		return "http://"+ server+":"+port+"";
-
-	}
-	*/
 
 	public void doLogout(ActionEvent event) {
 		FacesContext context = FacesContext.getCurrentInstance();
