@@ -31,6 +31,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -40,12 +42,15 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
+import javax.faces.model.SelectItem;
 import javax.inject.Named;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
 import org.imixs.marty.ejb.ConfigService;
+import org.imixs.marty.util.SelectItemComparator;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.jpa.EntityIndex;
 import org.imixs.workflow.xml.EntityCollection;
@@ -81,7 +86,9 @@ public class SetupMB implements Serializable {
 	private int defaultworklistview = 0;
 	private boolean createDefaultProject = false;
 	private String defaultPage = "pages/notes";
+	private ArrayList<SelectItem> localeSelection = null;
 
+	
 	public final static String CONFIGURATION_NAME = "BASIC";
 
 	private boolean setupOk = false;
@@ -350,6 +357,38 @@ public class SetupMB implements Serializable {
 		return false;
 	}
 
+	/**
+	 * This method returns a list of SelectItems with the predefined Languages
+	 * The locale is configured in the property file
+	 * configuration/locale.properties
+	 * 
+	 * If a locale is supported also the resource bundles in directory /bundle/
+	 * need to be supported
+	 * 
+	 * @return
+	 */
+	public ArrayList<SelectItem> getLocaleSelection() {
+		// load My projects only once...
+		if (localeSelection == null) {
+			// build new localeSelection
+			localeSelection = new ArrayList<SelectItem>();
+			ResourceBundle r = ResourceBundle.getBundle("configuration.locale");
+			Enumeration<String> enkeys = r.getKeys();
+			while (enkeys.hasMoreElements()) {
+				String sKey = enkeys.nextElement();
+				String sValue = r.getString(sKey);
+				localeSelection.add(new SelectItem(sKey, sValue));
+			}
+
+			Collections.sort(localeSelection,
+					new SelectItemComparator(FacesContext.getCurrentInstance()
+							.getViewRoot().getLocale(), true));
+
+
+		}
+		return localeSelection;
+	}
+	
 	/**
 	 * this method imports an xml entity data stream. This is used to provide
 	 * model uploads during the system setup. The method can also import general

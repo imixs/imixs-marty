@@ -42,8 +42,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.project.ProjectMB;
+import org.imixs.marty.workflow.ViewController;
 import org.imixs.marty.workflow.WorkflowController;
-import org.imixs.marty.workflow.WorklistController;
 import org.imixs.workflow.ItemCollection;
 
 /**
@@ -83,7 +83,7 @@ public class URLControllerMB  implements Serializable {
 
 	
 	@Inject
-	private WorklistController worklistController = null;
+	private ViewController viewController = null;
 	
 	@Inject
 	private ProjectMB projectMB = null;
@@ -103,14 +103,20 @@ public class URLControllerMB  implements Serializable {
 	}
 	
 
-	public WorklistController getWorklistController() {
-		return worklistController;
+
+
+	public ViewController getViewController() {
+		return viewController;
 	}
 
 
-	public void setWorklistController(WorklistController worklistMB) {
-		this.worklistController = worklistMB;
+
+
+	public void setViewController(ViewController viewController) {
+		this.viewController = viewController;
 	}
+
+
 
 
 	public ProjectMB getProjectMB() {
@@ -214,7 +220,7 @@ public class URLControllerMB  implements Serializable {
 			projectMB.setWorkitem(itemColProject);
 
 			// reset worklist
-			worklistController.doReset(null);
+			viewController.doReset(null);
 			System.out.println("URLControllerMB - Project '" + project
 					+ "' selected");
 		} else {
@@ -435,7 +441,7 @@ public class URLControllerMB  implements Serializable {
 							+ sIDRef + "' ");
 					projectMB.setWorkitem(itemColProject);
 					// reset worklist
-					worklistController.doReset(null);
+					viewController.doReset(null);
 				}
 			}
 		} catch (Exception e) {

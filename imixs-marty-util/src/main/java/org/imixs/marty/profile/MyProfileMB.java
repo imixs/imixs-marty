@@ -32,6 +32,7 @@ import java.text.Collator;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -51,16 +52,17 @@ import javax.faces.event.ActionEvent;
 import javax.faces.validator.ValidatorException;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.config.SetupMB;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.model.ModelVersionHandler;
 import org.imixs.marty.project.ProjectMB;
-import org.imixs.marty.util.LoginMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
-
 
 /**
  * This backing beans handles the Profile of the current user. The user is
@@ -93,9 +95,11 @@ import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
  */
 @Named("myProfileMB")
 @SessionScoped
-public class MyProfileMB extends AbstractWorkflowController implements Serializable {
+public class MyProfileMB extends AbstractWorkflowController implements
+		Serializable {
 
 	private static final long serialVersionUID = 1L;
+	private final String COOKIE_LOCALE = "imixs.workflow.locale";
 
 	/* Profile Service */
 	@EJB
@@ -116,21 +120,15 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 
 	private boolean profileLoaded = false;
 
-	
+	private String locale;
 
 	private ModelVersionHandler modelVersionHandler = null;
 
-	
-	@Inject
-	private LoginMB loginMB = null;
-	
 	@Inject
 	private SetupMB setupMB = null;
-	
-	
+
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
-	
 	/**
 	 * The init method is used to load a user profile or automatically create a
 	 * new one if no profile for the user is available. A new Profile will be
@@ -162,17 +160,15 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 			// if SystemSetup is not yet completed - start System Setup now
 			if (!setupMB.isSetupOk())
 				setupMB.doSetup(null);
-			
-			
+
 			// determine user language and set Modelversion depending on
 			// the selected user locale
 			String sModelVersion = this.getModelVersionHandler()
-					.getLatestSystemVersion(loginMB.getLocale());
+					.getLatestSystemVersion(getLocale());
 			// terminate excecution if no system model ist defined
-			if (sModelVersion==null) {
+			if (sModelVersion == null) {
 				throw new RuntimeException(" No System Model found!");
 			}
-			
 
 			try {
 				// try to load the profile for the current user
@@ -183,18 +179,14 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 					profile = profileService
 							.createProfile(START_PROFILE_PROCESS_ID);
 
-					profile.replaceItemValue("$modelversion",
-							sModelVersion);
+					profile.replaceItemValue("$modelversion", sModelVersion);
 
 					// now set default values for locale
-					profile.replaceItemValue("txtLocale",
-							loginMB.getLocale());
+					profile.replaceItemValue("txtLocale", getLocale());
 
 					// set default launch page
-					profile.replaceItemValue(
-							"keyStartpage",
-							setupMB.getWorkitem().getItemValueString(
-									"DefaultPage"));
+					profile.replaceItemValue("keyStartpage", setupMB
+							.getWorkitem().getItemValueString("DefaultPage"));
 
 					List defaultProcessList = setupMB.getWorkitem()
 							.getItemValue("defaultprojectprocesslist");
@@ -211,8 +203,7 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 					// process new profile...
 					profile.replaceItemValue("$ActivityID",
 							CREATE_PROFILE_ACTIVITY_ID);
-					profile = profileService
-							.processProfile(profile);
+					profile = profileService.processProfile(profile);
 
 				} else {
 					// Update Workitem to store last Login Time and logincount
@@ -223,29 +214,22 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 					if (datpenultimateLogin == null)
 						datpenultimateLogin = cal.getTime();
 
-					profile.replaceItemValue(
-							"datpenultimateLogin", datpenultimateLogin);
+					profile.replaceItemValue("datpenultimateLogin",
+							datpenultimateLogin);
 
-					profile.replaceItemValue("datLastLogin",
-							cal.getTime());
-					int logins = profile
-							.getItemValueInteger("numLoginCount");
+					profile.replaceItemValue("datLastLogin", cal.getTime());
+					int logins = profile.getItemValueInteger("numLoginCount");
 					logins++;
-					profile.replaceItemValue("numLoginCount",
-							logins);
-					
-					
-					
-					//workitemItemCollection = getEntityService().save(
-					//		workitemItemCollection);
+					profile.replaceItemValue("numLoginCount", logins);
+
+					// workitemItemCollection = getEntityService().save(
+					// workitemItemCollection);
 
 					// process profile to trigger ProfilePlugin (Invitations)...
 					profile.replaceItemValue("$ActivityID",
 							UPDATE_PROJECT_ACTIVITY_ID);
-					profile = profileService
-							.processProfile(profile);
-					
-					
+					profile = profileService.processProfile(profile);
+
 				}
 				// set max History & log length
 				profile.replaceItemValue(
@@ -270,32 +254,14 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 		}
 
 	}
-	
-	
 
 	public SetupMB getSetupMB() {
 		return setupMB;
 	}
 
-
-
 	public void setSetupMB(SetupMB setupMB) {
 		this.setupMB = setupMB;
 	}
-
-
-
-	public LoginMB getLoginMB() {
-		return loginMB;
-	}
-
-
-
-	public void setLoginMB(LoginMB loginMB) {
-		this.loginMB = loginMB;
-	}
-
-
 
 	/**
 	 * This method creates a UserDefault Project. The Method is called only if a
@@ -384,8 +350,73 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 
 			itemColProject = projectService.processProject(itemColProject);
 
-			
 		}
+
+	}
+
+	/**
+	 * This getter method trys to get the locale out from the cookie if
+	 * available. Otherwise it will default to "en"
+	 * 
+	 * @return
+	 */
+	public String getLocale() {
+		// if no locale is set try to get it from cookie or set default
+		if (locale == null) {
+			FacesContext facesContext = FacesContext.getCurrentInstance();
+			HttpServletRequest request = (HttpServletRequest) FacesContext
+					.getCurrentInstance().getExternalContext().getRequest();
+
+			String cookieName = null;
+			String cookiePath = null;
+
+			Cookie cookie[] = ((HttpServletRequest) facesContext
+					.getExternalContext().getRequest()).getCookies();
+			if (cookie != null && cookie.length > 0) {
+				for (int i = 0; i < cookie.length; i++) {
+					cookieName = cookie[i].getName();
+					cookiePath = cookie[i].getPath();
+
+					if (cookieName.equals(COOKIE_LOCALE)
+
+					) {
+						locale = cookie[i].getValue();
+						break;
+					}
+
+				}
+			}
+
+			// still no value found? - default to "en"
+			if (locale == null || "".equals(locale) || "null".equals(locale)) {
+				Locale ldefault = request.getLocale();
+				if (ldefault != null)
+					locale = ldefault.toString();
+				else
+					locale = "en";
+			}
+
+			locale = verifyLocale(locale);
+		}
+		return locale;
+	}
+
+	public void setLocale(String locale) {
+		if (locale == null)
+			locale = "en";
+		this.locale = locale;
+
+		// update cookie
+		HttpServletResponse response = (HttpServletResponse) FacesContext
+				.getCurrentInstance().getExternalContext().getResponse();
+		HttpServletRequest request = (HttpServletRequest) FacesContext
+				.getCurrentInstance().getExternalContext().getRequest();
+		Cookie cookieLocale = new Cookie(COOKIE_LOCALE, locale);
+		cookieLocale.setPath(request.getContextPath());
+
+		// 30 days
+		cookieLocale.setMaxAge(2592000);
+		response.addCookie(cookieLocale);
 
 	}
 
@@ -422,13 +453,12 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 
 			List<String> col = getModelService().getAllModelVersions();
 
-			List modelDomains = getWorkitem()
-					.getItemValue("txtModelDomain");
+			List modelDomains = getWorkitem().getItemValue("txtModelDomain");
 			// add default model domain if empty or first entry is '' (could be
 			// happen :-/)
 			if (modelDomains.size() == 0
-					|| (modelDomains.size() == 1 && "".equals(modelDomains
-							.get(0).toString())))
+					|| (modelDomains.size() == 1 && "".equals(modelDomains.get(
+							0).toString())))
 				modelDomains.add("public");
 
 			for (String sversion : col) {
@@ -458,8 +488,7 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 
 			// Now add the latest ModelVersion to the modelVersionHandler
 			for (String latestversion : latestModelVersions.values()) {
-				logger.fine("===> modelVersionHandler adding:"
-						+ latestversion);
+				logger.fine("===> modelVersionHandler adding:" + latestversion);
 				modelVersionHandler.addVersion(latestversion);
 			}
 		}
@@ -512,10 +541,9 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 
 		// validate workitem and verify txtname and txtusername
 		try {
-			ItemCollection profile=getWorkitem();
+			ItemCollection profile = getWorkitem();
 			// lowercase email to allow unique lookups
-			String sEmail = profile
-					.getItemValueString("txtEmail");
+			String sEmail = profile.getItemValueString("txtEmail");
 			sEmail = sEmail.toLowerCase();
 			profile.replaceItemValue("txtEmail", sEmail);
 
@@ -524,14 +552,11 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 			// the selected user locale
 			String sModelVersion = this.getModelVersionHandler()
 					.getLatestSystemVersion(
-							profile
-									.getItemValueString("txtLocale"));
-			profile.replaceItemValue("$modelversion",
-					sModelVersion);
+							profile.getItemValueString("txtLocale"));
+			profile.replaceItemValue("$modelversion", sModelVersion);
 
 			profile.replaceItemValue("$ActivityID", activityID);
-			profile = profileService
-					.processProfile(profile);
+			profile = profileService.processProfile(profile);
 
 			setWorkitem(profile);
 
@@ -552,10 +577,10 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 				rb = ResourceBundle.getBundle("bundle.profile");
 
 			// depending on the messeage string we fetch the message
-			String sMessage="";
+			String sMessage = "";
 			if (ee.getMessage().contains("txtemail"))
-				 sMessage = rb.getString("duplicateemail_error");
-			else	
+				sMessage = rb.getString("duplicateemail_error");
+			else
 				sMessage = rb.getString("displayname_error");
 			FacesMessage message = new FacesMessage("* ", sMessage);
 			// add two messages to support the standard profile_form and also
@@ -572,8 +597,8 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 		updateLocale();
 	}
 
-	
-	 /* Comparator for ProjectNames
+	/*
+	 * Comparator for ProjectNames
 	 */
 	class ProjectComparator implements Comparator<ItemCollection> {
 		private final Collator collator;
@@ -597,20 +622,14 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 
 	}
 
-	
-
 	/**
 	 * This method clears the cached project, workitems and invations lists The
 	 * method is called after a doProcess and after DropEvents
 	 */
 	public void clearCache() {
-		
+
 	}
 
-	
-
-	
-	
 	/*
 	 * HELPER METHODS
 	 */
@@ -630,20 +649,54 @@ public class MyProfileMB extends AbstractWorkflowController implements Serializa
 		// Verify if Locale is available in profile
 		String sLocale = getWorkitem().getItemValueString("txtLocale");
 		if ("".equals(sLocale)) {
-			sLocale = loginMB.getLocale();
+			sLocale = getLocale();
 			getWorkitem().replaceItemValue("txtLocale", sLocale);
 
 		}
 		// reset locale to update cookie
-		loginMB.setLocale(sLocale);
+		setLocale(sLocale);
 		// set locale for context
 		FacesContext.getCurrentInstance().getViewRoot()
 				.setLocale(new Locale(sLocale));
 
 	}
 
-	
+	/**
+	 * This method verifies a locale against the current skin configuration
+	 * file: /configuration/skins.properties
+	 * 
+	 * if the locale is not found the method will default to the frist locale
+	 * found in property file So a valid locale will be returned!
+	 * 
+	 * @param aSkin
+	 * @return
+	 */
+	private String verifyLocale(String aLocale) {
 
+		String sBestLocale = null;
 
+		/* Test if current skin is available in the skin configuration */
+		ResourceBundle r = ResourceBundle.getBundle("configuration.locale");
+
+		Enumeration<String> enkeys = r.getKeys();
+		while (enkeys.hasMoreElements()) {
+			String sKey = enkeys.nextElement();
+
+			// save first skin
+			if (sBestLocale == null)
+				sBestLocale = sKey;
+
+			// test if current skin match...
+			if (sKey.equals(aLocale))
+				// yes! aSkin is valid!
+				return aLocale;
+		}
+
+		// aSkin did not match anny of the available skinn in the skin
+		// configuration
+		// so return the first skin found in the configuration
+		return sBestLocale;
+
+	}
 
 }

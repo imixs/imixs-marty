@@ -36,7 +36,7 @@ import javax.faces.model.SelectItem;
 /**
  * Sorts a ArrayList of SelectItems by label 
  * @author rsoika
- *
+ * 
  */ 
 public class SelectItemComparator implements Comparator<SelectItem> {
 	private final Collator collator;

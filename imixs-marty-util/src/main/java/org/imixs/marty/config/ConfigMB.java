@@ -47,8 +47,8 @@ import org.imixs.marty.util.SelectItemComparator;
 import org.imixs.workflow.ItemCollection;
 
 /**
- * This ConfigMB acts as a application wide config bean. The bean manages an
- * entity which holds general config params in an itemCollection object. The
+ * This ConfigMB acts as a generic config bean. The bean manages an
+ * entity which holds config params in an itemCollection object. The
  * entity is stored with the type property "configuration" and a configurable
  * name property (txtname). The name property is used to select the params by a
  * query. So the bean can be used to provide different config settings in one

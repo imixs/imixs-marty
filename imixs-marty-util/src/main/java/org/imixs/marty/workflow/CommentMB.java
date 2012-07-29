@@ -58,7 +58,7 @@ import org.imixs.workflow.ItemCollection;
  * The property log provides a ArrayList with ItemCollection Adapters providing
  * the comment details.
  * 
- * @author rsoika
+ * @author rsoika 
  */
 @Named("commentMB")
 @SessionScoped

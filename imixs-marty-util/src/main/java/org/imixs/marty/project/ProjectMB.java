@@ -46,7 +46,7 @@ import javax.faces.component.UIData;
 import javax.faces.component.UIInput;
 import javax.faces.component.UIParameter;
 import javax.faces.component.UIViewRoot;
-import javax.faces.context.ExternalContext;
+import javax.faces.context.ExternalContext; 
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
@@ -58,7 +58,6 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.profile.MyProfileMB;
 import org.imixs.marty.profile.NameLookupMB;
-import org.imixs.marty.workflow.WorklistController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
@@ -87,10 +86,10 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 	private SetupMB setupMB = null;
 	
 	
-	
+	  
 	@Inject
 	private NameLookupMB nameLookupMB = null;
-	
+	 
 	 
 	private ArrayList<ItemCollection> team = null;
 	private ArrayList<ItemCollection> projectSiblingList = null;
@@ -832,16 +831,7 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 
 		this.setWorkitem(parentProject);
 
-		// get WorklistMB instance
-		WorklistController worklist = (WorklistController) FacesContext
-				.getCurrentInstance()
-				.getApplication()
-				.getELResolver()
-				.getValue(FacesContext.getCurrentInstance().getELContext(),
-						null, "worklistMB");
-
-		worklist.doReset(event);
-
+	
 	}
 
 	/**

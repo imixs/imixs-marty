@@ -105,13 +105,13 @@ public class WorkflowController extends AbstractWorkflowController implements Se
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
-	/* WorkItem Services */
+	/* Services */
 	@EJB
 	private org.imixs.marty.ejb.WorkitemService workitemService;
-
-	/* Porject Service */
 	@EJB
-	ProjectService projectService;
+	private org.imixs.marty.ejb.WorklistService worklistService;
+	@EJB
+	private ProjectService projectService;
 
 	
 	
@@ -1099,7 +1099,7 @@ public class WorkflowController extends AbstractWorkflowController implements Se
 		try {
 			String sRefUniqueID = getWorkitem().getItemValueString("$uniqueid");
 
-			col = workitemService.findAllWorkitems(sRefUniqueID, null, null, 0,
+			col = worklistService.findAllWorkitems(sRefUniqueID, null, null, 0,
 					0, -1, getSortby(), getSortorder());
 			for (ItemCollection aworkitem : col) {
 				childs.add((aworkitem));

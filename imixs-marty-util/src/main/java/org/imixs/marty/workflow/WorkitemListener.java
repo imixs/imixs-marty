@@ -37,7 +37,7 @@ import org.imixs.workflow.ItemCollection;
  * situations.
  * 
  * @author rsoika 
- * 
+ *  
  */
 public interface WorkitemListener extends EventListener {
 

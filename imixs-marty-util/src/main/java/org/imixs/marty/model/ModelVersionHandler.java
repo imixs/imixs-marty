@@ -33,7 +33,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 
-/** 
+/**  
  * This Class handles the different model versions used in SYWAPPs. 
  * Versions can be added with the method addVersion().
  * 
