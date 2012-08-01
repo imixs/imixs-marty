@@ -28,9 +28,7 @@
 package org.imixs.marty.profile;
 
 import java.io.Serializable;
-import java.text.Collator;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -62,7 +60,6 @@ import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.model.ModelVersionHandler;
 import org.imixs.marty.project.ProjectMB;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
 /**
  * This backing beans handles the Profile of the current user. The user is
@@ -93,21 +90,26 @@ import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
  * @author rsoika
  * 
  */
-@Named("myProfileMB")
+@Named("userController")
 @SessionScoped
-public class MyProfileMB extends AbstractWorkflowController implements
+public class UserController  implements
 		Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private final String COOKIE_LOCALE = "imixs.workflow.locale";
+	private ItemCollection workitem = null;
 
+	@EJB
+	private org.imixs.workflow.jee.ejb.ModelService modelService;
+
+	
 	/* Profile Service */
 	@EJB
-	ProfileService profileService;
+	private ProfileService profileService;
 
 	/* Project Service */
 	@EJB
-	ProjectService projectService;
+	private ProjectService projectService;
 
 	/* WorkItem Services */
 	@EJB
@@ -128,6 +130,14 @@ public class MyProfileMB extends AbstractWorkflowController implements
 	private SetupMB setupMB = null;
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
+
+	
+	
+	
+	public UserController() {
+		super();
+		// empty constructor!
+	}
 
 	/**
 	 * The init method is used to load a user profile or automatically create a
@@ -354,6 +364,18 @@ public class MyProfileMB extends AbstractWorkflowController implements
 
 	}
 
+	
+
+	public ItemCollection getWorkitem() {
+		if (workitem == null)
+			workitem = new ItemCollection();
+		return workitem;
+	}
+
+	public void setWorkitem(ItemCollection aworkitem) {
+		this.workitem = aworkitem;
+	}
+	
 	/**
 	 * This getter method trys to get the locale out from the cookie if
 	 * available. Otherwise it will default to "en"
@@ -451,7 +473,7 @@ public class MyProfileMB extends AbstractWorkflowController implements
 
 			// add available Models...
 
-			List<String> col = getModelService().getAllModelVersions();
+			List<String> col = modelService.getAllModelVersions();
 
 			List modelDomains = getWorkitem().getItemValue("txtModelDomain");
 			// add default model domain if empty or first entry is '' (could be
@@ -560,9 +582,7 @@ public class MyProfileMB extends AbstractWorkflowController implements
 
 			setWorkitem(profile);
 
-			// clear primary lists and invitations
-			clearCache();
-
+			
 		} catch (Exception ee) {
 
 			// Generate Error message
@@ -597,38 +617,9 @@ public class MyProfileMB extends AbstractWorkflowController implements
 		updateLocale();
 	}
 
-	/*
-	 * Comparator for ProjectNames
-	 */
-	class ProjectComparator implements Comparator<ItemCollection> {
-		private final Collator collator;
+	
 
-		private final boolean ascending;
-
-		public ProjectComparator(Locale locale, boolean ascending) {
-			this.collator = Collator.getInstance(locale);
-			this.ascending = ascending;
-		}
-
-		public int compare(ItemCollection a, ItemCollection b) {
-			String nameA = a.getItemValueString("txtName");
-			String nameB = b.getItemValueString("txtName");
-			int result = this.collator.compare(nameA, nameB);
-			if (!this.ascending) {
-				result = -result;
-			}
-			return result;
-		}
-
-	}
-
-	/**
-	 * This method clears the cached project, workitems and invations lists The
-	 * method is called after a doProcess and after DropEvents
-	 */
-	public void clearCache() {
-
-	}
+	
 
 	/*
 	 * HELPER METHODS

@@ -44,7 +44,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.config.SetupMB;
-import org.imixs.marty.profile.MyProfileMB;
+import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
 
 /**
@@ -92,7 +92,7 @@ public class ViewController implements Serializable {
 	org.imixs.marty.ejb.WorklistService worklistService;
 
 	@Inject
-	MyProfileMB myProfileMB = null;
+	UserController myProfileMB = null;
 
 	@Inject
 	private SetupMB setupMB = null;
@@ -138,11 +138,11 @@ public class ViewController implements Serializable {
 		this.setupMB = setupMB;
 	}
 
-	public MyProfileMB getMyProfileMB() {
+	public UserController getMyProfileMB() {
 		return myProfileMB;
 	}
 
-	public void setMyProfileMB(MyProfileMB myProfileMB) {
+	public void setMyProfileMB(UserController myProfileMB) {
 		this.myProfileMB = myProfileMB;
 	}
 

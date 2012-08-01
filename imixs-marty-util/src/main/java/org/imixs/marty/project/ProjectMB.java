@@ -56,7 +56,7 @@ import javax.inject.Named;
 import org.imixs.marty.config.SetupMB;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.ProjectService;
-import org.imixs.marty.profile.MyProfileMB;
+import org.imixs.marty.profile.UserController;
 import org.imixs.marty.profile.NameLookupMB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
@@ -78,7 +78,7 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 	ProfileService profileService;
 
 	@Inject
-	private MyProfileMB myProfileMB = null;
+	private UserController userController = null;
 	
 	
 	
@@ -106,13 +106,16 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 		projectListeners = new ArrayList<ProjectListener>();
 	}
 
-	public MyProfileMB getMyProfileMB() {
-		return myProfileMB;
+
+	public UserController getUserController() {
+		return userController;
 	}
 
-	public void setMyProfileMB(MyProfileMB myProfileMB) {
-		this.myProfileMB = myProfileMB;
+
+	public void setUserController(UserController userController) {
+		this.userController = userController;
 	}
+
 
 	public SetupMB getSetupMB() {
 		return setupMB;
@@ -416,7 +419,7 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 		String sUserLanguage = userLocale.getLanguage();
 
 		// Set System Model Version for this Project to user Language
-		String sModelVersion = myProfileMB.getModelVersionHandler()
+		String sModelVersion = userController.getModelVersionHandler()
 				.getLatestSystemVersion(sUserLanguage);
 
 		if (sModelVersion == null)
@@ -586,7 +589,7 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 		ItemCollection saveItem = project;
 
 		
-		myProfileMB.clearCache();
+		
 		this.setWorkitem(saveItem);
 
 	}

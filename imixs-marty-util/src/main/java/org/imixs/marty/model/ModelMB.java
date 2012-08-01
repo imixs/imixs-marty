@@ -46,7 +46,7 @@ import javax.faces.model.SelectItem;
 import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProjectService;
-import org.imixs.marty.profile.MyProfileMB;
+import org.imixs.marty.profile.UserController;
 import org.imixs.marty.project.ProjectMB;
 import org.imixs.marty.project.ProjectlistMB;
 import org.imixs.marty.util.SelectItemComparator;
@@ -76,7 +76,7 @@ import org.imixs.workflow.jee.ejb.ModelService;
  * MyProfileMB is different from this format and was used in earlier versions of
  * ShareYourWork. We hope that we can drop the ModelVersionHandler sometimes....
  * 
- * @see org.imixs.marty.profile.MyProfileMB
+ * @see org.imixs.marty.profile.UserController
  * @author rsoika
  * 
  */
@@ -85,7 +85,7 @@ import org.imixs.workflow.jee.ejb.ModelService;
 public class ModelMB implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private MyProfileMB myProfileMB = null;
+	private UserController myProfileMB = null;
 	private ProjectlistMB projectlist = null;
 	private ProjectMB projectMB = null;
 	private String latestSystemModelVersion = null;
@@ -477,9 +477,9 @@ public class ModelMB implements Serializable {
 	 * 
 	 * @return
 	 */
-	public MyProfileMB getProfileBean() {
+	public UserController getProfileBean() {
 		if (myProfileMB == null)
-			myProfileMB = (MyProfileMB) FacesContext
+			myProfileMB = (UserController) FacesContext
 					.getCurrentInstance()
 					.getApplication()
 					.getELResolver()

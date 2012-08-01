@@ -84,6 +84,8 @@ public class WorkflowController extends AbstractWorkflowController implements Se
 	/* Workflow Model & Caching objects */
 	private HashMap processCache;
 
+	
+
 	/* Project Backing Bean */
 	@Inject
 	private ProjectMB projectMB = null;
@@ -386,6 +388,20 @@ public class WorkflowController extends AbstractWorkflowController implements Se
 		fireWorkitemChangedEvent();
 	}
 
+	
+	
+	
+	
+	
+	@Override
+	public String editAction(ItemCollection currentSelection, String action) {
+		
+		return action;
+		
+		//return super.editAction(currentSelection, action);
+	}
+
+
 	/**
 	 * This method is called by the page myProjects.xhtml form the startProcess
 	 * section.
@@ -639,7 +655,13 @@ public class WorkflowController extends AbstractWorkflowController implements Se
 
 		}
 	}
+	
+	
+	
+	
 
+	
+	
 	/**
 	 * this method is called by datatables to select an workitem
 	 * 
