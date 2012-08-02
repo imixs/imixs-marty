@@ -36,7 +36,7 @@ public class Cache extends LinkedHashMap {
 	public Cache(int capacity) {
 		super(capacity + 1, 1.1f, true);
 		this.capacity = capacity;
-	} 
+	}   
 
 	protected boolean removeEldestEntry(Entry eldest) {
 		return size() > capacity;

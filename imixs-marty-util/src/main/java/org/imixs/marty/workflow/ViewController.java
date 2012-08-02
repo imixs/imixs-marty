@@ -43,7 +43,7 @@ import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.marty.config.SetupMB;
+import org.imixs.marty.config.SetupController;
 import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
 
@@ -95,7 +95,7 @@ public class ViewController implements Serializable {
 	UserController myProfileMB = null;
 
 	@Inject
-	private SetupMB setupMB = null;
+	private SetupController setupController = null;
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
@@ -115,27 +115,27 @@ public class ViewController implements Serializable {
 
 		// set default view if not set
 		if (queryType == -1)
-			setQueryType(setupMB.getWorkitem().getItemValueInteger(
+			setQueryType(setupController.getWorkitem().getItemValueInteger(
 					"defaultworklistview"));
 
 		// read configurations for the max count. This value can be also set via
 		// faces-config-custom.xml
 		if (count == 0)
-			count = setupMB.getWorkitem().getItemValueInteger(
+			count = setupController.getWorkitem().getItemValueInteger(
 					"Maxviewentriesperpage");
 		// read configuration for the sort order
 		if (sortby == -1)
-			sortby = setupMB.getWorkitem().getItemValueInteger("Sortby");
+			sortby = setupController.getWorkitem().getItemValueInteger("Sortby");
 		if (sortorder == -1)
-			sortorder = setupMB.getWorkitem().getItemValueInteger("Sortorder");
+			sortorder = setupController.getWorkitem().getItemValueInteger("Sortorder");
 	}
 
-	public SetupMB getSetupMB() {
-		return setupMB;
+	public SetupController getSetupsetupController() {
+		return setupController;
 	}
 
-	public void setSetupMB(SetupMB setupMB) {
-		this.setupMB = setupMB;
+	public void setSetupsetupController(SetupController setupMB) {
+		this.setupController = setupMB;
 	}
 
 	public UserController getMyProfileMB() {

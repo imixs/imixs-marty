@@ -29,12 +29,15 @@ package org.imixs.marty.profile;
 
 import java.io.Serializable;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Logger;
 
@@ -54,11 +57,12 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.imixs.marty.config.SetupMB;
+import org.imixs.marty.config.SetupController;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.model.ModelVersionHandler;
-import org.imixs.marty.project.ProjectMB;
+import org.imixs.marty.project.ProjectController;
+import org.imixs.marty.util.Cache;
 import org.imixs.workflow.ItemCollection;
 
 /**
@@ -99,6 +103,11 @@ public class UserController  implements
 	private final String COOKIE_LOCALE = "imixs.workflow.locale";
 	private ItemCollection workitem = null;
 
+	final int MAX_CACHE_SIZE = 20;
+	private Cache cache;
+	
+	
+	
 	@EJB
 	private org.imixs.workflow.jee.ejb.ModelService modelService;
 
@@ -127,16 +136,17 @@ public class UserController  implements
 	private ModelVersionHandler modelVersionHandler = null;
 
 	@Inject
-	private SetupMB setupMB = null;
+	private SetupController setupController = null;
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
 	
 	
-	
+	 
 	public UserController() {
 		super();
-		// empty constructor!
+		cache = new Cache(MAX_CACHE_SIZE);
+		
 	}
 
 	/**
@@ -168,8 +178,8 @@ public class UserController  implements
 		if (!profileLoaded) {
 
 			// if SystemSetup is not yet completed - start System Setup now
-			if (!setupMB.isSetupOk())
-				setupMB.doSetup(null);
+			if (!setupController.isSetupOk())
+				setupController.doSetup(null);
 
 			// determine user language and set Modelversion depending on
 			// the selected user locale
@@ -195,15 +205,15 @@ public class UserController  implements
 					profile.replaceItemValue("txtLocale", getLocale());
 
 					// set default launch page
-					profile.replaceItemValue("keyStartpage", setupMB
+					profile.replaceItemValue("keyStartpage", setupController
 							.getWorkitem().getItemValueString("DefaultPage"));
 
-					List defaultProcessList = setupMB.getWorkitem()
+					List defaultProcessList = setupController.getWorkitem()
 							.getItemValue("defaultprojectprocesslist");
 
 					// create a default project
 					try {
-						if (setupMB.getWorkitem().getItemValueBoolean(
+						if (setupController.getWorkitem().getItemValueBoolean(
 								"CreateDefaultProject") == true)
 							createUserDefaultProject(defaultProcessList);
 					} catch (Exception ecp) {
@@ -244,11 +254,11 @@ public class UserController  implements
 				// set max History & log length
 				profile.replaceItemValue(
 						"numworkflowHistoryLength",
-						setupMB.getWorkitem().getItemValueInteger(
+						setupController.getWorkitem().getItemValueInteger(
 								"MaxProfileHistoryLength"));
 				profile.replaceItemValue(
 						"numworkflowLogLength",
-						setupMB.getWorkitem().getItemValueInteger(
+						setupController.getWorkitem().getItemValueInteger(
 								"MaxProfileHistoryLength"));
 
 				this.setWorkitem(profile);
@@ -265,20 +275,18 @@ public class UserController  implements
 
 	}
 
-	public SetupMB getSetupMB() {
-		return setupMB;
+	public SetupController getSetupController() {
+		return setupController;
 	}
 
-	public void setSetupMB(SetupMB setupMB) {
-		this.setupMB = setupMB;
+	public void setSetupController(SetupController setupMB) {
+		this.setupController = setupMB;
 	}
 
 	/**
 	 * This method creates a UserDefault Project. The Method is called only if a
 	 * user logged in first time and a new profile was created successfully
-	 * Note: This method may not call getProjectMB() because a circular
-	 * exception will be thrown!!!
-	 * 
+	
 	 * <p>
 	 * The default process model versions are now scanned for the string
 	 * '-LOCALE-'. If this string is found it will be replaced with the current
@@ -299,7 +307,7 @@ public class UserController  implements
 		if (projectList.size() == 0) {
 			// create default project
 			ItemCollection itemColProject = projectService
-					.createProject(ProjectMB.START_PROJECT_PROCESS_ID);
+					.createProject(ProjectController.START_PROJECT_PROCESS_ID);
 
 			// determine user language and set Modelversion depending on the
 			// selected user locale
@@ -619,7 +627,38 @@ public class UserController  implements
 
 	
 
-	
+	/**
+	 * This method returns the username (displayname) for a useraccount
+	 * 
+	 * @param aName
+	 * @return
+	 */
+	public String getUserName(String aAccount) {
+		String[] userArray;
+		// try to get name out from cache
+		userArray = (String[]) cache.get(aAccount);
+		if (userArray == null)
+			userArray = lookupUser(aAccount);
+
+		return userArray[0];
+	}
+
+	/**
+	 * This method returns the email for a useraccount
+	 * 
+	 * @param aName
+	 * @return
+	 */
+	public String getEmail(String aAccount) {
+		String[] userArray;
+		// try to get name out from cache
+		userArray = (String[]) cache.get(aAccount);
+		if (userArray == null)
+			userArray = lookupUser(aAccount);
+
+		return userArray[1];
+	}
+
 
 	/*
 	 * HELPER METHODS
@@ -690,4 +729,63 @@ public class UserController  implements
 
 	}
 
+	
+	/**
+	 * this class performes a EJB Lookup for the corresponding userprofile. The
+	 * method stores the username and his email into a string array. So either
+	 * the username or the email address will be cached in a single object.
+	 * 
+	 * @param aName
+	 * @return array of username and string
+	 */
+	private String[] lookupUser(String aName) {
+		String[] array = new String[2];
+
+		// String sUserName = null;
+		ItemCollection profile = profileService.findProfileByName(aName);
+		// if profile null cache current name object
+		if (profile == null) {
+			array[0] = aName;
+			array[1] = aName;
+		} else {
+			array[0] = profile.getItemValueString("txtuserName");
+			array[1] = profile.getItemValueString("txtemail");
+		}
+
+		if ("".equals(array[0]))
+			array[0] = aName;
+
+		if ("".equals(array[1]))
+			array[1] = array[0];
+
+		// put name into cache
+		cache.put(aName, array);
+
+		return array;
+	}
+
+	/**
+	 * this class performs a EJB Lookup for the corresponding userprofile
+	 * 
+	 * @param aName
+	 * @return
+	 */
+	private String lookupAccount(String aUserName) {
+		String sAccount = null;
+		ItemCollection profile = profileService
+				.findProfileByUserName(aUserName);
+		// if profile null cache current name object
+		if (profile == null)
+			sAccount = aUserName;
+		else
+			sAccount = profile.getItemValueString("txtName");
+
+		if ("".equals(sAccount))
+			sAccount = aUserName;
+
+		// put name into cache
+		cache.put(aUserName, sAccount);
+
+		return sAccount;
+	}
 }

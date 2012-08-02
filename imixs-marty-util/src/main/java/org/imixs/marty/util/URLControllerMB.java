@@ -41,7 +41,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.ProjectService;
-import org.imixs.marty.project.ProjectMB;
+import org.imixs.marty.project.ProjectController;
 import org.imixs.marty.workflow.ViewController;
 import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.workflow.ItemCollection;
@@ -86,7 +86,7 @@ public class URLControllerMB  implements Serializable {
 	private ViewController viewController = null;
 	
 	@Inject
-	private ProjectMB projectMB = null;
+	private ProjectController projectMB = null;
 	
 	@Inject
 	private WorkflowController workflowController = null;
@@ -119,12 +119,12 @@ public class URLControllerMB  implements Serializable {
 
 
 
-	public ProjectMB getProjectMB() {
+	public ProjectController getProjectMB() {
 		return projectMB;
 	}
 
 
-	public void setProjectMB(ProjectMB projectMB) {
+	public void setProjectMB(ProjectController projectMB) {
 		this.projectMB = projectMB;
 	}
 

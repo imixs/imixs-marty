@@ -52,11 +52,11 @@ import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.marty.config.SetupMB;
+import org.imixs.marty.config.SetupController;
 import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.ejb.WorkitemService;
-import org.imixs.marty.profile.NameLookupMB;
-import org.imixs.marty.project.ProjectMB;
+import org.imixs.marty.profile.UserController;
+import org.imixs.marty.project.ProjectController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
@@ -88,13 +88,13 @@ public class WorkflowController extends AbstractWorkflowController implements Se
 
 	/* Project Backing Bean */
 	@Inject
-	private ProjectMB projectMB = null;
+	private ProjectController projectMB = null;
 
 	@Inject
-	private SetupMB setupMB = null;
+	private SetupController setupMB = null;
 
 	@Inject
-	private NameLookupMB nameLookupMB = null;
+	private UserController userController = null;
 
 	/* Child Process */
 	protected ItemCollection childWorkitemItemCollection = null;
@@ -136,29 +136,32 @@ public class WorkflowController extends AbstractWorkflowController implements Se
 			sortorder = setupMB.getWorkitem().getItemValueInteger("Sortorder");
 	}
 
-	public ProjectMB getProjectMB() {
+	public ProjectController getProjectMB() {
 		return projectMB;
 	}
 
-	public void setProjectMB(ProjectMB projectMB) {
+	public void setProjectMB(ProjectController projectMB) {
 		this.projectMB = projectMB;
 	}
 
-	public SetupMB getSetupMB() {
+	public SetupController getSetupMB() {
 		return setupMB;
 	}
 
-	public void setSetupMB(SetupMB setupMB) {
+	public void setSetupMB(SetupController setupMB) {
 		this.setupMB = setupMB;
 	}
 
-	public NameLookupMB getNameLookupMB() {
-		return nameLookupMB;
+
+	public UserController getUserController() {
+		return userController;
 	}
 
-	public void setNameLookupMB(NameLookupMB nameLookupMB) {
-		this.nameLookupMB = nameLookupMB;
+
+	public void setUserController(UserController userController) {
+		this.userController = userController;
 	}
+
 
 	/**
 	 * returns the workflowEditorID for the current workItem. If no attribute
@@ -392,14 +395,6 @@ public class WorkflowController extends AbstractWorkflowController implements Se
 	
 	
 	
-	
-	@Override
-	public String editAction(ItemCollection currentSelection, String action) {
-		
-		return action;
-		
-		//return super.editAction(currentSelection, action);
-	}
 
 
 	/**
@@ -1409,17 +1404,17 @@ public class WorkflowController extends AbstractWorkflowController implements Se
 
 			// update current editor / remote user
 			acol.replaceItemValue("dspnamcurrenteditor",
-					this.nameLookupMB.findUserName(remoteUser));
+					this.userController.getUserName(remoteUser));
 
 			// test if creator was still right translated
 			String sNamCreator = acol.getItemValueString("namCreator");
 			String sDspNamCreator = acol.getItemValueString("dspnamCreator");
 			if ("".equals(sDspNamCreator)
-					|| !this.nameLookupMB.findUserName(sNamCreator).equals(
+					|| !this.userController.getUserName(sNamCreator).equals(
 							sDspNamCreator)) {
 				// update dsp name for creator
 				acol.replaceItemValue("dspnamCreator",
-						this.nameLookupMB.findUserName(sNamCreator));
+						this.userController.getUserName(sNamCreator));
 			}
 
 		} catch (Exception e) {

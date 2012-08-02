@@ -30,6 +30,7 @@ package org.imixs.marty.project;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -46,25 +47,26 @@ import javax.faces.component.UIData;
 import javax.faces.component.UIInput;
 import javax.faces.component.UIParameter;
 import javax.faces.component.UIViewRoot;
-import javax.faces.context.ExternalContext; 
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.marty.config.SetupMB;
+import org.imixs.marty.config.SetupController;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.profile.UserController;
-import org.imixs.marty.profile.NameLookupMB;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.jee.ejb.ModelService;
 import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
 
-@Named("projectMB")
+@Named("projectController") 
 @SessionScoped
-public class ProjectMB extends AbstractWorkflowController implements Serializable {
+public class ProjectController extends AbstractWorkflowController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -76,6 +78,13 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 	/* Profile Service */
 	@EJB
 	ProfileService profileService;
+	
+	@EJB
+	EntityService entityService;
+
+	@EJB
+	ModelService modelService;
+ 
 
 	@Inject
 	private UserController userController = null;
@@ -83,27 +92,44 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 	
 	
 	@Inject
-	private SetupMB setupMB = null;
+	private SetupController setupController = null;
 	
 	
 	  
-	@Inject
-	private NameLookupMB nameLookupMB = null;
-	 
+	
 	 
 	private ArrayList<ItemCollection> team = null;
 	private ArrayList<ItemCollection> projectSiblingList = null;
 
 	
 	private Collection<ProjectListener> projectListeners = new ArrayList<ProjectListener>();
-
+	List<ItemCollection> projects;
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
+	private StartProcessCache startProcessList;
+	private SubProcessCache subProcessList;
+	private boolean selectMainProjects = false;
+	private ArrayList<ItemCollection> startProjects = null;
+
+	private ArrayList<SelectItem> myProjectSelection = null;
+
+	public ProjectController() {
+		super();
 	
-	
+	}
+ 
+
 	@PostConstruct
 	public void init() {
 		projectListeners = new ArrayList<ProjectListener>();
+		
+		startProcessList = new StartProcessCache();
+		subProcessList = new SubProcessCache();
+
+		this.setMaxSearchResult(this.setupController.getWorkitem().getItemValueInteger(
+				"MaxviewEntriesPerPage"));
+	
+		
 	}
 
 
@@ -117,24 +143,16 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 	}
 
 
-	public SetupMB getSetupMB() {
-		return setupMB;
+	public SetupController getSetupsetupController() {
+		return setupController;
 	}
 
-	public void setSetupMB(SetupMB setupMB) {
-		this.setupMB = setupMB;
+	public void setSetupsetupController(SetupController setupMB) {
+		this.setupController = setupMB;
 	}
 
 	
 
-	
-	public NameLookupMB getNameLookupMB() {
-		return nameLookupMB;
-	}
-
-	public void setNameLookupMB(NameLookupMB nameLookupMB) {
-		this.nameLookupMB = nameLookupMB;
-	}
 
 	public synchronized void addProjectistener(ProjectListener l) {
 		// Test if the current listener was allreaded added to avoid that a
@@ -250,6 +268,13 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 		fireProjectChangedEvent();
 	}
 
+	
+	
+	
+	
+	
+	
+	
 	/**
 	 * Returns true if current user is member of team, owner, parentteam or
 	 * parentowner list
@@ -348,6 +373,15 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
 
+	@Override
+	public void doReset(ActionEvent event) {
+		startProjects = null;
+		startProcessList = new StartProcessCache();
+		subProcessList = new SubProcessCache();
+		super.doReset(event);
+	}
+
+
 	/**
 	 * returns a unique list with all member names
 	 * 
@@ -399,6 +433,8 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 		return vTeam;
 	}
 
+	
+	
 	/**
 	 * This method creates an empty project instance. The method sets the
 	 * modelversion to the current user language selection
@@ -468,7 +504,7 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 		// add a default process
 		project.replaceItemValue(
 				"txtprocesslist",
-				this.setupMB.getWorkitem()
+				this.setupController.getWorkitem()
 						.getItemValue("defaultprojectprocesslist"));
 		
 		
@@ -562,11 +598,11 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 		// set max History & log length
 		project.replaceItemValue(
 				"numworkflowHistoryLength",
-				setupMB.getWorkitem().getItemValueInteger(
+				setupController.getWorkitem().getItemValueInteger(
 						"MaxProjectHistoryLength"));
 		project.replaceItemValue(
 				"numworkflowLogLength",
-				setupMB.getWorkitem().getItemValueInteger(
+				setupController.getWorkitem().getItemValueInteger(
 						"MaxProjectHistoryLength"));
 
 	
@@ -927,8 +963,8 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 		List<String> vOwners = this.getWorkitem().getItemValue("namTeam");
 		ArrayList<SelectItem> nameSelection = new ArrayList<SelectItem>();
 		for (String sName : vOwners)
-			nameSelection.add(new SelectItem(sName, nameLookupMB
-					.findUserName(sName)));
+			nameSelection.add(new SelectItem(sName, userController
+					.getUserName(sName)));
 		return nameSelection;
 	}
 
@@ -943,8 +979,8 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 		List<String> vOwners = this.getWorkitem().getItemValue("namManager");
 		ArrayList<SelectItem> nameSelection = new ArrayList<SelectItem>();
 		for (String sName : vOwners)
-			nameSelection.add(new SelectItem(sName, nameLookupMB
-					.findUserName(sName)));
+			nameSelection.add(new SelectItem(sName, userController
+					.getUserName(sName)));
 		return nameSelection;
 	}
 
@@ -959,8 +995,8 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 		List<String> vOwners = this.getWorkitem().getItemValue("namAssist");
 		ArrayList<SelectItem> nameSelection = new ArrayList<SelectItem>();
 		for (String sName : vOwners)
-			nameSelection.add(new SelectItem(sName, nameLookupMB
-					.findUserName(sName)));
+			nameSelection.add(new SelectItem(sName, userController
+					.getUserName(sName)));
 		return nameSelection;
 	}
 
@@ -975,8 +1011,8 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 		List<String> vOwners = this.getWorkitem().getItemValue("namowner");
 		ArrayList<SelectItem> nameSelection = new ArrayList<SelectItem>();
 		for (String sName : vOwners)
-			nameSelection.add(new SelectItem(sName, nameLookupMB
-					.findUserName(sName)));
+			nameSelection.add(new SelectItem(sName, userController
+					.getUserName(sName)));
 		return nameSelection;
 	}
 
@@ -1071,6 +1107,463 @@ public class ProjectMB extends AbstractWorkflowController implements Serializabl
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	
+
+	public List<ItemCollection> getProjects() {
+		selectMainProjects = false;
+		if (projects == null)
+			loadProjectList();
+		return projects;
+
+	}
+
+	/**
+	 * This method returns a list of all Projects with ProcessIDs defined and
+	 * where the current User is a Member of. So these Projects represent the
+	 * collection of Projects where the User can start a new task.
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getStartProjects() {
+		if (startProjects == null) {
+			startProjects = new ArrayList<ItemCollection>();
+			try {
+				List<ItemCollection> col = null;
+				long l = System.currentTimeMillis();
+				col = projectService.findAllProjects(0, -1);
+
+				logger.fine("  loadStartProjectList ("
+						+ (System.currentTimeMillis() - l) + " ms) ");
+
+				setEndOfList( col.size() <  getMaxSearchResult());
+				
+				for (ItemCollection aworkitem : col) {
+					// test if Project contains a ProcessList
+					List<String> vprojectList = aworkitem
+							.getItemValue("txtprocesslist");
+					if (vprojectList.size() > 0
+							&& this.isMember(aworkitem))
+						startProjects.add((aworkitem));
+				}
+			} catch (Exception ee) {
+				ee.printStackTrace();
+			}
+		}
+		return startProjects;
+
+	}
+
+
+	
+	/**
+	 * returns a project list where the current user is owner
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getMyProjects() {
+		if (projects == null)
+			loadMyProjectList();
+		return projects;
+	}
+
+	/**
+	 * returns a project list where the current user is member
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getMemberProjects() {
+		if (projects == null)
+			loadMemberProjectList();
+		return projects;
+	}
+	public List<ItemCollection> getMainProjects() {
+		selectMainProjects = true;
+		if (projects == null)
+			loadProjectList();
+		return projects;
+	}
+
+	/**
+	 * returns a project list where the type is 'projectdeleted'
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getDeletedProjects() {
+		
+		String query = "SELECT project FROM Entity AS project "
+				+ " WHERE project.type IN ('projectdeleted' ) "
+				+ " ORDER BY project.modified DESC";
+		
+		super.setSearchQuery(query);
+		super.doSwitchToSearchlist(null);
+		return super.getWorkitems();
+		
+		
+	
+
+	}
+
+	/**
+	 * returns the full list of Porjects available to the current user
+	 * 
+	 * @return
+	 */
+	public ArrayList<SelectItem> getMyProjectSelection() throws Exception {
+
+		if (myProjectSelection != null)
+			return myProjectSelection;
+
+		// load Project list only once...
+
+		myProjectSelection = new ArrayList<SelectItem>();
+		long l = System.currentTimeMillis();
+
+		List<ItemCollection> col = projectService.findAllProjects(0, -1);
+
+		logger.fine(" -------------- loadMyProjectList : "
+				+ (System.currentTimeMillis() - l) + " ----------------- ");
+		for (ItemCollection aworkitem : col) {
+
+			String sID = aworkitem.getItemValueString("$uniqueID");
+			String sName = aworkitem.getItemValueString("txtName");
+
+			myProjectSelection.add(new SelectItem(sID, sName));
+
+		}
+		return myProjectSelection;
+	}
+	
+
+	
+	/**
+	 * Loads the project list
+	 * 
+	 * boolean selectMainProjects indicates if only main projects should be
+	 * loaded or all projects need to be loaded. The user frontend typically
+	 * shows only the main projects
+	 * 
+	 * @return
+	 */
+	private List<ItemCollection> loadProjectList() {
+		projects = new ArrayList<ItemCollection>();
+		try {
+			List<ItemCollection> col = null;
+			long l = System.currentTimeMillis();
+			if (selectMainProjects)
+				col = projectService.findAllMainProjects(getRow(), getMaxSearchResult());
+			else
+				col = projectService.findAllProjects(getRow(), getMaxSearchResult());
+
+			logger.fine("  loadProjectList ("
+					+ (System.currentTimeMillis() - l) + " ms) ");
+
+			setEndOfList( col.size() <  getMaxSearchResult());
+			for (ItemCollection aworkitem : col) {
+				projects.add((aworkitem));
+			}
+		} catch (Exception ee) {
+			projects = null;
+			ee.printStackTrace();
+		}
+		return projects;
+	}
+
+	/**
+	 * Loads the project list where the current user is owner
+	 * 
+	 * @return
+	 */
+	private List<ItemCollection> loadMyProjectList() {
+		 projects = new ArrayList<ItemCollection>();
+		try {
+			List<ItemCollection> col = null;
+			
+			col = projectService.findAllProjectsByOwner(getRow(), getMaxSearchResult());
+
+			setEndOfList( col.size() <  getMaxSearchResult());
+			
+			for (ItemCollection aworkitem : col) {
+				projects.add((aworkitem));
+			}
+		} catch (Exception ee) {
+			projects = null;
+			ee.printStackTrace();
+		}
+		return projects;
+	}
+
+	/**
+	 * Loads the project list where the current user is member of without public
+	 * projects
+	 * 
+	 * @return
+	 */
+	private List<ItemCollection> loadMemberProjectList() {
+	 projects = new ArrayList<ItemCollection>();
+		try {
+			List<ItemCollection> col = null;
+			long l = System.currentTimeMillis();
+			col = projectService.findAllProjectsByMember(getRow(),getMaxSearchResult());
+
+		
+			setEndOfList( col.size() <  getMaxSearchResult());
+			for (ItemCollection aworkitem : col) {
+				projects.add((aworkitem));
+			}
+		} catch (Exception ee) {
+			projects = null;
+			ee.printStackTrace();
+		}
+		return projects;
+	}
+	
+	
+
+
+	/**
+	 * This class implements an internal Cache for the StartProcess Lists
+	 * assigned to a project. The Class overwrites the get() Method and
+	 * implements an lazy loading mechanism to load a startprocess List for
+	 * project the first time the list was forced. After the first load the list
+	 * is cached internal so further get() calls are very fast.
+	 * 
+	 * The key value expected of the get() method is a string with the $uniqueID
+	 * of the corresponding project. The class uses the projectService EJB to
+	 * load the informations of a project.
+	 * 
+	 * The Cache size is shrinked to a maximum of 30 projects to be cached one
+	 * time. This mechanism can be optimized later...
+	 * 
+	 * @author rsoika
+	 * 
+	 */
+	class StartProcessCache extends HashMap {
+		HashMap processEntityCache;
+		final int MAX_SIZE = 30;
+
+		/**
+		 * returns a single value out of the ItemCollection if the key dos not
+		 * exist the method will create a value automatical
+		 */
+		@SuppressWarnings("unchecked")
+		public Object get(Object key) {
+			List<ItemCollection> startProcessList;
+
+			// check if a key is a String....
+			if (!(key instanceof String))
+				return null;
+
+			// 1.) try to get list out from cache..
+			startProcessList = (List<ItemCollection>) super.get(key);
+			if (startProcessList != null)
+				// list already known and loaded into the cache!....
+				return startProcessList;
+
+			logger.fine(" -------------- loadProcessList for Project " + key
+					+ "----------------- ");
+
+			if (processEntityCache == null)
+				processEntityCache = new HashMap();
+
+			startProcessList = new ArrayList<ItemCollection>();
+			// first load Project
+			ItemCollection aProject = projectService
+					.findProject(key.toString());
+
+			if (aProject == null)
+				return startProcessList;
+
+			List<String> vprojectList = aProject.getItemValue("txtprocesslist");
+
+			// load ModelVersion
+			// String sProcessModelVersion = aProject
+			// .getItemValueString("txtProcessModelVersion");
+			// sProcessModelVersion = "public-de-general-0.0.1";
+			// get StartProcessList first time and store result into cache...
+
+			for (String aProcessIdentifier : vprojectList) {
+				// try to get ProcessEntity form ProcessEntity cache
+				ItemCollection itemColProcessEntity = (ItemCollection) processEntityCache
+						.get(aProcessIdentifier);
+
+				if (itemColProcessEntity == null) {
+					// not yet cached...
+					try {
+						// now try to separate modelversion from process id ...
+						if (aProcessIdentifier.contains("|")) {
+							logger.fine(" -------------- loadProcessEntity into cache ----------------- ");
+
+							String sProcessModelVersion = aProcessIdentifier
+									.substring(0,
+											aProcessIdentifier.indexOf('|'));
+							String sProcessID = aProcessIdentifier
+									.substring(aProcessIdentifier.indexOf('|') + 1);
+
+							logger.fine(" -------------- Modelversion:"
+									+ sProcessModelVersion
+									+ " ----------------- ");
+							logger.fine(" -------------- ProcessID:"
+									+ sProcessID + " ----------------- ");
+
+							itemColProcessEntity = modelService
+									.getProcessEntityByVersion(
+											Integer.parseInt(sProcessID),
+											sProcessModelVersion);
+
+						}
+					} catch (NumberFormatException e) {
+						e.printStackTrace();
+						itemColProcessEntity = null;
+					} catch (Exception e) {
+						e.printStackTrace();
+						itemColProcessEntity = null;
+					}
+					// put processEntity into cache
+					if (itemColProcessEntity != null)
+						processEntityCache.put(aProcessIdentifier,
+								itemColProcessEntity);
+				}
+				if (itemColProcessEntity != null)
+					startProcessList.add((itemColProcessEntity));
+			}
+
+			// now put startProcessList first time into the cache
+
+			// if size > MAX_SIZE than remove first entry
+			if (this.keySet().size() > MAX_SIZE) {
+				Object oldesKey = this.keySet().iterator().next();
+
+				System.out
+						.println(" -------------- maximum CacheSize exeeded remove : "
+								+ oldesKey);
+
+				this.remove(oldesKey);
+			}
+
+			this.put(key, startProcessList);
+
+			return startProcessList;
+		}
+
+	}
+
+	/**
+	 * This class implements an internal Cache for the SubProcess Lists assigned
+	 * to a project. A Subprocess is indeicated by the '~' character in its
+	 * group name. The SubProcessCache is similar to the StartProcessCache class
+	 * 
+	 * The key value expected of the get() method is a string with the $unqiueid
+	 * of a workitem. From this worktiem the modelversion and a specific
+	 * txtWorkflowGroup name of the the main process will be taken
+	 * <p>
+	 * e.g. public-standard-de-0.0.1 Ticketservice
+	 * <p>
+	 * The Method searches all start processIDs with txtWorkflowGroup names
+	 * started with the given Groupname + '~'
+	 * 
+	 * 
+	 * 
+	 * @author rsoika
+	 * 
+	 */
+	class SubProcessCache extends HashMap {
+		// HashMap processEntityCache;
+		final int MAX_SIZE = 30;
+
+		/**
+		 * returns a single value out of the ItemCollection if the key dos not
+		 * exist the method will create a value automatical
+		 */
+		@SuppressWarnings("unchecked")
+		public Object get(Object key) {
+			List<ItemCollection> startProcessList;
+
+			// check if a key is a String....
+			if (!(key instanceof String))
+				return null;
+
+			// find modelversion and group name from workitem proivded by key
+			// ($uniqueid)
+			// if $uniueid is equals to current workitem than no lookup is
+			// neede.
+
+			// find workitem
+			ItemCollection workitem= entityService.load(key.toString());
+			
+
+			if (workitem == null)
+				return null;
+			// get modelversio and group name from given workitem
+			String sModelVersion = workitem.getItemValueString("$modelVersion");
+			String sGroupName = workitem.getItemValueString("txtWorkflowGroup");
+
+			// now update the key
+			key = sModelVersion + "|" + sGroupName;
+
+			// 1.) try to get list out from cache..
+			startProcessList = (List<ItemCollection>) super.get(key);
+			if (startProcessList != null)
+				// list already known and loaded into the cache!....
+				return startProcessList;
+
+			startProcessList = new ArrayList<ItemCollection>();
+
+			System.out
+					.println(" -------------- loadSubProcessList for ModelVersion "
+							+ sModelVersion
+							+ " and ProcessGroup "
+							+ sGroupName
+							+ "----------------- ");
+
+			List<ItemCollection> aProcessList = modelService
+					.getAllStartProcessEntitiesByVersion(sModelVersion);
+
+			Iterator<ItemCollection> iter = aProcessList.iterator();
+			while (iter.hasNext()) {
+				ItemCollection processEntity = iter.next();
+				String sSubGroupName = processEntity
+						.getItemValueString("txtWorkflowGroup");
+
+				// the process will not be added if it is a SubprocessGroup
+				// Indicated by a '~' char
+				if (!sSubGroupName.startsWith(sGroupName + "~"))
+					continue;
+				// subprocess maches!
+				// add txtWorkflowSubGroup property
+				try {
+					processEntity
+							.replaceItemValue("txtWorkflowSubGroup",
+									sSubGroupName.substring(sSubGroupName
+											.indexOf("~") + 1));
+				} catch (Exception e) {
+
+					e.printStackTrace();
+				}
+
+				startProcessList.add((processEntity));
+
+			}
+
+			// now put startProcessList first time into the cache
+
+			// if size > MAX_SIZE than remove first entry
+			if (this.keySet().size() > MAX_SIZE) {
+				Object oldesKey = this.keySet().iterator().next();
+
+				System.out
+						.println(" -------------- maximum CacheSize exeeded remove : "
+								+ oldesKey);
+
+				this.remove(oldesKey);
+			}
+
+			this.put(key, startProcessList);
+
+			return startProcessList;
+		}
+
 	}
 
 }

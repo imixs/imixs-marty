@@ -7,20 +7,19 @@
 
 	<ui:define name="content">
 		<h:form id="logoutform">
-		
-			<div class="imixs-form">
-				<div class="imixs-form-body">
-					<div class="imixs-header">
-						<h3>#{global.logout_title}</h3>
-						</div>
-						<br />
-						<h:outputLabel value="#{global.logout_help}" />
 
-						<br />
-						<br />
-						<br />
-						<h:commandButton value="#{global.login}" action="/index.xhtml" />
-					
+			<div class="imixs-form">
+
+				<div class="imixs-header">
+					<h1>#{global.logout_title}</h1>
+				</div>
+				<div class="imixs-body">
+					<br />
+					<h:outputLabel value="#{global.logout_help}" />
+
+					<br /> <br /> <br />
+					<h:commandButton value="#{global.login}" action="/index.xhtml" />
+
 				</div>
 			</div>
 		</h:form>

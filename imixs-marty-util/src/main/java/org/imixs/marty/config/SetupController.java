@@ -65,12 +65,12 @@ import org.imixs.workflow.xml.XMLItemCollectionAdapter;
  * The method doSetup() initializes the system. The method also loads a default
  * model configuration if no model yet exists.
  * 
- * @author rsoika
+ * @author rsoika 
  * 
  */
-@Named("setupMB")
+@Named("setupController")
 @SessionScoped
-public class SetupMB implements Serializable {
+public class SetupController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -108,7 +108,7 @@ public class SetupMB implements Serializable {
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
-	public SetupMB() {
+	public SetupController() {
 		super();
 	}
 
@@ -215,7 +215,7 @@ public class SetupMB implements Serializable {
 	public void doSetup(ActionEvent event) throws Exception {
 		
 		
-		logger.info("[SetupMB] starting System Setup...");
+		logger.info("[SetupController starting System Setup...");
 		// model
 		epm.addIndex("numprocessid", EntityIndex.TYP_INT);
 		epm.addIndex("numactivityid", EntityIndex.TYP_INT);
@@ -250,7 +250,7 @@ public class SetupMB implements Serializable {
 		epm.addIndex("txtProjectName", EntityIndex.TYP_TEXT);
 		epm.addIndex("txtUsername", EntityIndex.TYP_TEXT);
 
-		logger.info("[SetupMB] index configuration - ok");
+		logger.info("[SetupController] index configuration - ok");
 
 		// update System configuration.....
 		getWorkitem().replaceItemValue("keySystemSetupCompleted", true);
@@ -261,7 +261,7 @@ public class SetupMB implements Serializable {
 
 		setupOk = true;
 
-		logger.info("[SetupMB] system setup completed");
+		logger.info("[SetupController] system setup completed");
 
 	}
 
@@ -289,27 +289,27 @@ public class SetupMB implements Serializable {
 	 */
 	public void loadDefaultModels() {
 
-		logger.info("[SetupMB] searching system model...");
+		logger.info("[SetupController] searching system model...");
 		try {
 			if (hasSystemModel()) {
-				logger.info("[SetupMB] system model found - skip loading default models");
+				logger.info("[SetupController] system model found - skip loading default models");
 				return;
 			}
 
-			logger.info("[SetupMB] loading default model configuration from 'configuration/model.properties'...");
+			logger.info("[SetupController] loading default model configuration from 'configuration/model.properties'...");
 
 			ResourceBundle r = ResourceBundle.getBundle("configuration.model");
 			if (r == null)
-				logger.warning("[SetupMB] configuration/model.properties - file found");
+				logger.warning("[SetupController] configuration/model.properties - file found");
 			Enumeration<String> enkeys = r.getKeys();
 			while (enkeys.hasMoreElements()) {
 				String sKey = enkeys.nextElement();
 				// try to load this model
 				String filePath = r.getString(sKey);
-				logger.info("[SetupMB] loading model configuration '" + sKey
+				logger.info("[SetupController] loading model configuration '" + sKey
 						+ "=" + filePath + "'");
 
-				InputStream inputStream = SetupMB.class.getClassLoader()
+				InputStream inputStream = SetupController.class.getClassLoader()
 						.getResourceAsStream(filePath);
 				// byte[] bytes = IOUtils.toByteArray(inputStream);
 
@@ -328,9 +328,9 @@ public class SetupMB implements Serializable {
 				this.importXmlEntityData(result);
 			}
 		} catch (Exception e) {
-			logger.severe("[SetupMB] unable to load model configuration - please check configuration/model.properties file!");
+			logger.severe("[SetupController] unable to load model configuration - please check configuration/model.properties file!");
 			throw new RuntimeException(
-					"[SetupMB] unable to load model configuration - please check configuration/model.properties file!");
+					"[SetupController] unable to load model configuration - please check configuration/model.properties file!");
 		}
 
 	}
@@ -406,7 +406,7 @@ public class SetupMB implements Serializable {
 			return;
 		try {
 			EntityCollection ecol = null;
-			logger.info("[SetupMB] verifing file content....");
+			logger.info("[SetupController] verifing file content....");
 			JAXBContext context = JAXBContext
 					.newInstance(EntityCollection.class);
 			Unmarshaller m = context.createUnmarshaller();
@@ -415,7 +415,7 @@ public class SetupMB implements Serializable {
 			Object jaxbObject = m.unmarshal(input);
 			if (jaxbObject == null) {
 				throw new RuntimeException(
-						"[SetupMB] error - wrong xml file format - unable to import file!");
+						"[SetupController] error - wrong xml file format - unable to import file!");
 			}
 
 			ecol = (EntityCollection) jaxbObject;
@@ -444,7 +444,7 @@ public class SetupMB implements Serializable {
 				}
 				// now remove old model entries....
 				for (String aModelVersion : vModelVersions) {
-					logger.info("[SetupMB] removing existing configuration for model version '"
+					logger.info("[SetupController] removing existing configuration for model version '"
 							+ aModelVersion + "'");
 					modelService.removeModelVersion(aModelVersion);
 				}
@@ -457,7 +457,7 @@ public class SetupMB implements Serializable {
 					entityService.save(itemCollection);
 				}
 
-				logger.info("[SetupMB] " + ecol.getEntity().length
+				logger.info("[SetupController] " + ecol.getEntity().length
 						+ " entries sucessfull imported");
 			}
 

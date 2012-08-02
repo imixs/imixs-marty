@@ -47,8 +47,7 @@ import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.profile.UserController;
-import org.imixs.marty.project.ProjectMB;
-import org.imixs.marty.project.ProjectlistMB;
+import org.imixs.marty.project.ProjectController;
 import org.imixs.marty.util.SelectItemComparator;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.ModelService;
@@ -86,8 +85,8 @@ public class ModelMB implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private UserController myProfileMB = null;
-	private ProjectlistMB projectlist = null;
-	private ProjectMB projectMB = null;
+	
+	private ProjectController projectMB = null;
 	private String latestSystemModelVersion = null;
 
 	private ArrayList<SelectItem> workflowGroupSelection = null;
@@ -490,22 +489,10 @@ public class ModelMB implements Serializable {
 
 	}
 
-	public ProjectlistMB getProjectListMB() {
-		// get WorklistMB instance
-		if (projectlist == null)
-			projectlist = (ProjectlistMB) FacesContext
-					.getCurrentInstance()
-					.getApplication()
-					.getELResolver()
-					.getValue(FacesContext.getCurrentInstance().getELContext(),
-							null, "projectlistMB");
-
-		return projectlist;
-	}
-
-	public ProjectMB getProjectMB() {
+	
+	public ProjectController getProjectMB() {
 		if (projectMB == null)
-			projectMB = (ProjectMB) FacesContext
+			projectMB = (ProjectController) FacesContext
 					.getCurrentInstance()
 					.getApplication()
 					.getELResolver()
