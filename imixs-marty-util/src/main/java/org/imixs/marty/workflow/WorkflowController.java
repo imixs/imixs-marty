@@ -58,7 +58,6 @@ import org.imixs.marty.ejb.WorkitemService;
 import org.imixs.marty.profile.UserController;
 import org.imixs.marty.project.ProjectController;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
 
 /**
  * This class provides methods to access a single workitem controlled by the
@@ -73,7 +72,7 @@ import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
  */
 @Named("workflowController")
 @SessionScoped
-public class WorkflowController extends AbstractWorkflowController implements Serializable {
+public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.WorkflowController implements Serializable {
 
 	
 	private static final long serialVersionUID = 1L;

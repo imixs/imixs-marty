@@ -61,13 +61,13 @@ import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.ModelService;
-import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
+import org.imixs.workflow.jee.faces.workitem.DataController;
 
 
 @Named("projectController") 
 @SessionScoped
-public class ProjectController extends AbstractWorkflowController implements Serializable {
-
+public class ProjectController extends org.imixs.workflow.jee.faces.workitem.WorkflowController implements Serializable {
+ 
 	private static final long serialVersionUID = 1L;
 
 	public final static int START_PROJECT_PROCESS_ID = 100;
@@ -1197,7 +1197,6 @@ public class ProjectController extends AbstractWorkflowController implements Ser
 				+ " ORDER BY project.modified DESC";
 		
 		super.setSearchQuery(query);
-		super.doSwitchToSearchlist(null);
 		return super.getWorkitems();
 		
 		

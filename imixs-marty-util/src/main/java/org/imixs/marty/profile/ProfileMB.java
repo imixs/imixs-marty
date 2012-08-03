@@ -49,12 +49,12 @@ import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.faces.workitem.AbstractWorkflowController;
+import org.imixs.workflow.jee.faces.workitem.WorkflowController;
 
 
 @Named("profileMB")
 @SessionScoped
-public class ProfileMB extends AbstractWorkflowController  implements Serializable {
+public class ProfileMB extends org.imixs.workflow.jee.faces.workitem.WorkflowController  implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -69,9 +69,7 @@ public class ProfileMB extends AbstractWorkflowController  implements Serializab
 	@PostConstruct
 	public void init() {
 		setType("profile");
-		doSwitchToWorklistAll(null);
-	
-	
+		
 	}
 	
 
