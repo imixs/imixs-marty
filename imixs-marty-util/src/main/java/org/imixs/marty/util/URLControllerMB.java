@@ -40,11 +40,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.ejb.ProfileService;
-import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.project.ProjectController;
 import org.imixs.marty.workflow.ViewController;
 import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
  * This backing bean is used to control the project selection over URI Requests.
@@ -77,10 +77,9 @@ public class URLControllerMB  implements Serializable {
 	@EJB
 	private ProfileService profileService;
 
-	/* Project Service */
 	@EJB
-	private ProjectService projectService;
-
+	private EntityService entityService;
+	
 	
 	@Inject
 	private ViewController viewController = null;
@@ -214,7 +213,7 @@ public class URLControllerMB  implements Serializable {
 
 		// user is authenticated....
 		// Find project
-		itemColProject = projectService.findProject(project);
+		itemColProject = entityService.load(project);
 		// update the ProjectMB
 		if (itemColProject != null) {
 			projectMB.setWorkitem(itemColProject);
@@ -435,7 +434,7 @@ public class URLControllerMB  implements Serializable {
 			if (itemColProject == null
 					|| !sIDRef.equals(itemColProject
 							.getItemValueString("$uniqueid"))) {
-				itemColProject = projectService.findProject(sIDRef);
+				itemColProject = entityService.load(sIDRef);
 				if (itemColProject != null) {
 					System.out.println("URLControllerMB - Select Project '"
 							+ sIDRef + "' ");

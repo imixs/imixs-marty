@@ -29,23 +29,20 @@ package org.imixs.marty.workflow;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.config.SetupController;
 import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.faces.workitem.DataController;
 
 /**
  * The ViewController is a generic implementation for all types of views for
@@ -58,41 +55,41 @@ import org.imixs.workflow.ItemCollection;
  */
 @Named("viewController")
 @SessionScoped
-public class ViewController implements Serializable {
+public class ViewController extends DataController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private ArrayList<ItemCollection> workitems = null;
-
+	
 	// view options
-	private int count = 0;
-	private int row = 0;
 	private int sortby = -1;
 	private int sortorder = -1;
-	private boolean endOfList = false;
 	private String viewTitle = "undefined viewtitle";
 
 	// filter options
 	private String projectUniqueID = "";
 	private String workflowGroup = "";
+	private String modelVersion="";
 	private int processID = 0;
 	private String searchQuery = null;
 
-	// view types
-	private int queryType = -1;
-	final int QUERY_WORKLIST_BY_OWNER = 0;
-	final int QUERY_WORKLIST_BY_CREATOR = 1;
-	final int QUERY_WORKLIST_BY_AUTHOR = 2;
-	final int QUERY_WORKLIST_ALL = 3;
-	final int QUERY_WORKLIST_ARCHIVE = 4;
-	final int QUERY_WORKLIST_DELETIONS = 7;
-	final int QUERY_SEARCH = 5;
+	
+	
+	final String QUERY_WORKLIST_BY_OWNER = "worklist.owner";
+	final String QUERY_WORKLIST_BY_CREATOR = "worklist.creator";
+	final String QUERY_WORKLIST_BY_AUTHOR = "worklist.author";
+	final String QUERY_WORKLIST_ALL = "worklist";
+	final String QUERY_WORKLIST_ARCHIVE = "archive";
+	final String QUERY_WORKLIST_DELETIONS = "deletions";
+	
+	
+	public final static int SORT_BY_CREATED = 0;
+	public final static int SORT_BY_MODIFIED = 1;
+	public final static int SORT_ORDER_DESC = 0;
+	public final static int SORT_ORDER_ASC = 1;
 
-	@EJB
-	org.imixs.marty.ejb.WorklistService worklistService;
 
 	@Inject
-	UserController myProfileMB = null;
+	UserController userController = null;
 
 	@Inject
 	private SetupController setupController = null;
@@ -113,16 +110,12 @@ public class ViewController implements Serializable {
 	@PostConstruct
 	public void init() {
 
-		// set default view if not set
-		if (queryType == -1)
-			setQueryType(setupController.getWorkitem().getItemValueInteger(
-					"defaultworklistview"));
-
+		
 		// read configurations for the max count. This value can be also set via
 		// faces-config-custom.xml
-		if (count == 0)
-			count = setupController.getWorkitem().getItemValueInteger(
-					"Maxviewentriesperpage");
+		if (getMaxSearchResult() == 0)
+			setMaxSearchResult(setupController.getWorkitem().getItemValueInteger(
+					"Maxviewentriesperpage"));
 		// read configuration for the sort order
 		if (sortby == -1)
 			sortby = setupController.getWorkitem().getItemValueInteger("Sortby");
@@ -138,21 +131,15 @@ public class ViewController implements Serializable {
 		this.setupController = setupMB;
 	}
 
-	public UserController getMyProfileMB() {
-		return myProfileMB;
+	public UserController getUserController() {
+		return userController;
 	}
 
-	public void setMyProfileMB(UserController myProfileMB) {
-		this.myProfileMB = myProfileMB;
+	public void setUserController(UserController myProfileMB) {
+		this.userController = myProfileMB;
 	}
 
-	public int getCount() {
-		return count;
-	}
-
-	public void setCount(int count) {
-		this.count = count;
-	}
+	
 
 	public int getSortby() {
 		return sortby;
@@ -186,6 +173,14 @@ public class ViewController implements Serializable {
 		this.projectUniqueID = projectUniqueID;
 	}
 
+	public String getModelVersion() {
+		return modelVersion;
+	}
+
+	public void setModelVersion(String modelVersion) {
+		this.modelVersion = modelVersion;
+	}
+
 	public String getWorkflowGroup() {
 		return workflowGroup;
 	}
@@ -202,46 +197,15 @@ public class ViewController implements Serializable {
 		this.processID = processID;
 	}
 
-	public int getQueryType() {
-		return queryType;
-	}
-
-	public void setQueryType(int queryType) {
-		this.queryType = queryType;
-
-		switch (queryType) {
-		case QUERY_WORKLIST_BY_AUTHOR:
-			setViewTitle("title_worklist_by_author");
-			break;
-		case QUERY_WORKLIST_BY_OWNER:
-			setViewTitle("title_worklist_by_owner");
-			break;
-		case QUERY_WORKLIST_BY_CREATOR:
-			setViewTitle("title_worklist_by_creator");
-			break;
-		case QUERY_WORKLIST_ARCHIVE:
-			setViewTitle("title_worklist_archive");
-			break;
-		case QUERY_WORKLIST_DELETIONS:
-			setViewTitle("title_worklist_deletions");
-			break;
-
-		default:
-			setViewTitle("title_worklist_all");
-			break;
-
-		}
-	}
+	
 
 	public String getViewTitle() {
 		return viewTitle;
 	}
 
 	public void setViewTitle(String viewTitle) {
-		if (myProfileMB == null)
-			return;
-
-		Locale locale = new Locale(myProfileMB.getLocale());
+		
+		Locale locale = new Locale(userController.getLocale());
 		ResourceBundle rb = null;
 		rb = ResourceBundle.getBundle("bundle.workitem", locale);
 
@@ -249,151 +213,253 @@ public class ViewController implements Serializable {
 
 	}
 
-	/**
-	 * loads the current workitem collection based on the selected view-type
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getWorkitems() {
-		if (workitems == null)
-			loadWorkItemList();
-		return workitems;
-	}
+	
+	class MartyViewAdapter extends ViewAdapter {
 
-	/**
-	 * resets the current project list and projectMB
-	 * 
-	 * @return
-	 */
-	public void doReset(ActionEvent event) {
-		workitems = null;
-		row = 0;
-	}
+		
+		public List<ItemCollection> getViewEntries() {
+			
 
-	/**
-	 * refreshes the current workitem list. so the list will be loaded again.
-	 * but start pos will not be changed!
-	 */
-	public void doRefresh(ActionEvent event) {
-		workitems = null;
-	}
-
-	public void doLoadNext(ActionEvent event) {
-		row = row + count;
-		workitems = null;
-	}
-
-	public void doLoadPrev(ActionEvent event) {
-		row = row - count;
-		if (row < 0)
-			row = 0;
-		workitems = null;
-	}
-
-	/**
-	 * this method loads the workitems depending to the current query type The
-	 * queryType is set during the getter Methods getWorkList, getStatusList and
-	 * getIssueList For each query type a coresponding method is implmented by
-	 * the issueService.
-	 * 
-	 * Caching: ======== The isDirty Flag is diabled because we recognize that
-	 * in cases where people working online on share workitems the worklist is
-	 * not uptodate. The only way to go back to a caching mechanism would be to
-	 * place a refresh-button into the worklist pages.
-	 * 
-	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
-	 */
-	private void loadWorkItemList() {
-		workitems = new ArrayList<ItemCollection>();
-		Collection<ItemCollection> col = null;
-		String sModel = null;
-		String sWorkflowGroup = null;
-		try {
-			long lTime = System.currentTimeMillis();
-			String sProjectUniqueID = getProjectUniqueID();
-
-			if (this.getWorkflowGroup().indexOf('|') > -1) {
-				sModel = this.getWorkflowGroup().substring(0,
-						this.getWorkflowGroup().indexOf("|") - 0);
-				sWorkflowGroup = this.getWorkflowGroup().substring(
-						this.getWorkflowGroup().indexOf("|") + 1);
+			if (QUERY_WORKLIST_BY_AUTHOR.equals(getView())) {
+				
+				return getEntityService().findAllEntities(buildQueryWorkitemsByAuthor(), getRow(),
+						getMaxSearchResult());
 			}
-
-			switch (getQueryType()) {
-			case QUERY_WORKLIST_BY_OWNER:
-				col = worklistService.findWorkitemsByOwner(sProjectUniqueID,
-						sModel, sWorkflowGroup, this.getProcessID(), row,
-						count, sortby, sortorder);
-				break;
-			case QUERY_WORKLIST_BY_CREATOR:
-				col = worklistService.findWorkitemsByCreator(sProjectUniqueID,
-						sModel, sWorkflowGroup, this.getProcessID(), row,
-						count, sortby, sortorder);
-				break;
-
-			case QUERY_WORKLIST_BY_AUTHOR:
-				col = worklistService.findWorkitemsByAuthor(sProjectUniqueID,
-						sModel, sWorkflowGroup, this.getProcessID(), row,
-						count, sortby, sortorder);
-				break;
-
-			case QUERY_WORKLIST_ALL:
-				col = worklistService.findAllWorkitems(sProjectUniqueID,
-						sModel, sWorkflowGroup, this.getProcessID(), row,
-						count, sortby, sortorder);
-				break;
-
-			case QUERY_WORKLIST_ARCHIVE:
-				col = worklistService.findArchive(sProjectUniqueID, sModel,
-						sWorkflowGroup, this.getProcessID(), row, count,
-						sortby, sortorder);
-				break;
-
-			case QUERY_WORKLIST_DELETIONS:
-				col = worklistService.findDeletions(sProjectUniqueID, sModel,
-						sWorkflowGroup, this.getProcessID(), row, count,
-						sortby, sortorder);
-				break;
-
-			case QUERY_SEARCH:
-				if (searchQuery != null || "".equals(searchQuery))
-					col = this.worklistService.findWorkitemsByQuery(
-							searchQuery, row, count);
-				else
-					// return empty result if no filter is defined!
-					col = new Vector<ItemCollection>();
-				break;
-
-			default:
-				col = worklistService.findAllWorkitems(sProjectUniqueID,
-						sModel, sWorkflowGroup, this.getProcessID(), row,
-						count, sortby, sortorder);
+			
+			
+			
+			
+			if (QUERY_WORKLIST_BY_CREATOR.equals(getView())) {
+				return getEntityService().findAllEntities(buildQueryWorkitemsByCreator(), getRow(),
+						getMaxSearchResult());
 			}
-
-			lTime = System.currentTimeMillis() - lTime;
-			logger.fine("  loadWorkItemList (" + lTime + " ms)");
-
-			endOfList = col.size() < count;
-			for (ItemCollection aworkitem : col) {
-				workitems.add((aworkitem));
+			
+			
+			
+			if (QUERY_WORKLIST_BY_OWNER.equals(getView())) {
+				return getEntityService().findAllEntities(buildQueryWorkitemsByOwner(), getRow(),
+						getMaxSearchResult());
 			}
-		} catch (Exception ee) {
-			workitems = null;
-			ee.printStackTrace();
+			
+			
+			
+			
+			 
+			 // default behaivor
+			 
+			 return super.getViewEntries();
+			
+			
+		
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		/**
+		 * Returns a JPQL statement selecting the worklist for the current user
+		 * 
+		 * @param model
+		 *            - an optional model version to filter workitems
+		 * @param processgroup
+		 *            - an optional processgroup to filter workitems
+		 * @param processid
+		 *            - an optional processID to filter workitems
+		 * @param row
+		 *            - start position
+		 * @param count
+		 *            - max count of selected worktiems
+		 * @return list of workitems 
+		 */
+		private String buildQueryWorkitemsByAuthor() {
+			ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
+			
+		
+
+			// construct query
+			String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
+			sQuery += " JOIN wi.writeAccessList as a1";
+			if (!"".equals(getProjectUniqueID()))
+				sQuery += " JOIN wi.textItems as t2 ";
+			if (!"".equals(workflowGroup))
+				sQuery += " JOIN wi.textItems as t3 ";
+			if (getProcessID() > 0)
+				sQuery += " JOIN wi.integerItems as t4 ";
+			if (!"".equals(getModelVersion() ))
+				sQuery += " JOIN wi.textItems AS model ";
+			sQuery += " WHERE wi.type = 'workitem'";
+			sQuery += " AND a1.value = '" + userController.getUserPrincipal() + "'";
+			if (!"".equals(getProjectUniqueID()))
+				sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
+						+ getProjectUniqueID() + "' ";
+			if (!"".equals(getModelVersion() ))
+				sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
+						+ getModelVersion()  + "'";
+
+			if (!"".equals(workflowGroup))
+				sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
+						+ workflowGroup + "' ";
+			// Process ID
+			if (getProcessID() > 0)
+				sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
+						+ getProcessID() + "'";
+
+			// creade ORDER BY phrase
+			sQuery += " ORDER BY wi.";
+			if (sortby == SORT_BY_CREATED)
+				sQuery += "created ";
+			else
+				sQuery += "modified ";
+			if (sortorder == SORT_ORDER_DESC)
+				sQuery += "desc";
+			else
+				sQuery += "asc";
+
+			return sQuery;
+
+		}
+		
+		
+		
+		
+		
+		
+		/**
+		 * Returns a collection representing the worklist for the current user
+		 * 
+		 * @param model
+		 *            - an optional model version to filter workitems
+		 * @param processgroup
+		 *            - an optional processgroup to filter workitems
+		 * @param processid
+		 *            - an optional processID to filter workitems
+		 * @param row
+		 *            - start position
+		 * @param count
+		 *            - max count of selected worktiems
+		 * @return list of workitems 
+		 */
+		private String buildQueryWorkitemsByCreator() {
+		
+
+			// construct query
+			String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
+			sQuery += " JOIN wi.textItems as a1";
+			if (!"".equals(getProjectUniqueID()))
+				sQuery += " JOIN wi.textItems as t2 ";
+			if (!"".equals(getWorkflowGroup()))
+				sQuery += " JOIN wi.textItems as t3 ";
+			if (getProcessID() > 0)
+				sQuery += " JOIN wi.integerItems as t4 ";
+			if (!"".equals(getModelVersion() ))
+				sQuery += " JOIN wi.textItems AS model ";
+			sQuery += " WHERE wi.type = 'workitem'";
+			sQuery += " AND a1.itemName = 'namcreator' and a1.itemValue = '" + getUserController().getUserPrincipal()
+					+ "'";
+			if (!"".equals(getProjectUniqueID()))
+				sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
+						+ getProjectUniqueID() + "' ";
+			if (!"".equals(getModelVersion() ))
+				sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
+						+ getModelVersion() + "'";
+
+			if (!"".equals(getWorkflowGroup()))
+				sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
+						+ getWorkflowGroup() + "' ";
+			// Process ID
+			if (getProcessID() > 0)
+				sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
+						+ getProcessID() + "'";
+
+			// creade ORDER BY phrase
+			sQuery += " ORDER BY wi.";
+			if (sortby == SORT_BY_CREATED)
+				sQuery += "created ";
+			else
+				sQuery += "modified ";
+			if (sortorder == SORT_ORDER_DESC)
+				sQuery += "desc";
+			else
+				sQuery += "asc";
+
+		return sQuery;
+
+		}
+		
+		
+		
+		
+		
+		/**
+		 * Returns a collection of workitems where current user is owner (namOwner)
+		 * 
+		 * @param model
+		 *            - an optional model version to filter workitems
+		 * @param processgroup
+		 *            - an optional processgroup to filter workitems
+		 * @param processid
+		 *            - an optional processID to filter workitems
+		 * @param row
+		 *            - start position
+		 * @param count
+		 *            - max count of selected worktiems
+		 * @return list of workitems 
+		 */
+		private String buildQueryWorkitemsByOwner() {
+		
+
+			// construct query
+			String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
+			sQuery += " JOIN wi.textItems as a1";
+			if (!"".equals(getProjectUniqueID()))
+				sQuery += " JOIN wi.textItems as t2 ";
+			if (!"".equals(getWorkflowGroup()))
+				sQuery += " JOIN wi.textItems as t3 ";
+			if (getProcessID() > 0)
+				sQuery += " JOIN wi.integerItems as t4 ";
+			if (!"".equals(getModelVersion()))
+				sQuery += " JOIN wi.textItems AS model ";
+			sQuery += " WHERE wi.type = 'workitem'";
+			sQuery += " AND a1.itemName = 'namowner' and a1.itemValue = '" + getUserController().getUserPrincipal()
+					+ "'";
+			if (!"".equals(getProjectUniqueID()))
+				sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
+						+ getProjectUniqueID() + "' ";
+
+			if (!"".equals(getModelVersion()))
+				sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
+						+ getModelVersion() + "'";
+
+			if (!"".equals(getWorkflowGroup()))
+				sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
+						+ getWorkflowGroup() + "' ";
+			// Process ID
+			if (getProcessID() > 0)
+				sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
+						+ getProcessID() + "'";
+
+			// creade ORDER BY phrase
+			sQuery += " ORDER BY wi.";
+			if (sortby == SORT_BY_CREATED)
+				sQuery += "created ";
+			else
+				sQuery += "modified ";
+			if (sortorder == SORT_ORDER_DESC)
+				sQuery += "desc";
+			else
+				sQuery += "asc";
+
+			return sQuery;
+
 		}
 
 	}
-
-	/***************************************************************************
-	 * Navigation
-	 */
-
-	public int getRow() {
-		return row;
-	}
-
-	public boolean isEndOfList() {
-		return endOfList;
-	}
+	
+	
+	
 
 }

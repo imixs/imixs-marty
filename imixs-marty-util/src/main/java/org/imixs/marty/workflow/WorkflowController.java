@@ -53,11 +53,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.config.SetupController;
-import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.ejb.WorkitemService;
 import org.imixs.marty.profile.UserController;
 import org.imixs.marty.project.ProjectController;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
  * This class provides methods to access a single workitem controlled by the
@@ -109,11 +109,10 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 	/* Services */
 	@EJB
 	private org.imixs.marty.ejb.WorkitemService workitemService;
+		
 	@EJB
-	private org.imixs.marty.ejb.WorklistService worklistService;
-	@EJB
-	private ProjectService projectService;
-
+	private EntityService entityService;
+	
 	
 	
 	public WorkflowController() {
@@ -372,23 +371,6 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		return processList;
 	}
 
-	@Override
-	public void setWorkitem(ItemCollection aworkitem) {
-
-		super.setWorkitem(aworkitem);
-
-		// reset Versions
-		versions = null;
-		// reset Childs
-		childs = null;
-		this.setChildWorkitem(null);
-
-		// reset processlist
-		processList = null;
-
-		// inform listeners
-		fireWorkitemChangedEvent();
-	}
 
 	
 	
@@ -492,98 +474,8 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		}
 	}
 
-	/**
-	 * processes the current workitem. The method expects an parameter "id" with
-	 * the activity ID which should be processed
-	 * 
-	 * Attributes inherited by the Project are updated through the
-	 * WorkItemServiceBean. So no additional Business logic is needed here.
-	 * 
-	 * The method adds additional display name fields to be used in history
-	 * plugin
-	 * 
-	 * The Process method from the workflowService will be called. This method
-	 * can change the current project reference. See WorkflowService
-	 * implementation for details.
-	 * 
-	 * After all the Method refreshes the Worklist which is typical shown after
-	 * a process action. To Change the behavior of the worklist displayed after
-	 * this method a bean should register as a workitemListener and implement
-	 * the method onWorkitemProcessCompleted
-	 * 
-	 * 
-	 * @param event
-	 * @return
-	 * @throws Exception
-	 */
-	public void doProcess(ActionEvent event) throws Exception {
-		// Activity ID raussuchen und in activityID speichern
-		List children = event.getComponent().getChildren();
-		int activityID = -1;
-
-		for (int i = 0; i < children.size(); i++) {
-			if (children.get(i) instanceof UIParameter) {
-				UIParameter currentParam = (UIParameter) children.get(i);
-				if (currentParam.getName().equals("id")
-						&& currentParam.getValue() != null) {
-					activityID = Integer.parseInt(currentParam.getValue()
-							.toString());
-					break;
-				}
-			}
-		}
-
-		ItemCollection workitem = getWorkitem();
-		// remove last workflow result properties......
-		workitem.removeItem("action");
-		workitem.removeItem("project");
-
-		// set max History & log length
-		workitem.replaceItemValue("numworkflowHistoryLength", setupMB
-				.getWorkitem().getItemValueInteger("MaxWorkitemHistoryLength"));
-		workitem.replaceItemValue("numworkflowLogLength", setupMB.getWorkitem()
-				.getItemValueInteger("MaxWorkitemHistoryLength"));
-
-		workitem.replaceItemValue("$ActivityID", activityID);
-
-		updateDisplayNameFields(workitem);
-
-		// inform Listeners...
-		fireWorkitemProcessEvent();
-
-		workitem = workitemService.processWorkItem(workitem);
-
-		// inform Listeners...
-		fireWorkitemProcessCompletedEvent();
-		// update workitemcollection and reset childs
-		this.setWorkitem(workitem);
-
-	}
-
-	/**
-	 * deletes the current workitem from the database.
-	 * 
-	 * After all the Method refreshes the Worklist which is typical shown after
-	 * a process action. To Change the behavior a bean should register as a
-	 * workitemListener and implement the method onWorkitemDeleteCompleted
-	 * 
-	 * @param event
-	 * @return
-	 * @throws Exception
-	 */
-	public void doDelete(ActionEvent event) throws Exception {
-
-		// inform Listeners...
-		fireWorkitemDeleteEvent();
-
-		workitemService.deleteWorkItem(getWorkitem());
-		this.setWorkitem(null);
-		// getFileUploadMB().reset();
-
-		// inform Listeners...
-		fireWorkitemDeleteCompletedEvent();
-
-	}
+	
+	
 
 	/**
 	 * moves a workitem into the archive by changing the attribute type to
@@ -717,8 +609,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 
 		childWorkitemItemCollection.replaceItemValue("$ActivityID", activityID);
 
-		updateDisplayNameFields(childWorkitemItemCollection);
-
+		
 		// inform Listeners...
 		fireChildProcessEvent();
 
@@ -840,8 +731,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 	public void doMoveToProject(ActionEvent event) throws Exception {
 
 		// get current project
-		ItemCollection itemColProject = projectService
-				.findProject(getWorkitem().getItemValueString("$uniqueidRef"));
+		ItemCollection itemColProject = entityService.load(getWorkitem().getItemValueString("$uniqueidRef"));
 		projectMB.setWorkitem(itemColProject);
 
 	}
@@ -908,45 +798,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 
 	}
 
-	/**
-	 * This method changes the current $ProcessID of the actual workitem. But
-	 * did not (!) save the workitem!
-	 * 
-	 * The method calls the workitemService EJB which also updates the
-	 * $ModelVersion, txtWorkflowGroup attribute and the Attribute
-	 * txtworkfloweditorid. So the workitem can be displayed with the new editor
-	 * (Navigation rule: show_workitem)
-	 * 
-	 * @param event
-	 * @return
-	 * @throws Exception
-	 */
-	public void doChangeProcessID(ActionEvent event) throws Exception {
-
-		String aProcessIdentifier = getWorkitem().getItemValueString(
-				"txtNewStratProcessEntity");
-
-		/*
-		 * System.out
-		 * .println(" -------------- doChangeProcessID ----------------- ");
-		 */
-		String sProcessModelVersion = aProcessIdentifier.substring(0,
-				aProcessIdentifier.indexOf('|'));
-		String sProcessID = aProcessIdentifier.substring(aProcessIdentifier
-				.indexOf('|') + 1);
-
-		ItemCollection itemColProcessEntity = getModelService()
-				.getProcessEntityByVersion(Integer.parseInt(sProcessID),
-						sProcessModelVersion);
-
-		if (itemColProcessEntity != null) {
-			ItemCollection workitem = workitemService.changeProcess(
-					getWorkitem(), itemColProcessEntity);
-			this.setWorkitem(workitem);
-
-		}
-
-	}
+	
 
 	/**
 	 * returns the last workflow result to control the navigation flow if no
@@ -1030,8 +882,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 						.getItemValueString("$uniqueid"))) {
 			// update projectMB
 			System.out.println("Updating ProjectMB....");
-			ItemCollection itemColProject = projectService
-					.findProject(projectID);
+			ItemCollection itemColProject = entityService.load(projectID);
 			projectMB.setWorkitem(itemColProject);
 		}
 	}
@@ -1091,41 +942,9 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		return getChildWorkitem();
 	}
 
-	/**
-	 * retuns a List with all Child Workitems
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getChilds() {
-		if (childs == null)
-			loadChildWorkItemList();
-		return childs;
-	}
 
-	/**
-	 * this method loads the child workitems to the current workitem
-	 * 
-	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
-	 */
-	private void loadChildWorkItemList() {
-		childs = new ArrayList<ItemCollection>();
-		if (this.isNewWorkitem())
-			return;
-		Collection<ItemCollection> col = null;
-		try {
-			String sRefUniqueID = getWorkitem().getItemValueString("$uniqueid");
 
-			col = worklistService.findAllWorkitems(sRefUniqueID, null, null, 0,
-					0, -1, getSortby(), getSortorder());
-			for (ItemCollection aworkitem : col) {
-				childs.add((aworkitem));
-			}
-		} catch (Exception ee) {
-			childs = null;
-			ee.printStackTrace();
-		}
-
-	}
+	
 
 	/**
 	 * returns a arrayList of Activities to the corresponidng processiD of the
@@ -1383,44 +1202,6 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		}
 	}
 
-	/**
-	 * This method adds the displayname of the current user to the following
-	 * fields which can be used by history or mail plugin configuration
-	 * 
-	 * namcreator, namcurrenteditor
-	 * 
-	 * display names are translated using the NameLookupBean which has an
-	 * additional caching feature
-	 * 
-	 * @param acol
-	 */
-	private void updateDisplayNameFields(ItemCollection acol) {
-		try {
-			// get display remote user name by the nameLookupMB
-			FacesContext context = FacesContext.getCurrentInstance();
-			ExternalContext externalContext = context.getExternalContext();
-			String remoteUser = externalContext.getRemoteUser();
-
-			// update current editor / remote user
-			acol.replaceItemValue("dspnamcurrenteditor",
-					this.userController.getUserName(remoteUser));
-
-			// test if creator was still right translated
-			String sNamCreator = acol.getItemValueString("namCreator");
-			String sDspNamCreator = acol.getItemValueString("dspnamCreator");
-			if ("".equals(sDspNamCreator)
-					|| !this.userController.getUserName(sNamCreator).equals(
-							sDspNamCreator)) {
-				// update dsp name for creator
-				acol.replaceItemValue("dspnamCreator",
-						this.userController.getUserName(sNamCreator));
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-	}
 
 	public int getSortby() {
 		return sortby;

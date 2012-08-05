@@ -138,39 +138,6 @@ public class WorkitemService {
 	}
 
 	/**
-	 * This method changes the ProeccEntity assigned to the Workitem.
-	 * 
-	 * The Attributes txtEditor, numProcessID, $modelVersion and
-	 * txtWrofklwoGroup will be set to the corresponding values of processEntity
-	 * 
-	 * 
-	 * @param processEntity
-	 *            ItemCollection representing the ProcessEntity where the
-	 *            workitem is assigned to
-	 */
-	public ItemCollection changeProcess(ItemCollection aworkitem,
-			ItemCollection processEntity) throws Exception {
-
-		workItem = aworkitem;
-		String sEditorID = processEntity.getItemValueString("txteditorid");
-		if ("".equals(sEditorID))
-			sEditorID = "default";
-		int processID = processEntity.getItemValueInteger("numProcessID");
-		String sModelVersion = processEntity
-				.getItemValueString("$modelversion");
-		String sWorkflowGroup = processEntity
-				.getItemValueString("txtworkflowgroup");
-
-		// assigen ModelVersion, group and editor
-		workItem.replaceItemValue("$ProcessID", processID);
-		workItem.replaceItemValue("$modelversion", sModelVersion);
-		workItem.replaceItemValue("txtworkflowgroup", sWorkflowGroup);
-		workItem.replaceItemValue("txtworkfloweditorid", sEditorID);
-
-		return workItem;
-	}
-
-	/**
 	 * Processes a Workitem. The method updates the type attribute. If the
 	 * Workitem is attached to a project then the type will be set to
 	 * 'workitem'. If the woritem is a child process form another workitem then
@@ -195,10 +162,7 @@ public class WorkitemService {
 			throws Exception {
 		String sDefaultType = "workitem";
 
-		if (validateIssue(aworkitem) == false)
-			throw new Exception(
-					"WorkitemServiceBean - invalid object! no $uniqueidref or $process property found");
-
+	
 		workItem = aworkitem;
 		// test the if the workitem is a child process
 		// typcially a workitem is a child to a project
@@ -387,28 +351,8 @@ public class WorkitemService {
 		entityService.remove(workitem);
 	}
 
-	public ItemCollection findWorkItem(String id) {
-		return entityService.load(id);
-	}
+	
 
-	/**
-	 * This method validates if the attributes supported to a map are
-	 * corresponding to the team structure
-	 */
-	private boolean validateIssue(ItemCollection aWorkitem) {
-
-		try {
-			if (!aWorkitem.hasItem("$processid"))
-				return false;
-			// test Project reference
-			if (!aWorkitem.hasItem("$uniqueIDref"))
-				return false;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
+	
 
 }

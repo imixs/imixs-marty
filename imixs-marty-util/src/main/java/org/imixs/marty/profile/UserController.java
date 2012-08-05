@@ -29,16 +29,12 @@ package org.imixs.marty.profile;
 
 import java.io.Serializable;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -59,9 +55,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.config.SetupController;
 import org.imixs.marty.ejb.ProfileService;
-import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.model.ModelVersionHandler;
-import org.imixs.marty.project.ProjectController;
 import org.imixs.marty.util.Cache;
 import org.imixs.workflow.ItemCollection;
 
@@ -116,10 +110,7 @@ public class UserController  implements
 	@EJB
 	private ProfileService profileService;
 
-	/* Project Service */
-	@EJB
-	private ProjectService projectService;
-
+	
 	/* WorkItem Services */
 	@EJB
 	private org.imixs.marty.ejb.WorkitemService workitemService;
@@ -138,6 +129,7 @@ public class UserController  implements
 	@Inject
 	private SetupController setupController = null;
 
+	
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
 	
@@ -211,15 +203,7 @@ public class UserController  implements
 					List defaultProcessList = setupController.getWorkitem()
 							.getItemValue("defaultprojectprocesslist");
 
-					// create a default project
-					try {
-						if (setupController.getWorkitem().getItemValueBoolean(
-								"CreateDefaultProject") == true)
-							createUserDefaultProject(defaultProcessList);
-					} catch (Exception ecp) {
-						logger.warning("WARNING: Can not create default User Project");
-						ecp.printStackTrace();
-					}
+				
 					// process new profile...
 					profile.replaceItemValue("$ActivityID",
 							CREATE_PROFILE_ACTIVITY_ID);
@@ -283,94 +267,20 @@ public class UserController  implements
 		this.setupController = setupMB;
 	}
 
-	/**
-	 * This method creates a UserDefault Project. The Method is called only if a
-	 * user logged in first time and a new profile was created successfully
 	
-	 * <p>
-	 * The default process model versions are now scanned for the string
-	 * '-LOCALE-'. If this string is found it will be replaced with the current
-	 * user locale. So it is possible to provide default process list
-	 * indenpendent from a fixed locale
-	 * 
-	 * public-LOCALE-standard-0.0.2|1000
-	 * 
-	 * 
-	 * @throws Exception
-	 * 
+	/**
+	 * returns the userPrincipal Name 
+	 * @return
 	 */
-	private void createUserDefaultProject(List<String> defaultProcectList)
-			throws Exception {
-		// test if project list is empty...
-		List<ItemCollection> projectList = projectService
-				.findAllProjectsByOwner(0, 1);
-		if (projectList.size() == 0) {
-			// create default project
-			ItemCollection itemColProject = projectService
-					.createProject(ProjectController.START_PROJECT_PROCESS_ID);
-
-			// determine user language and set Modelversion depending on the
-			// selected user locale
-			Locale userLocale = FacesContext.getCurrentInstance().getViewRoot()
-					.getLocale();
-			String sUserLanguage = getWorkitem()
-					.getItemValueString("txtLocale");
-
-			// Set System Model Version for this Project to user Language
-			String sModelVersion = getModelVersionHandler()
-					.getLatestSystemVersion(sUserLanguage);
-			itemColProject.replaceItemValue("$modelversion", sModelVersion);
-			itemColProject.replaceItemValue("txtModelLanguage", userLocale);
-
-			// add current user to team and owner lists
-			FacesContext context = FacesContext.getCurrentInstance();
-			ExternalContext externalContext = context.getExternalContext();
-			String remoteUser = externalContext.getRemoteUser();
-			itemColProject.replaceItemValue("namTeam", remoteUser);
-			itemColProject.replaceItemValue("namOwner", remoteUser);
-
-			// update project name and process infos
-			String sDefaultProjectName = "My Project";
-			String sDefaultProjectDesc = "My first ShareYourWork project";
-			try {
-				ResourceBundle rb = null;
-				if (userLocale != null)
-					rb = ResourceBundle.getBundle("bundle.profile", userLocale);
-				else
-					rb = ResourceBundle.getBundle("bundle.profile");
-
-				sDefaultProjectName = rb.getString("default_project_name");
-				sDefaultProjectDesc = rb
-						.getString("default_project_description");
-			} catch (Exception e) {
-				logger.warning("Warning: can not load ressource bundle profile");
-				e.printStackTrace();
-			}
-
-			itemColProject.replaceItemValue("txtProjectName",
-					sDefaultProjectName);
-			itemColProject.replaceItemValue("txtdescription",
-					sDefaultProjectDesc);
-
-			itemColProject.replaceItemValue("$ActivityID",
-					UPDATE_PROJECT_ACTIVITY_ID);
-
-			// the default model versions are now scanned for the string
-			// '-LOCALE-'. If this string is found it will be replaced
-			// with the current user locale.
-			Vector vnewProcessList = new Vector();
-			for (String sversion : defaultProcectList) {
-				sversion = sversion.replace("-LOCALE-",
-						"-" + userLocale.getLanguage() + "-");
-				vnewProcessList.add(sversion);
-			}
-			itemColProject.replaceItemValue("txtprocesslist", vnewProcessList);
-
-			itemColProject = projectService.processProject(itemColProject);
-
-		}
-
+	public String getUserPrincipal() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		ExternalContext externalContext = context.getExternalContext();
+		return externalContext.getUserPrincipal() != null ? externalContext
+				.getUserPrincipal().toString() : null;
 	}
+	
+	
+	
 
 	
 

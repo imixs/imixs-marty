@@ -31,10 +31,6 @@ import java.util.List;
 import java.util.Vector;
 import java.util.logging.Logger;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
-import org.imixs.marty.ejb.ProjectService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
@@ -56,7 +52,7 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  */
 public class TeamPlugin extends AbstractPlugin {
 
-	private ProjectService projectService = null;
+	//private ProjectService projectService = null;
 	private EntityService entityService = null;
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
@@ -71,6 +67,7 @@ public class TeamPlugin extends AbstractPlugin {
 			entityService = ws.getEntityService();
 		}
 
+		/*
 		try {
 			projectService = (ProjectService) new InitialContext()
 					.lookup("java:module/ProjectService");
@@ -78,9 +75,11 @@ public class TeamPlugin extends AbstractPlugin {
 			throw new PluginException(
 					"[TeamPlugin] unable to lookup ProjectService ", e);
 		}
+		*/
 
 	}
 
+	/*
 	public ProjectService getProjectService() {
 		return projectService;
 	}
@@ -88,6 +87,7 @@ public class TeamPlugin extends AbstractPlugin {
 	public EntityService getEntityService() {
 		return entityService;
 	}
+	*/
 
 	/**
 	 * Each Workitem holds a reference to a Project in the attriubte
@@ -157,8 +157,7 @@ public class TeamPlugin extends AbstractPlugin {
 						.println("[WorkitemService] Updating Project reference: "
 								+ sProjectName);
 				// try to update project reference
-				ItemCollection parent = this.projectService
-						.findProjectByName(sProjectName);
+				ItemCollection parent =findProjectByName(sProjectName);
 				if (parent != null) {
 
 					// assign project name and reference
@@ -217,9 +216,8 @@ public class TeamPlugin extends AbstractPlugin {
 				vParentOwner = itemColProject.getItemValue("namParentOwner");
 				// now add subproject teams and owners to additional attributes
 				// - if
-				// available
-				List<ItemCollection> subProjects = projectService
-						.findAllSubProjects(sParentID, 0, -1);
+				// available 
+				List<ItemCollection> subProjects = findAllSubProjects(sParentID);
 				for (ItemCollection aSubProject : subProjects) {
 					vSubTeams.addAll(aSubProject.getItemValue("namTeam"));
 					vSubOwner.addAll(aSubProject.getItemValue("namOwner"));
@@ -282,4 +280,39 @@ public class TeamPlugin extends AbstractPlugin {
 
 	}
 
+	
+
+	private List<ItemCollection> findAllSubProjects(String sIDRef) {
+
+		String sQuery = "SELECT project FROM Entity AS project "
+				+ " JOIN project.textItems AS r"
+				+ " JOIN project.textItems AS n"
+				+ " WHERE project.type = 'project'"
+				+ " AND n.itemName = 'txtname' "
+				+ " AND r.itemName='$uniqueidref'" + " AND r.itemValue = '"
+				+ sIDRef + "' " + " ORDER BY n.itemValue asc";
+
+		return entityService.findAllEntities(sQuery, 0, -1);
+	}
+	
+	
+	/**
+	 * This method returns a project ItemCollection for a specified name.
+	 * Returns null if no project with the provided name was found
+	 * 
+	 */
+	public ItemCollection findProjectByName(String aName) {
+		String sQuery = "SELECT project FROM Entity AS project "
+				+ " JOIN project.textItems AS t2"
+				+ " WHERE  project.type = 'project' "
+				+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
+				+ aName + "'";
+
+		List<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, 1);
+		if (col.size() > 0)
+			return col.iterator().next();
+		else
+			return null;
+	}
 }

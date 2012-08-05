@@ -35,7 +35,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -45,7 +44,6 @@ import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import javax.inject.Named;
 
-import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.profile.UserController;
 import org.imixs.marty.project.ProjectController;
 import org.imixs.marty.util.SelectItemComparator;
@@ -101,8 +99,6 @@ public class ModelMB implements Serializable {
 	@EJB
 	ModelService modelService;
 
-	@EJB
-	ProjectService projectService;
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
@@ -255,101 +251,6 @@ public class ModelMB implements Serializable {
 				true));
 
 		return workflowGroupSelection;
-
-	}
-
-	/**
-	 * returns a SelctItem Array containing all ProcessGroups contained by
-	 * Projects where the current user is member of.
-	 * 
-	 * A possible scenario is, that a WorkflowGroup is part of more than one
-	 * projects. In this case the method returns the WorkflowGoup only once.
-	 * This is the reason why this method is a little bit longer ;-)
-	 * 
-	 * @return
-	 */
-	public ArrayList<SelectItem> getWorkflowGroupsByUser() {
-
-		if (workflowGroupSelectionByProfile == null) {
-			// build new groupSelection
-			workflowGroupSelectionByProfile = new ArrayList<SelectItem>();
-
-			Vector<String> vWorkflowGroupCache = new Vector<String>();
-
-			// first we fetch all Projects from the current user
-			List<ItemCollection> col = null;
-			col = projectService.findAllProjects(0, -1);
-			// now we iterate over all projects and test if a processList is
-			// available...
-			for (ItemCollection aworkitem : col) {
-				String sProjectName = aworkitem.getItemValueString("txtName");
-				// get the ProcessList and test if the user is a member of this
-				// project. The ProcessList conatins values like
-				// 'public-de-0.0.1|1000'
-				List<String> vprojectList = aworkitem
-						.getItemValue("txtprocesslist");
-				if (vprojectList.size() > 0
-						&& this.getProjectMB().isMember(aworkitem)) {
-					try {
-						// next iterate over the processlist and fetch the
-						// coresponding WorkflowGroups
-						for (String process : vprojectList) {
-							if (process.indexOf('|') > -1) {
-								String modelversion = process.substring(0,
-										process.indexOf('|'));
-								String sProcessID = process.substring(process
-										.indexOf('|') + 1);
-
-								// now search for the processEntity....
-								ItemCollection processEntity = modelService
-										.getProcessEntityByVersion(new Integer(
-												sProcessID), modelversion);
-								// extract the groupname
-								String aGroupName = processEntity
-										.getItemValueString("txtworkflowgroup");
-
-								// test if the group name is already known and
-								// part of our workflowGroupSelectionByProfile
-								if (!aGroupName.contains("~")
-										&& vWorkflowGroupCache
-												.indexOf(modelversion + "|"
-														+ aGroupName) == -1) {
-									// ad a new select item.
-									workflowGroupSelectionByProfile
-											.add(new SelectItem(modelversion
-													+ "|" + aGroupName,
-													aGroupName));
-									// remember that this group is already
-									// stored
-									vWorkflowGroupCache.add(modelversion + "|"
-											+ aGroupName);
-								}
-
-							}
-
-						}
-
-					} catch (NumberFormatException e) {
-						logger.severe("ModelMB getWorkflowGroupsByProfile - unable to read processlist from project: "
-								+ sProjectName);
-						e.printStackTrace();
-					} catch (Exception e) {
-						logger.severe("ModelMB getWorkflowGroupsByProfile - unable to read processlist from project: "
-								+ sProjectName);
-						e.printStackTrace();
-					}
-
-				}
-
-			}
-
-		}
-
-		Collections.sort(workflowGroupSelectionByProfile,
-				new SelectItemComparator(FacesContext.getCurrentInstance()
-						.getViewRoot().getLocale(), true));
-
-		return workflowGroupSelectionByProfile;
 
 	}
 

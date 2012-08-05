@@ -45,7 +45,6 @@ import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.component.UIInput;
-import javax.faces.component.UIParameter;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -56,25 +55,19 @@ import javax.inject.Named;
 
 import org.imixs.marty.config.SetupController;
 import org.imixs.marty.ejb.ProfileService;
-import org.imixs.marty.ejb.ProjectService;
 import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.ModelService;
-import org.imixs.workflow.jee.faces.workitem.DataController;
 
-
-@Named("projectController") 
+@Named("projectController")
 @SessionScoped
-public class ProjectController extends org.imixs.workflow.jee.faces.workitem.WorkflowController implements Serializable {
- 
+public class ProjectController extends
+		org.imixs.workflow.jee.faces.workitem.WorkflowController implements
+		Serializable {
+
 	private static final long serialVersionUID = 1L;
 
 	public final static int START_PROJECT_PROCESS_ID = 100;
-
-	/* Project Service */
-	@EJB
-	ProjectService projectService;
 	/* Profile Service */
 	@EJB
 	ProfileService profileService;
@@ -82,26 +75,15 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 	@EJB
 	EntityService entityService;
 
-	@EJB
-	ModelService modelService;
- 
-
 	@Inject
 	private UserController userController = null;
-	
-	
-	
+
 	@Inject
 	private SetupController setupController = null;
-	
-	
-	  
-	
-	 
+
 	private ArrayList<ItemCollection> team = null;
 	private ArrayList<ItemCollection> projectSiblingList = null;
 
-	
 	private Collection<ProjectListener> projectListeners = new ArrayList<ProjectListener>();
 	List<ItemCollection> projects;
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
@@ -115,33 +97,42 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 
 	public ProjectController() {
 		super();
-	
-	}
- 
 
+	}
+
+	/**
+	 * The ProjectController provides additional views which were added in the
+	 * init() method call
+	 */
 	@PostConstruct
 	public void init() {
+
+		super.init();
+
+		// add custom views
+		getViews().put(
+				"projectlist.deleted.modified.desc",
+				"SELECT project FROM Entity AS project "
+						+ " WHERE project.type IN ('projectdeleted' ) "
+						+ " ORDER BY project.modified DESC");
+
 		projectListeners = new ArrayList<ProjectListener>();
-		
+
 		startProcessList = new StartProcessCache();
 		subProcessList = new SubProcessCache();
 
-		this.setMaxSearchResult(this.setupController.getWorkitem().getItemValueInteger(
-				"MaxviewEntriesPerPage"));
-	
-		
-	}
+		this.setMaxSearchResult(this.setupController.getWorkitem()
+				.getItemValueInteger("MaxviewEntriesPerPage"));
 
+	}
 
 	public UserController getUserController() {
 		return userController;
 	}
 
-
 	public void setUserController(UserController userController) {
 		this.userController = userController;
 	}
-
 
 	public SetupController getSetupsetupController() {
 		return setupController;
@@ -150,9 +141,6 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 	public void setSetupsetupController(SetupController setupMB) {
 		this.setupController = setupMB;
 	}
-
-	
-
 
 	public synchronized void addProjectistener(ProjectListener l) {
 		// Test if the current listener was allreaded added to avoid that a
@@ -219,13 +207,7 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 			l.onProjectDelete(getWorkitem());
 		}
 	}
-	
 
-
-
-	public ProjectService getProjectService() {
-		return projectService;
-	}
 
 	public ProfileService getProfileService() {
 		return profileService;
@@ -237,9 +219,9 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 	 */
 	public void setWorkitem(ItemCollection aworkitem) {
 		// clear inivtations and team
-		
+
 		team = null;
-	
+
 		// clear sibling list
 		projectSiblingList = null;
 
@@ -247,19 +229,19 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 
 		try {
 			// reset worklist
-			
-			System.out.println(" Hier fehlt der FireEvent mechanismus um die worklist zu resetten");
-			
-			/*
-			worklistMB.doReset(null);
 
-			// reset view filters
-			worklistMB.setProcessFilter(0);
-			worklistMB.setWorkflowGroupFilter(null);
-			worklistMB.setProjectFilter(
-					getWorkitem().getItemValueString("$uniqueid"));
-*/
-			
+			System.out
+					.println(" Hier fehlt der FireEvent mechanismus um die worklist zu resetten");
+
+			/*
+			 * worklistMB.doReset(null);
+			 * 
+			 * // reset view filters worklistMB.setProcessFilter(0);
+			 * worklistMB.setWorkflowGroupFilter(null);
+			 * worklistMB.setProjectFilter(
+			 * getWorkitem().getItemValueString("$uniqueid"));
+			 */
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -268,13 +250,6 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 		fireProjectChangedEvent();
 	}
 
-	
-	
-	
-	
-	
-	
-	
 	/**
 	 * Returns true if current user is member of team, owner, parentteam or
 	 * parentowner list
@@ -354,8 +329,7 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 		ExternalContext externalContext = FacesContext.getCurrentInstance()
 				.getExternalContext();
 		String remoteUser = externalContext.getRemoteUser();
-		List<String> vTeam = getWorkitem()
-				.getItemValue("namManager");
+		List<String> vTeam = getWorkitem().getItemValue("namManager");
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
 
@@ -380,7 +354,6 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 		subProcessList = new SubProcessCache();
 		super.doReset(event);
 	}
-
 
 	/**
 	 * returns a unique list with all member names
@@ -433,8 +406,6 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 		return vTeam;
 	}
 
-	
-	
 	/**
 	 * This method creates an empty project instance. The method sets the
 	 * modelversion to the current user language selection
@@ -443,11 +414,11 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 	 * @return
 	 * @throws Exception
 	 */
-	public void doCreate(ActionEvent event) throws Exception {
+	@Override
+	public String create(String action) {
 
-		ItemCollection project = projectService
-				.createProject(START_PROJECT_PROCESS_ID);
-
+		
+	
 		// determine user language and set Model version depending on the
 		// selected user locale
 		Locale userLocale = FacesContext.getCurrentInstance().getViewRoot()
@@ -455,25 +426,20 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 		String sUserLanguage = userLocale.getLanguage();
 
 		// Set System Model Version for this Project to user Language
-		String sModelVersion = userController.getModelVersionHandler()
-				.getLatestSystemVersion(sUserLanguage);
+		String sModelVersion=null;
+		try {
+			sModelVersion = userController.getModelVersionHandler()
+					.getLatestSystemVersion(sUserLanguage);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		if (sModelVersion == null)
-			throw new Exception(
+			throw new RuntimeException(
 					"Warning - no system model found for language '"
 							+ sUserLanguage + "'");
-
-		project.replaceItemValue("$modelversion", sModelVersion);
-
-		// We do no longer check if the user lanaguage is supported by one of
-		// the
-		// model files - as a user can always chouse any model version/language
-		// for a project
-		// he like.
-		// =====================
-		// Now determine if the User Language is available in the users
-		// ModelDomain!
-
+	
 		// String sModelDomain = getProfileBean().getUserModelDomain();
 		String sModelLanguage = sUserLanguage;
 
@@ -489,8 +455,11 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 		 * "' found! Check user profile"); }
 		 */
 
-		project.replaceItemValue("txtModelLanguage",
-				sModelLanguage);
+		action=super.create(sModelVersion, START_PROJECT_PROCESS_ID, action);
+		
+		ItemCollection project=getWorkitem();
+		
+		project.replaceItemValue("txtModelLanguage", sModelLanguage);
 
 		// add current user to team and owner lists
 		FacesContext context = FacesContext.getCurrentInstance();
@@ -502,135 +471,18 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 		project.replaceItemValue("namManager", new Vector());
 
 		// add a default process
-		project.replaceItemValue(
-				"txtprocesslist",
-				this.setupController.getWorkitem()
-						.getItemValue("defaultprojectprocesslist"));
-		
-		
+		project.replaceItemValue("txtprocesslist", this.setupController
+				.getWorkitem().getItemValue("defaultprojectprocesslist"));
+
 		setWorkitem(project);
 		// inform Listeners...
-					fireProjectCreatedEvent();
+		fireProjectCreatedEvent();
 
-
+		return action;
 	}
 
-	/**
-	 * This method acts as an actionListener to creates a new Project dataobject
-	 * based on the current selected Project. A method caller must care about
-	 * the right setting of the ProjectMB. It needs to be set to the parent
-	 * project!
-	 * 
-	 * A Subproject begins with the name of the parent project followed by a '.'
-	 * 
-	 * The method set a reference using the $uniqueidRef attriubte which points
-	 * to the parent project
-	 * 
-	 * @param event
-	 * @return
-	 * @throws Exception
-	 */
-	public void doCreateSubproject(ActionEvent event) throws Exception {
-
-		// save project name from current project
-		String sParentProjectName = getWorkitem()
-				.getItemValueString("txtName");
-
-		String sParentProjektID = getWorkitem()
-				.getItemValueString("$UniqueID");
-
-		doCreate(event);
-
-		// set Parent Name and Reference
-		getWorkitem().replaceItemValue("txtParentname",
-				sParentProjectName);
-		getWorkitem().replaceItemValue("$UniqueIDRef",
-				sParentProjektID);
-
-	}
-
-	
-
-	
 
 
-	/**
-	 * refreshes the current workitem list. so the list will be loaded again.
-	 */
-	public void doRefresh(ActionEvent event) {
-		// projectSelection = null;
-		//workitemItemCollection = null;
-	}
-
-	/**
-	 * This method is for saving and processing a single project. The method
-	 * generates the attribute 'txtprocesslist' containing a list of
-	 * ModelVersions+ProcessIDs. This list will be used to start a new Process
-	 * by a Workitem according to this project.
-	 * 
-	 * Attributes inherited by the ParentProject are updated through the
-	 * ProjectServiceBean. So no additional Business logic is needed here. The
-	 * Reference to a ParentProject is stored in the attribute $UniqueIDRef
-	 * 
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void doProcess(ActionEvent event) throws Exception {
-		// Activity ID raussuchen und in activityID speichern
-		List children = event.getComponent().getChildren();
-		int activityID = -1;
-
-		for (int i = 0; i < children.size(); i++) {
-			if (children.get(i) instanceof UIParameter) {
-				UIParameter currentParam = (UIParameter) children.get(i);
-				if (currentParam.getName().equals("id")
-						&& currentParam.getValue() != null) {
-					activityID = (Integer) currentParam.getValue();
-					break;
-				}
-			}
-		}
-
-		ItemCollection project=getWorkitem();
-		// remove a4j: attributes generated inside the viewentries by the UI
-		
-		// set max History & log length
-		project.replaceItemValue(
-				"numworkflowHistoryLength",
-				setupController.getWorkitem().getItemValueInteger(
-						"MaxProjectHistoryLength"));
-		project.replaceItemValue(
-				"numworkflowLogLength",
-				setupController.getWorkitem().getItemValueInteger(
-						"MaxProjectHistoryLength"));
-
-	
-
-	
-
-		// Process project via processService EJB
-		project.replaceItemValue("$activityid", activityID);
-		
-
-		// inform Listeners...
-		fireProjectProcessEvent();
-
-		project = projectService
-				.processProject(project);
-		// inform Listeners...
-		fireProjectProcessCompletedEvent();
-
-
-		ItemCollection saveItem = project;
-
-		
-		
-		this.setWorkitem(saveItem);
-
-	}
-
-	
 
 	/**
 	 * This Method adds an user entry to the owner or team list. The method is
@@ -854,84 +706,7 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 
 	}
 
-	/**
-	 * This Method Selects the Parent project and refreshes the Worklist Bean so
-	 * wokitems of these project will be displayed after show_worklist
-	 * 
-	 * @return
-	 */
-	public void doSwitchToMainProject(ActionEvent event) {
 
-		ItemCollection currentSelection = null;
-
-		String sIDRef = this.getWorkitem().getItemValueString("$uniqueIDRef");
-		ItemCollection parentProject = this.getProjectService().findProject(
-				sIDRef);
-
-		this.setWorkitem(parentProject);
-
-	
-	}
-
-	/**
-	 * This method deletes a project and all containing workitems
-	 * 
-	 * This method can only be called by role
-	 * org.imixs.ACCESSLEVEL.MANAGERACCESS or by an Owner of the project
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public void doDelete(ActionEvent event) throws Exception {
-		ExternalContext ectx = FacesContext.getCurrentInstance()
-				.getExternalContext();
-		String remoteUser = ectx.getRemoteUser();
-		List ownerList = this.getWorkitem().getItemValue("namOwner");
-
-		if (ectx.isUserInRole("org.imixs.ACCESSLEVEL.MANAGERACCESS")
-				|| ownerList.indexOf(remoteUser) > -1) {
-			
-			// inform Listeners...
-			fireProjectDeleteEvent();
-			projectService.deleteProject(this.getWorkitem());
-			
-		}
-	}
-
-	/**
-	 * deletes a Project and its subprojects and workitems by changing the
-	 * attribute type' into 'workitemdeleted'
-	 * 
-	 * @param event
-	 * @return
-	 * @throws Exception
-	 */
-	public void doSoftDelete(ActionEvent event) throws Exception {
-		
-			projectService.moveIntoDeletions(getWorkitem());
-
-		
-	}
-
-	/**
-	 * This method collects informations about all workitmes connected to the
-	 * current project
-	 * 
-	 * 
-	 * This method can only be called by role
-	 * org.imixs.ACCESSLEVEL.MANAGERACCESS!
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void doAnalyse(ActionEvent event) throws Exception {
-
-		ExternalContext ectx = FacesContext.getCurrentInstance()
-				.getExternalContext();
-		if (ectx.isUserInRole("org.imixs.ACCESSLEVEL.MANAGERACCESS")) {
-			projectService.analyseProject(this.getWorkitem());
-		}
-	}
 
 	/**
 	 * returns the list of ItemCollectionAdapter Objects for each Team member
@@ -1015,44 +790,10 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 					.getUserName(sName)));
 		return nameSelection;
 	}
-
+	
 	
 
-
-
-	/**
-	 * Returns a list of project siblings to the current project. if the current
-	 * project is a main project, all main projects will be returned if the
-	 * current project is a subproject, all subproject for the corresponding
-	 * main project will be returned.
-	 * 
-	 * @return
-	 */
-	public ArrayList<ItemCollection> getProjectSiblings() {
-
-		if (projectSiblingList != null)
-			return projectSiblingList;
-
-		projectSiblingList = new ArrayList<ItemCollection>();
-		List<ItemCollection> col = null;
-
-		String sIDRef = this.getWorkitem().getItemValueString("$uniqueIDRef");
-
-		// is it a main Project?
-
-		if ("".equals(sIDRef))
-			col = projectService.findAllMainProjects(0, -1);
-		else
-			col = projectService.findAllSubProjects(sIDRef, 0, -1);
-
-		for (ItemCollection aworkitem : col) {
-			projectSiblingList.add((aworkitem));
-		}
-
-		return projectSiblingList;
-
-	}
-
+	
 	/**
 	 * Helper class to convert the provided vector into a List Object. The
 	 * itemListArray method from the ItemCollectionAdapter did not work for
@@ -1084,12 +825,12 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 	 */
 	public List<Object> getProcessList() {
 		List<Object> aList = new ArrayList<Object>();
-		
-			List v = getWorkitem().getItemValue("txtprocesslist");
-			for (Object aEntryValue : v) {
-				aList.add(aEntryValue);
-			}
-		
+
+		List v = getWorkitem().getItemValue("txtprocesslist");
+		for (Object aEntryValue : v) {
+			aList.add(aEntryValue);
+		}
+
 		return aList;
 
 	}
@@ -1108,218 +849,11 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 			}
 		}
 	}
-	
-	
 
-	public List<ItemCollection> getProjects() {
-		selectMainProjects = false;
-		if (projects == null)
-			loadProjectList();
-		return projects;
-
-	}
-
-	/**
-	 * This method returns a list of all Projects with ProcessIDs defined and
-	 * where the current User is a Member of. So these Projects represent the
-	 * collection of Projects where the User can start a new task.
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getStartProjects() {
-		if (startProjects == null) {
-			startProjects = new ArrayList<ItemCollection>();
-			try {
-				List<ItemCollection> col = null;
-				long l = System.currentTimeMillis();
-				col = projectService.findAllProjects(0, -1);
-
-				logger.fine("  loadStartProjectList ("
-						+ (System.currentTimeMillis() - l) + " ms) ");
-
-				setEndOfList( col.size() <  getMaxSearchResult());
-				
-				for (ItemCollection aworkitem : col) {
-					// test if Project contains a ProcessList
-					List<String> vprojectList = aworkitem
-							.getItemValue("txtprocesslist");
-					if (vprojectList.size() > 0
-							&& this.isMember(aworkitem))
-						startProjects.add((aworkitem));
-				}
-			} catch (Exception ee) {
-				ee.printStackTrace();
-			}
-		}
-		return startProjects;
-
-	}
 
 
 	
-	/**
-	 * returns a project list where the current user is owner
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getMyProjects() {
-		if (projects == null)
-			loadMyProjectList();
-		return projects;
-	}
-
-	/**
-	 * returns a project list where the current user is member
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getMemberProjects() {
-		if (projects == null)
-			loadMemberProjectList();
-		return projects;
-	}
-	public List<ItemCollection> getMainProjects() {
-		selectMainProjects = true;
-		if (projects == null)
-			loadProjectList();
-		return projects;
-	}
-
-	/**
-	 * returns a project list where the type is 'projectdeleted'
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getDeletedProjects() {
-		
-		String query = "SELECT project FROM Entity AS project "
-				+ " WHERE project.type IN ('projectdeleted' ) "
-				+ " ORDER BY project.modified DESC";
-		
-		super.setSearchQuery(query);
-		return super.getWorkitems();
-		
-		
 	
-
-	}
-
-	/**
-	 * returns the full list of Porjects available to the current user
-	 * 
-	 * @return
-	 */
-	public ArrayList<SelectItem> getMyProjectSelection() throws Exception {
-
-		if (myProjectSelection != null)
-			return myProjectSelection;
-
-		// load Project list only once...
-
-		myProjectSelection = new ArrayList<SelectItem>();
-		long l = System.currentTimeMillis();
-
-		List<ItemCollection> col = projectService.findAllProjects(0, -1);
-
-		logger.fine(" -------------- loadMyProjectList : "
-				+ (System.currentTimeMillis() - l) + " ----------------- ");
-		for (ItemCollection aworkitem : col) {
-
-			String sID = aworkitem.getItemValueString("$uniqueID");
-			String sName = aworkitem.getItemValueString("txtName");
-
-			myProjectSelection.add(new SelectItem(sID, sName));
-
-		}
-		return myProjectSelection;
-	}
-	
-
-	
-	/**
-	 * Loads the project list
-	 * 
-	 * boolean selectMainProjects indicates if only main projects should be
-	 * loaded or all projects need to be loaded. The user frontend typically
-	 * shows only the main projects
-	 * 
-	 * @return
-	 */
-	private List<ItemCollection> loadProjectList() {
-		projects = new ArrayList<ItemCollection>();
-		try {
-			List<ItemCollection> col = null;
-			long l = System.currentTimeMillis();
-			if (selectMainProjects)
-				col = projectService.findAllMainProjects(getRow(), getMaxSearchResult());
-			else
-				col = projectService.findAllProjects(getRow(), getMaxSearchResult());
-
-			logger.fine("  loadProjectList ("
-					+ (System.currentTimeMillis() - l) + " ms) ");
-
-			setEndOfList( col.size() <  getMaxSearchResult());
-			for (ItemCollection aworkitem : col) {
-				projects.add((aworkitem));
-			}
-		} catch (Exception ee) {
-			projects = null;
-			ee.printStackTrace();
-		}
-		return projects;
-	}
-
-	/**
-	 * Loads the project list where the current user is owner
-	 * 
-	 * @return
-	 */
-	private List<ItemCollection> loadMyProjectList() {
-		 projects = new ArrayList<ItemCollection>();
-		try {
-			List<ItemCollection> col = null;
-			
-			col = projectService.findAllProjectsByOwner(getRow(), getMaxSearchResult());
-
-			setEndOfList( col.size() <  getMaxSearchResult());
-			
-			for (ItemCollection aworkitem : col) {
-				projects.add((aworkitem));
-			}
-		} catch (Exception ee) {
-			projects = null;
-			ee.printStackTrace();
-		}
-		return projects;
-	}
-
-	/**
-	 * Loads the project list where the current user is member of without public
-	 * projects
-	 * 
-	 * @return
-	 */
-	private List<ItemCollection> loadMemberProjectList() {
-	 projects = new ArrayList<ItemCollection>();
-		try {
-			List<ItemCollection> col = null;
-			long l = System.currentTimeMillis();
-			col = projectService.findAllProjectsByMember(getRow(),getMaxSearchResult());
-
-		
-			setEndOfList( col.size() <  getMaxSearchResult());
-			for (ItemCollection aworkitem : col) {
-				projects.add((aworkitem));
-			}
-		} catch (Exception ee) {
-			projects = null;
-			ee.printStackTrace();
-		}
-		return projects;
-	}
-	
-	
-
 
 	/**
 	 * This class implements an internal Cache for the StartProcess Lists
@@ -1368,8 +902,8 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 
 			startProcessList = new ArrayList<ItemCollection>();
 			// first load Project
-			ItemCollection aProject = projectService
-					.findProject(key.toString());
+			ItemCollection aProject = entityService
+					.load(key.toString());
 
 			if (aProject == null)
 				return startProcessList;
@@ -1406,7 +940,7 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 							logger.fine(" -------------- ProcessID:"
 									+ sProcessID + " ----------------- ");
 
-							itemColProcessEntity = modelService
+							itemColProcessEntity = getModelService()
 									.getProcessEntityByVersion(
 											Integer.parseInt(sProcessID),
 											sProcessModelVersion);
@@ -1489,8 +1023,7 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 			// neede.
 
 			// find workitem
-			ItemCollection workitem= entityService.load(key.toString());
-			
+			ItemCollection workitem = getEntityService().load(key.toString());
 
 			if (workitem == null)
 				return null;
@@ -1516,7 +1049,7 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 							+ sGroupName
 							+ "----------------- ");
 
-			List<ItemCollection> aProcessList = modelService
+			List<ItemCollection> aProcessList = getModelService()
 					.getAllStartProcessEntitiesByVersion(sModelVersion);
 
 			Iterator<ItemCollection> iter = aProcessList.iterator();
@@ -1563,6 +1096,80 @@ public class ProjectController extends org.imixs.workflow.jee.faces.workitem.Wor
 			return startProcessList;
 		}
 
+	}
+
+	class ProjectViewAdapter extends ViewAdapter {
+
+		public List<ItemCollection> getViewEntries() {
+			if ("subprojectlist".equals(getView())) {
+
+				String sIDRef = getWorkitem()
+						.getItemValueString("$uniqueIDRef");
+
+				String sQuery = "SELECT project FROM Entity AS project "
+						+ " JOIN project.textItems AS r"
+						+ " JOIN project.textItems AS n"
+						+ " WHERE project.type = 'project'"
+						+ " AND n.itemName = 'txtname' "
+						+ " AND r.itemName='$uniqueidref'"
+						+ " AND r.itemValue = '" + sIDRef + "' "
+						+ " ORDER BY n.itemValue asc";
+
+				return getEntityService().findAllEntities(sQuery, getRow(),
+						getMaxSearchResult());
+
+			}
+
+			if ("mainprojectlist".equals(getView())) {
+				String sQuery = "SELECT project FROM Entity AS project "
+						+ " JOIN project.textItems AS n1"
+						+ " JOIN project.textItems AS n2"
+						+ " WHERE project.type = 'project'"
+						+ " AND n1.itemName = 'txtname' "
+						+ " AND n2.itemName = 'txtprojectname'"
+						+ " AND n1.itemValue = n2.itemValue "
+						+ " ORDER BY n1.itemValue asc";
+				return getEntityService().findAllEntities(sQuery, getRow(),
+						getMaxSearchResult());
+			}
+
+			if ("projectlistbyowner".equals(getView())) {
+
+				String aname = userController.getUserPrincipal();
+
+				String sQuery = "SELECT project FROM Entity AS project "
+						+ " JOIN project.textItems as owner"
+						+ " JOIN project.textItems AS n1"
+						+ " WHERE project.type = 'project'"
+						+ " AND owner.itemName = 'namowner' AND owner.itemValue = '"
+						+ aname + "'" + " AND n1.itemName = 'txtname' "
+						+ " ORDER BY n1.itemValue asc";
+
+				return getEntityService().findAllEntities(sQuery, getRow(),
+						getMaxSearchResult());
+			}
+
+			if ("projectlistbymember".equals(getView())) {
+
+				String aname = userController.getUserPrincipal();
+
+				String sQuery = "SELECT project FROM Entity AS project "
+						+ " JOIN project.textItems AS n1"
+						+ " JOIN project.readAccessList AS readaccess "
+						+ " JOIN project.writeAccessList AS writeaccess "
+						+ " WHERE project.type = 'project'"
+						+ " AND ( readaccess.value IN ( '" + aname + "')"
+						+ "      OR writeaccess.value IN ( '" + aname + "')) "
+						+ " AND n1.itemName = 'txtname' "
+						+ " ORDER BY n1.itemValue asc";
+				return getEntityService().findAllEntities(sQuery, getRow(),
+						getMaxSearchResult());
+			}
+			// default behaivor
+
+			return super.getViewEntries();
+
+		}
 	}
 
 }
