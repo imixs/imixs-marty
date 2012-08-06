@@ -55,39 +55,15 @@ import org.imixs.workflow.jee.faces.workitem.DataController;
  */
 @Named("viewController")
 @SessionScoped
-public class ViewController extends DataController implements Serializable {
+public class ViewController extends org.imixs.workflow.jee.faces.workitem.WorkflowController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	
-	// view options
-	private int sortby = -1;
-	private int sortorder = -1;
 	private String viewTitle = "undefined viewtitle";
 
-	// filter options
-	private String projectUniqueID = "";
-	private String workflowGroup = "";
-	private String modelVersion="";
-	private int processID = 0;
-	private String searchQuery = null;
 
 	
-	
-	final String QUERY_WORKLIST_BY_OWNER = "worklist.owner";
-	final String QUERY_WORKLIST_BY_CREATOR = "worklist.creator";
-	final String QUERY_WORKLIST_BY_AUTHOR = "worklist.author";
-	final String QUERY_WORKLIST_ALL = "worklist";
-	final String QUERY_WORKLIST_ARCHIVE = "archive";
-	final String QUERY_WORKLIST_DELETIONS = "deletions";
-	
-	
-	public final static int SORT_BY_CREATED = 0;
-	public final static int SORT_BY_MODIFIED = 1;
-	public final static int SORT_ORDER_DESC = 0;
-	public final static int SORT_ORDER_ASC = 1;
-
-
 	@Inject
 	UserController userController = null;
 
@@ -111,16 +87,8 @@ public class ViewController extends DataController implements Serializable {
 	public void init() {
 
 		
-		// read configurations for the max count. This value can be also set via
-		// faces-config-custom.xml
-		if (getMaxSearchResult() == 0)
-			setMaxSearchResult(setupController.getWorkitem().getItemValueInteger(
-					"Maxviewentriesperpage"));
-		// read configuration for the sort order
-		if (sortby == -1)
-			sortby = setupController.getWorkitem().getItemValueInteger("Sortby");
-		if (sortorder == -1)
-			sortorder = setupController.getWorkitem().getItemValueInteger("Sortorder");
+		
+		
 	}
 
 	public SetupController getSetupsetupController() {
@@ -141,63 +109,6 @@ public class ViewController extends DataController implements Serializable {
 
 	
 
-	public int getSortby() {
-		return sortby;
-	}
-
-	public void setSortby(int sortby) {
-		this.sortby = sortby;
-	}
-
-	public int getSortorder() {
-		return sortorder;
-	}
-
-	public void setSortorder(int sortorder) {
-		this.sortorder = sortorder;
-	}
-
-	public String getSearchQuery() {
-		return searchQuery;
-	}
-
-	public void setSearchQuery(String searchQuery) {
-		this.searchQuery = searchQuery;
-	}
-
-	public String getProjectUniqueID() {
-		return projectUniqueID;
-	}
-
-	public void setProjectUniqueID(String projectUniqueID) {
-		this.projectUniqueID = projectUniqueID;
-	}
-
-	public String getModelVersion() {
-		return modelVersion;
-	}
-
-	public void setModelVersion(String modelVersion) {
-		this.modelVersion = modelVersion;
-	}
-
-	public String getWorkflowGroup() {
-		return workflowGroup;
-	}
-
-	public void setWorkflowGroup(String workflowGroup) {
-		this.workflowGroup = workflowGroup;
-	}
-
-	public int getProcessID() {
-		return processID;
-	}
-
-	public void setProcessID(int processID) {
-		this.processID = processID;
-	}
-
-	
 
 	public String getViewTitle() {
 		return viewTitle;
@@ -213,251 +124,6 @@ public class ViewController extends DataController implements Serializable {
 
 	}
 
-	
-	class MartyViewAdapter extends ViewAdapter {
-
-		
-		public List<ItemCollection> getViewEntries() {
-			
-
-			if (QUERY_WORKLIST_BY_AUTHOR.equals(getView())) {
-				
-				return getEntityService().findAllEntities(buildQueryWorkitemsByAuthor(), getRow(),
-						getMaxSearchResult());
-			}
-			
-			
-			
-			
-			if (QUERY_WORKLIST_BY_CREATOR.equals(getView())) {
-				return getEntityService().findAllEntities(buildQueryWorkitemsByCreator(), getRow(),
-						getMaxSearchResult());
-			}
-			
-			
-			
-			if (QUERY_WORKLIST_BY_OWNER.equals(getView())) {
-				return getEntityService().findAllEntities(buildQueryWorkitemsByOwner(), getRow(),
-						getMaxSearchResult());
-			}
-			
-			
-			
-			
-			 
-			 // default behaivor
-			 
-			 return super.getViewEntries();
-			
-			
-		
-		}
-		
-		
-		
-		
-		
-		
-		
-		
-		/**
-		 * Returns a JPQL statement selecting the worklist for the current user
-		 * 
-		 * @param model
-		 *            - an optional model version to filter workitems
-		 * @param processgroup
-		 *            - an optional processgroup to filter workitems
-		 * @param processid
-		 *            - an optional processID to filter workitems
-		 * @param row
-		 *            - start position
-		 * @param count
-		 *            - max count of selected worktiems
-		 * @return list of workitems 
-		 */
-		private String buildQueryWorkitemsByAuthor() {
-			ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
-			
-		
-
-			// construct query
-			String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-			sQuery += " JOIN wi.writeAccessList as a1";
-			if (!"".equals(getProjectUniqueID()))
-				sQuery += " JOIN wi.textItems as t2 ";
-			if (!"".equals(workflowGroup))
-				sQuery += " JOIN wi.textItems as t3 ";
-			if (getProcessID() > 0)
-				sQuery += " JOIN wi.integerItems as t4 ";
-			if (!"".equals(getModelVersion() ))
-				sQuery += " JOIN wi.textItems AS model ";
-			sQuery += " WHERE wi.type = 'workitem'";
-			sQuery += " AND a1.value = '" + userController.getUserPrincipal() + "'";
-			if (!"".equals(getProjectUniqueID()))
-				sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
-						+ getProjectUniqueID() + "' ";
-			if (!"".equals(getModelVersion() ))
-				sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
-						+ getModelVersion()  + "'";
-
-			if (!"".equals(workflowGroup))
-				sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
-						+ workflowGroup + "' ";
-			// Process ID
-			if (getProcessID() > 0)
-				sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
-						+ getProcessID() + "'";
-
-			// creade ORDER BY phrase
-			sQuery += " ORDER BY wi.";
-			if (sortby == SORT_BY_CREATED)
-				sQuery += "created ";
-			else
-				sQuery += "modified ";
-			if (sortorder == SORT_ORDER_DESC)
-				sQuery += "desc";
-			else
-				sQuery += "asc";
-
-			return sQuery;
-
-		}
-		
-		
-		
-		
-		
-		
-		/**
-		 * Returns a collection representing the worklist for the current user
-		 * 
-		 * @param model
-		 *            - an optional model version to filter workitems
-		 * @param processgroup
-		 *            - an optional processgroup to filter workitems
-		 * @param processid
-		 *            - an optional processID to filter workitems
-		 * @param row
-		 *            - start position
-		 * @param count
-		 *            - max count of selected worktiems
-		 * @return list of workitems 
-		 */
-		private String buildQueryWorkitemsByCreator() {
-		
-
-			// construct query
-			String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-			sQuery += " JOIN wi.textItems as a1";
-			if (!"".equals(getProjectUniqueID()))
-				sQuery += " JOIN wi.textItems as t2 ";
-			if (!"".equals(getWorkflowGroup()))
-				sQuery += " JOIN wi.textItems as t3 ";
-			if (getProcessID() > 0)
-				sQuery += " JOIN wi.integerItems as t4 ";
-			if (!"".equals(getModelVersion() ))
-				sQuery += " JOIN wi.textItems AS model ";
-			sQuery += " WHERE wi.type = 'workitem'";
-			sQuery += " AND a1.itemName = 'namcreator' and a1.itemValue = '" + getUserController().getUserPrincipal()
-					+ "'";
-			if (!"".equals(getProjectUniqueID()))
-				sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
-						+ getProjectUniqueID() + "' ";
-			if (!"".equals(getModelVersion() ))
-				sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
-						+ getModelVersion() + "'";
-
-			if (!"".equals(getWorkflowGroup()))
-				sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
-						+ getWorkflowGroup() + "' ";
-			// Process ID
-			if (getProcessID() > 0)
-				sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
-						+ getProcessID() + "'";
-
-			// creade ORDER BY phrase
-			sQuery += " ORDER BY wi.";
-			if (sortby == SORT_BY_CREATED)
-				sQuery += "created ";
-			else
-				sQuery += "modified ";
-			if (sortorder == SORT_ORDER_DESC)
-				sQuery += "desc";
-			else
-				sQuery += "asc";
-
-		return sQuery;
-
-		}
-		
-		
-		
-		
-		
-		/**
-		 * Returns a collection of workitems where current user is owner (namOwner)
-		 * 
-		 * @param model
-		 *            - an optional model version to filter workitems
-		 * @param processgroup
-		 *            - an optional processgroup to filter workitems
-		 * @param processid
-		 *            - an optional processID to filter workitems
-		 * @param row
-		 *            - start position
-		 * @param count
-		 *            - max count of selected worktiems
-		 * @return list of workitems 
-		 */
-		private String buildQueryWorkitemsByOwner() {
-		
-
-			// construct query
-			String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-			sQuery += " JOIN wi.textItems as a1";
-			if (!"".equals(getProjectUniqueID()))
-				sQuery += " JOIN wi.textItems as t2 ";
-			if (!"".equals(getWorkflowGroup()))
-				sQuery += " JOIN wi.textItems as t3 ";
-			if (getProcessID() > 0)
-				sQuery += " JOIN wi.integerItems as t4 ";
-			if (!"".equals(getModelVersion()))
-				sQuery += " JOIN wi.textItems AS model ";
-			sQuery += " WHERE wi.type = 'workitem'";
-			sQuery += " AND a1.itemName = 'namowner' and a1.itemValue = '" + getUserController().getUserPrincipal()
-					+ "'";
-			if (!"".equals(getProjectUniqueID()))
-				sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
-						+ getProjectUniqueID() + "' ";
-
-			if (!"".equals(getModelVersion()))
-				sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
-						+ getModelVersion() + "'";
-
-			if (!"".equals(getWorkflowGroup()))
-				sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
-						+ getWorkflowGroup() + "' ";
-			// Process ID
-			if (getProcessID() > 0)
-				sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
-						+ getProcessID() + "'";
-
-			// creade ORDER BY phrase
-			sQuery += " ORDER BY wi.";
-			if (sortby == SORT_BY_CREATED)
-				sQuery += "created ";
-			else
-				sQuery += "modified ";
-			if (sortorder == SORT_ORDER_DESC)
-				sQuery += "desc";
-			else
-				sQuery += "asc";
-
-			return sQuery;
-
-		}
-
-	}
 	
 	
 	

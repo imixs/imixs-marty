@@ -58,32 +58,56 @@ import org.imixs.marty.profile.UserController;
 import org.imixs.marty.project.ProjectController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.jee.ejb.WorkflowService;
 
 /**
- * This class provides methods to access a single workitem controlled by the
- * Imixs Workflow engine. This is the most used BackingBean class in forms. The
- * different pages from the marty-web module providing all the functionality to
- * create and manage workitems. You can implement additional sub_forms for your
- * individual business process. In this case you can access the WorkitemMB to
- * bind input fields to specific properties of a workitem
+ * The marty WorkflowController extends the
+ * org.imixs.workflow.jee.faces.workitem.WorkflowController and provides
+ * additional functionality. The property 'viewFilter' can be used to filter the
+ * worklists with additional criteria. There for the marty WorkflowController
+ * provides a custom ViewEntryAdapter.
+ * 
+ * The properties 'sortorder' and 'sortby' define the sort direction of worklist
+ * result.
+ * 
+ * The String property 'project' is used to assign the workItem to a project
+ * entity. The property contains the $UniqueId of the corresponding project. If
+ * the 'project' property is not set a new workItem can not be processed or a
+ * new workItem can not be created.
+ * 
+ * The marty WorkflowController provides an editor selector which allows to
+ * split parts of a form in separate sections (see formpanel.xhmtl,
+ * tabpanel.xhmtl)
  * 
  * @author rsoika
  * 
  */
 @Named("workflowController")
 @SessionScoped
-public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.WorkflowController implements Serializable {
+public class WorkflowController extends
+		org.imixs.workflow.jee.faces.workitem.WorkflowController implements
+		Serializable {
 
-	
 	private static final long serialVersionUID = 1L;
 
 	public final static String DEFAULT_EDITOR_ID = "default";
-	private int sortby = -1;
-	private int sortorder = -1;
-	/* Workflow Model & Caching objects */
-	private HashMap processCache;
+
+	// view filter
+
+	final String QUERY_WORKLIST_BY_OWNER = "worklist.owner";
+	final String QUERY_WORKLIST_BY_CREATOR = "worklist.creator";
+	final String QUERY_WORKLIST_BY_AUTHOR = "worklist.author";
+	final String QUERY_WORKLIST_ALL = "worklist";
+	final String QUERY_WORKLIST_ARCHIVE = "archive";
+	final String QUERY_WORKLIST_DELETIONS = "deletions";
+
+
+	private ItemCollection viewFilter = null;
 
 	
+
+	/* Workflow Model & Caching objects */
+	private HashMap processCache;
 
 	/* Project Backing Bean */
 	@Inject
@@ -109,29 +133,22 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 	/* Services */
 	@EJB
 	private org.imixs.marty.ejb.WorkitemService workitemService;
-		
+
 	@EJB
 	private EntityService entityService;
-	
-	
-	
+
 	public WorkflowController() {
 		super();
-		// empty constructor
+
+		viewFilter = new ItemCollection();
 	}
 
-	
 	@PostConstruct
 	public void init() {
 		processCache = new HashMap();
 		workitemListeners = new ArrayList<WorkitemListener>();
 
 	
-		// read configuration for the sort order
-		if (sortby == -1)
-			sortby = setupMB.getWorkitem().getItemValueInteger("Sortby");
-		if (sortorder == -1)
-			sortorder = setupMB.getWorkitem().getItemValueInteger("Sortorder");
 	}
 
 	public ProjectController getProjectMB() {
@@ -150,16 +167,24 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		this.setupMB = setupMB;
 	}
 
-
 	public UserController getUserController() {
 		return userController;
 	}
 
-
 	public void setUserController(UserController userController) {
 		this.userController = userController;
 	}
+	
+	
 
+
+	public ItemCollection getViewFilter() {
+		return viewFilter;
+	}
+
+	public void setViewFilter(ItemCollection viewFilter) {
+		this.viewFilter = viewFilter;
+	}
 
 	/**
 	 * returns the workflowEditorID for the current workItem. If no attribute
@@ -371,13 +396,6 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		return processList;
 	}
 
-
-	
-	
-	
-	
-
-
 	/**
 	 * This method is called by the page myProjects.xhtml form the startProcess
 	 * section.
@@ -474,9 +492,6 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		}
 	}
 
-	
-	
-
 	/**
 	 * moves a workitem into the archive by changing the attribute type to
 	 * 'workitemdeleted'
@@ -541,13 +556,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 
 		}
 	}
-	
-	
-	
-	
 
-	
-	
 	/**
 	 * this method is called by datatables to select an workitem
 	 * 
@@ -609,7 +618,6 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 
 		childWorkitemItemCollection.replaceItemValue("$ActivityID", activityID);
 
-		
 		// inform Listeners...
 		fireChildProcessEvent();
 
@@ -731,7 +739,8 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 	public void doMoveToProject(ActionEvent event) throws Exception {
 
 		// get current project
-		ItemCollection itemColProject = entityService.load(getWorkitem().getItemValueString("$uniqueidRef"));
+		ItemCollection itemColProject = entityService.load(getWorkitem()
+				.getItemValueString("$uniqueidRef"));
 		projectMB.setWorkitem(itemColProject);
 
 	}
@@ -797,8 +806,6 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		setWorkitem(workitem);
 
 	}
-
-	
 
 	/**
 	 * returns the last workflow result to control the navigation flow if no
@@ -941,10 +948,6 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 
 		return getChildWorkitem();
 	}
-
-
-
-	
 
 	/**
 	 * returns a arrayList of Activities to the corresponidng processiD of the
@@ -1202,22 +1205,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		}
 	}
 
-
-	public int getSortby() {
-		return sortby;
-	}
-
-	public void setSortby(int sortby) {
-		this.sortby = sortby;
-	}
-
-	public int getSortorder() {
-		return sortorder;
-	}
-
-	public void setSortorder(int sortorder) {
-		this.sortorder = sortorder;
-	}
+	
 
 	/**
 	 * Helper class returns a Map containing all EditorSection Objects. The
@@ -1246,5 +1234,244 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 			return section;
 		}
 
+	}
+	
+	
+	
+	
+	
+class MartyViewAdapter extends ViewAdapter {
+
+		
+		public List<ItemCollection> getViewEntries() {
+			
+
+			if (QUERY_WORKLIST_BY_AUTHOR.equals(getView())) {
+				
+				return getEntityService().findAllEntities(buildQueryWorkitemsByAuthor(), getRow(),
+						getMaxSearchResult());
+			}
+			
+			
+			
+			
+			if (QUERY_WORKLIST_BY_CREATOR.equals(getView())) {
+				return getEntityService().findAllEntities(buildQueryWorkitemsByCreator(), getRow(),
+						getMaxSearchResult());
+			}
+			
+			
+			
+			if (QUERY_WORKLIST_BY_OWNER.equals(getView())) {
+				return getEntityService().findAllEntities(buildQueryWorkitemsByOwner(), getRow(),
+						getMaxSearchResult());
+			}
+			
+			
+			
+			
+			 
+			 // default behaivor
+			 
+			 return super.getViewEntries();
+			
+			
+		
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		/**
+		 * Returns a JPQL statement selecting the worklist for the current user
+		 * 
+		 * @param model
+		 *            - an optional model version to filter workitems
+		 * @param processgroup
+		 *            - an optional processgroup to filter workitems
+		 * @param processid
+		 *            - an optional processID to filter workitems
+		 * @param row
+		 *            - start position
+		 * @param count
+		 *            - max count of selected worktiems
+		 * @return list of workitems 
+		 */
+		private String buildQueryWorkitemsByAuthor() {
+			
+		
+
+			// construct query
+			String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
+			sQuery += " JOIN wi.writeAccessList as a1";
+			if (!"".equals(getViewFilter().getItemValueString("project")))
+				sQuery += " JOIN wi.textItems as t2 ";
+			if (!"".equals(getViewFilter().getItemValueString("workflowGroup")))
+				sQuery += " JOIN wi.textItems as t3 ";
+			if (getViewFilter().getItemValueInteger("ProcessID") > 0)
+				sQuery += " JOIN wi.integerItems as t4 ";
+		
+			sQuery += " WHERE wi.type = 'workitem'";
+			sQuery += " AND a1.value = '" + userController.getUserPrincipal() + "'";
+			if (!"".equals(getViewFilter().getItemValueString("project")))
+				sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
+						+ getViewFilter().getItemValueString("project") + "' ";
+			
+
+			if (!"".equals(getViewFilter().getItemValueString("workflowGroup")))
+				sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
+						+ getViewFilter().getItemValueString("workflowGroup") + "' ";
+			// Process ID
+			if (getViewFilter().getItemValueInteger("ProcessID") > 0)
+				sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
+						+getViewFilter().getItemValueInteger("ProcessID")+ "'";
+
+			// creade ORDER BY phrase
+			sQuery +=createSortOrderClause();
+
+			return sQuery;
+
+		}
+		
+		
+		
+		
+		
+		
+		/**
+		 * Returns a collection representing the worklist for the current user
+		 * 
+		 * @param model
+		 *            - an optional model version to filter workitems
+		 * @param processgroup
+		 *            - an optional processgroup to filter workitems
+		 * @param processid
+		 *            - an optional processID to filter workitems
+		 * @param row
+		 *            - start position
+		 * @param count
+		 *            - max count of selected worktiems
+		 * @return list of workitems 
+		 */
+		private String buildQueryWorkitemsByCreator() {
+		
+
+			// construct query
+			String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
+			sQuery += " JOIN wi.textItems as a1";
+			if (!"".equals(getViewFilter().getItemValueString("project")))
+				sQuery += " JOIN wi.textItems as t2 ";
+			if (!"".equals(getViewFilter().getItemValueString("workflowGroup")))
+				sQuery += " JOIN wi.textItems as t3 ";
+			if (getViewFilter().getItemValueInteger("ProcessID")> 0)
+				sQuery += " JOIN wi.integerItems as t4 ";
+			
+			sQuery += " WHERE wi.type = 'workitem'";
+			sQuery += " AND a1.itemName = 'namcreator' and a1.itemValue = '" + getUserController().getUserPrincipal()
+					+ "'";
+			if (!"".equals(getViewFilter().getItemValueString("project")))
+				sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
+						+ getViewFilter().getItemValueString("project") + "' ";
+		
+
+			if (!"".equals(getViewFilter().getItemValueString("workflowGroup")))
+				sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
+						+ getViewFilter().getItemValueString("workflowGroup") + "' ";
+			// Process ID
+			if (getViewFilter().getItemValueInteger("ProcessID") > 0)
+				sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
+						+getViewFilter().getItemValueInteger("ProcessID") + "'";
+
+			// creade ORDER BY phrase
+			sQuery +=createSortOrderClause();
+
+		return sQuery;
+
+		}
+		
+		
+		
+		
+		
+		/**
+		 * Returns a collection of workitems where current user is owner (namOwner)
+		 * 
+		 * @param model
+		 *            - an optional model version to filter workitems
+		 * @param processgroup
+		 *            - an optional processgroup to filter workitems
+		 * @param processid
+		 *            - an optional processID to filter workitems
+		 * @param row
+		 *            - start position
+		 * @param count
+		 *            - max count of selected worktiems
+		 * @return list of workitems 
+		 */
+		private String buildQueryWorkitemsByOwner() {
+		
+
+			// construct query
+			String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
+			sQuery += " JOIN wi.textItems as a1";
+			if (!"".equals(getViewFilter().getItemValueString("project")))
+				sQuery += " JOIN wi.textItems as t2 ";
+			if (!"".equals(getViewFilter().getItemValueString("workflowGroup")))
+				sQuery += " JOIN wi.textItems as t3 ";
+			if (getViewFilter().getItemValueInteger("ProcessID") > 0)
+				sQuery += " JOIN wi.integerItems as t4 ";
+			
+			sQuery += " WHERE wi.type = 'workitem'";
+			sQuery += " AND a1.itemName = 'namowner' and a1.itemValue = '" + getUserController().getUserPrincipal()
+					+ "'";
+			if (!"".equals(getViewFilter().getItemValueString("project")))
+				sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
+						+ getViewFilter().getItemValueString("project") + "' ";
+
+		
+
+			if (!"".equals(getViewFilter().getItemValueString("workflowGroup")))
+				sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
+						+ getViewFilter().getItemValueString("workflowGroup") + "' ";
+			// Process ID
+			if (getViewFilter().getItemValueInteger("ProcessID") > 0)
+				sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
+						+ getViewFilter().getItemValueInteger("ProcessID")+ "'";
+
+			// creade ORDER BY phrase
+			sQuery +=createSortOrderClause();
+			
+			return sQuery;
+
+		}
+
+		
+		/**
+		 * generates a sort order clause depending on a sororder id
+		 * 
+		 * @param asortorder
+		 * @return
+		 */
+		private String createSortOrderClause() {
+			switch (getSortOrder()) {
+
+			case WorkflowService.SORT_ORDER_CREATED_ASC: {
+				return " ORDER BY wi.created asc";
+			}
+			case WorkflowService.SORT_ORDER_MODIFIED_ASC: {
+				return " ORDER BY wi.modified asc";
+			}
+			case WorkflowService.SORT_ORDER_MODIFIED_DESC: {
+				return " ORDER BY wi.modified desc";
+			}
+			default:
+				return " ORDER BY wi.created desc";
+			}
+
+		}
 	}
 }
