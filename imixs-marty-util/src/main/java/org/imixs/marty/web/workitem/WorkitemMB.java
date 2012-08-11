@@ -1302,7 +1302,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 					.getItemValueString("$workitemId");
 			String refQuery = "SELECT entity FROM Entity entity "
 					+ " JOIN entity.textItems AS t"
-					+ "  WHERE entity.type='workitem'"
+					+ "  WHERE (entity.type='workitem' OR entity.type='workitemarchive') "
 					+ "  AND t.itemName = '$workitemid'"
 					+ "  AND t.itemValue = '" + sRefID + "' "
 					+ " ORDER BY entity.created ASC";
