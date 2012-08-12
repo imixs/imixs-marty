@@ -295,10 +295,10 @@ public class UserController  implements
 	}
 	
 	/**
-	 * This getter method trys to get the locale out from the cookie if
-	 * available. Otherwise it will default to "en"
+	 * This method returns the current user locale. If the user is not logged in the method 
+	 * try to get the locale out from the cookie. If no cockie is set the method defaults to "en"
 	 * 
-	 * @return
+	 * @return - ISO Locale format
 	 */
 	public String getLocale() {
 		// if no locale is set try to get it from cookie or set default

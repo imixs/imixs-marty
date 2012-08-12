@@ -7,6 +7,12 @@
 
 
 
+	<managed-bean>
+		<managed-bean-name>loginController</managed-bean-name>
+		<managed-bean-class>org.imixs.workflow.jee.faces.util.LoginController</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
 
 
 
