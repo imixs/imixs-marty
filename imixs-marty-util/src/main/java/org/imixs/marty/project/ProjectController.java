@@ -84,7 +84,6 @@ public class ProjectController extends
 	private ArrayList<ItemCollection> team = null;
 	private ArrayList<ItemCollection> projectSiblingList = null;
 
-	private Collection<ProjectListener> projectListeners = new ArrayList<ProjectListener>();
 	List<ItemCollection> projects;
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
@@ -106,24 +105,10 @@ public class ProjectController extends
 	 */
 	@PostConstruct
 	public void init() {
-
 		super.init();
-
-		// add custom views
-		getViews().put(
-				"projectlist.deleted.modified.desc",
-				"SELECT project FROM Entity AS project "
-						+ " WHERE project.type IN ('projectdeleted' ) "
-						+ " ORDER BY project.modified DESC");
-
-		projectListeners = new ArrayList<ProjectListener>();
-
+		
 		startProcessList = new StartProcessCache();
 		subProcessList = new SubProcessCache();
-
-		this.setMaxSearchResult(this.setupController.getWorkitem()
-				.getItemValueInteger("MaxviewEntriesPerPage"));
-
 	}
 
 	public UserController getUserController() {
@@ -141,73 +126,6 @@ public class ProjectController extends
 	public void setSetupsetupController(SetupController setupMB) {
 		this.setupController = setupMB;
 	}
-
-	public synchronized void addProjectistener(ProjectListener l) {
-		// Test if the current listener was allreaded added to avoid that a
-		// listener register itself more than once!
-		if (!projectListeners.contains(l))
-			projectListeners.add(l);
-	}
-
-	public synchronized void removeProjectListener(ProjectListener l) {
-		projectListeners.remove(l);
-	}
-
-	/**
-	 * Informs WorkitemListeners about a new or updated Workitem
-	 */
-	private void fireProjectCreatedEvent() {
-		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
-				.hasNext();) {
-			ProjectListener l = i.next();
-			l.onProjectCreated(getWorkitem());
-		}
-	}
-
-	/**
-	 * Informs WorkitemListeners about a new or updated Workitem
-	 */
-	private void fireProjectChangedEvent() {
-		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
-				.hasNext();) {
-			ProjectListener l = i.next();
-			l.onProjectChanged(getWorkitem());
-		}
-	}
-
-	/**
-	 * Informs WorkitemListeners about a new or updated Workitem
-	 */
-	private void fireProjectProcessEvent() {
-		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
-				.hasNext();) {
-			ProjectListener l = i.next();
-			l.onProjectProcess(getWorkitem());
-		}
-	}
-
-	/**
-	 * Informs WorkitemListeners about a new or updated Workitem
-	 */
-	private void fireProjectProcessCompletedEvent() {
-		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
-				.hasNext();) {
-			ProjectListener l = i.next();
-			l.onProjectProcessCompleted(getWorkitem());
-		}
-	}
-
-	/**
-	 * Informs WorkitemListeners about a deletion of a workitem
-	 */
-	private void fireProjectDeleteEvent() {
-		for (Iterator<ProjectListener> i = projectListeners.iterator(); i
-				.hasNext();) {
-			ProjectListener l = i.next();
-			l.onProjectDelete(getWorkitem());
-		}
-	}
-
 
 	public ProfileService getProfileService() {
 		return profileService;
@@ -246,8 +164,7 @@ public class ProjectController extends
 			e.printStackTrace();
 		}
 
-		// inform listeners
-		fireProjectChangedEvent();
+		
 	}
 
 	/**
@@ -475,9 +392,7 @@ public class ProjectController extends
 				.getWorkitem().getItemValue("defaultprojectprocesslist"));
 
 		setWorkitem(project);
-		// inform Listeners...
-		fireProjectCreatedEvent();
-
+	
 		return action;
 	}
 
@@ -1096,80 +1011,6 @@ public class ProjectController extends
 			return startProcessList;
 		}
 
-	}
-
-	class ProjectViewAdapter extends ViewAdapter {
-
-		public List<ItemCollection> getViewEntries() {
-			if ("subprojectlist".equals(getView())) {
-
-				String sIDRef = getWorkitem()
-						.getItemValueString("$uniqueIDRef");
-
-				String sQuery = "SELECT project FROM Entity AS project "
-						+ " JOIN project.textItems AS r"
-						+ " JOIN project.textItems AS n"
-						+ " WHERE project.type = 'project'"
-						+ " AND n.itemName = 'txtname' "
-						+ " AND r.itemName='$uniqueidref'"
-						+ " AND r.itemValue = '" + sIDRef + "' "
-						+ " ORDER BY n.itemValue asc";
-
-				return getEntityService().findAllEntities(sQuery, getRow(),
-						getMaxSearchResult());
-
-			}
-
-			if ("mainprojectlist".equals(getView())) {
-				String sQuery = "SELECT project FROM Entity AS project "
-						+ " JOIN project.textItems AS n1"
-						+ " JOIN project.textItems AS n2"
-						+ " WHERE project.type = 'project'"
-						+ " AND n1.itemName = 'txtname' "
-						+ " AND n2.itemName = 'txtprojectname'"
-						+ " AND n1.itemValue = n2.itemValue "
-						+ " ORDER BY n1.itemValue asc";
-				return getEntityService().findAllEntities(sQuery, getRow(),
-						getMaxSearchResult());
-			}
-
-			if ("projectlistbyowner".equals(getView())) {
-
-				String aname = userController.getUserPrincipal();
-
-				String sQuery = "SELECT project FROM Entity AS project "
-						+ " JOIN project.textItems as owner"
-						+ " JOIN project.textItems AS n1"
-						+ " WHERE project.type = 'project'"
-						+ " AND owner.itemName = 'namowner' AND owner.itemValue = '"
-						+ aname + "'" + " AND n1.itemName = 'txtname' "
-						+ " ORDER BY n1.itemValue asc";
-
-				return getEntityService().findAllEntities(sQuery, getRow(),
-						getMaxSearchResult());
-			}
-
-			if ("projectlistbymember".equals(getView())) {
-
-				String aname = userController.getUserPrincipal();
-
-				String sQuery = "SELECT project FROM Entity AS project "
-						+ " JOIN project.textItems AS n1"
-						+ " JOIN project.readAccessList AS readaccess "
-						+ " JOIN project.writeAccessList AS writeaccess "
-						+ " WHERE project.type = 'project'"
-						+ " AND ( readaccess.value IN ( '" + aname + "')"
-						+ "      OR writeaccess.value IN ( '" + aname + "')) "
-						+ " AND n1.itemName = 'txtname' "
-						+ " ORDER BY n1.itemValue asc";
-				return getEntityService().findAllEntities(sQuery, getRow(),
-						getMaxSearchResult());
-			}
-			// default behaivor
-
-			return super.getViewEntries();
-
-		}
 	}
 
 }

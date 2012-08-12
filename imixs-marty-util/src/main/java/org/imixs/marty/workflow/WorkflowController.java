@@ -92,17 +92,6 @@ public class WorkflowController extends
 
 	public final static String DEFAULT_EDITOR_ID = "default";
 
-	// view filter
-
-	final String QUERY_WORKLIST_BY_OWNER = "worklist.owner";
-	final String QUERY_WORKLIST_BY_CREATOR = "worklist.creator";
-	final String QUERY_WORKLIST_BY_AUTHOR = "worklist.author";
-	final String QUERY_WORKLIST_ALL = "worklist";
-	final String QUERY_WORKLIST_ARCHIVE = "archive";
-	final String QUERY_WORKLIST_DELETIONS = "deletions";
-
-
-	private ItemCollection viewFilter = null;
 
 	
 
@@ -112,9 +101,6 @@ public class WorkflowController extends
 	/* Project Backing Bean */
 	@Inject
 	private ProjectController projectMB = null;
-
-	@Inject
-	private SetupController setupMB = null;
 
 	@Inject
 	private UserController userController = null;
@@ -140,7 +126,7 @@ public class WorkflowController extends
 	public WorkflowController() {
 		super();
 
-		viewFilter = new ItemCollection();
+		
 	}
 
 	@PostConstruct
@@ -159,13 +145,7 @@ public class WorkflowController extends
 		this.projectMB = projectMB;
 	}
 
-	public SetupController getSetupMB() {
-		return setupMB;
-	}
-
-	public void setSetupMB(SetupController setupMB) {
-		this.setupMB = setupMB;
-	}
+	
 
 	public UserController getUserController() {
 		return userController;
@@ -177,14 +157,6 @@ public class WorkflowController extends
 	
 	
 
-
-	public ItemCollection getViewFilter() {
-		return viewFilter;
-	}
-
-	public void setViewFilter(ItemCollection viewFilter) {
-		this.viewFilter = viewFilter;
-	}
 
 	/**
 	 * returns the workflowEditorID for the current workItem. If no attribute
@@ -607,15 +579,7 @@ public class WorkflowController extends
 			}
 		}
 
-		// set max History & log length
-		childWorkitemItemCollection.replaceItemValue(
-				"numworkflowHistoryLength", setupMB.getWorkitem()
-						.getItemValueInteger("MaxWorkitemHistoryLength"));
-		childWorkitemItemCollection.replaceItemValue(
-				"numworkflowLogLength",
-				setupMB.getWorkitem().getItemValueInteger(
-						"MaxWorkitemHistoryLength"));
-
+	
 		childWorkitemItemCollection.replaceItemValue("$ActivityID", activityID);
 
 		// inform Listeners...
@@ -1238,240 +1202,5 @@ public class WorkflowController extends
 	
 	
 	
-	
-	
-class MartyViewAdapter extends ViewAdapter {
 
-		
-		public List<ItemCollection> getViewEntries() {
-			
-
-			if (QUERY_WORKLIST_BY_AUTHOR.equals(getView())) {
-				
-				return getEntityService().findAllEntities(buildQueryWorkitemsByAuthor(), getRow(),
-						getMaxSearchResult());
-			}
-			
-			
-			
-			
-			if (QUERY_WORKLIST_BY_CREATOR.equals(getView())) {
-				return getEntityService().findAllEntities(buildQueryWorkitemsByCreator(), getRow(),
-						getMaxSearchResult());
-			}
-			
-			
-			
-			if (QUERY_WORKLIST_BY_OWNER.equals(getView())) {
-				return getEntityService().findAllEntities(buildQueryWorkitemsByOwner(), getRow(),
-						getMaxSearchResult());
-			}
-			
-			
-			
-			
-			 
-			 // default behaivor
-			 
-			 return super.getViewEntries();
-			
-			
-		
-		}
-		
-		
-		
-		
-		
-		
-		
-		
-		/**
-		 * Returns a JPQL statement selecting the worklist for the current user
-		 * 
-		 * @param model
-		 *            - an optional model version to filter workitems
-		 * @param processgroup
-		 *            - an optional processgroup to filter workitems
-		 * @param processid
-		 *            - an optional processID to filter workitems
-		 * @param row
-		 *            - start position
-		 * @param count
-		 *            - max count of selected worktiems
-		 * @return list of workitems 
-		 */
-		private String buildQueryWorkitemsByAuthor() {
-			
-		
-
-			// construct query
-			String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-			sQuery += " JOIN wi.writeAccessList as a1";
-			if (!"".equals(getViewFilter().getItemValueString("project")))
-				sQuery += " JOIN wi.textItems as t2 ";
-			if (!"".equals(getViewFilter().getItemValueString("workflowGroup")))
-				sQuery += " JOIN wi.textItems as t3 ";
-			if (getViewFilter().getItemValueInteger("ProcessID") > 0)
-				sQuery += " JOIN wi.integerItems as t4 ";
-		
-			sQuery += " WHERE wi.type = 'workitem'";
-			sQuery += " AND a1.value = '" + userController.getUserPrincipal() + "'";
-			if (!"".equals(getViewFilter().getItemValueString("project")))
-				sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
-						+ getViewFilter().getItemValueString("project") + "' ";
-			
-
-			if (!"".equals(getViewFilter().getItemValueString("workflowGroup")))
-				sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
-						+ getViewFilter().getItemValueString("workflowGroup") + "' ";
-			// Process ID
-			if (getViewFilter().getItemValueInteger("ProcessID") > 0)
-				sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
-						+getViewFilter().getItemValueInteger("ProcessID")+ "'";
-
-			// creade ORDER BY phrase
-			sQuery +=createSortOrderClause();
-
-			return sQuery;
-
-		}
-		
-		
-		
-		
-		
-		
-		/**
-		 * Returns a collection representing the worklist for the current user
-		 * 
-		 * @param model
-		 *            - an optional model version to filter workitems
-		 * @param processgroup
-		 *            - an optional processgroup to filter workitems
-		 * @param processid
-		 *            - an optional processID to filter workitems
-		 * @param row
-		 *            - start position
-		 * @param count
-		 *            - max count of selected worktiems
-		 * @return list of workitems 
-		 */
-		private String buildQueryWorkitemsByCreator() {
-		
-
-			// construct query
-			String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-			sQuery += " JOIN wi.textItems as a1";
-			if (!"".equals(getViewFilter().getItemValueString("project")))
-				sQuery += " JOIN wi.textItems as t2 ";
-			if (!"".equals(getViewFilter().getItemValueString("workflowGroup")))
-				sQuery += " JOIN wi.textItems as t3 ";
-			if (getViewFilter().getItemValueInteger("ProcessID")> 0)
-				sQuery += " JOIN wi.integerItems as t4 ";
-			
-			sQuery += " WHERE wi.type = 'workitem'";
-			sQuery += " AND a1.itemName = 'namcreator' and a1.itemValue = '" + getUserController().getUserPrincipal()
-					+ "'";
-			if (!"".equals(getViewFilter().getItemValueString("project")))
-				sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
-						+ getViewFilter().getItemValueString("project") + "' ";
-		
-
-			if (!"".equals(getViewFilter().getItemValueString("workflowGroup")))
-				sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
-						+ getViewFilter().getItemValueString("workflowGroup") + "' ";
-			// Process ID
-			if (getViewFilter().getItemValueInteger("ProcessID") > 0)
-				sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
-						+getViewFilter().getItemValueInteger("ProcessID") + "'";
-
-			// creade ORDER BY phrase
-			sQuery +=createSortOrderClause();
-
-		return sQuery;
-
-		}
-		
-		
-		
-		
-		
-		/**
-		 * Returns a collection of workitems where current user is owner (namOwner)
-		 * 
-		 * @param model
-		 *            - an optional model version to filter workitems
-		 * @param processgroup
-		 *            - an optional processgroup to filter workitems
-		 * @param processid
-		 *            - an optional processID to filter workitems
-		 * @param row
-		 *            - start position
-		 * @param count
-		 *            - max count of selected worktiems
-		 * @return list of workitems 
-		 */
-		private String buildQueryWorkitemsByOwner() {
-		
-
-			// construct query
-			String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-			sQuery += " JOIN wi.textItems as a1";
-			if (!"".equals(getViewFilter().getItemValueString("project")))
-				sQuery += " JOIN wi.textItems as t2 ";
-			if (!"".equals(getViewFilter().getItemValueString("workflowGroup")))
-				sQuery += " JOIN wi.textItems as t3 ";
-			if (getViewFilter().getItemValueInteger("ProcessID") > 0)
-				sQuery += " JOIN wi.integerItems as t4 ";
-			
-			sQuery += " WHERE wi.type = 'workitem'";
-			sQuery += " AND a1.itemName = 'namowner' and a1.itemValue = '" + getUserController().getUserPrincipal()
-					+ "'";
-			if (!"".equals(getViewFilter().getItemValueString("project")))
-				sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
-						+ getViewFilter().getItemValueString("project") + "' ";
-
-		
-
-			if (!"".equals(getViewFilter().getItemValueString("workflowGroup")))
-				sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
-						+ getViewFilter().getItemValueString("workflowGroup") + "' ";
-			// Process ID
-			if (getViewFilter().getItemValueInteger("ProcessID") > 0)
-				sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
-						+ getViewFilter().getItemValueInteger("ProcessID")+ "'";
-
-			// creade ORDER BY phrase
-			sQuery +=createSortOrderClause();
-			
-			return sQuery;
-
-		}
-
-		
-		/**
-		 * generates a sort order clause depending on a sororder id
-		 * 
-		 * @param asortorder
-		 * @return
-		 */
-		private String createSortOrderClause() {
-			switch (getSortOrder()) {
-
-			case WorkflowService.SORT_ORDER_CREATED_ASC: {
-				return " ORDER BY wi.created asc";
-			}
-			case WorkflowService.SORT_ORDER_MODIFIED_ASC: {
-				return " ORDER BY wi.modified asc";
-			}
-			case WorkflowService.SORT_ORDER_MODIFIED_DESC: {
-				return " ORDER BY wi.modified desc";
-			}
-			default:
-				return " ORDER BY wi.created desc";
-			}
-
-		}
-	}
 }
