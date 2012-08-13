@@ -28,7 +28,9 @@
 package org.imixs.marty.web.profile;
 
 import java.text.Collator;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -48,6 +50,7 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.validator.ValidatorException;
+import javax.mail.FetchProfile.Item;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.ProjectService;
@@ -110,7 +113,6 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 	private boolean profileLoaded = false;
 
-	
 	private String lastDropType; // stores the last drop type event
 
 	private ModelVersionHandler modelVersionHandler = null;
@@ -120,9 +122,13 @@ public class MyProfileMB extends AbstractWorkflowController {
 	private WorkitemMB workitemMB = null;
 	private SetupMB setupMB = null;
 
+	private List<ItemCollection> projectsByOwner = null;
+	private List<ItemCollection> projectsByManager = null;
+	private List<ItemCollection> projectsByAssist = null;
+	private List<ItemCollection> projectsByTeam = null;
+
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
-	
 	/**
 	 * The init method is used to load a user profile or automatically create a
 	 * new one if no profile for the user is available. A new Profile will be
@@ -159,20 +165,18 @@ public class MyProfileMB extends AbstractWorkflowController {
 					.getELResolver()
 					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "setupMB");
-			
+
 			if (systemSetupMB != null && !systemSetupMB.isSetupOk())
 				systemSetupMB.doSetup(null);
-			
-			
+
 			// determine user language and set Modelversion depending on
 			// the selected user locale
 			String sModelVersion = this.getModelVersionHandler()
 					.getLatestSystemVersion(getLoginBean().getLocale());
 			// terminate excecution if no system model ist defined
-			if (sModelVersion==null) {
+			if (sModelVersion == null) {
 				throw new RuntimeException(" No System Model found!");
 			}
-			
 
 			try {
 				// try to load the profile for the current user
@@ -233,19 +237,16 @@ public class MyProfileMB extends AbstractWorkflowController {
 					logins++;
 					workitemItemCollection.replaceItemValue("numLoginCount",
 							logins);
-					
-					
-					
-					//workitemItemCollection = getEntityService().save(
-					//		workitemItemCollection);
+
+					// workitemItemCollection = getEntityService().save(
+					// workitemItemCollection);
 
 					// process profile to trigger ProfilePlugin (Invitations)...
 					workitemItemCollection.replaceItemValue("$ActivityID",
 							UPDATE_PROJECT_ACTIVITY_ID);
 					workitemItemCollection = profileService
 							.processProfile(workitemItemCollection);
-					
-					
+
 				}
 				// set max History & log length
 				workitemItemCollection.replaceItemValue(
@@ -403,8 +404,8 @@ public class MyProfileMB extends AbstractWorkflowController {
 			// add default model domain if empty or first entry is '' (could be
 			// happen :-/)
 			if (modelDomains.size() == 0
-					|| (modelDomains.size() == 1 && "".equals(modelDomains
-							.get(0).toString())))
+					|| (modelDomains.size() == 1 && "".equals(modelDomains.get(
+							0).toString())))
 				modelDomains.add("public");
 
 			for (String sversion : col) {
@@ -434,8 +435,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 			// Now add the latest ModelVersion to the modelVersionHandler
 			for (String latestversion : latestModelVersions.values()) {
-				logger.fine("===> modelVersionHandler adding:"
-						+ latestversion);
+				logger.fine("===> modelVersionHandler adding:" + latestversion);
 				modelVersionHandler.addVersion(latestversion);
 			}
 		}
@@ -478,7 +478,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 			String sID = (String) context.getExternalContext()
 					.getRequestParameterMap().get("uniqueid");
 			logger.fine("------------ doSwitchToPrimaryProject $uniqueid:"
-							+ sID);
+					+ sID);
 
 			if (sID == null)
 				return;
@@ -571,10 +571,10 @@ public class MyProfileMB extends AbstractWorkflowController {
 				rb = ResourceBundle.getBundle("bundle.profile");
 
 			// depending on the messeage string we fetch the message
-			String sMessage="";
+			String sMessage = "";
 			if (ee.getMessage().contains("txtemail"))
-				 sMessage = rb.getString("duplicateemail_error");
-			else	
+				sMessage = rb.getString("duplicateemail_error");
+			else
 				sMessage = rb.getString("displayname_error");
 			FacesMessage message = new FacesMessage("* ", sMessage);
 			// add two messages to support the standard profile_form and also
@@ -591,8 +591,8 @@ public class MyProfileMB extends AbstractWorkflowController {
 		updateLocale();
 	}
 
-	
-	 /* Comparator for ProjectNames
+	/*
+	 * Comparator for ProjectNames
 	 */
 	class ProjectComparator implements Comparator<ItemCollection> {
 		private final Collator collator;
@@ -616,7 +616,6 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 	}
 
-	
 	public void doEditWorkitem(ActionEvent event) {
 		// get selection
 		UIComponent component = event.getComponent();
@@ -713,7 +712,7 @@ public class MyProfileMB extends AbstractWorkflowController {
 	 * method is called after a doProcess and after DropEvents
 	 */
 	public void clearCache() {
-		
+
 	}
 
 	/**
@@ -771,8 +770,6 @@ public class MyProfileMB extends AbstractWorkflowController {
 
 	}
 
-	
-	
 	/*
 	 * HELPER METHODS
 	 */
@@ -847,6 +844,65 @@ public class MyProfileMB extends AbstractWorkflowController {
 					.getValue(FacesContext.getCurrentInstance().getELContext(),
 							null, "projectMB");
 		return projectMB;
+	}
+
+	public List<ItemCollection> getProjectsByAssist() {
+		if (projectsByAssist == null)
+			readProjectStructure();
+		return projectsByAssist;
+	}
+
+	public List<ItemCollection> getProjectsByOwner() {
+		if (projectsByOwner == null)
+			readProjectStructure();
+		return projectsByOwner;
+	}
+
+	public List<ItemCollection> getProjectsByManager() {
+		if (projectsByManager == null)
+			readProjectStructure();
+		return projectsByManager;
+	}
+
+	public List<ItemCollection> getProjectsByTeam() {
+		if (projectsByTeam == null)
+			readProjectStructure();
+		return projectsByTeam;
+	}
+
+	private void readProjectStructure() {
+
+		projectsByTeam = new ArrayList<ItemCollection>();
+		projectsByManager = new ArrayList<ItemCollection>();
+		projectsByOwner = new ArrayList<ItemCollection>();
+		projectsByAssist = new ArrayList<ItemCollection>();
+
+		FacesContext context = FacesContext.getCurrentInstance();
+		ExternalContext externalContext = context.getExternalContext();
+		String aname = externalContext.getRemoteUser();
+
+		Collection<ItemCollection> allProjects = projectService
+				.findAllProjects(0, -1);
+
+		for (ItemCollection aProject : allProjects) {
+			List<String> vOwner = aProject.getItemValue("namOwner");
+			List<String> vTeam = aProject.getItemValue("namTeam");
+			List<String> vAssist = aProject.getItemValue("namAssist");
+			List<String> vManager = aProject.getItemValue("namManager");
+
+			if (vOwner.indexOf(aname) > -1)
+				projectsByOwner.add(aProject);
+
+			if (vTeam.indexOf(aname) > -1)
+				projectsByTeam.add(aProject);
+
+			if (vAssist.indexOf(aname) > -1)
+				projectsByAssist.add(aProject);
+
+			if (vManager.indexOf(aname) > -1)
+				projectsByManager.add(aProject);
+
+		}
 	}
 
 }

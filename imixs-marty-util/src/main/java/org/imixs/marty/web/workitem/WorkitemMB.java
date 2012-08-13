@@ -1288,7 +1288,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 	}
 
 	/**
-	 * this method loads all versions to the current workitem
+	 * this method loads all versions to the current workitem. Idependent from the type property!
 	 * 
 	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
 	 */
@@ -1302,8 +1302,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 					.getItemValueString("$workitemId");
 			String refQuery = "SELECT entity FROM Entity entity "
 					+ " JOIN entity.textItems AS t"
-					+ "  WHERE (entity.type='workitem' OR entity.type='workitemarchive') "
-					+ "  AND t.itemName = '$workitemid'"
+					+ "  WHERE t.itemName = '$workitemid'"
 					+ "  AND t.itemValue = '" + sRefID + "' "
 					+ " ORDER BY entity.created ASC";
 
