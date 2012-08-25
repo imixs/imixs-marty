@@ -33,7 +33,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.enterprise.context.SessionScoped;
+import javax.faces.bean.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -44,9 +44,8 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.faces.workitem.ViewController;
 
-@Named("projectViewController")
-@SessionScoped
-public class ProjectViewController extends
+
+public class XxxxProjectViewController extends
 		org.imixs.workflow.jee.faces.workitem.ViewController implements
 		Serializable {
 
@@ -71,9 +70,9 @@ public class ProjectViewController extends
 	List<ItemCollection> projects;
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
-	public ProjectViewController() {
+	public XxxxProjectViewController() {
 		super();
-
+		setViewAdapter(new ProjectViewAdapter());
 	}
 
 	/**
@@ -94,6 +93,8 @@ public class ProjectViewController extends
 
 	}
 
+	
+	
 	public UserController getUserController() {
 		return userController;
 	}
@@ -128,7 +129,7 @@ public class ProjectViewController extends
 				final ViewController controller) {
 
 			logger.fine("getViewEntries for " + getView());
-			if ("subprojectlist".equals(getView())) {
+			if ("projectlist.sub".equals(getView())) {
 
 				String sIDRef = projectController.getWorkitem()
 						.getItemValueString("$uniqueIDRef");
@@ -147,7 +148,7 @@ public class ProjectViewController extends
 
 			}
 
-			if ("mainprojectlist".equals(getView())) {
+			if ("projectlist.main".equals(getView())) {
 				String sQuery = "SELECT project FROM Entity AS project "
 						+ " JOIN project.textItems AS n1"
 						+ " JOIN project.textItems AS n2"
@@ -160,7 +161,7 @@ public class ProjectViewController extends
 						getMaxResult());
 			}
 
-			if ("projectlistbyowner".equals(getView())) {
+			if ("projectlist.owner".equals(getView())) {
 
 				String aname = userController.getUserPrincipal();
 
@@ -176,7 +177,7 @@ public class ProjectViewController extends
 						getMaxResult());
 			}
 
-			if ("projectlistbymember".equals(getView())) {
+			if ("projectlist.member".equals(getView())) {
 
 				String aname = userController.getUserPrincipal();
 
