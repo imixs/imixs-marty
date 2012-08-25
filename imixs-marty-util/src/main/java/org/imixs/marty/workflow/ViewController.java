@@ -34,7 +34,7 @@ import java.util.ResourceBundle;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
-import javax.enterprise.context.SessionScoped;
+import javax.faces.bean.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -53,7 +53,7 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
  * 
  */
 @Named("viewController")
-@SessionScoped
+@ViewScoped
 public class ViewController extends
 		org.imixs.workflow.jee.faces.workitem.WorklistController implements
 		Serializable {
