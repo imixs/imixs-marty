@@ -28,28 +28,12 @@
 package org.imixs.marty.project;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.application.FacesMessage;
-import javax.faces.component.UIComponent;
-import javax.faces.component.UIData;
-import javax.faces.component.UIInput;
-import javax.faces.component.UIViewRoot;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
-import javax.faces.event.ActionEvent;
-import javax.faces.model.SelectItem;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -58,6 +42,7 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.jee.faces.workitem.ViewController;
 
 @Named("projectViewController")
 @SessionScoped
@@ -70,7 +55,7 @@ public class ProjectViewController extends
 	/* Profile Service */
 	@EJB
 	ProfileService profileService;
-	
+
 	@EJB
 	EntityService entityService;
 
@@ -83,10 +68,8 @@ public class ProjectViewController extends
 	@Inject
 	private ProjectController projectController = null;
 
-	
 	List<ItemCollection> projects;
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
-
 
 	public ProjectViewController() {
 		super();
@@ -106,7 +89,7 @@ public class ProjectViewController extends
 				"SELECT project FROM Entity AS project "
 						+ " WHERE project.type IN ('projectdeleted' ) "
 						+ " ORDER BY project.modified DESC");
-		this.setMaxSearchResult(this.setupController.getWorkitem()
+		this.setMaxResult(this.setupController.getWorkitem()
 				.getItemValueInteger("MaxviewEntriesPerPage"));
 
 	}
@@ -131,7 +114,6 @@ public class ProjectViewController extends
 		return profileService;
 	}
 
-
 	public ProjectController getProjectController() {
 		return projectController;
 	}
@@ -140,15 +122,12 @@ public class ProjectViewController extends
 		this.projectController = projectController;
 	}
 
-
-
-
-
-
-
 	class ProjectViewAdapter extends ViewAdapter {
 
-		public List<ItemCollection> getViewEntries() {
+		public List<ItemCollection> getViewEntries(
+				final ViewController controller) {
+
+			logger.fine("getViewEntries for " + getView());
 			if ("subprojectlist".equals(getView())) {
 
 				String sIDRef = projectController.getWorkitem()
@@ -164,7 +143,7 @@ public class ProjectViewController extends
 						+ " ORDER BY n.itemValue asc";
 
 				return getEntityService().findAllEntities(sQuery, getRow(),
-						getMaxSearchResult());
+						getMaxResult());
 
 			}
 
@@ -178,7 +157,7 @@ public class ProjectViewController extends
 						+ " AND n1.itemValue = n2.itemValue "
 						+ " ORDER BY n1.itemValue asc";
 				return getEntityService().findAllEntities(sQuery, getRow(),
-						getMaxSearchResult());
+						getMaxResult());
 			}
 
 			if ("projectlistbyowner".equals(getView())) {
@@ -194,7 +173,7 @@ public class ProjectViewController extends
 						+ " ORDER BY n1.itemValue asc";
 
 				return getEntityService().findAllEntities(sQuery, getRow(),
-						getMaxSearchResult());
+						getMaxResult());
 			}
 
 			if ("projectlistbymember".equals(getView())) {
@@ -211,11 +190,11 @@ public class ProjectViewController extends
 						+ " AND n1.itemName = 'txtname' "
 						+ " ORDER BY n1.itemValue asc";
 				return getEntityService().findAllEntities(sQuery, getRow(),
-						getMaxSearchResult());
+						getMaxResult());
 			}
 			// default behaivor
 
-			return super.getViewEntries();
+			return super.getViewEntries(controller);
 
 		}
 	}
