@@ -155,30 +155,30 @@ public class ViewController extends
 
 	class MartyViewAdapter extends ViewAdapter {
 
-		public List<ItemCollection> getViewEntries() {
+		public List<ItemCollection> getViewEntries(final ViewController controller) {
 
 			if (QUERY_WORKLIST_BY_AUTHOR.equals(getView())) {
 
 				return getEntityService().findAllEntities(
 						buildQueryWorkitemsByAuthor(), getRow(),
-						getMaxSearchResult());
+						getMaxResult());
 			}
 
 			if (QUERY_WORKLIST_BY_CREATOR.equals(getView())) {
 				return getEntityService().findAllEntities(
 						buildQueryWorkitemsByCreator(), getRow(),
-						getMaxSearchResult());
+						getMaxResult());
 			}
 
 			if (QUERY_WORKLIST_BY_OWNER.equals(getView())) {
 				return getEntityService().findAllEntities(
 						buildQueryWorkitemsByOwner(), getRow(),
-						getMaxSearchResult());
+						getMaxResult());
 			}
 
 			// default behaivor
 
-			return super.getViewEntries();
+			return super.getViewEntries(controller);
 
 		}
 
