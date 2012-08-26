@@ -29,6 +29,7 @@ package org.imixs.marty.profile;
 
 import java.io.Serializable;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -40,13 +41,10 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.application.FacesMessage;
 import javax.faces.component.UIParameter;
-import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import javax.faces.validator.ValidatorException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.Cookie;
@@ -54,10 +52,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.config.SetupController;
-import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.model.ModelVersionHandler;
 import org.imixs.marty.util.Cache;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.jee.ejb.WorkflowService;
 
 /**
  * This backing beans handles the Profile of the current user. The user is
@@ -105,15 +104,14 @@ public class UserController  implements
 	@EJB
 	private org.imixs.workflow.jee.ejb.ModelService modelService;
 
-	
-	/* Profile Service */
 	@EJB
-	private ProfileService profileService;
+	private EntityService entityService;
 
-	
-	/* WorkItem Services */
 	@EJB
-	private org.imixs.marty.ejb.WorkitemService workitemService;
+	private WorkflowService workflowService;
+	
+	//@EJB
+	//private org.imixs.marty.ejb.WorkitemService workitemService;
 
 	public final static int MAX_PRIMARY_ENTRIES = 5;
 	public final static int START_PROFILE_PROCESS_ID = 200;
@@ -184,30 +182,25 @@ public class UserController  implements
 
 			try {
 				// try to load the profile for the current user
-				ItemCollection profile = profileService.findProfileByName(null);
+				ItemCollection profile = findProfileByName(null);
 				if (profile == null) {
 
 					// create new Profile for current user
-					profile = profileService
-							.createProfile(START_PROFILE_PROCESS_ID);
+					profile = new ItemCollection();
+					profile.replaceItemValue("type","profile");
+					profile.replaceItemValue("$processID",START_PROFILE_PROCESS_ID);
 
 					profile.replaceItemValue("$modelversion", sModelVersion);
 
 					// now set default values for locale
 					profile.replaceItemValue("txtLocale", getLocale());
 
-					// set default launch page
-					profile.replaceItemValue("keyStartpage", setupController
-							.getWorkitem().getItemValueString("DefaultPage"));
-
-					List defaultProcessList = setupController.getWorkitem()
-							.getItemValue("defaultprojectprocesslist");
-
+		
 				
 					// process new profile...
 					profile.replaceItemValue("$ActivityID",
 							CREATE_PROFILE_ACTIVITY_ID);
-					profile = profileService.processProfile(profile);
+					profile = workflowService.processWorkItem(profile);
 
 				} else {
 					// Update Workitem to store last Login Time and logincount
@@ -232,7 +225,7 @@ public class UserController  implements
 					// process profile to trigger ProfilePlugin (Invitations)...
 					profile.replaceItemValue("$ActivityID",
 							UPDATE_PROJECT_ACTIVITY_ID);
-					profile = profileService.processProfile(profile);
+					profile = workflowService.processWorkItem(profile);
 
 				}
 				// set max History & log length
@@ -479,58 +472,8 @@ public class UserController  implements
 			}
 		}
 
-		// validate workitem and verify txtname and txtusername
-		try {
-			ItemCollection profile = getWorkitem();
-			// lowercase email to allow unique lookups
-			String sEmail = profile.getItemValueString("txtEmail");
-			sEmail = sEmail.toLowerCase();
-			profile.replaceItemValue("txtEmail", sEmail);
-
-			// Now update the Model version to the current User Setting
-			// determine user language and set Modelversion depending on
-			// the selected user locale
-			String sModelVersion = this.getModelVersionHandler()
-					.getLatestSystemVersion(
-							profile.getItemValueString("txtLocale"));
-			profile.replaceItemValue("$modelversion", sModelVersion);
-
-			profile.replaceItemValue("$ActivityID", activityID);
-			profile = profileService.processProfile(profile);
-
-			setWorkitem(profile);
-
-			
-		} catch (Exception ee) {
-
-			// Generate Error message
-			FacesContext context = FacesContext.getCurrentInstance();
-			UIViewRoot viewRoot = FacesContext.getCurrentInstance()
-					.getViewRoot();
-			Locale locale = viewRoot.getLocale();
-			ResourceBundle rb = null;
-			if (locale != null)
-				rb = ResourceBundle.getBundle("bundle.profile", locale);
-			else
-				rb = ResourceBundle.getBundle("bundle.profile");
-
-			// depending on the messeage string we fetch the message
-			String sMessage = "";
-			if (ee.getMessage().contains("txtemail"))
-				sMessage = rb.getString("duplicateemail_error");
-			else
-				sMessage = rb.getString("displayname_error");
-			FacesMessage message = new FacesMessage("* ", sMessage);
-			// add two messages to support the standard profile_form and also
-			// the verify Profile form
-			// should be optimized some times....
-			context.addMessage("myprofile_form_id:displayname_id", message);
-			context.addMessage(
-					"verify_profile_id:verify_profile_form:displayname_id",
-					message);
-
-			throw new ValidatorException(message);
-		}
+		
+		
 		// Now reset current Skin
 		updateLocale();
 	}
@@ -652,7 +595,7 @@ public class UserController  implements
 		String[] array = new String[2];
 
 		// String sUserName = null;
-		ItemCollection profile = profileService.findProfileByName(aName);
+		ItemCollection profile = findProfileByName(aName);
 		// if profile null cache current name object
 		if (profile == null) {
 			array[0] = aName;
@@ -682,8 +625,7 @@ public class UserController  implements
 	 */
 	private String lookupAccount(String aUserName) {
 		String sAccount = null;
-		ItemCollection profile = profileService
-				.findProfileByUserName(aUserName);
+		ItemCollection profile = findProfileByUserName(aUserName);
 		// if profile null cache current name object
 		if (profile == null)
 			sAccount = aUserName;
@@ -698,4 +640,70 @@ public class UserController  implements
 
 		return sAccount;
 	}
+	
+	
+	
+	
+	/**
+	 * This method returns a profile ItemCollection for a specified account
+	 * name. if no name is supported the remote user name will by used to find
+	 * the profile The method returns null if no Profile for this name was found
+	 * 
+	 * @param aname
+	 * @return
+	 */
+	private ItemCollection findProfileByName(String aname) {
+
+		if (aname == null)
+			aname = getUserPrincipal();
+
+		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+				+ " JOIN profile.textItems AS t2"
+				+ " WHERE  profile.type= 'profile' "
+				+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
+				+ aname + "' ";
+
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, 1);
+
+		if (col.size() > 0) {
+			ItemCollection aworkitem = col.iterator().next();
+			return aworkitem;
+		}
+		return null;
+
+	}
+	
+	
+	
+	/**
+	 * This method returns a profile ItemCollection for a specified username.
+	 * The username is mapped to a technical name inside a profile. The method
+	 * returns null if no Profile for this name was found
+	 * 
+	 * @param aname
+	 * @return
+	 */
+	private ItemCollection findProfileByUserName(String aname) {
+		if (aname == null)
+			aname = getUserPrincipal();
+
+		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+				+ " JOIN profile.textItems AS t2"
+				+ " WHERE  profile.type= 'profile' "
+				+ " AND t2.itemName = 'txtusername' " + " AND t2.itemValue = '"
+				+ aname.trim() + "' ";
+
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, 1);
+
+		if (col.size() > 0) {
+			ItemCollection aworkitem = col.iterator().next();
+			return aworkitem;
+		}
+		return null;
+
+	}
+	
+
 }

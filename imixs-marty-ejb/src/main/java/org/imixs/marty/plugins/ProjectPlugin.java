@@ -40,7 +40,9 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
- * This plugin supports additional business logic for project entites
+ * This plug-in supports additional business logic for project entities.
+ * The plug-in updates the properties txtName and txtProjectName. It also 
+ * compute the parent team members and the team members of subprojects.
  * 
  * @author rsoika
  * 

@@ -27,23 +27,23 @@
 
 package org.imixs.marty.plugins;
 
+import java.util.Collection;
 import java.util.logging.Logger;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.jee.ejb.WorkflowService;
 
 public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
-	private ProfileService profileService = null;
+	private EntityService entityService = null;
 	private boolean hasMailSession = false;
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
@@ -51,20 +51,16 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 	public void init(WorkflowContext actx) throws PluginException {
 
 		super.init(actx);
-		hasMailSession = true;
-		// lookup profile service EJB
-		String jndiName = "ejb/ProfileService";
-		InitialContext ictx;
-		try {
-			ictx = new InitialContext();
 
-			Context ctx = (Context) ictx.lookup("java:comp/env");
-			profileService = (ProfileService) ctx.lookup(jndiName);
-		} catch (NamingException e) {
-			throw new PluginException(
-					"[MailPlugin] unable to lookup ProfileService", e);
-
+		// check for an instance of WorkflowService
+		if (actx instanceof WorkflowService) {
+			// yes we are running in a WorkflowService EJB
+			WorkflowService ws = (WorkflowService) actx;
+			entityService = ws.getEntityService();
 		}
+
+		hasMailSession = true;
+
 	}
 
 	@Override
@@ -106,16 +102,14 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		try {
 			aAddr = fetchEmail(aAddr);
 			if (aAddr.indexOf('@') == -1) {
-				System.out.println("[MartyMailPlugin] smtp mail address for '"
+				logger.warning("[MartyMailPlugin] smtp mail address for '"
 						+ aAddr + "' could not be resolved!");
 				return null;
 			}
 		} catch (NamingException e) {
 			// no valid email was found!
-			System.out.println("[MartyMailPlugin] mail for '" + aAddr
+			logger.warning("[MartyMailPlugin] mail for '" + aAddr
 					+ "' could not be resolved!");
-			// e.printStackTrace();
-			// avoid sending mail to this address!
 			return null;
 		}
 		return super.getInternetAddress(aAddr);
@@ -134,8 +128,7 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 	 */
 	private String fetchEmail(String aOpenID) throws NamingException {
 
-		ItemCollection itemColProfile = profileService
-				.findProfileByName(aOpenID);
+		ItemCollection itemColProfile = findProfileByName(aOpenID);
 
 		if (itemColProfile == null)
 			throw new NamingException(
@@ -160,6 +153,36 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 					+ aOpenID);
 
 		return aOpenID;
+	}
+
+	/**
+	 * This method returns a profile ItemCollection for a specified account
+	 * name. if no name is supported the remote user name will by used to find
+	 * the profile The method returns null if no Profile for this name was found
+	 * 
+	 * @param aname
+	 * @return
+	 */
+	private ItemCollection findProfileByName(String aname) {
+
+		if (aname == null)
+			return null;
+
+		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+				+ " JOIN profile.textItems AS t2"
+				+ " WHERE  profile.type= 'profile' "
+				+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
+				+ aname + "' ";
+
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, 1);
+
+		if (col.size() > 0) {
+			ItemCollection aworkitem = col.iterator().next();
+			return aworkitem;
+		}
+		return null;
+
 	}
 
 }

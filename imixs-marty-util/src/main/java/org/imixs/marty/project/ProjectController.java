@@ -29,7 +29,6 @@ package org.imixs.marty.project;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -54,7 +53,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.config.SetupController;
-import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
@@ -68,9 +66,6 @@ public class ProjectController extends
 	private static final long serialVersionUID = 1L;
 
 	public final static int START_PROJECT_PROCESS_ID = 100;
-	/* Profile Service */
-	@EJB
-	ProfileService profileService;
 	
 	@EJB
 	EntityService entityService;
@@ -125,10 +120,6 @@ public class ProjectController extends
 
 	public void setSetupsetupController(SetupController setupMB) {
 		this.setupController = setupMB;
-	}
-
-	public ProfileService getProfileService() {
-		return profileService;
 	}
 
 	/**
@@ -455,11 +446,7 @@ public class ProjectController extends
 		// test if the newValue is an Email address - if so than lookup the
 		// email name
 		ItemCollection profile = null;
-		if (sNewValue.contains("@"))
-			profile = profileService.findProfileByEmail(sNewValue);
-		if (profile == null)
-			profile = profileService.findProfileByUserName(sNewValue);
-
+		
 		// profile found?
 		if (profile != null)
 			sAccount = profile.getItemValueString("txtName");
@@ -554,11 +541,7 @@ public class ProjectController extends
 		// test if the newValue is an Email address - if so than lookup the
 		// email name
 		ItemCollection profile = null;
-		if (sNewValue.contains("@"))
-			profile = profileService.findProfileByEmail(sNewValue);
-		if (profile == null)
-			profile = profileService.findProfileByUserName(sNewValue);
-
+		
 		// profile found?
 		if (profile != null)
 			sAccount = profile.getItemValueString("txtName");
@@ -622,25 +605,6 @@ public class ProjectController extends
 	}
 
 
-
-	/**
-	 * returns the list of ItemCollectionAdapter Objects for each Team member
-	 * 
-	 * @return
-	 */
-	public ArrayList<ItemCollection> getTeam() throws Exception {
-		if (team != null)
-			return team;
-		team = new ArrayList<ItemCollection>();
-		List<String> vTeam = this.getWorkitem().getItemValue("namTeam");
-		for (String sName : vTeam) {
-			ItemCollection profile = profileService
-					.findProfileByUserName(sName);
-			if (profile != null)
-				team.add((profile));
-		}
-		return team;
-	}
 
 	/**
 	 * returns the list of Team Select Items to be displayed in the Project
