@@ -30,11 +30,8 @@ package org.imixs.marty.workflow;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
@@ -42,9 +39,6 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.component.UIComponent;
-import javax.faces.component.UIData;
-import javax.faces.component.UIParameter;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -52,14 +46,8 @@ import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.marty.config.SetupController;
-import org.imixs.marty.deprecated.DeprecatedProjectController;
-import org.imixs.marty.deprecated.WorkitemListener;
-import org.imixs.marty.ejb.WorkitemService;
-import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
+import org.imixs.workflow.jee.faces.util.LoginController;
 
 /**
  * The marty WorkflowController extends the
@@ -88,14 +76,10 @@ public class WorkflowController extends
 
 	public final static String DEFAULT_EDITOR_ID = "default";
 
-	@Inject
-	private UserController userController = null;
 
-	/* Child Process */
-	protected ItemCollection childWorkitemItemCollection = null;
 
-	private ArrayList<ItemCollection> versions = null;
 	private ArrayList<ItemCollection> processList = null;
+	private ArrayList<ItemCollection> projectList = null;
 
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
@@ -103,8 +87,10 @@ public class WorkflowController extends
 	@EJB
 	private org.imixs.marty.ejb.WorkitemService workitemService;
 
-	@EJB
-	private EntityService entityService;
+	
+	@Inject
+	private LoginController loginController = null;
+	
 
 	public WorkflowController() {
 		super();
@@ -116,12 +102,14 @@ public class WorkflowController extends
 
 	}
 
-	public UserController getUserController() {
-		return userController;
+	
+
+	public LoginController getLoginController() {
+		return loginController;
 	}
 
-	public void setUserController(UserController userController) {
-		this.userController = userController;
+	public void setLoginController(LoginController loginController) {
+		this.loginController = loginController;
 	}
 
 	/**
@@ -306,6 +294,56 @@ public class WorkflowController extends
 
 		return processList;
 	}
+	
+	
+	
+	/**
+	 * This method returns all project entities for the current user.
+	 * This list can be used to display project informations inside a form.
+	 * The returned project list is reduced to the following attributes
+	 * <p>
+	 * txtname
+	 * txtprocessids.
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getProjectList() {
+		if (projectList == null) {
+			projectList = new ArrayList<ItemCollection>();
+			
+			String sUserID=getLoginController().getUserPrincipal();
+
+			String sQuery = "SELECT projct FROM Entity AS projct "
+					+ " JOIN projct.textItems AS t2" + " WHERE projct.type = 'project'" 
+					+ " AND t2.itemName = 'txtname'"
+					+ " ORDER BY t2.itemValue asc";
+			Collection<ItemCollection> col = getEntityService().findAllEntities(sQuery,
+					0, -1);
+			
+			// create reduced list
+			for (ItemCollection aworkitem : col) {
+				
+				ItemCollection project=new ItemCollection();
+				project.replaceItemValue("$uniqueID", aworkitem.getItemValue("$uniqueID"));
+				project.replaceItemValue("txtName", aworkitem.getItemValue("txtName"));
+				
+				project.replaceItemValue("isOwner",aworkitem.getItemValue("namOwner").indexOf(sUserID)>-1);
+				project.replaceItemValue("isTeam",aworkitem.getItemValue("namTeam").indexOf(sUserID)>-1);
+				project.replaceItemValue("isAssist",aworkitem.getItemValue("namAssist").indexOf(sUserID)>-1);
+				project.replaceItemValue("isManager",aworkitem.getItemValue("namManager").indexOf(sUserID)>-1);
+				
+						
+				
+				
+				projectList.add(project);
+				
+				
+			}
+			
+		}
+		
+		return projectList;
+	}
 
 	/**
 	 * moves a workitem into the archive by changing the attribute type to
@@ -319,190 +357,6 @@ public class WorkflowController extends
 
 		workitemService.moveIntoDeletions(getWorkitem());
 
-	}
-
-	/**
-	 * This method is similar to the createWorkitem method but creates a child
-	 * process to the current workitem.
-	 * 
-	 * @see WorkitemService
-	 * 
-	 * @param event
-	 * @return
-	 */
-	public void doCreateChildWorkitem(ActionEvent event) throws Exception {
-
-		// get Process ID out from the ActionEvent Object....
-		List children = event.getComponent().getChildren();
-		String processEntityIdentifier = "";
-
-		for (int i = 0; i < children.size(); i++) {
-			if (children.get(i) instanceof UIParameter) {
-				UIParameter currentParam = (UIParameter) children.get(i);
-				if (currentParam.getName().equals("id")
-						&& currentParam.getValue() != null) {
-					processEntityIdentifier = (String) currentParam.getValue();
-					break;
-				}
-			}
-		}
-		if (processEntityIdentifier != null
-				&& !"".equals(processEntityIdentifier)) {
-			// find ProcessEntity the Worktiem should be started at
-			String sProcessModelVersion = processEntityIdentifier.substring(0,
-					processEntityIdentifier.indexOf('|'));
-			String sProcessID = processEntityIdentifier
-					.substring(processEntityIdentifier.indexOf('|') + 1);
-
-			childWorkitemItemCollection = workitemService.createWorkItem(
-					getWorkitem(), sProcessModelVersion,
-					Integer.parseInt(sProcessID));
-
-			this.setChildWorkitem(childWorkitemItemCollection);
-
-		}
-	}
-
-	/**
-	 * this method is called by datatables to select an workitem
-	 * 
-	 * @return
-	 */
-	public void doEditChild(ActionEvent event) {
-		ItemCollection currentSelection = null;
-		// suche selektierte Zeile....
-		UIComponent component = event.getComponent();
-		for (UIComponent parent = component.getParent(); parent != null; parent = parent
-				.getParent()) {
-			if (!(parent instanceof UIData))
-				continue;
-
-			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
-			setChildWorkitem(currentSelection);
-			break;
-
-		}
-	}
-
-	/**
-	 * processes the current child workitem. The method expects an parameter
-	 * "id" with the activity ID which should be processed
-	 * 
-	 * The method adds additional display name fields to be used in history
-	 * plugin
-	 * 
-	 * @param event
-	 * @return
-	 * @throws Exception
-	 */
-	public void doProcessChild(ActionEvent event) throws Exception {
-		// Activity ID raussuchen und in activityID speichern
-		List children = event.getComponent().getChildren();
-		int activityID = -1;
-
-		for (int i = 0; i < children.size(); i++) {
-			if (children.get(i) instanceof UIParameter) {
-				UIParameter currentParam = (UIParameter) children.get(i);
-				if (currentParam.getName().equals("id")
-						&& currentParam.getValue() != null) {
-					activityID = Integer.parseInt(currentParam.getValue()
-							.toString());
-					break;
-				}
-			}
-		}
-
-		childWorkitemItemCollection.replaceItemValue("$ActivityID", activityID);
-
-		childWorkitemItemCollection = workitemService
-				.processWorkItem(childWorkitemItemCollection);
-
-		this.setChildWorkitem(childWorkitemItemCollection);
-
-	}
-
-	/**
-	 * wrapper method to delete a child process.
-	 * 
-	 * @see doMoveIntoDeletions
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void doDeleteChild(ActionEvent event) throws Exception {
-		ItemCollection currentSelection = null;
-		// suche selektierte Zeile....
-		UIComponent component = event.getComponent();
-		for (UIComponent parent = component.getParent(); parent != null; parent = parent
-				.getParent()) {
-			if (!(parent instanceof UIData))
-				continue;
-
-			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
-			childWorkitemItemCollection = currentSelection;
-
-			break;
-		}
-
-		if (childWorkitemItemCollection != null) {
-
-			if ("childworkitem".equals(childWorkitemItemCollection
-					.getItemValueString("type")))
-				workitemService.deleteWorkItem(childWorkitemItemCollection);
-
-			doResetChildWorkitems(event);
-
-		}
-
-	}
-
-	/**
-	 * moves a child into the archive by changing the attribute type to
-	 * 'workitemdeleted'
-	 * 
-	 * @see doMoveIntoDeletions
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void doSoftDeleteChild(ActionEvent event) throws Exception {
-		ItemCollection currentSelection = null;
-		// suche selektierte Zeile....
-		UIComponent component = event.getComponent();
-		for (UIComponent parent = component.getParent(); parent != null; parent = parent
-				.getParent()) {
-			if (!(parent instanceof UIData))
-				continue;
-
-			// Zeile gefunden
-			currentSelection = (ItemCollection) ((UIData) parent).getRowData();
-			childWorkitemItemCollection = currentSelection;
-
-			break;
-		}
-
-		if (childWorkitemItemCollection != null) {
-
-			childWorkitemItemCollection = workitemService
-					.moveIntoDeletions(childWorkitemItemCollection);
-
-			doResetChildWorkitems(event);
-		}
-	}
-
-	/**
-	 * This method resets the current Child Selection and set the ChildWorkitem
-	 * to null. Also the childs selection will be reset to null
-	 * 
-	 * @param event
-	 * @return
-	 */
-	public void doResetChildWorkitems(ActionEvent event) throws Exception {
-		childWorkitemItemCollection = null;
-
-		this.setChildWorkitem(null);
 	}
 
 	/**
@@ -585,89 +439,7 @@ public class WorkflowController extends
 
 	}
 
-	/**
-	 * updates the child workitem
-	 * 
-	 * @param aworkitem
-	 */
-	public void setChildWorkitem(ItemCollection aworkitem) {
 
-		if (aworkitem != null)
-			childWorkitemItemCollection = aworkitem;
-		else
-			childWorkitemItemCollection = new ItemCollection();
-
-	}
-
-	public ItemCollection getChildWorkitem() {
-		return childWorkitemItemCollection;
-	}
-
-	/**
-	 * returns a arrayList of Activities to the corresponidng processiD of the
-	 * current Worktiem. The Method returns the activities corresponding to the
-	 * worktiems modelVersionID
-	 * 
-	 * @return
-	 */
-	public ArrayList<ItemCollection> getChildActivities() {
-		ArrayList<ItemCollection> activityChildList = new ArrayList<ItemCollection>();
-
-		if (childWorkitemItemCollection == null)
-			return activityChildList;
-
-		int processId = childWorkitemItemCollection
-				.getItemValueInteger("$processid");
-
-		if (processId <= 0)
-			return activityChildList;
-
-		String sversion = childWorkitemItemCollection
-				.getItemValueString("$modelversion");
-
-		// get Workflow-Activities by version if provided by the workitem
-		List<ItemCollection> col;
-		if (sversion != null && !"".equals(sversion))
-			col = getModelService().getPublicActivitiesByVersion(processId,
-					sversion);
-		else
-			// return activities by defined modelversion
-			col = getModelService().getPublicActivitiesByVersion(processId,
-					getModelVersion());
-		for (ItemCollection aworkitem : col) {
-			activityChildList.add((aworkitem));
-		}
-		return activityChildList;
-	}
-
-	/**
-	 * Returns a List with all Versions of the current Workitem The method loads
-	 * all versions if not yet loaded
-	 * 
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getVersions() {
-		if (versions == null) {
-			versions = new ArrayList<ItemCollection>();
-			if (this.isNewWorkitem())
-				return versions;
-			Collection<ItemCollection> col = null;
-			String sRefID = getWorkitem().getItemValueString("$workitemId");
-			String refQuery = "SELECT entity FROM Entity entity "
-					+ " JOIN entity.textItems AS t"
-					+ "  WHERE entity.type='workitem'"
-					+ "  AND t.itemName = '$workitemid'"
-					+ "  AND t.itemValue = '" + sRefID + "' "
-					+ " ORDER BY entity.created ASC";
-
-			col = this.getEntityService().findAllEntities(refQuery, 0, -1);
-			for (ItemCollection aworkitem : col) {
-				versions.add(aworkitem);
-			}
-		}
-		return versions;
-	}
 
 	
 
