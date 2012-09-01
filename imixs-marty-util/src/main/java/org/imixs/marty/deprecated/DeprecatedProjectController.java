@@ -25,7 +25,7 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.project;
+package org.imixs.marty.deprecated;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -57,9 +57,9 @@ import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 
-@Named("projectController")
-@SessionScoped
-public class ProjectController extends
+//@Named("projectController")
+//@SessionScoped
+public class DeprecatedProjectController extends
 		org.imixs.workflow.jee.faces.workitem.WorkflowController implements
 		Serializable {
 
@@ -89,7 +89,7 @@ public class ProjectController extends
 
 	private ArrayList<SelectItem> myProjectSelection = null;
 
-	public ProjectController() {
+	public DeprecatedProjectController() {
 		super();
 
 	}

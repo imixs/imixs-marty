@@ -25,7 +25,7 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.workflow;
+package org.imixs.marty.deprecated;
 
 import java.util.EventListener;
 

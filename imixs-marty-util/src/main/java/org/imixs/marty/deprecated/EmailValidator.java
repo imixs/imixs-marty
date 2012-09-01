@@ -25,7 +25,7 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.util;
+package org.imixs.marty.deprecated;
 
 import java.util.Locale;
 import java.util.ResourceBundle;

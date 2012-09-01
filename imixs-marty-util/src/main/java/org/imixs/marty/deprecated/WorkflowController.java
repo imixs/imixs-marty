@@ -25,7 +25,7 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.workflow;
+package org.imixs.marty.deprecated;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -41,7 +41,6 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.enterprise.context.SessionScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIData;
 import javax.faces.component.UIParameter;
@@ -50,16 +49,12 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
-import javax.inject.Named;
 
-import org.imixs.marty.config.SetupController;
-import org.imixs.marty.deprecated.DeprecatedProjectController;
-import org.imixs.marty.deprecated.WorkitemListener;
 import org.imixs.marty.ejb.WorkitemService;
 import org.imixs.marty.profile.UserController;
+import org.imixs.marty.workflow.EditorSection;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
 
 /**
  * The marty WorkflowController extends the
@@ -78,8 +73,8 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
  * @author rsoika
  * 
  */
-@Named("workflowController")
-@SessionScoped
+//@Named("workflowController")
+//@SessionScoped
 public class WorkflowController extends
 		org.imixs.workflow.jee.faces.workitem.WorkflowController implements
 		Serializable {
@@ -88,14 +83,27 @@ public class WorkflowController extends
 
 	public final static String DEFAULT_EDITOR_ID = "default";
 
+
+	
+
+	/* Workflow Model & Caching objects */
+	private HashMap processCache;
+
+	/* Project Backing Bean */
+	@Inject
+	private DeprecatedProjectController projectMB = null;
+
 	@Inject
 	private UserController userController = null;
 
 	/* Child Process */
 	protected ItemCollection childWorkitemItemCollection = null;
 
+	private ArrayList<ItemCollection> childs = null;
 	private ArrayList<ItemCollection> versions = null;
 	private ArrayList<ItemCollection> processList = null;
+
+	private Collection<WorkitemListener> workitemListeners = new ArrayList<WorkitemListener>();
 
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
@@ -109,12 +117,26 @@ public class WorkflowController extends
 	public WorkflowController() {
 		super();
 
+		
 	}
 
 	@PostConstruct
 	public void init() {
+		processCache = new HashMap();
+		workitemListeners = new ArrayList<WorkitemListener>();
 
+	
 	}
+
+	public DeprecatedProjectController getProjectMB() {
+		return projectMB;
+	}
+
+	public void setProjectMB(DeprecatedProjectController projectMB) {
+		this.projectMB = projectMB;
+	}
+
+	
 
 	public UserController getUserController() {
 		return userController;
@@ -123,6 +145,9 @@ public class WorkflowController extends
 	public void setUserController(UserController userController) {
 		this.userController = userController;
 	}
+	
+	
+
 
 	/**
 	 * returns the workflowEditorID for the current workItem. If no attribute
@@ -155,7 +180,28 @@ public class WorkflowController extends
 
 	}
 
-	
+	/**
+	 * This method provides a HashMap with EditorSections. The Method is used to
+	 * test if a specific Section is defined within the current Process Entity.
+	 * 
+	 * EditorSections are provided by the workItem property
+	 * 'txtWorkflowEditorid' marked with the '#' character and separated with
+	 * charater '|'. Editors can evaluate this additional information to change
+	 * the behaivor of a form. The map provides booleans (true) per each section
+	 * or false if the section is not included.
+	 * 
+	 * <code>
+	 *   ....<h:outputPanel 
+				rendered="#{! empty workitemMB.editorSection['team']}">
+	 * </code>
+	 * 
+	 * @return
+	 */
+	public Map getEditorSection() {
+		// create dynamic hashmap
+		return new EditorSectionMap();
+	}
+
 	/**
 	 * returns an array list with EditorSection Objects. Each EditorSection
 	 * object contains the url and the name of one section. EditorSections can
@@ -227,20 +273,26 @@ public class WorkflowController extends
 								break;
 							}
 							// test if user is project member
-							/*
-							 * if ("owner".equalsIgnoreCase(aPermission) &&
-							 * this.projectMB.isProjectOwner()) {
-							 * bPermissionGranted = true; break; } if
-							 * ("manager".equalsIgnoreCase(aPermission) &&
-							 * this.projectMB.isProjectManager()) {
-							 * bPermissionGranted = true; break; } if
-							 * ("team".equalsIgnoreCase(aPermission) &&
-							 * this.projectMB.isProjectTeam()) {
-							 * bPermissionGranted = true; break; } if
-							 * ("assist".equalsIgnoreCase(aPermission) &&
-							 * this.projectMB.isProjectAssist()) {
-							 * bPermissionGranted = true; break; }
-							 */
+							if ("owner".equalsIgnoreCase(aPermission)
+									&& this.projectMB.isProjectOwner()) {
+								bPermissionGranted = true;
+								break;
+							}
+							if ("manager".equalsIgnoreCase(aPermission)
+									&& this.projectMB.isProjectManager()) {
+								bPermissionGranted = true;
+								break;
+							}
+							if ("team".equalsIgnoreCase(aPermission)
+									&& this.projectMB.isProjectTeam()) {
+								bPermissionGranted = true;
+								break;
+							}
+							if ("assist".equalsIgnoreCase(aPermission)
+									&& this.projectMB.isProjectAssist()) {
+								bPermissionGranted = true;
+								break;
+							}
 
 						}
 
@@ -308,6 +360,102 @@ public class WorkflowController extends
 	}
 
 	/**
+	 * This method is called by the page myProjects.xhtml form the startProcess
+	 * section.
+	 * 
+	 * This method creates an empty WorkItem assigned to the currentProject and
+	 * ProcessEntity. So the WorktIem will become an reference to the current
+	 * project by setting the field "$unqiueidref". If no project was selected
+	 * before the method throws an exception.
+	 * 
+	 * The ProcessID, Modelversion and Group will be set to the attributes of
+	 * the corresponding ProcessEntity provided by param ID provided by the
+	 * ActionEvent
+	 * 
+	 * The Method expects an ID which identifies the ModelVersion and Process ID
+	 * the new Workitem should be started. The ID is a String value with the
+	 * following format:
+	 * 
+	 * modelversion|processID
+	 * 
+	 * The first Part is the modelversion for the corresponding workflowmodel
+	 * the second part will be vast to an integer which corresponds to the start
+	 * process id in the model
+	 * 
+	 * 
+	 * Optional the param 'project' is evaluated. If this param is provided the
+	 * method selects the refered project.
+	 * 
+	 * @see WorkitemService
+	 * 
+	 * @param event
+	 * @return
+	 */
+	public void doCreateWorkitem(ActionEvent event) throws Exception {
+		// get Process ID out from the ActionEvent Object....
+		List children = event.getComponent().getChildren();
+		String processEntityIdentifier = "";
+		String projectIdentifier = "";
+
+		for (int i = 0; i < children.size(); i++) {
+			if (children.get(i) instanceof UIParameter) {
+				UIParameter currentParam = (UIParameter) children.get(i);
+				if (currentParam.getName().equals("id")
+						&& currentParam.getValue() != null) {
+					processEntityIdentifier = (String) currentParam.getValue();
+				}
+				if (currentParam.getName().equals("project")
+						&& currentParam.getValue() != null) {
+					projectIdentifier = (String) currentParam.getValue();
+				}
+				if (!"".equals(processEntityIdentifier)
+						&& !"".equals(projectIdentifier))
+					break;
+			}
+		}
+		doCreateWorkitem(processEntityIdentifier, projectIdentifier);
+
+	}
+
+	/**
+	 * @see doCreateWorkitem(ActionEvent event)
+	 * @param processEntityIdentifier
+	 * @param projectIdentifier
+	 * @throws Exception
+	 */
+	public void doCreateWorkitem(String processEntityIdentifier,
+			String projectIdentifier) throws Exception {
+		// this.getWorkitemBlobBean().clear();
+		if (processEntityIdentifier != null
+				&& !"".equals(processEntityIdentifier)) {
+
+			// if a project was refred switch to this project
+			if (projectIdentifier != null && !"".equals(projectIdentifier)) {
+				ItemCollection currentProject = this.projectMB
+						.getEntityService().load(projectIdentifier);
+				projectMB.setWorkitem(currentProject);
+
+			}
+
+			// find ProcessEntity the Worktiem should be started at
+			String sProcessModelVersion = processEntityIdentifier.substring(0,
+					processEntityIdentifier.indexOf('|'));
+			String sProcessID = processEntityIdentifier
+					.substring(processEntityIdentifier.indexOf('|') + 1);
+
+			ItemCollection workitem = workitemService.createWorkItem(
+					projectMB.getWorkitem(), sProcessModelVersion,
+					Integer.parseInt(sProcessID));
+
+			this.setWorkitem(workitem);
+
+			// inform Listeners...
+			fireWorkitemCreatedEvent();
+
+		}
+	}
+
+	/**
 	 * moves a workitem into the archive by changing the attribute type to
 	 * 'workitemdeleted'
 	 * 
@@ -317,7 +465,13 @@ public class WorkflowController extends
 	 */
 	public void doSoftDelete(ActionEvent event) throws Exception {
 
+		// inform Listeners...
+		fireWorkitemSoftDeleteEvent();
+
 		workitemService.moveIntoDeletions(getWorkitem());
+
+		// inform Listeners...
+		fireWorkitemSoftDeleteCompletedEvent();
 
 	}
 
@@ -359,6 +513,9 @@ public class WorkflowController extends
 					Integer.parseInt(sProcessID));
 
 			this.setChildWorkitem(childWorkitemItemCollection);
+
+			// inform Listeners...
+			fireChildCreatedEvent();
 
 		}
 	}
@@ -413,13 +570,20 @@ public class WorkflowController extends
 			}
 		}
 
+	
 		childWorkitemItemCollection.replaceItemValue("$ActivityID", activityID);
+
+		// inform Listeners...
+		fireChildProcessEvent();
 
 		childWorkitemItemCollection = workitemService
 				.processWorkItem(childWorkitemItemCollection);
 
 		this.setChildWorkitem(childWorkitemItemCollection);
 
+		// inform Listeners...
+		fireChildProcessCompletedEvent();
+		childs = null;
 	}
 
 	/**
@@ -448,12 +612,17 @@ public class WorkflowController extends
 
 		if (childWorkitemItemCollection != null) {
 
+			// inform Listeners...
+			fireChildDeleteEvent();
+
 			if ("childworkitem".equals(childWorkitemItemCollection
 					.getItemValueString("type")))
 				workitemService.deleteWorkItem(childWorkitemItemCollection);
 
 			doResetChildWorkitems(event);
 
+			// inform Listeners...
+			fireChildDeleteCompletedEvent();
 		}
 
 	}
@@ -484,9 +653,14 @@ public class WorkflowController extends
 		}
 
 		if (childWorkitemItemCollection != null) {
+			// inform Listeners...
+			fireChildSoftDeleteEvent();
 
 			childWorkitemItemCollection = workitemService
 					.moveIntoDeletions(childWorkitemItemCollection);
+
+			// inform Listeners...
+			fireChildSoftDeleteCompletedEvent();
 
 			doResetChildWorkitems(event);
 		}
@@ -501,8 +675,29 @@ public class WorkflowController extends
 	 */
 	public void doResetChildWorkitems(ActionEvent event) throws Exception {
 		childWorkitemItemCollection = null;
-
+		// reset Childs
+		childs = null;
 		this.setChildWorkitem(null);
+	}
+
+	/**
+	 * This method updates the current $uniqueidref of the acutal workitem. But
+	 * did not (!) save the workitem!
+	 * 
+	 * The method updates the projectname attribute so the workitem can be
+	 * displayed with the new settings (Navigation rule: show_workitem)
+	 * 
+	 * @param event
+	 * @return
+	 * @throws Exception
+	 */
+	public void doMoveToProject(ActionEvent event) throws Exception {
+
+		// get current project
+		ItemCollection itemColProject = entityService.load(getWorkitem()
+				.getItemValueString("$uniqueidRef"));
+		projectMB.setWorkitem(itemColProject);
+
 	}
 
 	/**
@@ -586,9 +781,110 @@ public class WorkflowController extends
 	}
 
 	/**
-	 * updates the child workitem
+	 * returns the process description text from the current processEntity
 	 * 
-	 * @param aworkitem
+	 * @return a help text
+	 */
+	public String getProcessDescription() {
+
+		String sModelVersion = getWorkitem()
+				.getItemValueString("$modelversion");
+		int iPID = getWorkitem().getItemValueInteger("$ProcessID");
+
+		ItemCollection processEntity = this.getModelService()
+				.getProcessEntityByVersion(iPID, sModelVersion);
+		if (processEntity != null)
+			return processEntity.getItemValueString("rtfdescription");
+
+		return "";
+
+	}
+
+	/**
+	 * returns a report name provided by teh WorkflowProperty
+	 * 'txtworkflowresultmessage'. The report must be defined by the präfix the
+	 * tag:
+	 * 
+	 * <ul>
+	 * <li>report=
+	 * </ul>
+	 * 
+	 * If this präfix is available the string followed by 'report=' will be
+	 * returned
+	 * 
+	 * @return
+	 */
+	public String getWorkflowReport() {
+
+		String sResult = getWorkitem().getItemValueString(
+				"txtworkflowresultmessage");
+		if (sResult != null && !"".equals(sResult)) {
+			// test if result contains "report="
+			if (sResult.indexOf("report=") > -1) {
+				sResult = sResult.substring(sResult.indexOf("report=") + 7);
+				// cut next newLine
+				if (sResult.indexOf("\n") > -1)
+					sResult = sResult.substring(0, sResult.indexOf("\n"));
+			}
+			return sResult;
+		} else
+			return "";
+	}
+
+	/***
+	 * This method finds the corresponding Project of the curreent workitem and
+	 * updates the ProjectMB with this project
+	 */
+	public void updateProjectMB() {
+
+		String projectID = getWorkitem().getItemValueString("$uniqueidRef");
+
+		if (projectMB.getWorkitem() == null
+				|| !projectID.equals(projectMB.getWorkitem()
+						.getItemValueString("$uniqueid"))) {
+			// update projectMB
+			System.out.println("Updating ProjectMB....");
+			ItemCollection itemColProject = entityService.load(projectID);
+			projectMB.setWorkitem(itemColProject);
+		}
+	}
+
+	/**************************************************************************
+	 * ModelService Helper Methods
+	 *************************************************************************/
+
+	/**
+	 * loads a processEntity using a internal caching meachnism used by the
+	 * methods loadProcessList and doCreateWorkitem
+	 * 
+	 * @param processID
+	 * @return
+	 */
+	public ItemCollection loadProcessEntity(String processEntityUnqiueID) {
+		ItemCollection itemColProcessEntity = (ItemCollection) processCache
+				.get(processEntityUnqiueID);
+		if (itemColProcessEntity == null) {
+			// process entity not yet in cache
+			itemColProcessEntity = getEntityService().load(
+					processEntityUnqiueID);
+			// .findProcessEntity(processID);
+			// put processEntity into cache
+			processCache.put(processEntityUnqiueID, itemColProcessEntity);
+		}
+
+		return itemColProcessEntity;
+	}
+
+	/*************************************************************************
+	 * Child Process management
+	 *************************************************************************/
+
+	/**
+	 * updates all attributes by the supported map into the child ItemCollection
+	 * 
+	 * Diese Mehtode wird beim Klick auf einen Datensatz aufgerufen
+	 * 
+	 * @param ateam
 	 */
 	public void setChildWorkitem(ItemCollection aworkitem) {
 
@@ -601,6 +897,11 @@ public class WorkflowController extends
 
 	public ItemCollection getChildWorkitem() {
 		return childWorkitemItemCollection;
+	}
+
+	public ItemCollection getChild() {
+
+		return getChildWorkitem();
 	}
 
 	/**
@@ -641,18 +942,27 @@ public class WorkflowController extends
 	}
 
 	/**
-	 * Returns a List with all Versions of the current Workitem The method loads
-	 * all versions if not yet loaded
-	 * 
+	 * returns a List with all Versions of the current Workitem
 	 * 
 	 * @return
 	 */
 	public List<ItemCollection> getVersions() {
-		if (versions == null) {
-			versions = new ArrayList<ItemCollection>();
-			if (this.isNewWorkitem())
-				return versions;
-			Collection<ItemCollection> col = null;
+		if (versions == null)
+			loadVersionWorkItemList();
+		return versions;
+	}
+
+	/**
+	 * this method loads all versions to the current workitem
+	 * 
+	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
+	 */
+	private void loadVersionWorkItemList() {
+		versions = new ArrayList<ItemCollection>();
+		if (this.isNewWorkitem())
+			return;
+		Collection<ItemCollection> col = null;
+		try {
 			String sRefID = getWorkitem().getItemValueString("$workitemId");
 			String refQuery = "SELECT entity FROM Entity entity "
 					+ " JOIN entity.textItems AS t"
@@ -665,10 +975,223 @@ public class WorkflowController extends
 			for (ItemCollection aworkitem : col) {
 				versions.add(aworkitem);
 			}
+		} catch (Exception ee) {
+			versions = null;
+			ee.printStackTrace();
 		}
-		return versions;
+
 	}
 
+	/*** Action Events ***/
+
+	public synchronized void addWorkitemListener(WorkitemListener l) {
+		// Test if the current listener was allreaded added to avoid that a
+		// listener register itself more than once!
+		if (!workitemListeners.contains(l))
+			workitemListeners.add(l);
+	}
+
+	public synchronized void removeWorkitemListener(WorkitemListener l) {
+		workitemListeners.remove(l);
+	}
+
+	/**
+	 * Informs WorkitemListeners about a new or updated Workitem
+	 */
+	private void fireWorkitemCreatedEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onWorkitemCreated(getWorkitem());
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a new or updated Workitem
+	 */
+	private void fireWorkitemChangedEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onWorkitemChanged(getWorkitem());
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a new or updated Workitem
+	 */
+	private void fireWorkitemProcessEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onWorkitemProcess(getWorkitem());
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a new or updated Workitem
+	 */
+	private void fireWorkitemProcessCompletedEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onWorkitemProcessCompleted(getWorkitem());
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a new or updated Workitem
+	 */
+	private void fireChildProcessEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onChildProcess(childWorkitemItemCollection);
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a new or updated Workitem
+	 */
+	private void fireChildProcessCompletedEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onChildProcessCompleted(childWorkitemItemCollection);
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a deletion of a workitem
+	 */
+	private void fireWorkitemSoftDeleteEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onWorkitemSoftDelete(getWorkitem());
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a deletion of a workitem
+	 */
+	private void fireWorkitemSoftDeleteCompletedEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onWorkitemSoftDeleteCompleted(getWorkitem());
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a deletion of a workitem
+	 */
+	private void fireWorkitemDeleteEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onWorkitemDelete(getWorkitem());
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a deletion of a workitem
+	 */
+	private void fireWorkitemDeleteCompletedEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onWorkitemDeleteCompleted();
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a deletion of a child process
+	 */
+	private void fireChildDeleteEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onChildDelete(childWorkitemItemCollection);
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a deletion of a child process
+	 */
+	private void fireChildDeleteCompletedEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onChildDeleteCompleted();
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a deletion of a child process
+	 */
+	private void fireChildSoftDeleteEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onChildSoftDelete(childWorkitemItemCollection);
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a deletion of a child process
+	 */
+	private void fireChildSoftDeleteCompletedEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onChildSoftDeleteCompleted(childWorkitemItemCollection);
+		}
+	}
+
+	/**
+	 * Informs WorkitemListeners about a new or updated Workitem
+	 */
+	private void fireChildCreatedEvent() {
+		for (Iterator<WorkitemListener> i = workitemListeners.iterator(); i
+				.hasNext();) {
+			WorkitemListener l = i.next();
+			l.onChildCreated(childWorkitemItemCollection);
+		}
+	}
+
+	
+
+	/**
+	 * Helper class returns a Map containing all EditorSection Objects. The
+	 * Class is used by the method EditorSectionIn() to test if a specific
+	 * Section is defined
+	 * 
+	 * <code>
+	 *      #{! empty workitemMB.editorSectionIn['prototyp/files']}
+	 *         ....
+	 * </code>
+	 * 
+	 * @author rsoika
+	 * 
+	 */
+	class EditorSectionMap extends HashMap {
+		ArrayList<EditorSection> sections = getEditorSections();
+
+		public Object get(Object key) {
+			EditorSection section = null;
+			for (EditorSection aSection : sections) {
+				if (aSection.getUrl().equals(key)) {
+					section = aSection;
+					break;
+				}
+			}
+			return section;
+		}
+
+	}
+	
+	
 	
 
 }

@@ -7,8 +7,12 @@ html,body {
 }
 
 body {
-	font: 76% arial, sans-serif;
+	font: 12px arial, sans-serif;
 	text-align: center;
+}
+
+h1, h2, h3 {
+	margin: 0 0 0.3em;
 }
 
 p {
@@ -79,8 +83,7 @@ a {
 	margin: 0em 0em 0.5em 0em;
 	padding: 0.4em 0 0.4em 0;
 	text-align: right;
-	border: 0px;
-	font-size: 11px;
+	border: 0px;	
 }
 
 #imixs-topnav {
@@ -108,9 +111,6 @@ a {
 	padding: 0px;
 }
 
-#imixs-servicenav a,#imixs-topnav a {
-	font-size: 11px;
-}
 
 #imixs-branding {
 	height: 100px;

@@ -42,6 +42,7 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.imixs.marty.deprecated.WorkitemListener;
 import org.imixs.workflow.ItemCollection;
 
 /**
@@ -62,7 +63,7 @@ import org.imixs.workflow.ItemCollection;
  */
 @Named("commentMB")
 @SessionScoped
-public class CommentMB implements WorkitemListener , Serializable {
+public class CommentMB implements  Serializable {
 
 	private static final long serialVersionUID = 1L;
 	@Inject
@@ -89,8 +90,7 @@ public class CommentMB implements WorkitemListener , Serializable {
 	@PostConstruct
 	public void init() { 
 		// register this Bean as a workitemListener to the current WorktieMB
-		workflowController.addWorkitemListener(this);
-
+		
 		// set workitem
 		workitem=workflowController.getWorkitem();
 	}
@@ -172,59 +172,6 @@ public class CommentMB implements WorkitemListener , Serializable {
 		}
 
 		return commentList;
-	}
-
-	public void onChildProcess(ItemCollection arg0) {
-		// nothing
-	}
-
-	public void onChildCreated(ItemCollection arg0) {
-		// nothing
-
-	}
-
-	public void onChildProcessCompleted(ItemCollection arg0) {
-		// nothing
-	}
-
-	public void onWorkitemCreated(ItemCollection arg0) {
-		// nothing
-	}
-
-	public void onWorkitemProcessCompleted(ItemCollection arg0) {
-
-	}
-
-	public void onChildDelete(ItemCollection e) {
-		// nothing
-	}
-
-	public void onChildDeleteCompleted() {
-		// nothing
-	}
-
-	public void onChildSoftDelete(ItemCollection e) {
-		// nothing
-	}
-
-	public void onChildSoftDeleteCompleted(ItemCollection e) {
-		// nothing
-	}
-
-	public void onWorkitemDelete(ItemCollection e) {
-		// nothing
-	}
-
-	public void onWorkitemDeleteCompleted() {
-		// nothing
-	}
-
-	public void onWorkitemSoftDelete(ItemCollection e) {
-
-	}
-
-	public void onWorkitemSoftDeleteCompleted(ItemCollection e) {
-		// nothing
 	}
 
 }
