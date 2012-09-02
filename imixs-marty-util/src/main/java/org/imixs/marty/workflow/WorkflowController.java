@@ -29,8 +29,6 @@ package org.imixs.marty.workflow;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
@@ -43,11 +41,9 @@ import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.faces.util.LoginController;
 
 /**
  * The marty WorkflowController extends the
@@ -78,9 +74,6 @@ public class WorkflowController extends
 
 
 
-	private ArrayList<ItemCollection> processList = null;
-	private ArrayList<ItemCollection> projectList = null;
-
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	/* Services */
@@ -88,8 +81,6 @@ public class WorkflowController extends
 	private org.imixs.marty.ejb.WorkitemService workitemService;
 
 	
-	@Inject
-	private LoginController loginController = null;
 	
 
 	public WorkflowController() {
@@ -104,13 +95,6 @@ public class WorkflowController extends
 
 	
 
-	public LoginController getLoginController() {
-		return loginController;
-	}
-
-	public void setLoginController(LoginController loginController) {
-		this.loginController = loginController;
-	}
 
 	/**
 	 * returns the workflowEditorID for the current workItem. If no attribute
@@ -270,80 +254,10 @@ public class WorkflowController extends
 
 	}
 
-	/**
-	 * This method returns all process entities for the current workflow model.
-	 * This list can be used to display state/flow informations inside a form
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getProcessList() {
-		if (processList == null) {
-			processList = new ArrayList<ItemCollection>();
-
-			String sGroup = this.getWorkitem().getItemValueString(
-					"txtWorkflowGroup");
-			String sVersion = this.getWorkitem().getItemValueString(
-					"$modelVersion");
-
-			List<ItemCollection> col = this.getModelService()
-					.getAllProcessEntitiesByGroupByVersion(sGroup, sVersion);
-
-			for (ItemCollection aworkitem : col)
-				processList.add((aworkitem));
-		}
-
-		return processList;
-	}
 	
 	
 	
-	/**
-	 * This method returns all project entities for the current user.
-	 * This list can be used to display project informations inside a form.
-	 * The returned project list is reduced to the following attributes
-	 * <p>
-	 * txtname
-	 * txtprocessids.
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getProjectList() {
-		if (projectList == null) {
-			projectList = new ArrayList<ItemCollection>();
-			
-			String sUserID=getLoginController().getUserPrincipal();
-
-			String sQuery = "SELECT projct FROM Entity AS projct "
-					+ " JOIN projct.textItems AS t2" + " WHERE projct.type = 'project'" 
-					+ " AND t2.itemName = 'txtname'"
-					+ " ORDER BY t2.itemValue asc";
-			Collection<ItemCollection> col = getEntityService().findAllEntities(sQuery,
-					0, -1);
-			
-			// create reduced list
-			for (ItemCollection aworkitem : col) {
-				
-				ItemCollection project=new ItemCollection();
-				project.replaceItemValue("$uniqueID", aworkitem.getItemValue("$uniqueID"));
-				project.replaceItemValue("txtName", aworkitem.getItemValue("txtName"));
-				
-				project.replaceItemValue("isOwner",aworkitem.getItemValue("namOwner").indexOf(sUserID)>-1);
-				project.replaceItemValue("isTeam",aworkitem.getItemValue("namTeam").indexOf(sUserID)>-1);
-				project.replaceItemValue("isAssist",aworkitem.getItemValue("namAssist").indexOf(sUserID)>-1);
-				project.replaceItemValue("isManager",aworkitem.getItemValue("namManager").indexOf(sUserID)>-1);
-				
-						
-				
-				
-				projectList.add(project);
-				
-				
-			}
-			
-		}
-		
-		return projectList;
-	}
+	
 
 	/**
 	 * moves a workitem into the archive by changing the attribute type to

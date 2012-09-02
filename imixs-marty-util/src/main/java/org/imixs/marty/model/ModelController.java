@@ -48,6 +48,7 @@ import javax.inject.Named;
 
 import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.ModelService;
 
 /**
@@ -85,11 +86,19 @@ public class ModelController implements Serializable {
 	private String latestSystemModelVersion = null;
 
 	private List<ItemCollection> workflowGroups = null;
+	private ArrayList<ItemCollection> projectList = null;
+	private List<ItemCollection> processList = null;
+
+	private String workflowGroup = null;
+	private String modelVersion = null;
 
 	private HashMap<String, String> modelVersionCache = null;
 
 	@Inject
 	private UserController userController = null;
+
+	@EJB
+	EntityService entityService;
 
 	@EJB
 	ModelService modelService;
@@ -184,6 +193,26 @@ public class ModelController implements Serializable {
 		this.userController = userController;
 	}
 
+	public String getWorkflowGroup() {
+		if (workflowGroup == null)
+			workflowGroup = "";
+		return workflowGroup;
+	}
+
+	public void setWorkflowGroup(String workflowGroup) {
+		this.workflowGroup = workflowGroup;
+	}
+
+	public String getModelVersion() {
+		if (modelVersion == null)
+			modelVersion = "";
+		return modelVersion;
+	}
+
+	public void setModelVersion(String modelVersion) {
+		this.modelVersion = modelVersion;
+	}
+
 	/**
 	 * Returns a list of ItemCollection representing the first ProcessEntity for
 	 * each available WorkflowGroup. Each ItemCollection provides at least the
@@ -229,6 +258,82 @@ public class ModelController implements Serializable {
 
 		return workflowGroups;
 
+	}
+
+	/**
+	 * This method returns all project entities for the current user. This list
+	 * can be used to display project informations inside a form. The returned
+	 * project list is reduced to the following attributes
+	 * <p>
+	 * txtname txtprocessids.
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getProjectList() {
+		if (projectList == null) {
+			projectList = new ArrayList<ItemCollection>();
+
+			String sUserID = getUserController().getUserPrincipal();
+
+			String sQuery = "SELECT projct FROM Entity AS projct "
+					+ " JOIN projct.textItems AS t2"
+					+ " WHERE projct.type = 'project'"
+					+ " AND t2.itemName = 'txtname'"
+					+ " ORDER BY t2.itemValue asc";
+			Collection<ItemCollection> col = entityService.findAllEntities(
+					sQuery, 0, -1);
+
+			// create reduced list
+			for (ItemCollection aworkitem : col) {
+
+				ItemCollection project = new ItemCollection();
+				project.replaceItemValue("$uniqueID",
+						aworkitem.getItemValue("$uniqueID"));
+				project.replaceItemValue("txtName",
+						aworkitem.getItemValue("txtName"));
+
+				project.replaceItemValue(
+						"isOwner",
+						aworkitem.getItemValue("namOwner").indexOf(sUserID) > -1);
+				project.replaceItemValue("isTeam",
+						aworkitem.getItemValue("namTeam").indexOf(sUserID) > -1);
+				project.replaceItemValue(
+						"isAssist",
+						aworkitem.getItemValue("namAssist").indexOf(sUserID) > -1);
+				project.replaceItemValue(
+						"isManager",
+						aworkitem.getItemValue("namManager").indexOf(sUserID) > -1);
+
+				projectList.add(project);
+
+			}
+
+		}
+
+		return projectList;
+	}
+
+	/**
+	 * This method returns all process entities for the current selected
+	 * workflowGroup and modelVersion
+	 * 
+	 * This list can be used to display state/flow informations inside a form
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getProcessList(String sGroup, String sVersion) {
+
+		if (processList == null || !getWorkflowGroup().equals(sGroup)
+				|| !getModelVersion().equals(sVersion)) {
+
+			setWorkflowGroup(sGroup);
+			setModelVersion(sVersion);
+			logger.info("ModelControler: getAllProcessEntitiesByGroupByVersion");
+			processList = modelService.getAllProcessEntitiesByGroupByVersion(
+					getWorkflowGroup(), getModelVersion());
+
+		}
+		return processList;
 	}
 
 	private class WorkflowGroupComparator implements Comparator<ItemCollection> {

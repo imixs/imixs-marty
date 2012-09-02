@@ -52,9 +52,9 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
  * @author rsoika
  * 
  */
-@Named("viewController")
+@Named("worklistController")
 @ViewScoped
-public class ViewController extends
+public class WorklistController extends
 		org.imixs.workflow.jee.faces.workitem.WorklistController implements
 		Serializable {
 
@@ -80,7 +80,7 @@ public class ViewController extends
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
-	public ViewController() {
+	public WorklistController() {
 		super();
 		viewFilter = new ItemCollection();
 		setViewAdapter(new MartyViewAdapter());
@@ -94,7 +94,7 @@ public class ViewController extends
 	 */
 	@PostConstruct
 	public void init() {
-
+		super.init();
 	}
 
 	public ItemCollection getViewFilter() {
@@ -155,7 +155,7 @@ public class ViewController extends
 
 	class MartyViewAdapter extends ViewAdapter {
 
-		public List<ItemCollection> getViewEntries(final ViewController controller) {
+		public List<ItemCollection> getViewEntries(final WorklistController controller) {
 
 			if (QUERY_WORKLIST_BY_AUTHOR.equals(getView())) {
 
