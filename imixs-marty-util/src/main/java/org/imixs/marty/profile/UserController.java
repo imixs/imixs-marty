@@ -32,7 +32,6 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -52,7 +51,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.config.SetupController;
-import org.imixs.marty.model.ModelVersionHandler;
 import org.imixs.marty.util.Cache;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
@@ -122,8 +120,7 @@ public class UserController  implements
 
 	private String locale;
 
-	private ModelVersionHandler modelVersionHandler = null;
-
+	
 	@Inject
 	private SetupController setupController = null;
 
@@ -173,8 +170,7 @@ public class UserController  implements
 
 			// determine user language and set Modelversion depending on
 			// the selected user locale
-			String sModelVersion = this.getModelVersionHandler()
-					.getLatestSystemVersion(getLocale());
+			String sModelVersion = "system-"+getLocale();
 			// terminate excecution if no system model ist defined
 			if (sModelVersion == null) {
 				throw new RuntimeException(" No System Model found!");
@@ -353,82 +349,7 @@ public class UserController  implements
 
 	}
 
-	/**
-	 * Returns a new modelVersionHandler. The modelVersionHandler supports all
-	 * process Types and Languages available for the current user.
-	 * 
-	 * The Methods verifies the internal Version number of each model and adds
-	 * only the latest version in a domain/language.
-	 * 
-	 * The domain is read from the user Profile. If no txtModelDomain is set the
-	 * domain defaults to 'public'.
-	 * 
-	 * ======= sywapps 2.0 ======= A model version can also be added if no
-	 * domain-lang-style schema is provided. In this case the
-	 * ModelVersionHandler provides the latest model version (excluding the
-	 * system model version) in the property latestDefaultModel() The latest
-	 * Default model is used by the imixs office workflwo where no user domain
-	 * needs to be configured.
-	 * 
-	 * 
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public ModelVersionHandler getModelVersionHandler() throws Exception {
-		HashMap<String, String> latestModelVersions = new HashMap<String, String>();
 
-		// initialize modelVersionHandler the first time...
-		if (modelVersionHandler == null) {
-			modelVersionHandler = new ModelVersionHandler();
-
-			// add available Models...
-
-			List<String> col = modelService.getAllModelVersions();
-
-			List modelDomains = getWorkitem().getItemValue("txtModelDomain");
-			// add default model domain if empty or first entry is '' (could be
-			// happen :-/)
-			if (modelDomains.size() == 0
-					|| (modelDomains.size() == 1 && "".equals(modelDomains.get(
-							0).toString())))
-				modelDomains.add("public");
-
-			for (String sversion : col) {
-				/*
-				 * add ModelVersion only if the modelDomain is corresponding to
-				 * the user ProfileSelection (txtModelDomain) or if it is a
-				 * system model
-				 */
-				String sModelDomain = sversion.substring(0,
-						sversion.indexOf("-"));
-
-				if (modelDomains.indexOf(sModelDomain) > -1
-						|| "system".equals(sModelDomain)) {
-
-					// test if this modeltype is still stored in a older version
-					// before..
-					String sModelType = sversion.substring(0,
-							sversion.lastIndexOf("-"));
-					String lastVersion = (String) latestModelVersions
-							.get(sModelType);
-					if (lastVersion == null
-							|| lastVersion.compareTo(sversion) < 0)
-						latestModelVersions.put(sModelType, sversion);
-
-				}
-			}
-
-			// Now add the latest ModelVersion to the modelVersionHandler
-			for (String latestversion : latestModelVersions.values()) {
-				logger.fine("===> modelVersionHandler adding:" + latestversion);
-				modelVersionHandler.addVersion(latestversion);
-			}
-		}
-
-		return modelVersionHandler;
-
-	}
 
 	/**
 	 * This Method returns the users Model Domain. e.g. 'public'
