@@ -259,6 +259,28 @@ public class ModelController implements Serializable {
 		return workflowGroups;
 
 	}
+	
+	
+	/**
+	 * Returns a List with all availabarg0le model versions
+	 * @return
+	 */
+	public List<String> getModelVersions() {
+
+		Collection<String> col= modelVersionCache.values();
+		
+		
+		List<String> versions=new ArrayList<String>();
+		
+		for (String aversion:col) {
+			versions.add(aversion);
+		}
+		
+		Collections.sort(versions);
+		return versions;
+			
+
+	}
 
 	/**
 	 * This method returns all project entities for the current user. This list
