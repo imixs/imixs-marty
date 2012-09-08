@@ -336,8 +336,8 @@ public class DeprecatedProjectController extends
 		// Set System Model Version for this Project to user Language
 		String sModelVersion=null;
 		try {
-			sModelVersion = userController.getModelVersionHandler()
-					.getLatestSystemVersion(sUserLanguage);
+		//	sModelVersion = userController.getModelVersionHandler()
+		//			.getLatestSystemVersion(sUserLanguage);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
