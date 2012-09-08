@@ -225,6 +225,9 @@ public class ModelController implements Serializable {
 	 * A workflowGroup with a '~' in its name will be skipped. This indicates a
 	 * child process.
 	 * 
+	 * The worflowGroup list is used to display the process navigation bar and
+	 * the filter options for the worklist view.
+	 * 
 	 * @return
 	 */
 	public List<ItemCollection> getWorkflowGroups() {
@@ -259,26 +262,104 @@ public class ModelController implements Serializable {
 		return workflowGroups;
 
 	}
-	
-	
+
+	/**
+	 * Returns a list of ItemCollection representing the first ProcessEntity for
+	 * each available WorkflowGroup defined for a specific project entity. Each
+	 * ItemCollection provides at least the properties
+	 * <ul>
+	 * <li>txtmodelVersion (model version)
+	 * <li>numprocessID (first process of a group)
+	 * <li>txtWorklfowGroup (name of group)
+	 * 
+	 * A workflowGroup with a '~' in its name will be skipped. This indicates a
+	 * child process.
+	 * 
+	 * The worflowGroup list is used to display the start process list for a
+	 * project
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getWorkflowGroupsByProject(
+			ItemCollection project) {
+
+		List<ItemCollection> result = new ArrayList<ItemCollection>();
+
+		if (project == null)
+			return result;
+
+		List<String> processList = null;
+
+		processList = project.getItemValue("txtprocesslist");
+		
+		// if no processList was defined return
+		if (processList == null || processList.isEmpty())
+			return result;
+
+		// now add all matching workflowGroups
+		List<ItemCollection> groups = getWorkflowGroups();
+		for (ItemCollection group : groups) {
+
+			// test if the $modelVersion matches....
+			if (isProcessEntityInList(group, processList))
+				result.add(group);
+
+		}
+
+		return result;
+
+	}
+
+	/**
+	 * This method compares a list of $modelversion|numprocessid with a given
+	 * startProcesEntity. If modelversion an processID matches the method
+	 * returns true.
+	 * 
+	 * @param ProcessEntity
+	 *            - itemCollection of start process
+	 * @param processlist
+	 *            - $modelversion|numprocessid
+	 * @return
+	 */
+	private boolean isProcessEntityInList(ItemCollection startProcessEntity,
+			List<String> processlist) {
+
+		String startGroupVersion = startProcessEntity
+				.getItemValueString("$ModelVersion");
+		String startProcessID = ""
+				+ startProcessEntity.getItemValueInteger("numProcessID");
+		for (String processid : processlist) {
+			String sModelVersion = null;
+			String sProcessID = null;
+			if (processid.indexOf('|') > -1) {
+				sModelVersion = processid.substring(0, processid.indexOf('|'));
+				sProcessID = processid.substring(processid.indexOf('|') + 1);
+				if (startGroupVersion.equals(sModelVersion)
+						&& startProcessID.equals(sProcessID))
+					return true;
+			}
+		}
+		return false;
+
+	}
+
 	/**
 	 * Returns a List with all availabarg0le model versions
+	 * 
 	 * @return
 	 */
 	public List<String> getModelVersions() {
 
-		Collection<String> col= modelVersionCache.values();
-		
-		
-		List<String> versions=new ArrayList<String>();
-		
-		for (String aversion:col) {
+		Collection<String> col = modelVersionCache.values();
+
+		List<String> versions = new ArrayList<String>();
+
+		for (String aversion : col) {
 			versions.add(aversion);
 		}
-		
+
 		Collections.sort(versions);
 		return versions;
-			
 
 	}
 
@@ -311,9 +392,17 @@ public class ModelController implements Serializable {
 				ItemCollection project = new ItemCollection();
 				project.replaceItemValue("$uniqueID",
 						aworkitem.getItemValue("$uniqueID"));
+				project.replaceItemValue("$processid",
+						aworkitem.getItemValue("$processid"));
+				project.replaceItemValue("$modelversion",
+						aworkitem.getItemValue("$modelversion"));
+
 				project.replaceItemValue("txtName",
 						aworkitem.getItemValue("txtName"));
 
+				project.replaceItemValue("txtprocesslist",
+						aworkitem.getItemValue("txtprocesslist"));
+				
 				project.replaceItemValue(
 						"isOwner",
 						aworkitem.getItemValue("namOwner").indexOf(sUserID) > -1);
@@ -325,6 +414,12 @@ public class ModelController implements Serializable {
 				project.replaceItemValue(
 						"isManager",
 						aworkitem.getItemValue("namManager").indexOf(sUserID) > -1);
+
+				boolean bMember = false;
+				if (project.getItemValueBoolean("isTeam")
+						|| project.getItemValueBoolean("isAssist"))
+					bMember = true;
+				project.replaceItemValue("isMember", bMember);
 
 				projectList.add(project);
 
