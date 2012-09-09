@@ -42,38 +42,30 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.enterprise.event.Observes;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.profile.UserController;
+import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.ModelService;
 
 /**
- * This backing beans provides informations about the Models provided in the
- * current workflow Instance.
- * 
- * There are two types of models handled. The System Model (used for project
- * management or Profile Settings) and the general Models used in a typical
- * workflow
- * 
- * A latest System Model depends on the current user locale. The general models
- * are language independent.
+ * The ModelController provides informations about workflow models.
  * 
  * A ModelVersion is always expected in the format
  * 
- * 'domain-lang-version'
+ * 'DOMAIN-LANGUAGE-VERSIONNUMBER'
  * 
  * e.g. office-de-0.1, support-en-2.0, system-de-0.0.1
  * 
  * 
- * The Model Format handled by the ModelVersionHanler which is used by the
- * MyProfileMB is different from this format and was used in earlier versions of
- * ShareYourWork. We hope that we can drop the ModelVersionHandler sometimes....
+ * The ModelController observes WorkflowEvents and rests the internal cache if a
+ * project was updated.
  * 
- * @see org.imixs.marty.profile.UserController
  * @author rsoika
  * 
  */
@@ -103,7 +95,7 @@ public class ModelController implements Serializable {
 	@EJB
 	ModelService modelService;
 
-	private static Logger logger = Logger.getLogger("org.imixs.workflow");
+	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	/**
 	 * The init method is used load all model versions and store the latest
@@ -183,6 +175,11 @@ public class ModelController implements Serializable {
 
 		}
 
+	}
+
+	public void reset() {
+		processList = null;
+		projectList = null;
 	}
 
 	public UserController getUserController() {
@@ -291,7 +288,7 @@ public class ModelController implements Serializable {
 		List<String> processList = null;
 
 		processList = project.getItemValue("txtprocesslist");
-		
+
 		// if no processList was defined return
 		if (processList == null || processList.isEmpty())
 			return result;
@@ -302,7 +299,7 @@ public class ModelController implements Serializable {
 			// test if the $modelVersion matches....
 			if (isProcessEntityInList(aProcessEntity, processList))
 				result.add(aProcessEntity);
- 
+
 		}
 
 		return result;
@@ -365,7 +362,8 @@ public class ModelController implements Serializable {
 	/**
 	 * This method returns all project entities for the current user. This list
 	 * can be used to display project informations inside a form. The returned
-	 * project list is optimized and provides additional the following attributes
+	 * project list is optimized and provides additional the following
+	 * attributes
 	 * <p>
 	 * isMember, isTeam, isOwner, isManager, isAssist
 	 * 
@@ -387,13 +385,11 @@ public class ModelController implements Serializable {
 
 			// create optimized list
 			for (ItemCollection project : col) {
-				project.replaceItemValue(
-						"isOwner",
+				project.replaceItemValue("isOwner",
 						project.getItemValue("namOwner").indexOf(sUserID) > -1);
 				project.replaceItemValue("isTeam",
 						project.getItemValue("namTeam").indexOf(sUserID) > -1);
-				project.replaceItemValue(
-						"isAssist",
+				project.replaceItemValue("isAssist",
 						project.getItemValue("namAssist").indexOf(sUserID) > -1);
 				project.replaceItemValue(
 						"isManager",
@@ -435,6 +431,31 @@ public class ModelController implements Serializable {
 
 		}
 		return processList;
+	}
+
+	/**
+	 * WorkflowEvent listener
+	 * 
+	 * If a project WorkItem was processed the modellController will be reseted.
+	 * 
+	 * @param workflowEvent
+	 */
+	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
+		if (workflowEvent == null)
+			return;
+
+		if (WorkflowEvent.WORKITEM_PROCESSED == workflowEvent.getEventType()) {
+			// test if project was processed
+			if ("project".equals(workflowEvent.getWorkitem()
+					.getItemValueString("type"))) {
+
+				reset();
+				logger.info("ModelController:WorkflowEvent="
+						+ workflowEvent.getEventType());
+
+			}
+		}
+
 	}
 
 	private class WorkflowGroupComparator implements Comparator<ItemCollection> {

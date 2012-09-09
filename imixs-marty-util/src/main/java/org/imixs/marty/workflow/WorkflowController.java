@@ -34,16 +34,19 @@ import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.enterprise.event.Event;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.ProcessingErrorException;
 
 /**
  * The marty WorkflowController extends the
@@ -78,14 +81,31 @@ public class WorkflowController extends
 	@EJB
 	private org.imixs.marty.ejb.WorkitemService workitemService;
 
+	@Inject
+	private Event<WorkflowEvent> events;
+
 	public WorkflowController() {
 		super();
 
 	}
 
 	/**
+	 * create method fires a WorkfowEvent
+	 */
+	@Override
+	public void create(ActionEvent event) {
+		super.create(event);
+		
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_CREATED));
+	
+	}
+
+	/**
 	 * This method provides the additional business information concerning the
 	 * assigned project and overrides the default behavior.
+	 * Finally the method fires a WorkflowEvent.
 	 * 
 	 */
 	@Override
@@ -100,9 +120,31 @@ public class WorkflowController extends
 						currentProject.getItemValue("txtprojectname"));
 		}
 
-		return super.init(action);
+		String actionResult = super.init(action);
+
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_INITIALIZED));
+
+		return actionResult;
 	}
 
+	/**
+	 * The action method processes the current workItem and fires a WorkflowEvent.
+	 */
+	@Override
+	public String process() throws AccessDeniedException,
+			ProcessingErrorException {
+		String actionResult = super.process();
+
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_PROCESSED));
+
+		return actionResult;
+	}
+	
+	
 	/**
 	 * returns the workflowEditorID for the current workItem. If no attribute
 	 * with the name "txtWorkflowEditorid" is available then the method return
