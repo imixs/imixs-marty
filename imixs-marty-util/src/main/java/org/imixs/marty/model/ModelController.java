@@ -297,13 +297,12 @@ public class ModelController implements Serializable {
 			return result;
 
 		// now add all matching workflowGroups
-		List<ItemCollection> groups = getWorkflowGroups();
-		for (ItemCollection group : groups) {
-
+		List<ItemCollection> processEntityList = getWorkflowGroups();
+		for (ItemCollection aProcessEntity : processEntityList) {
 			// test if the $modelVersion matches....
-			if (isProcessEntityInList(group, processList))
-				result.add(group);
-
+			if (isProcessEntityInList(aProcessEntity, processList))
+				result.add(aProcessEntity);
+ 
 		}
 
 		return result;
@@ -366,9 +365,9 @@ public class ModelController implements Serializable {
 	/**
 	 * This method returns all project entities for the current user. This list
 	 * can be used to display project informations inside a form. The returned
-	 * project list is reduced to the following attributes
+	 * project list is optimized and provides additional the following attributes
 	 * <p>
-	 * txtname txtprocessids.
+	 * isMember, isTeam, isOwner, isManager, isAssist
 	 * 
 	 * @return
 	 */
@@ -386,34 +385,19 @@ public class ModelController implements Serializable {
 			Collection<ItemCollection> col = entityService.findAllEntities(
 					sQuery, 0, -1);
 
-			// create reduced list
-			for (ItemCollection aworkitem : col) {
-
-				ItemCollection project = new ItemCollection();
-				project.replaceItemValue("$uniqueID",
-						aworkitem.getItemValue("$uniqueID"));
-				project.replaceItemValue("$processid",
-						aworkitem.getItemValue("$processid"));
-				project.replaceItemValue("$modelversion",
-						aworkitem.getItemValue("$modelversion"));
-
-				project.replaceItemValue("txtName",
-						aworkitem.getItemValue("txtName"));
-
-				project.replaceItemValue("txtprocesslist",
-						aworkitem.getItemValue("txtprocesslist"));
-				
+			// create optimized list
+			for (ItemCollection project : col) {
 				project.replaceItemValue(
 						"isOwner",
-						aworkitem.getItemValue("namOwner").indexOf(sUserID) > -1);
+						project.getItemValue("namOwner").indexOf(sUserID) > -1);
 				project.replaceItemValue("isTeam",
-						aworkitem.getItemValue("namTeam").indexOf(sUserID) > -1);
+						project.getItemValue("namTeam").indexOf(sUserID) > -1);
 				project.replaceItemValue(
 						"isAssist",
-						aworkitem.getItemValue("namAssist").indexOf(sUserID) > -1);
+						project.getItemValue("namAssist").indexOf(sUserID) > -1);
 				project.replaceItemValue(
 						"isManager",
-						aworkitem.getItemValue("namManager").indexOf(sUserID) > -1);
+						project.getItemValue("namManager").indexOf(sUserID) > -1);
 
 				boolean bMember = false;
 				if (project.getItemValueBoolean("isTeam")

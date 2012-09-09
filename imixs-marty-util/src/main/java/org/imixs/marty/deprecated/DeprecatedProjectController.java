@@ -100,7 +100,6 @@ public class DeprecatedProjectController extends
 	 */
 	@PostConstruct
 	public void init() {
-		super.init();
 		
 		startProcessList = new StartProcessCache();
 		subProcessList = new SubProcessCache();
@@ -255,14 +254,7 @@ public class DeprecatedProjectController extends
 		return (vTeam.indexOf(remoteUser) > -1);
 	}
 
-	@Override
-	public void doReset(ActionEvent event) {
-		startProjects = null;
-		startProcessList = new StartProcessCache();
-		subProcessList = new SubProcessCache();
-		super.doReset(event);
-	}
-
+	
 	/**
 	 * returns a unique list with all member names
 	 * 
@@ -313,82 +305,6 @@ public class DeprecatedProjectController extends
 		}
 		return vTeam;
 	}
-
-	/**
-	 * This method creates an empty project instance. The method sets the
-	 * modelversion to the current user language selection
-	 * 
-	 * @param event
-	 * @return
-	 * @throws Exception
-	 */
-	@Override
-	public String create(String action) {
-
-		
-	
-		// determine user language and set Model version depending on the
-		// selected user locale
-		Locale userLocale = FacesContext.getCurrentInstance().getViewRoot()
-				.getLocale();
-		String sUserLanguage = userLocale.getLanguage();
-
-		// Set System Model Version for this Project to user Language
-		String sModelVersion=null;
-		try {
-		//	sModelVersion = userController.getModelVersionHandler()
-		//			.getLatestSystemVersion(sUserLanguage);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		if (sModelVersion == null)
-			throw new RuntimeException(
-					"Warning - no system model found for language '"
-							+ sUserLanguage + "'");
-	
-		// String sModelDomain = getProfileBean().getUserModelDomain();
-		String sModelLanguage = sUserLanguage;
-
-		// Collection<String> colLangs =
-		// getProfileBean().getModelVersionHandler()
-		// .getLanguageSupport(sModelDomain);
-
-		/*
-		 * try { if (!colLangs.contains(sUserLanguage)) sModelLanguage =
-		 * colLangs.iterator().next(); } catch (Exception cd) { throw new
-		 * Exception( "No language support (" + sUserLanguage +
-		 * ") for prefered user model domain '" + sModelDomain +
-		 * "' found! Check user profile"); }
-		 */
-
-		action=super.create(sModelVersion, START_PROJECT_PROCESS_ID, action);
-		
-		ItemCollection project=getWorkitem();
-		
-		project.replaceItemValue("txtModelLanguage", sModelLanguage);
-
-		// add current user to team and owner lists
-		FacesContext context = FacesContext.getCurrentInstance();
-		ExternalContext externalContext = context.getExternalContext();
-		String remoteUser = externalContext.getRemoteUser();
-		project.replaceItemValue("namTeam", remoteUser);
-		project.replaceItemValue("namOwner", remoteUser);
-		project.replaceItemValue("namAssist", new Vector());
-		project.replaceItemValue("namManager", new Vector());
-
-		// add a default process
-		project.replaceItemValue("txtprocesslist", this.setupController
-				.getWorkitem().getItemValue("defaultprojectprocesslist"));
-
-		setWorkitem(project);
-	
-		return action;
-	}
-
-
-
 
 	/**
 	 * This Method adds an user entry to the owner or team list. The method is

@@ -72,29 +72,36 @@ public class WorkflowController extends
 
 	public final static String DEFAULT_EDITOR_ID = "default";
 
-
-
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	/* Services */
 	@EJB
 	private org.imixs.marty.ejb.WorkitemService workitemService;
 
-	
-	
-
 	public WorkflowController() {
 		super();
 
 	}
 
-	@PostConstruct
-	public void init() {
+	/**
+	 * This method provides the additional business information concerning the
+	 * assigned project and overrides the default behavior.
+	 * 
+	 */
+	@Override
+	public String init(String action) {
+		// fetch the assigned project
+		String sProjectRef = getWorkitem().getItemValueString("$UniqueidRef");
+		if (!"".equals(sProjectRef)) {
+			ItemCollection currentProject = this.getEntityService().load(
+					sProjectRef);
+			if (currentProject != null)
+				getWorkitem().replaceItemValue("txtprojectname",
+						currentProject.getItemValue("txtprojectname"));
+		}
 
+		return super.init(action);
 	}
-
-	
-
 
 	/**
 	 * returns the workflowEditorID for the current workItem. If no attribute
@@ -127,7 +134,6 @@ public class WorkflowController extends
 
 	}
 
-	
 	/**
 	 * returns an array list with EditorSection Objects. Each EditorSection
 	 * object contains the url and the name of one section. EditorSections can
@@ -254,11 +260,6 @@ public class WorkflowController extends
 
 	}
 
-	
-	
-	
-	
-
 	/**
 	 * moves a workitem into the archive by changing the attribute type to
 	 * 'workitemdeleted'
@@ -352,9 +353,5 @@ public class WorkflowController extends
 			return sResult;
 
 	}
-
-
-
-	
 
 }

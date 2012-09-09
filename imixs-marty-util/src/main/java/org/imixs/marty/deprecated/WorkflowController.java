@@ -927,14 +927,18 @@ public class WorkflowController extends
 				.getItemValueString("$modelversion");
 
 		// get Workflow-Activities by version if provided by the workitem
-		List<ItemCollection> col;
+		List<ItemCollection> col=null;
+		
 		if (sversion != null && !"".equals(sversion))
 			col = getModelService().getPublicActivitiesByVersion(processId,
 					sversion);
+					
+		/*
 		else
 			// return activities by defined modelversion
 			col = getModelService().getPublicActivitiesByVersion(processId,
 					getModelVersion());
+					*/
 		for (ItemCollection aworkitem : col) {
 			activityChildList.add((aworkitem));
 		}
