@@ -307,59 +307,6 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * This method compares a list of $modelversion|numprocessid with a given
-	 * startProcesEntity. If modelversion an processID matches the method
-	 * returns true.
-	 * 
-	 * @param ProcessEntity
-	 *            - itemCollection of start process
-	 * @param processlist
-	 *            - $modelversion|numprocessid
-	 * @return
-	 */
-	private boolean isProcessEntityInList(ItemCollection startProcessEntity,
-			List<String> processlist) {
-
-		String startGroupVersion = startProcessEntity
-				.getItemValueString("$ModelVersion");
-		String startProcessID = ""
-				+ startProcessEntity.getItemValueInteger("numProcessID");
-		for (String processid : processlist) {
-			String sModelVersion = null;
-			String sProcessID = null;
-			if (processid.indexOf('|') > -1) {
-				sModelVersion = processid.substring(0, processid.indexOf('|'));
-				sProcessID = processid.substring(processid.indexOf('|') + 1);
-				if (startGroupVersion.equals(sModelVersion)
-						&& startProcessID.equals(sProcessID))
-					return true;
-			}
-		}
-		return false;
-
-	}
-
-	/**
-	 * Returns a List with all availabarg0le model versions
-	 * 
-	 * @return
-	 */
-	public List<String> getModelVersions() {
-
-		Collection<String> col = modelVersionCache.values();
-
-		List<String> versions = new ArrayList<String>();
-
-		for (String aversion : col) {
-			versions.add(aversion);
-		}
-
-		Collections.sort(versions);
-		return versions;
-
-	}
-
-	/**
 	 * This method returns all project entities for the current user. This list
 	 * can be used to display project informations inside a form. The returned
 	 * project list is optimized and provides additional the following
@@ -369,7 +316,7 @@ public class ModelController implements Serializable {
 	 * 
 	 * @return
 	 */
-	public List<ItemCollection> getProjectList() {
+	public List<ItemCollection> getProjects() {
 		if (projectList == null) {
 			projectList = new ArrayList<ItemCollection>();
 
@@ -408,6 +355,51 @@ public class ModelController implements Serializable {
 		}
 
 		return projectList;
+	}
+
+	/**
+	 * Returns a list of all projects which are siblings to a given project
+	 * unqiueid.
+	 * 
+	 * @param uniqueIdRef
+	 * @return
+	 */
+	public List<ItemCollection> getProjectsByRef(String uniqueIdRef) {
+
+		List<ItemCollection> result = new ArrayList<ItemCollection>();
+
+		if (uniqueIdRef != null) {
+			// iterate over all projects and compare the $UniqueIDRef
+			List<ItemCollection> list = getProjects();
+			for (ItemCollection project : list) {
+				if (uniqueIdRef.equals(project
+						.getItemValueString("$UniqueIDRef"))) {
+					result.add(project);
+				}
+
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Returns a List with all availabarg0le model versions
+	 * 
+	 * @return
+	 */
+	public List<String> getModelVersions() {
+
+		Collection<String> col = modelVersionCache.values();
+
+		List<String> versions = new ArrayList<String>();
+
+		for (String aversion : col) {
+			versions.add(aversion);
+		}
+
+		Collections.sort(versions);
+		return versions;
+
 	}
 
 	/**
@@ -455,6 +447,39 @@ public class ModelController implements Serializable {
 
 			}
 		}
+
+	}
+
+	/**
+	 * This method compares a list of $modelversion|numprocessid with a given
+	 * startProcesEntity. If modelversion an processID matches the method
+	 * returns true.
+	 * 
+	 * @param ProcessEntity
+	 *            - itemCollection of start process
+	 * @param processlist
+	 *            - $modelversion|numprocessid
+	 * @return
+	 */
+	private boolean isProcessEntityInList(ItemCollection startProcessEntity,
+			List<String> processlist) {
+
+		String startGroupVersion = startProcessEntity
+				.getItemValueString("$ModelVersion");
+		String startProcessID = ""
+				+ startProcessEntity.getItemValueInteger("numProcessID");
+		for (String processid : processlist) {
+			String sModelVersion = null;
+			String sProcessID = null;
+			if (processid.indexOf('|') > -1) {
+				sModelVersion = processid.substring(0, processid.indexOf('|'));
+				sProcessID = processid.substring(processid.indexOf('|') + 1);
+				if (startGroupVersion.equals(sModelVersion)
+						&& startProcessID.equals(sProcessID))
+					return true;
+			}
+		}
+		return false;
 
 	}
 

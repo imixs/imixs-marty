@@ -25,14 +25,14 @@
  *  	Ralph Soika - Software Developer
  *******************************************************************************/
 
-package org.imixs.marty.util;
+package org.imixs.marty.workflow;
 
 import java.io.Serializable;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.enterprise.context.SessionScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.faces.event.ActionEvent;
 import javax.inject.Named;
 
@@ -46,9 +46,9 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
  * @author rsoika
  * 
  */
-@Named("workflowSchedulerMB")
-@SessionScoped
-public class WorkflowSchedulerMB  implements Serializable {
+@Named("workflowSchedulerController")
+@RequestScoped
+public class WorkflowSchedulerController  implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -66,7 +66,7 @@ public class WorkflowSchedulerMB  implements Serializable {
 
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
-	public WorkflowSchedulerMB() {
+	public WorkflowSchedulerController() {
 		super();
 	}
 
@@ -78,7 +78,7 @@ public class WorkflowSchedulerMB  implements Serializable {
 	@PostConstruct
 	public void init() {
 		
-		doLoadConfiguration(null);
+		configItemCollection = workflowSchedulerService.findConfiguration();
 	}
 
 	/**
@@ -103,14 +103,6 @@ public class WorkflowSchedulerMB  implements Serializable {
 		configItemCollection = workflowSchedulerService
 				.saveConfiguration(configItemCollection);
 
-	}
-
-	/**
-	 * This method reloads the configuration entity for the dms scheduler
-	 * service
-	 */
-	public void doLoadConfiguration(ActionEvent event) {
-		configItemCollection = workflowSchedulerService.findConfiguration();
 	}
 
 	/**
