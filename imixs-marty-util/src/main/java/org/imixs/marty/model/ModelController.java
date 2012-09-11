@@ -436,7 +436,7 @@ public class ModelController implements Serializable {
 		if (workflowEvent == null)
 			return;
 
-		if (WorkflowEvent.WORKITEM_PROCESSED == workflowEvent.getEventType()) {
+		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
 			// test if project was processed
 			if ("project".equals(workflowEvent.getWorkitem()
 					.getItemValueString("type"))) {

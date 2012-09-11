@@ -135,11 +135,17 @@ public class WorkflowController extends
 	@Override
 	public String process() throws AccessDeniedException,
 			ProcessingErrorException {
+		
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+						WorkflowEvent.WORKITEM_BEFORE_PROCESS));
+
+				
 		String actionResult = super.process();
 
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.WORKITEM_PROCESSED));
+				WorkflowEvent.WORKITEM_AFTER_PROCESS));
 
 		return actionResult;
 	}

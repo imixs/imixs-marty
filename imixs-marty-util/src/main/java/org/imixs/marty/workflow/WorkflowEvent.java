@@ -6,7 +6,8 @@ public class WorkflowEvent {
 
 	public static final int WORKITEM_CREATED = 1;
 	public static final int WORKITEM_INITIALIZED = 2;
-	public static final int WORKITEM_PROCESSED = 3;
+	public static final int WORKITEM_BEFORE_PROCESS = 3;
+	public static final int WORKITEM_AFTER_PROCESS = 4;
 
 	private int eventType;
 	private ItemCollection workitem;

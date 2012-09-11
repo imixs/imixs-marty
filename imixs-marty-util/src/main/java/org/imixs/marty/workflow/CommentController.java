@@ -28,21 +28,18 @@
 package org.imixs.marty.workflow;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.SessionScoped;
+import javax.enterprise.event.Observes;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.marty.deprecated.WorkitemListener;
 import org.imixs.workflow.ItemCollection;
 
 /**
@@ -61,62 +58,34 @@ import org.imixs.workflow.ItemCollection;
  * 
  * @author rsoika 
  */
-@Named("commentMB")
-@SessionScoped
-public class CommentMB implements  Serializable {
+@Named("commentController")
+@ViewScoped
+public class CommentController implements  Serializable {
 
 	private static final long serialVersionUID = 1L;
-	@Inject
-	private WorkflowController workflowController = null;
 	
 	
-	private ItemCollection workitem = null;
-
-	public CommentMB() {
+	public CommentController() {
 		super();
 		
 	}
-
-
-	/**
-	 * This method register the bean as an workitemListener
-	 * 
-	 * The method also tries to set the current workitem hold by the workitemMB.
-	 * The instance variable worktiem can be null if the commenMB was loaded
-	 * after a worktiem was selected (so the onWorkitemChanged method was not
-	 * called )
-	 * 
-	 */
-	@PostConstruct
-	public void init() { 
-		// register this Bean as a workitemListener to the current WorktieMB
-		
-		// set workitem
-		workitem=workflowController.getWorkitem();
-	}
-
 	
-	public WorkflowController getWorkflowController() {
-		return workflowController;
-	}
-
-
-	public void setWorkflowController(WorkflowController workitemMB) {
-		this.workflowController = workitemMB;
-	}
-
-
-	public void onWorkitemChanged(ItemCollection arg0) {
-		workitem = arg0;
-	}
-
+	
 	/**
-	 * updates the comment list Therefor the method copies the txtComment into
+	 * WorkflowEvent listener
+	 * 
+	 * updates the comment list. Therefor the method copies the txtComment into
 	 * the txtCommentList and clears the txtComment field
+	 * 
+	 * @param workflowEvent
 	 */
-	public void onWorkitemProcess(ItemCollection workitem) {
-		// take comment and append it to txtCommentList
-		try {
+	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
+		if (workflowEvent == null)
+			return;
+	
+		ItemCollection workitem = workflowEvent.getWorkitem();
+
+		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == workflowEvent.getEventType()) {
 			String sComment = workitem.getItemValueString("txtComment");
 			if (!"".equals(sComment)) {
 				List vCommentList = workitem.getItemValue("txtCommentLog");
@@ -138,40 +107,12 @@ public class CommentMB implements  Serializable {
 
 				// clear comment
 				workitem.replaceItemValue("txtComment", "");
-			}
-		} catch (Exception e) {
-			// unable to copy comment
-			e.printStackTrace();
+		
 		}
-	}
-
-	/**
-	 * This method returns a array list containing all comment entries for the
-	 * current workitem.
-	 * 
-	 * @return
-	 */
-	public ArrayList<ItemCollection> getLog() {
-		ArrayList<ItemCollection> commentList = new ArrayList<ItemCollection>();
-		if (workitem != null) {
-			try {
-				List<Map> vCommentList = workitem
-						.getItemValue("txtCommentLog");
-				for (Map aworkitem : vCommentList) {
-					ItemCollection aComment = new ItemCollection(aworkitem);
-					commentList.add((aComment));
-				}
-			} catch (Exception e) {
-				// unable to copy comment
-				try {
-					workitem.replaceItemValue("txtcommentLog", "");
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-			}
 		}
 
-		return commentList;
 	}
+	
 
+	
 }
