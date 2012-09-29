@@ -71,10 +71,10 @@ public class WorkflowController extends
 		org.imixs.workflow.jee.faces.workitem.WorkflowController implements
 		Serializable {
 
+	//private String lastUniqueID = null;
+
 	private static final long serialVersionUID = 1L;
-
-	public final static String DEFAULT_EDITOR_ID = "default";
-
+	private static final String DEFAULT_EDITOR_ID = "default";
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	/* Services */
@@ -95,17 +95,17 @@ public class WorkflowController extends
 	@Override
 	public void create(ActionEvent event) {
 		super.create(event);
-		
+
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_CREATED));
-	
+
 	}
 
 	/**
 	 * This method provides the additional business information concerning the
-	 * assigned project and overrides the default behavior.
-	 * Finally the method fires a WorkflowEvent.
+	 * assigned project and overrides the default behavior. Finally the method
+	 * fires a WorkflowEvent.
 	 * 
 	 */
 	@Override
@@ -130,17 +130,17 @@ public class WorkflowController extends
 	}
 
 	/**
-	 * The action method processes the current workItem and fires a WorkflowEvent.
+	 * The action method processes the current workItem and fires a
+	 * WorkflowEvent.
 	 */
 	@Override
 	public String process() throws AccessDeniedException,
 			ProcessingErrorException {
-		
+
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
-						WorkflowEvent.WORKITEM_BEFORE_PROCESS));
+				WorkflowEvent.WORKITEM_BEFORE_PROCESS));
 
-				
 		String actionResult = super.process();
 
 		// fire event
@@ -149,8 +149,31 @@ public class WorkflowController extends
 
 		return actionResult;
 	}
-	
-	
+
+	/**
+	 * Fires a WORKITEM_CHANGED event if the $uniqueID of the current WorkItem
+	 * has changed
+	 */
+	@Override
+	public void setWorkitem(ItemCollection aworkitem) {
+		super.setWorkitem(aworkitem);
+		
+		/*
+		if (aworkitem == null
+				|| !aworkitem.getItemValueString("$Uniqueid").equals(
+						lastUniqueID)) {
+			if (aworkitem != null)
+				lastUniqueID = aworkitem.getItemValueString("$Uniqueid");
+			else
+				lastUniqueID = null;
+				*/
+			// fire event
+			events.fire(new WorkflowEvent(getWorkitem(),
+					WorkflowEvent.WORKITEM_CHANGED));
+
+		//}
+	}
+
 	/**
 	 * returns the workflowEditorID for the current workItem. If no attribute
 	 * with the name "txtWorkflowEditorid" is available then the method return
