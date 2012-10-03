@@ -149,7 +149,7 @@ public class DmsController implements Serializable {
 				// update the file info for the current workitem
 				fileUploadController.updateWorkitem(
 						workflowEvent.getWorkitem(), true);
-				
+
 			}
 			// store the dms list
 			storeDmsList(workflowEvent.getWorkitem());
@@ -200,12 +200,15 @@ public class DmsController implements Serializable {
 	 * 
 	 */
 	private void readDmsList(ItemCollection workitem) {
-		String uniqueIdRef = workitem.getItemValueString("$BlobWorkitem");
-		List<Map> vDMS = workitem.getItemValue("dms");
-		List<String> files = workitem.getFileNames();
 		// build a new filelist and test if each file contained in the $files is
 		// listed
 		dmsList = new ArrayList<ItemCollection>();
+		if (workitem == null)
+			return;
+		
+		String uniqueIdRef = workitem.getItemValueString("$BlobWorkitem");
+		List<Map> vDMS = workitem.getItemValue("dms");
+		List<String> files = workitem.getFileNames();
 		// first we add all existing dms informations
 		for (Map aMetadata : vDMS) {
 			dmsList.add(new ItemCollection(aMetadata));
@@ -213,10 +216,10 @@ public class DmsController implements Serializable {
 		// add files which where not still part of the dms property.
 		updateDmsList(workitem);
 	}
-	
-	
+
 	/**
-	 * This method stores the dms meta information into the proeprty 'dms' from a workitem.
+	 * This method stores the dms meta information into the proeprty 'dms' from
+	 * a workitem.
 	 * 
 	 * @param workitem
 	 */

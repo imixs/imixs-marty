@@ -14,8 +14,6 @@ public class WorkflowEvent {
 	private ItemCollection workitem;
 
 	public WorkflowEvent(ItemCollection workitem, int eventType) {
-		if (workitem == null)
-			workitem = new ItemCollection();
 		this.eventType = eventType;
 		this.workitem = workitem;
 	}

@@ -36,9 +36,9 @@ import javax.inject.Named;
 import org.imixs.workflow.ItemCollection;
 
 /**
- * The HistoryController provides a histoy navigation over workitems the user
+ * The HistoryController provides a history navigation over workItems the user
  * has selected. There for the controller listens to the events of the
- * WokflowController. The history workitems containing only the $uniqueid and a
+ * WokflowController. The history workItems containing only the $uniqueid and a
  * minimum of attributes to display a summary.
  * 
  * @see historynav.xhtml
@@ -61,8 +61,8 @@ public class HistoryController implements Serializable {
 	private List<ItemCollection> workitems = null;
 	private String lastRemoveActionResult = null;
 	private String lastRemovedWorkitem = null;
-	
-	private String currentId=null;
+
+	private String currentId = null;
 
 	public HistoryController() {
 		super();
@@ -121,11 +121,10 @@ public class HistoryController implements Serializable {
 	 * 
 	 **/
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
-		if (workflowEvent == null)
+		if (workflowEvent == null || workflowEvent.getWorkitem() == null) {
+			currentId = null;
 			return;
-
-		if (workflowEvent.getWorkitem() == null)
-			return;
+		}
 
 		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
 			addWorkItem(workflowEvent.getWorkitem());
@@ -158,18 +157,23 @@ public class HistoryController implements Serializable {
 	 */
 	private void addWorkItem(ItemCollection aWorkitem) {
 
-		if (aWorkitem == null)
+		if (aWorkitem == null || !aWorkitem.getItemValueString("type").startsWith("workitem")) {
+			currentId = null;
 			return;
+		}
+
+		ItemCollection clone = cloneWorkitem(aWorkitem);
 
 		// test if exits
 		int iPos = findWorkItem(aWorkitem.getItemValueString("$UniqueID"));
 		if (iPos > -1) {
 			// update workitem
-			workitems.set(iPos, cloneWorkitem(aWorkitem));
-			return;
+			workitems.set(iPos, clone);
+		} else {
+			// add the new workitem into the history
+			workitems.add(clone);
 		}
-		// add the new workitem into the history
-		workitems.add(cloneWorkitem(aWorkitem));
+		currentId = clone.getItemValueString("$UniqueID");
 
 	}
 

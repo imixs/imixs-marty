@@ -71,7 +71,7 @@ public class WorkflowController extends
 		org.imixs.workflow.jee.faces.workitem.WorkflowController implements
 		Serializable {
 
-	//private String lastUniqueID = null;
+	// private String lastUniqueID = null;
 
 	private static final long serialVersionUID = 1L;
 	private static final String DEFAULT_EDITOR_ID = "default";
@@ -157,21 +157,9 @@ public class WorkflowController extends
 	@Override
 	public void setWorkitem(ItemCollection aworkitem) {
 		super.setWorkitem(aworkitem);
-		
-		/*
-		if (aworkitem == null
-				|| !aworkitem.getItemValueString("$Uniqueid").equals(
-						lastUniqueID)) {
-			if (aworkitem != null)
-				lastUniqueID = aworkitem.getItemValueString("$Uniqueid");
-			else
-				lastUniqueID = null;
-				*/
-			// fire event
-			events.fire(new WorkflowEvent(getWorkitem(),
-					WorkflowEvent.WORKITEM_CHANGED));
-
-		//}
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_CHANGED));
 	}
 
 	/**
