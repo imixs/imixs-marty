@@ -94,7 +94,10 @@ public class HistoryController implements Serializable {
 	}
 
 	/**
-	 * this action method removes a workItem from the history list
+	 * The action method removes a workItem from the history list. It the
+	 * current workitem was removed the method switches automatically to the
+	 * next workItem in the history list . If the list is empty the method
+	 * returns the action 'home'. Otherwise it returns action ''.
 	 * 
 	 * @param id
 	 *            - $UniqueID
@@ -103,14 +106,28 @@ public class HistoryController implements Serializable {
 	 * @return action
 	 * 
 	 */
-	public String removeWorkitem(String sID, String action) {
+	public String removeWorkitem(String aID) {
 		// test if exits
-		int iPos = findWorkItem(sID);
+		int iPos = findWorkItem(aID);
 		if (iPos > -1) {
-			// update workitem
+			// update history list
 			workitems.remove(iPos);
+			if (aID.equals(currentId)) {
+				// current workItem was removed - so select the next workItem in
+				// the list.
+				currentId = null;
+				if (iPos >= workitems.size())
+					iPos--;
+				if (iPos >= 0) {
+					ItemCollection current = workitems.get(iPos);
+					if (current != null) {
+						currentId = current.getItemValueString("$UniqueID");
+						workflowController.load(currentId, null);
+					}
+				}
+			}
 		}
-		return action;
+		return (currentId == null ? "home" : "");
 
 	}
 
@@ -125,6 +142,10 @@ public class HistoryController implements Serializable {
 			currentId = null;
 			return;
 		}
+		
+		// skip if not a workItem...
+		if (!workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
+			return;
 
 		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
 			addWorkItem(workflowEvent.getWorkitem());
@@ -137,27 +158,13 @@ public class HistoryController implements Serializable {
 	}
 
 	/**
-	 * This method removes a workItem from the current historyList.
-	 */
-	private void removeWorkItem(ItemCollection aWorkitem) {
-		if (aWorkitem == null)
-			return;
-
-		// test if exits
-		int iPos = findWorkItem(aWorkitem.getItemValueString("$UniqueID"));
-		if (iPos > -1) {
-			// update workitem
-			workitems.remove(iPos);
-		}
-	}
-
-	/**
 	 * This method adds a workItem into the current historyList. If the workItem
 	 * is still contained it will be updated.
 	 */
 	private void addWorkItem(ItemCollection aWorkitem) {
 
-		if (aWorkitem == null || !aWorkitem.getItemValueString("type").startsWith("workitem")) {
+		if (aWorkitem == null
+				|| !aWorkitem.getItemValueString("type").startsWith("workitem")) {
 			currentId = null;
 			return;
 		}

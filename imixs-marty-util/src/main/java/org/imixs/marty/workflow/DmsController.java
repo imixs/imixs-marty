@@ -116,6 +116,12 @@ public class DmsController implements Serializable {
 		if (workflowEvent == null)
 			return;
 
+		// skip if not a workItem...
+		if (workflowEvent.getWorkitem() != null
+				&& !workflowEvent.getWorkitem().getItemValueString("type")
+						.startsWith("workitem"))
+			return;
+
 		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
 			fileUploadController.doClear(null);
 			if (workflowEvent.getWorkitem() != null) {
@@ -205,7 +211,7 @@ public class DmsController implements Serializable {
 		dmsList = new ArrayList<ItemCollection>();
 		if (workitem == null)
 			return;
-		
+
 		String uniqueIdRef = workitem.getItemValueString("$BlobWorkitem");
 		List<Map> vDMS = workitem.getItemValue("dms");
 		List<String> files = workitem.getFileNames();
