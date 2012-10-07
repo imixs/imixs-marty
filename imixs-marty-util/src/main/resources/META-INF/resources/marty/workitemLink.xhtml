@@ -30,21 +30,59 @@
 }
 </style>
 
-<script type="text/javascript">
+	<script type="text/javascript">
 /*<![CDATA[*/
-
+$(document).ready(function() {
+  // test if delayEvent is defined
+  if (typeof(window.delayEvent)!='function') {
+  	 alert('function delayEvent() not defined! Please check if script library marty/imixs-marty.js is loaded!');
+  }
+ });
+ 
 
 /*]]>*/	
 </script>
 
 
-	<h:panelGroup layout="block" class="suggestbox">
+	<h:panelGroup id="workitemlink_box" layout="block" class="suggestbox">
+
 		<!-- Process references -->
-		<h:panelGroup layout="block" style="margin-bottom:5px;">
+		<h:panelGroup id="reference_box" layout="block" style="margin-bottom:5px;">
+			<c:forEach var="workitem" items="#{linkController.getReferences(cc.attrs.filter)}">
+				<div
+					style="border-bottom: 1px solid silver; margin-bottom: 5px; padding-bottom: 5px;">
+					<h:commandLink
+						action="#{workflowController.load(workitem.item['$uniqueid'],'/pages/workitems/workitem')}">
+						<h:outputText value="#{workitem.item['txtWorkflowSummary']}"
+							rendered="#{!empty workitem.item['txtWorkflowSummary']}" />
+						<h:outputText value="#{suggest.item['$created']}"
+							rendered="#{empty workitem.item['txtWorkflowSummary']}">
+							<f:convertDateTime timeZone="#{message.timeZone}"
+								pattern="#{message.dateTimePatternShort}" />
+						</h:outputText>
+					</h:commandLink>
+					<br />
+					<h:outputText style="font-weight: normal;"
+						value="#{workitem.item['txtworkflowgroup']}: " />
+					<h:outputText value="#{workitem.item['txtworkflowstatus']}" />
+					
+					
+					<h:commandLink  actionListener="#{linkController.remove(workitem.item['$uniqueid'],cc.attrs.workitem)}">
+						<h:outputText value="[#{message.remove}]" />
+						<f:ajax render="reference_box" />
+						
+					</h:commandLink>
+					
+				</div>
+
+			</c:forEach>
+		</h:panelGroup>
+		<!-- Input Field -->
+		<h:panelGroup id="input_box" layout="block" style="margin-bottom:5px;">
 			<h:inputText value="#{linkController.input}" class="suggestinput">
 				<f:ajax event="keyup" render="suggest_box"
 					listener="#{linkController.search(cc.attrs.filter)}" />
-				<f:ajax event="blur" render="suggest_box"
+				<f:ajax event="blur" render="suggest_box" 
 					listener="#{linkController.reset}" />
 			</h:inputText>
 		</h:panelGroup>
@@ -67,7 +105,7 @@
 									pattern="#{message.dateTimePatternShort}" />
 
 							</h:outputText>
-							<f:ajax render="suggest_box" />
+							<f:ajax render="suggest_box reference_box" />
 						</h:commandLink>
 						<br />
 						<h:outputText value="#{suggest.item['txtworkflowgroup']}: " />
