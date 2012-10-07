@@ -26,13 +26,13 @@ package org.imixs.marty.workflow;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
 
 /**
@@ -53,14 +53,10 @@ public class HistoryController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private static Logger logger = Logger.getLogger("org.imixs.office");
-
 	@Inject
 	private WorkflowController workflowController;
 
 	private List<ItemCollection> workitems = null;
-	private String lastRemoveActionResult = null;
-	private String lastRemovedWorkitem = null;
 
 	private String currentId = null;
 
@@ -169,7 +165,7 @@ public class HistoryController implements Serializable {
 			return;
 		}
 
-		ItemCollection clone = cloneWorkitem(aWorkitem);
+		ItemCollection clone = WorkitemHelper.clone(aWorkitem);
 
 		// test if exits
 		int iPos = findWorkItem(aWorkitem.getItemValueString("$UniqueID"));
@@ -208,22 +204,5 @@ public class HistoryController implements Serializable {
 		return -1;
 	}
 
-	/**
-	 * This method clones the given workItem with a minimum of attributes.
-	 * 
-	 * @param aWorkitem
-	 * @return
-	 */
-	private ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
-		ItemCollection clone = new ItemCollection();
-
-		clone.replaceItemValue("$UniqueID", aWorkitem.getItemValue("$UniqueID"));
-		clone.replaceItemValue("txtWorkflowSummary",
-				aWorkitem.getItemValue("txtWorkflowSummary"));
-		clone.replaceItemValue("txtWorkflowAbstract",
-				aWorkitem.getItemValue("txtWorkflowAbstract"));
-
-		return clone;
-
-	}
+	
 }

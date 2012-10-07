@@ -48,6 +48,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.profile.UserController;
+import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
@@ -328,27 +329,34 @@ public class ModelController implements Serializable {
 					+ " AND t2.itemName = 'txtname'"
 					+ " ORDER BY t2.itemValue asc";
 			Collection<ItemCollection> col = entityService.findAllEntities(
-					sQuery, 0, -1);
+					sQuery, 0, -1); 
 
 			// create optimized list
 			for (ItemCollection project : col) {
-				project.replaceItemValue("isOwner",
+				
+				ItemCollection clone=WorkitemHelper.clone(project);
+				
+				clone.replaceItemValue("isOwner",
 						project.getItemValue("namOwner").indexOf(sUserID) > -1);
-				project.replaceItemValue("isTeam",
+				clone.replaceItemValue("isTeam",
 						project.getItemValue("namTeam").indexOf(sUserID) > -1);
-				project.replaceItemValue("isAssist",
+				clone.replaceItemValue("isAssist",
 						project.getItemValue("namAssist").indexOf(sUserID) > -1);
-				project.replaceItemValue(
+				clone.replaceItemValue(
 						"isManager",
 						project.getItemValue("namManager").indexOf(sUserID) > -1);
 
 				boolean bMember = false;
-				if (project.getItemValueBoolean("isTeam")
+				if (clone.getItemValueBoolean("isTeam")
 						|| project.getItemValueBoolean("isAssist"))
 					bMember = true;
-				project.replaceItemValue("isMember", bMember);
+				clone.replaceItemValue("isMember", bMember);
+				
+				// add custom fields into clone...
+				clone.replaceItemValue("txtProcessList", project.getItemValue("txtProcessList"));
+				clone.replaceItemValue("txtdescription", project.getItemValue("txtdescription"));
 
-				projectList.add(project);
+				projectList.add(clone);
 
 			}
 
