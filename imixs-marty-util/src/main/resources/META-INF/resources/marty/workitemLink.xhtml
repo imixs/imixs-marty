@@ -10,15 +10,21 @@
 <cc:interface>
 	<cc:attribute name="workitem"></cc:attribute>
 	<cc:attribute name="filter"></cc:attribute>
+	<cc:attribute name="hidereferences" default="false" type="java.lang.Boolean"></cc:attribute>
 </cc:interface>
 
 <cc:implementation>
 	<style>
-.suggestbox {
+.workitemlinkbox {
 	position: relative;
 }
 
-.suggestbox .resultlist {
+.workitemlinkbox .inputbox {
+	position: relative;
+	height: 24px;
+}
+
+.workitemlinkbox .inputbox .resultlist {
 	display: block;
 	position: absolute;
 	z-index: 1;
@@ -44,11 +50,14 @@ $(document).ready(function() {
 </script>
 
 
-	<h:panelGroup id="workitemlink_box" layout="block" class="suggestbox">
+	<h:panelGroup id="workitemlink_box" layout="block"
+		class="workitemlinkbox">
 
 		<!-- Process references -->
-		<h:panelGroup id="reference_box" layout="block" style="margin-bottom:5px;">
-			<c:forEach var="workitem" items="#{linkController.getReferences(cc.attrs.filter)}">
+		<h:panelGroup id="reference_box" layout="block" rendered="#{! cc.attrs.hidereferences}"
+			style="margin-bottom:5px;">
+			<c:forEach var="workitem"
+				items="#{linkController.getReferences(cc.attrs.filter)}">
 				<div
 					style="border-bottom: 1px solid silver; margin-bottom: 5px; padding-bottom: 5px;">
 					<h:commandLink
@@ -65,59 +74,60 @@ $(document).ready(function() {
 					<h:outputText style="font-weight: normal;"
 						value="#{workitem.item['txtworkflowgroup']}: " />
 					<h:outputText value="#{workitem.item['txtworkflowstatus']}" />
-					
-					
-					<h:commandLink  actionListener="#{linkController.remove(workitem.item['$uniqueid'],cc.attrs.workitem)}">
-						<h:outputText value="[#{message.remove}]" />
+
+
+					<h:commandLink
+						actionListener="#{linkController.remove(workitem.item['$uniqueid'],cc.attrs.workitem)}">
+						<h:outputText value=" [#{message.remove}]" />
 						<f:ajax render="reference_box" />
-						
+
 					</h:commandLink>
-					
+
 				</div>
 
 			</c:forEach>
 		</h:panelGroup>
 		<!-- Input Field -->
-		<h:panelGroup id="input_box" layout="block" style="margin-bottom:5px;">
+		<h:panelGroup id="input_box" class="inputbox" layout="block"
+			style="margin-bottom:5px;">
 			<h:inputText value="#{linkController.input}" class="suggestinput">
 				<f:ajax event="keyup" render="suggest_box"
 					listener="#{linkController.search(cc.attrs.filter)}" />
-				<f:ajax event="blur" render="suggest_box" 
+				<f:ajax event="blur" render="suggest_box"
 					listener="#{linkController.reset}" />
 			</h:inputText>
-		</h:panelGroup>
-
-		<h:panelGroup id="suggest_box">
-			<h:panelGroup id="suggest_resultlist" class="resultlist"
-				rendered="#{! empty linkController.searchResult}">
 
 
-				<c:forEach var="suggest" items="#{linkController.searchResult}">
-					<div style="margin: 5px 5px 0 5px; border-bottom: 1px solid #eee;">
-						<h:commandLink
-							actionListener="#{linkController.add(suggest.item['$uniqueid'],cc.attrs.workitem)}">
-							<h:outputText style="font-weight: bold;"
-								value="#{suggest.item['txtWorkflowSummary']}" escape="false"
-								rendered="#{!empty suggest.item['txtWorkflowSummary']}" />
-							<h:outputText value="#{suggest.item['$created']}"
-								rendered="#{empty suggest.item['txtWorkflowSummary']}">
+			<h:panelGroup id="suggest_box">
+				<h:panelGroup id="suggest_resultlist" class="resultlist"
+					rendered="#{! empty linkController.searchResult}">
+					<c:forEach var="suggest" items="#{linkController.searchResult}">
+						<div style="margin: 5px 5px 0 5px; border-bottom: 1px solid #eee;">
+							<h:commandLink
+								actionListener="#{linkController.add(suggest.item['$uniqueid'],cc.attrs.workitem)}">
+								<h:outputText style="font-weight: bold;"
+									value="#{suggest.item['txtWorkflowSummary']}" escape="false"
+									rendered="#{!empty suggest.item['txtWorkflowSummary']}" />
+								<h:outputText value="#{suggest.item['$created']}"
+									rendered="#{empty suggest.item['txtWorkflowSummary']}">
+									<f:convertDateTime timeZone="#{message.timeZone}"
+										pattern="#{message.dateTimePatternShort}" />
+
+								</h:outputText>
+								<f:ajax render="suggest_box reference_box" />
+							</h:commandLink>
+							<br />
+							<h:outputText value="#{suggest.item['txtworkflowgroup']}: " />
+							<h:outputText value="#{suggest.item['txtworkflowstatus']} " />
+
+							<h:outputText value="#{suggest.item['$modified']}">
 								<f:convertDateTime timeZone="#{message.timeZone}"
 									pattern="#{message.dateTimePatternShort}" />
-
 							</h:outputText>
-							<f:ajax render="suggest_box reference_box" />
-						</h:commandLink>
-						<br />
-						<h:outputText value="#{suggest.item['txtworkflowgroup']}: " />
-						<h:outputText value="#{suggest.item['txtworkflowstatus']} " />
+						</div>
+					</c:forEach>
 
-						<h:outputText value="#{suggest.item['$modified']}">
-							<f:convertDateTime timeZone="#{message.timeZone}"
-								pattern="#{message.dateTimePatternShort}" />
-						</h:outputText>
-					</div>
-				</c:forEach>
-
+				</h:panelGroup>
 			</h:panelGroup>
 		</h:panelGroup>
 
