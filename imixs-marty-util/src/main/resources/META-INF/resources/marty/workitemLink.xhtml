@@ -10,31 +10,11 @@
 <cc:interface>
 	<cc:attribute name="workitem"></cc:attribute>
 	<cc:attribute name="filter"></cc:attribute>
-	<cc:attribute name="hidereferences" default="false" type="java.lang.Boolean"></cc:attribute>
+	<cc:attribute name="hidereferences" default="false"
+		type="java.lang.Boolean"></cc:attribute>
 </cc:interface>
 
 <cc:implementation>
-	<style>
-.workitemlinkbox {
-	position: relative;
-}
-
-.workitemlinkbox .inputbox {
-	position: relative;
-	height: 24px;
-}
-
-.workitemlinkbox .inputbox .resultlist {
-	display: block;
-	position: absolute;
-	z-index: 1;
-	left: 2px;
-	top: 22px;
-	border: 1px solid #CCC;
-	background-color: #fff;
-	z-index: 1;
-}
-</style>
 
 	<script type="text/javascript">
 /*<![CDATA[*/
@@ -51,15 +31,14 @@ $(document).ready(function() {
 
 
 	<h:panelGroup id="workitemlink_box" layout="block"
-		class="workitemlinkbox">
+		class="marty-workitemlink">
 
 		<!-- Process references -->
-		<h:panelGroup id="reference_box" layout="block" rendered="#{! cc.attrs.hidereferences}"
-			style="margin-bottom:5px;">
+		<h:panelGroup id="reference_box" layout="block"
+			rendered="#{! cc.attrs.hidereferences}" class="marty-workitemlink-referencebox">
 			<c:forEach var="workitem"
 				items="#{linkController.getReferences(cc.attrs.filter)}">
-				<div
-					style="border-bottom: 1px solid silver; margin-bottom: 5px; padding-bottom: 5px;">
+				<div class="marty-workitemlink-referencebox-entry">
 					<h:commandLink
 						action="#{workflowController.load(workitem.item['$uniqueid'],'/pages/workitems/workitem')}">
 						<h:outputText value="#{workitem.item['txtWorkflowSummary']}"
@@ -71,8 +50,7 @@ $(document).ready(function() {
 						</h:outputText>
 					</h:commandLink>
 					<br />
-					<h:outputText style="font-weight: normal;"
-						value="#{workitem.item['txtworkflowgroup']}: " />
+					<h:outputText value="#{workitem.item['txtworkflowgroup']}: " />
 					<h:outputText value="#{workitem.item['txtworkflowstatus']}" />
 
 
@@ -88,8 +66,8 @@ $(document).ready(function() {
 			</c:forEach>
 		</h:panelGroup>
 		<!-- Input Field -->
-		<h:panelGroup id="input_box" class="inputbox" layout="block"
-			style="margin-bottom:5px;">
+		<h:panelGroup id="input_box"
+			class="marty-workitemlink-inputbox" layout="block">
 			<h:inputText value="#{linkController.input}" class="suggestinput">
 				<f:ajax event="keyup" render="suggest_box"
 					listener="#{linkController.search(cc.attrs.filter)}" />
@@ -99,10 +77,11 @@ $(document).ready(function() {
 
 
 			<h:panelGroup id="suggest_box">
-				<h:panelGroup id="suggest_resultlist" class="resultlist"
+				<h:panelGroup id="suggest_resultlist"
+					class="marty-workitemlink-resultlist"
 					rendered="#{! empty linkController.searchResult}">
 					<c:forEach var="suggest" items="#{linkController.searchResult}">
-						<div style="margin: 5px 5px 0 5px; border-bottom: 1px solid #eee;">
+						<div class="marty-workitemlink-resultlist-entry">
 							<h:commandLink
 								actionListener="#{linkController.add(suggest.item['$uniqueid'],cc.attrs.workitem)}">
 								<h:outputText style="font-weight: bold;"
