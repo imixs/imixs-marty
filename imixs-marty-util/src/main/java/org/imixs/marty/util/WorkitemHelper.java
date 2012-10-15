@@ -45,6 +45,14 @@ public class WorkitemHelper {
 				aWorkitem.getItemValue("txtWorkflowSummary"));
 		clone.replaceItemValue("txtWorkflowAbstract",
 				aWorkitem.getItemValue("txtWorkflowAbstract"));
+		
+		clone.replaceItemValue("txtWorkflowImageURL",
+				aWorkitem.getItemValue("txtWorkflowImageURL"));
+	
+		clone.replaceItemValue("txtProjectName",
+				aWorkitem.getItemValue("txtProjectName"));
+	
+		
 
 		return clone;
 
