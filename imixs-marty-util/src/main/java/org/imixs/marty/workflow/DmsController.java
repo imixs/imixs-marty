@@ -53,8 +53,12 @@ import org.imixs.workflow.jee.faces.util.LoginController;
  * about file references to external file servers
  * 
  * 
+ * The DmsController observes WorkflowEvents and manages the file uploads during
+ * the Processing events.
  * 
- * The DmsController observes WorkflowEvents and manages the file uploads
+ * NOTE: if a plug-in adds a new file (like the reportPlugIn), and the plug-in
+ * also updates the $file information of the parent WorkItem, then the DMS
+ * property will be updated by the DmsController.
  * 
  * 
  * @see org.imixs.workflow.jee.faces.fileupload.FileUploadController
@@ -106,7 +110,14 @@ public class DmsController implements Serializable {
 	}
 
 	/**
-	 * WorkflowEvent listener
+	 * WorkflowEvent listener to update the DMS property if a WorkItem has
+	 * changed.
+	 * 
+	 * If a WorkItem was processed the method saves the BlobWorkitem
+	 * 
+	 * NOTE: if a plug-in adds a new file (like the reportPlugIn), and the
+	 * plug-in also updates the $file information of the parent WorkItem, then
+	 * the DMS property will be updated by the DmsController.
 	 * 
 	 * @param workflowEvent
 	 * @throws AccessDeniedException
@@ -122,6 +133,7 @@ public class DmsController implements Serializable {
 						.startsWith("workitem"))
 			return;
 
+		// if workItem has changed, then update the dms list
 		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
 			fileUploadController.doClear(null);
 			if (workflowEvent.getWorkitem() != null) {
@@ -199,22 +211,24 @@ public class DmsController implements Serializable {
 
 	/**
 	 * This method creates a new dmsList and reads all existing dms meta data
-	 * from the current workItem. The metadata is read from the property 'dms'.
+	 * from the current workItem. The meta data is read from the property 'dms'.
+	 * 
 	 * If a file contained in the property '$file' is not part of the property
-	 * 'dms' the method will automatically create a new dms entry. The dms
-	 * property is saved during processing the workiItem.
+	 * 'dms' the method will automatically create a new dms entry by calling the
+	 * method updateDmsList.
+	 * 
+	 * The dms property is saved during processing the workiItem.
 	 * 
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void readDmsList(ItemCollection workitem) {
-		// build a new filelist and test if each file contained in the $files is
+		// build a new fileList and test if each file contained in the $files is
 		// listed
 		dmsList = new ArrayList<ItemCollection>();
 		if (workitem == null)
 			return;
 
-		String uniqueIdRef = workitem.getItemValueString("$BlobWorkitem");
 		List<Map> vDMS = workitem.getItemValue("dms");
-		List<String> files = workitem.getFileNames();
 		// first we add all existing dms informations
 		for (Map aMetadata : vDMS) {
 			dmsList.add(new ItemCollection(aMetadata));
@@ -225,16 +239,16 @@ public class DmsController implements Serializable {
 
 	/**
 	 * This method stores the dms meta information into the proeprty 'dms' from
-	 * a workitem.
+	 * a workItem.
 	 * 
 	 * @param workitem
 	 */
+	@SuppressWarnings("rawtypes")
 	private void storeDmsList(ItemCollection workitem) {
 		// first update the dmsList with new file entries
 		updateDmsList(workitem);
 		// get the current dms value....
 		Vector<Map> vDMSnew = new Vector<Map>();
-
 		for (ItemCollection aEntry : dmsList) {
 			vDMSnew.add(aEntry.getAllItems());
 		}
