@@ -85,9 +85,6 @@ public class LinkController implements Serializable {
 		searchResult = new ArrayList<ItemCollection>();
 	}
 
-	public void setWorkflowController(WorkflowController workflowController) {
-		this.workflowController = workflowController;
-	}
 
 	public String getInput() {
 		return input;

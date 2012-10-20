@@ -93,9 +93,7 @@ public class DmsController implements Serializable {
 
 	}
 
-	public void setLoginController(LoginController loginController) {
-		this.loginController = loginController;
-	}
+
 
 	public void setFileUploadController(FileUploadController fleUploadController) {
 		this.fileUploadController = fleUploadController;
@@ -105,9 +103,7 @@ public class DmsController implements Serializable {
 				.setRestServiceURI("/office/rest/workflow/workitem/");
 	}
 
-	public void setWorkflowController(WorkflowController workflowController) {
-		this.workflowController = workflowController;
-	}
+	
 
 	/**
 	 * WorkflowEvent listener to update the DMS property if a WorkItem has

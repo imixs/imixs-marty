@@ -21,7 +21,7 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.marty.workflow;
+package org.imixs.marty.deprecated;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;

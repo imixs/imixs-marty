@@ -93,17 +93,7 @@ public class WorklistController extends
 		super();
 	}
 
-	public void setUserController(UserController userController) {
-		this.userController = userController;
-	}
-
-	public void setSetupController(SetupController setupController) {
-		this.setupController = setupController;
-	}
-
-	public void setSearchController(SearchController searchController) {
-		this.searchController = searchController;
-	}
+	
 
 	@Override
 	public IViewAdapter getViewAdapter() {

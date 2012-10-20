@@ -66,9 +66,7 @@ public class HistoryController implements Serializable {
 		workitems = new ArrayList<ItemCollection>();
 	}
 
-	public void setWorkflowController(WorkflowController workflowController) {
-		this.workflowController = workflowController;
-	}
+	
 
 	public String getCurrentId() {
 		return currentId;
