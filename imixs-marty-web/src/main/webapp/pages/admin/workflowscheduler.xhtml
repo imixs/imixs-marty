@@ -119,7 +119,7 @@
 										value="#{workflowSchedulerMB.configuration.item['nextTimeout']}"
 										rendered="#{! empty workflowSchedulerMB.configuration.item['nextTimeout']}">
 										<f:convertDateTime timeZone="#{global.timeZone}" type="both"
-											pattern="#{global.dateTimePattern}" />
+											pattern="d.M.yy HH:mm" />
 
 
 									</h:outputText>
