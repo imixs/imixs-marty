@@ -29,6 +29,7 @@ import java.util.List;
 
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
+import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -87,9 +88,9 @@ public class HistoryController implements Serializable {
 	}
 
 	/**
-	 * The action method removes a workItem from the history list. It the
-	 * current workitem was removed the method switches automatically to the
-	 * next workItem in the history list . If the list is empty the method
+	 * The action method removes a workItem from the history list. If the
+	 * current workItem was removed the method switches automatically to the
+	 * next workItem in the history list. If the list is empty the method
 	 * returns the action 'home'. Otherwise it returns action ''.
 	 * 
 	 * @param id
@@ -124,6 +125,18 @@ public class HistoryController implements Serializable {
 
 	}
 
+	/**
+	 * This action listener removes the current WorkItem from the history nav
+	 * @param aWorkitem
+	 */
+	public void closeCurrentWorkitem(ActionEvent event) {
+		int iPos = findWorkItem(currentId);
+		if (iPos > -1) {
+			workitems.remove(iPos);
+		}
+		currentId=null;
+	}
+	
 	/**
 	 * WorkflowEvent listener listens to WORKITEM_CHANGED events and adds the
 	 * current WorkItem into the history nav.
