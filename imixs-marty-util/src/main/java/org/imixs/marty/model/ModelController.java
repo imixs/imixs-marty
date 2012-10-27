@@ -78,9 +78,9 @@ public class ModelController implements Serializable {
 
 	private String latestSystemModelVersion = null;
 
-	private List<ItemCollection> workflowGroups = null;
-	private ArrayList<ItemCollection> projectList = null;
 	private List<ItemCollection> processList = null;
+	private List<ItemCollection> projectList = null;
+	// private List<ItemCollection> processList = null;
 
 	private String workflowGroup = null;
 	private String modelVersion = null;
@@ -168,7 +168,7 @@ public class ModelController implements Serializable {
 			 * Now we have a general Model. So we test here if the current model
 			 * version is higher then the last stored version of this domain
 			 */
-			String lastModel = (String) modelVersionCache.get(sDomain);
+			String lastModel = modelVersionCache.get(sDomain);
 			if (lastModel == null || lastModel.compareTo(aModelVersion) < 0) {
 				modelVersionCache.put(sDomain, aModelVersion);
 
@@ -181,14 +181,6 @@ public class ModelController implements Serializable {
 	public void reset() {
 		processList = null;
 		projectList = null;
-	}
-
-	public UserController getUserController() {
-		return userController;
-	}
-
-	public void setUserController(UserController userController) {
-		this.userController = userController;
 	}
 
 	public String getWorkflowGroup() {
@@ -224,15 +216,15 @@ public class ModelController implements Serializable {
 	 * child process.
 	 * 
 	 * The worflowGroup list is used to display the process navigation bar and
-	 * the filter options for the worklist view.
+	 * the filter options for the workList view.
 	 * 
 	 * @return
 	 */
-	public List<ItemCollection> getWorkflowGroups() {
+	public List<ItemCollection> getProcessList() {
 
-		if (workflowGroups == null) {
+		if (processList == null) {
 			// build new groupSelection
-			workflowGroups = new ArrayList<ItemCollection>();
+			processList = new ArrayList<ItemCollection>();
 
 			Collection<String> models = modelVersionCache.values();
 			for (String modelVersion : models) {
@@ -246,18 +238,18 @@ public class ModelController implements Serializable {
 					if (sGroupName.contains("~"))
 						continue; // childProcess is skipped
 
-					workflowGroups.add(process);
+					processList.add(process);
 				}
 
 			}
 
+			Collections.sort(processList,
+					new WorkflowGroupComparator(FacesContext
+							.getCurrentInstance().getViewRoot().getLocale(),
+							true));
 		}
 
-		Collections.sort(workflowGroups, new WorkflowGroupComparator(
-				FacesContext.getCurrentInstance().getViewRoot().getLocale(),
-				true));
-
-		return workflowGroups;
+		return processList;
 
 	}
 
@@ -276,31 +268,37 @@ public class ModelController implements Serializable {
 	 * The worflowGroup list is used to display the start process list for a
 	 * project
 	 * 
-	 * @return
+	 * @param uniqueid
+	 *            - $UniqueId of a project
+	 * @return - a collection of ProcessEntities
 	 */
-	public List<ItemCollection> getWorkflowGroupsByProject(
-			ItemCollection project) {
+	public List<ItemCollection> getProcessListByProject(String uniqueid) {
 
 		List<ItemCollection> result = new ArrayList<ItemCollection>();
-
+		ItemCollection project = getProjectByID(uniqueid);
 		if (project == null)
 			return result;
 
-		List<String> processList = null;
+		List<String> aprocessList = null;
 
-		processList = project.getItemValue("txtprocesslist");
+		aprocessList = project.getItemValue("txtprocesslist");
 
 		// if no processList was defined return
-		if (processList == null || processList.isEmpty())
+		if (aprocessList == null || aprocessList.isEmpty())
 			return result;
 
 		// now add all matching workflowGroups
-		List<ItemCollection> processEntityList = getWorkflowGroups();
+		List<ItemCollection> processEntityList = getProcessList();
 		for (ItemCollection aProcessEntity : processEntityList) {
 			// test if the $modelVersion matches....
-			if (isProcessEntityInList(aProcessEntity, processList))
+			if (isProcessEntityInList(aProcessEntity, aprocessList))
 				result.add(aProcessEntity);
 
+		}
+
+		for (ItemCollection atest : result) {
+			String s = atest.getItemValueString("txtname");
+			logger.info(s);
 		}
 
 		return result;
@@ -317,11 +315,11 @@ public class ModelController implements Serializable {
 	 * 
 	 * @return
 	 */
-	public List<ItemCollection> getProjects() {
+	public List<ItemCollection> getProjectList() {
 		if (projectList == null) {
 			projectList = new ArrayList<ItemCollection>();
 
-			String sUserID = getUserController().getUserPrincipal();
+			String sUserID = userController.getUserPrincipal();
 
 			String sQuery = "SELECT projct FROM Entity AS projct "
 					+ " JOIN projct.textItems AS t2"
@@ -329,17 +327,17 @@ public class ModelController implements Serializable {
 					+ " AND t2.itemName = 'txtname'"
 					+ " ORDER BY t2.itemValue asc";
 			Collection<ItemCollection> col = entityService.findAllEntities(
-					sQuery, 0, -1); 
+					sQuery, 0, -1);
 
 			// create optimized list
 			for (ItemCollection project : col) {
-				
-				ItemCollection clone=WorkitemHelper.clone(project);
-				
+
+				ItemCollection clone = WorkitemHelper.clone(project);
+
 				clone.replaceItemValue("isOwner",
 						project.getItemValue("namOwner").indexOf(sUserID) > -1);
-				clone.replaceItemValue("isTeam",
-						project.getItemValue("namTeam").indexOf(sUserID) > -1);
+				clone.replaceItemValue("isTeam", project
+						.getItemValue("namTeam").indexOf(sUserID) > -1);
 				clone.replaceItemValue("isAssist",
 						project.getItemValue("namAssist").indexOf(sUserID) > -1);
 				clone.replaceItemValue(
@@ -351,10 +349,12 @@ public class ModelController implements Serializable {
 						|| project.getItemValueBoolean("isAssist"))
 					bMember = true;
 				clone.replaceItemValue("isMember", bMember);
-				
+
 				// add custom fields into clone...
-				clone.replaceItemValue("txtProcessList", project.getItemValue("txtProcessList"));
-				clone.replaceItemValue("txtdescription", project.getItemValue("txtdescription"));
+				clone.replaceItemValue("txtProcessList",
+						project.getItemValue("txtProcessList"));
+				clone.replaceItemValue("txtdescription",
+						project.getItemValue("txtdescription"));
 
 				projectList.add(clone);
 
@@ -363,6 +363,27 @@ public class ModelController implements Serializable {
 		}
 
 		return projectList;
+	}
+
+	/**
+	 * this method finds a project by its UniqueID. The projectlist is read from
+	 * the project cache
+	 * 
+	 * @param uniqueid
+	 * @return
+	 */
+	public ItemCollection getProjectByID(String uniqueid) {
+		if (uniqueid == null || uniqueid.isEmpty())
+			return null;
+
+		List<ItemCollection> projectList = getProjectList();
+		for (ItemCollection aProject : projectList) {
+			if (uniqueid.equals(aProject
+					.getItemValueString(EntityService.UNIQUEID)))
+				return aProject;
+		}
+		return null;
+
 	}
 
 	/**
@@ -378,7 +399,7 @@ public class ModelController implements Serializable {
 
 		if (uniqueIdRef != null) {
 			// iterate over all projects and compare the $UniqueIDRef
-			List<ItemCollection> list = getProjects();
+			List<ItemCollection> list = getProjectList();
 			for (ItemCollection project : list) {
 				if (uniqueIdRef.equals(project
 						.getItemValueString("$UniqueIDRef"))) {
@@ -411,26 +432,50 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * This method returns all process entities for the current selected
-	 * workflowGroup and modelVersion
+	 * This method returns all process entities for modelVersion|workflowGroup
 	 * 
 	 * This list can be used to display state/flow informations inside a form
 	 * 
 	 * @return
 	 */
-	public List<ItemCollection> getProcessList(String sGroup, String sVersion) {
+	public List<ItemCollection> getProcessEntities(String sGroup,
+			String sVersion) {
 
-		if (processList == null || !getWorkflowGroup().equals(sGroup)
-				|| !getModelVersion().equals(sVersion)) {
+		if (sGroup != null && sVersion != null) {
 
 			setWorkflowGroup(sGroup);
 			setModelVersion(sVersion);
-			logger.info("ModelControler: getAllProcessEntitiesByGroupByVersion");
-			processList = modelService.getAllProcessEntitiesByGroupByVersion(
-					getWorkflowGroup(), getModelVersion());
-
+			logger.info("ModelControler: AChtung - diese Methode sollte einen Caching mechanismus unterstützen !!! getAllProcessEntitiesByGroupByVersion");
+			List<ItemCollection> result = modelService
+					.getAllProcessEntitiesByGroupByVersion(getWorkflowGroup(),
+							getModelVersion());
+			return result;
 		}
-		return processList;
+		return null;
+	}
+	
+	
+	/**
+	 * This method computes the modelVersion and than returns the list
+	 * @param sGroup
+	 * @return
+	 */
+	public List<ItemCollection> getProcessEntities(String sGroup) {
+		if (sGroup==null || sGroup.isEmpty())
+			return null;
+		
+		// find Modelversion..
+		List<ItemCollection> aprocessList=getProcessList();
+		for (ItemCollection aprocess: aprocessList) {
+			if (sGroup.equals(aprocess.getItemValueString("txtWorkflowGroup"))) {
+				return getProcessEntities( sGroup,
+						aprocess.getItemValueString("$modelVersion"));
+			}
+			
+		}
+		
+	
+		return null;
 	}
 
 	/**
@@ -444,7 +489,8 @@ public class ModelController implements Serializable {
 		if (workflowEvent == null)
 			return;
 
-		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
+		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
+				.getEventType()) {
 			// test if project was processed
 			if ("project".equals(workflowEvent.getWorkitem()
 					.getItemValueString("type"))) {
@@ -470,13 +516,13 @@ public class ModelController implements Serializable {
 	 * @return
 	 */
 	private boolean isProcessEntityInList(ItemCollection startProcessEntity,
-			List<String> processlist) {
+			List<String> aprocesslist) {
 
 		String startGroupVersion = startProcessEntity
 				.getItemValueString("$ModelVersion");
 		String startProcessID = ""
 				+ startProcessEntity.getItemValueInteger("numProcessID");
-		for (String processid : processlist) {
+		for (String processid : aprocesslist) {
 			String sModelVersion = null;
 			String sProcessID = null;
 			if (processid.indexOf('|') > -1) {

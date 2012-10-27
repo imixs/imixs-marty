@@ -33,6 +33,8 @@ public class WorkitemHelper {
 				aWorkitem.getItemValue("$ProcessID"));
 		clone.replaceItemValue("$Created", aWorkitem.getItemValue("$Created"));
 		clone.replaceItemValue("$Modified", aWorkitem.getItemValue("$Modified"));
+		clone.replaceItemValue("$isAuthor", aWorkitem.getItemValue("$isAuthor"));
+		
 		clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
 
 		clone.replaceItemValue("txtWorkflowStatus",

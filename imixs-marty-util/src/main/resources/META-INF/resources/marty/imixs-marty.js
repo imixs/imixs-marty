@@ -8,13 +8,13 @@
 $(document).ready(function() {
 	$(".suggestinput").each(function(index, input) {
 	    var onblur = input.onblur;
-	    input.onblur = null;
-	
+	    input.onblur = null;	
 	    $(input).on("blur", function(event) {
 	    	// clear the input on blur
 	    	$(this).val(''); 
 	        delayEvent(function() { onblur.call(input, event); }, 300);
 	    });
+	    
 	    // turn autocomplete of
 	    $(this).attr('autocomplete','off');
 	});
@@ -22,6 +22,7 @@ $(document).ready(function() {
 });
 
 var delayEvent = (function() {
+	
     var timer = 0;
     return function(callback, timeout) {
         clearTimeout(timer);

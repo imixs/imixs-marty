@@ -34,6 +34,7 @@ import javax.inject.Named;
 
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
  * The HistoryController provides a history navigation over workItems the user
@@ -65,8 +66,6 @@ public class HistoryController implements Serializable {
 
 		workitems = new ArrayList<ItemCollection>();
 	}
-
-	
 
 	public String getCurrentId() {
 		return currentId;
@@ -126,7 +125,11 @@ public class HistoryController implements Serializable {
 	}
 
 	/**
-	 * WorkflowEvent listener listens to WORKITEM_CHANGED events
+	 * WorkflowEvent listener listens to WORKITEM_CHANGED events and adds the
+	 * current WorkItem into the history nav.
+	 * 
+	 * If a WorkItem was processed, and the property 'action' is 'home' or
+	 * 'notes' then the WorkItem will be removed from the history
 	 * 
 	 * @param workflowEvent
 	 * 
@@ -136,9 +139,10 @@ public class HistoryController implements Serializable {
 			currentId = null;
 			return;
 		}
-		
+
 		// skip if not a workItem...
-		if (!workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
+		if (!workflowEvent.getWorkitem().getItemValueString("type")
+				.startsWith("workitem"))
 			return;
 
 		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
@@ -147,7 +151,18 @@ public class HistoryController implements Serializable {
 
 		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
 				.getEventType()) {
-			addWorkItem(workflowEvent.getWorkitem());
+
+			// if the property 'action' is 'home' or 'notes'
+			// then remove the WorkItem and clear the currentID
+			String result = workflowEvent.getWorkitem().getItemValueString(
+					"action");
+			if ("home".equals(result) || "notes".equals(result)) {
+				removeWorkitem(workflowEvent.getWorkitem().getItemValueString(
+						EntityService.UNIQUEID));
+				setCurrentId("");
+			} else {
+				addWorkItem(workflowEvent.getWorkitem());
+			}
 		}
 	}
 
@@ -158,7 +173,8 @@ public class HistoryController implements Serializable {
 	private void addWorkItem(ItemCollection aWorkitem) {
 
 		if (aWorkitem == null
-				|| !aWorkitem.getItemValueString("type").startsWith("workitem")) {
+				|| !aWorkitem.getItemValueString("type").startsWith("workitem")
+				|| aWorkitem.getItemValueString("$UniqueID").isEmpty()) {
 			currentId = null;
 			return;
 		}
@@ -202,5 +218,4 @@ public class HistoryController implements Serializable {
 		return -1;
 	}
 
-	
 }
