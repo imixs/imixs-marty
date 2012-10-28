@@ -34,8 +34,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.enterprise.context.RequestScoped;
 import javax.enterprise.event.Observes;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.inject.Named;
@@ -56,38 +56,37 @@ import org.imixs.workflow.ItemCollection;
  * The property log provides a ArrayList with ItemCollection Adapters providing
  * the comment details.
  * 
- * @author rsoika 
+ * The CommentController can be used for all types of WorkItems (e.g. workitem,
+ * project, ...)
+ * 
+ * 
+ * @author rsoika
  */
 @Named("commentController")
-@ViewScoped
-public class CommentController implements  Serializable {
+@RequestScoped
+public class CommentController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	
-	
-	public CommentController() {
-		super();
-		
-	}
-	
-	
+
 	/**
 	 * WorkflowEvent listener
 	 * 
-	 * updates the comment list. Therefor the method copies the txtComment into
+	 * updates the comment list. There for the method copies the txtComment into
 	 * the txtCommentList and clears the txtComment field
 	 * 
 	 * @param workflowEvent
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
 		if (workflowEvent == null)
 			return;
-	
+
 		ItemCollection workitem = workflowEvent.getWorkitem();
 
-		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == workflowEvent.getEventType()) {
+		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == workflowEvent
+				.getEventType()) {
 			String sComment = workitem.getItemValueString("txtComment");
-			if (!"".equals(sComment)) {
+			if (!sComment.isEmpty()) {
 				List vCommentList = workitem.getItemValue("txtCommentLog");
 				Map log = new HashMap();
 
@@ -107,12 +106,10 @@ public class CommentController implements  Serializable {
 
 				// clear comment
 				workitem.replaceItemValue("txtComment", "");
-		
-		}
+
+			}
 		}
 
 	}
-	
 
-	
 }
