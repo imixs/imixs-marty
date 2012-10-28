@@ -36,14 +36,15 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
-
 
 /**
  * The WorkitemService provides methods to create, process and update a workItem
  * 
  * @author rsoika
- *
+ * 
  */
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
 		"org.imixs.ACCESSLEVEL.READERACCESS",
@@ -59,20 +60,16 @@ import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
 @LocalBean
 public class WorkitemService {
 
-	
 	@EJB
 	org.imixs.workflow.jee.ejb.EntityService entityService;
 
-	
 	@EJB
 	org.imixs.workflow.jee.ejb.WorkflowService workflowService;
-
 
 	@EJB
 	org.imixs.workflow.jee.ejb.ModelService modelService;
 
 	ItemCollection workItem = null;
-
 
 	/**
 	 * This method creates a new workItem. The workItem becomes a response
@@ -120,6 +117,7 @@ public class WorkitemService {
 
 		// create empty workitem
 		workItem = new ItemCollection();
+		workItem.replaceItemValue("type", "workitem");
 		workItem.replaceItemValue("$processID", processID);
 
 		// assign project name and reference
@@ -138,67 +136,25 @@ public class WorkitemService {
 	}
 
 	/**
-	 * Processes a Workitem. The method updates the type attribute. If the
-	 * Workitem is attached to a project then the type will be set to
-	 * 'workitem'. If the woritem is a child process form another workitem then
-	 * teh type will be set to 'childworkitem'
+	 * Processes a WorkItem.
 	 * 
-	 * 
-	 * Also the Method test the workflow property txtWorkflowResultMessage for
-	 * the String "parent=". If such a string element is found the method tries
-	 * to update the project reference for the workitem to the new project with
-	 * the name provided in the txtWorkflowResultMessage (e.g.
-	 * ...parent=purchase). The project reference will be only updated if a
-	 * project with the name provided by the model is provided
-	 * 
-	 * Optional SywApp Plugins are managing the team lists and project name
-	 * properties.
-	 * 
-	 * @see SywappApplicationPlugin, SywappTeamPlugin
-	 * 
+	 * @throws ProcessingErrorException
+	 * @throws AccessDeniedException
 	 * 
 	 */
 	public ItemCollection processWorkItem(ItemCollection aworkitem)
-			throws Exception {
-		String sDefaultType = "workitem";
-
-	
-		workItem = aworkitem;
-		// test the if the workitem is a child process
-		// typcially a workitem is a child to a project
-		String sUniqueidRef = workItem.getItemValueString("$uniqueidref");
-		if (!"".equals(sUniqueidRef)) {
-			// test parent type
-			try {
-				ItemCollection aParentWorkitem = entityService
-						.load(sUniqueidRef);
-				if (aParentWorkitem != null) {
-					String parenttype = aParentWorkitem
-							.getItemValueString("type");
-					if ("workitem".equals(parenttype))
-						// type becomes a child
-						sDefaultType = "childworkitem";
-				}
-			} catch (Exception esearch) {
-				sDefaultType = "workitem";
-			}
-		}
-
-		// replace type only if no type was still set!
-		if ("".equals(workItem.getItemValueString("type")))
-			workItem.replaceItemValue("type", sDefaultType);
+			throws AccessDeniedException, ProcessingErrorException {
 
 		// Process workitem...
-		workItem = workflowService.processWorkItem(workItem);
+		workItem = workflowService.processWorkItem(aworkitem);
 
 		return workItem;
 	}
 
-	
-	
-
 	/**
-	 * This method moves a workitem into the archive by changing the type property
+	 * This method moves a workitem into the archive by changing the type
+	 * property
+	 * 
 	 * @param workitem
 	 * @return
 	 * @throws Exception
@@ -208,7 +164,8 @@ public class WorkitemService {
 		if ("workitem".equals(workitem.getItemValueString("type"))) {
 
 			String id = workitem.getItemValueString("$uniqueid");
-			Collection<ItemCollection> col = workflowService.getWorkListByRef(id);
+			Collection<ItemCollection> col = workflowService
+					.getWorkListByRef(id);
 			for (ItemCollection achildworkitem : col) {
 				// recursive method call
 				moveIntoArchive(achildworkitem);
@@ -217,7 +174,7 @@ public class WorkitemService {
 					workitem.getItemValueString("type") + "archive");
 
 			workitem = entityService.save(workitem);
-			
+
 			// update search index
 			try {
 				LucenePlugin.addWorkitem(workitem);
@@ -230,7 +187,8 @@ public class WorkitemService {
 	}
 
 	/**
-	 * THie method restores a workitem from the archive by changing the type property
+	 * THie method restores a workitem from the archive by changing the type
+	 * property
 	 * 
 	 * @param workitem
 	 * @return
@@ -244,7 +202,8 @@ public class WorkitemService {
 						.getItemValueString("type"))) {
 
 			String id = workitem.getItemValueString("$uniqueid");
-			Collection<ItemCollection> col = workflowService.getWorkListByRef(id);
+			Collection<ItemCollection> col = workflowService
+					.getWorkListByRef(id);
 			for (ItemCollection achildworkitem : col) {
 				// recursive method call
 				restoreFromArchive(achildworkitem);
@@ -255,7 +214,7 @@ public class WorkitemService {
 					.getItemValueString("type")))
 				workitem.replaceItemValue("type", "childworkitem");
 			workitem = entityService.save(workitem);
-			
+
 			// update search index
 			try {
 				LucenePlugin.addWorkitem(workitem);
@@ -276,7 +235,8 @@ public class WorkitemService {
 				|| "childworkitem".equals(workitem.getItemValueString("type"))) {
 
 			String id = workitem.getItemValueString("$uniqueid");
-			Collection<ItemCollection> col = workflowService.getWorkListByRef(id);
+			Collection<ItemCollection> col = workflowService
+					.getWorkListByRef(id);
 			for (ItemCollection achildworkitem : col) {
 				// recursive method call
 				moveIntoDeletions(achildworkitem);
@@ -284,7 +244,7 @@ public class WorkitemService {
 			workitem.replaceItemValue("type",
 					workitem.getItemValueString("type") + "deleted");
 			workitem = entityService.save(workitem);
-			
+
 			// update search index
 			try {
 				LucenePlugin.addWorkitem(workitem);
@@ -298,6 +258,7 @@ public class WorkitemService {
 
 	/**
 	 * This method restores a delted workitem by changing the type property
+	 * 
 	 * @param workitem
 	 * @return
 	 * @throws Exception
@@ -310,7 +271,8 @@ public class WorkitemService {
 						.getItemValueString("type"))) {
 
 			String id = workitem.getItemValueString("$uniqueid");
-			Collection<ItemCollection> col = workflowService.getWorkListByRef(id);
+			Collection<ItemCollection> col = workflowService
+					.getWorkListByRef(id);
 			for (ItemCollection achildworkitem : col) {
 				// recursive method call
 				restoreFromDeletions(achildworkitem);
@@ -321,22 +283,19 @@ public class WorkitemService {
 					.getItemValueString("type")))
 				workitem.replaceItemValue("type", "childworkitem");
 			workitem = entityService.save(workitem);
-			
 
 			// update search index
 			try {
 				LucenePlugin.addWorkitem(workitem);
 			} catch (Exception e) {
 				// no op
-				
+
 			}
 		}
 
 		return workitem;
 	}
-	
-	
-	
+
 	/**
 	 * This method delete a workitem. The method checks for child processes and
 	 * runs a recursive deletion ...
@@ -350,9 +309,5 @@ public class WorkitemService {
 		}
 		entityService.remove(workitem);
 	}
-
-	
-
-	
 
 }

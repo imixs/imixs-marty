@@ -76,7 +76,7 @@ public class ModelController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private String latestSystemModelVersion = null;
+	private String systemModelVersion = null;
 
 	private List<ItemCollection> processList = null;
 	private List<ItemCollection> projectList = null;
@@ -156,10 +156,10 @@ public class ModelController implements Serializable {
 			if ("system".equals(sDomain)) {
 				// test language and version
 				if (sLanguage.equals(userController.getLocale())
-						&& (latestSystemModelVersion == null || latestSystemModelVersion
+						&& (systemModelVersion == null || systemModelVersion
 								.compareTo(aModelVersion) < 0)) {
 					// update latest System model version
-					latestSystemModelVersion = aModelVersion;
+					systemModelVersion = aModelVersion;
 				}
 				continue;
 			}
@@ -201,6 +201,11 @@ public class ModelController implements Serializable {
 
 	public void setModelVersion(String modelVersion) {
 		this.modelVersion = modelVersion;
+	}
+	
+	
+	public String getSystemModelVersion() {
+		return systemModelVersion;
 	}
 
 	/**

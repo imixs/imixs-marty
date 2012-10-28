@@ -40,9 +40,9 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
- * This plug-in supports additional business logic for project entities.
- * The plug-in updates the properties txtName and txtProjectName. It also 
- * compute the parent team members and the team members of subprojects.
+ * This plug-in supports additional business logic for project entities. The
+ * plug-in updates the properties txtName and txtProjectName. It also compute
+ * the parent team members and the team members of subprojects.
  * 
  * @author rsoika
  * 
@@ -60,18 +60,20 @@ public class ProjectPlugin extends AbstractPlugin {
 		// check for an instance of WorkflowService
 		if (actx instanceof WorkflowService) {
 			// yes we are running in a WorkflowService EJB
-			WorkflowService ws = (WorkflowService) actx;			
+			WorkflowService ws = (WorkflowService) actx;
 			entityService = ws.getEntityService();
 		}
-		
 
 	}
 
 	/**
 	 * The Plugin verifies if the workitem is from the type 'project'. Only in
 	 * this case the plugin will update project Information and updates parent
-	 * and subProjects. The user has to have sufficient access for these
-	 * operations!
+	 * and subProjects.
+	 * 
+	 * The plugin also updates the name and access fields of a project.
+	 * 
+	 * The current user has to have sufficient access for these operations!
 	 **/
 	@SuppressWarnings("unchecked")
 	@Override
@@ -85,12 +87,9 @@ public class ProjectPlugin extends AbstractPlugin {
 
 		project = aworkItem;
 
-		updateParentProjectInformations(project);
-		project.replaceItemValue("txtName",
-				project.getItemValueString("txtProjectName"));
-
+		updateProject();
+		
 		// Verify if namTeam or namOwner is empty!
-
 		List<String> vTeam = project.getItemValue("namTeam");
 		List<String> vOwner = project.getItemValue("namOwner");
 		if (vTeam.size() == 0) {
@@ -134,47 +133,65 @@ public class ProjectPlugin extends AbstractPlugin {
 
 	@Override
 	public void close(int arg0) throws PluginException {
-		if (project != null && arg0!=Plugin.PLUGIN_ERROR)
-			updateSubProjectInformations(project);
+		if (project != null && arg0 != Plugin.PLUGIN_ERROR)
+			updateSubProjectInformations();
 
 	}
 
 	/**
-	 * This method updates the Project Informations which are inherited from a
-	 * parentProject. A ParenProject is referenced by the $UniqueIDRef
+	 * This method updates the Project Name ('txtName') which is inherited from
+	 * a parentProject aneme. A ParenProject is referenced by the $UniqueIDRef.
 	 * 
-	 * The Method adds the attriubtes
+	 * If the project has a parentProject, then the method adds also the
+	 * properties
 	 * 
 	 * namParentTeam namParentOwner
 	 * 
-	 * @throws Exception
 	 */
-	private void updateParentProjectInformations(ItemCollection project) {
-
+	private void updateProject() {
+		ItemCollection parentProject =null;
+		// test if the project has a subproject..
 		String sParentProjectID = project.getItemValueString("$uniqueidRef");
-		logger.fine("Updating Parent Project Informations for '"+sParentProjectID+"'");
+		if (!sParentProjectID.isEmpty())
+			parentProject = entityService.load(sParentProjectID);
+		
+		
+		if (parentProject != null) {
+			logger.fine("Updating Parent Project Informations for '"
+					+ sParentProjectID + "'");
 
-		ItemCollection parentProject = entityService.load(sParentProjectID);
+			String sName = project.getItemValueString("txtProjectName");
+			String sParentName = parentProject.getItemValueString("txtName");
 
-		String sName = project.getItemValueString("txtProjectName");
-		String sParentName = parentProject.getItemValueString("txtName");
+			project.replaceItemValue("txtName", sParentName + "." + sName);
+			project.replaceItemValue("txtParentName", sParentName );
+		
+			project.replaceItemValue("namParentTeam",
+					parentProject.getItemValue("namTeam"));
+			project.replaceItemValue("namParentOwner",
+					parentProject.getItemValue("namOwner"));
+		}
+		else {
+			// root project - update txtName
+			project.replaceItemValue("txtName",
+					project.getItemValueString("txtProjectName"));
 
-		project.replaceItemValue("txtName", sParentName + "." + sName);
-
-		project.replaceItemValue("namParentTeam",
-				parentProject.getItemValue("namTeam"));
-		project.replaceItemValue("namParentOwner",
-				parentProject.getItemValue("namOwner"));
+		}
 	}
 
-	private void updateSubProjectInformations(ItemCollection project) {
-		// now test if the parentName property of subprojects need to be updated
-		// this is only necesarry if subprojects are found.
-		
-		logger.fine("Updating Sub Project Informations for '"+project
-				.getItemValueString("$Uniqueid")+"'");
+	/**
+	 * This method updates the parentName property for all subprojects if the
+	 * parent project name has changed
+	 * 
+	 * This is only necessary if subprojects are found.
+	 * 
+	 * @param project
+	 */
+	private void updateSubProjectInformations() {
 
-		
+		logger.fine("Updating Sub Project Informations for '"
+				+ project.getItemValueString("$Uniqueid") + "'");
+
 		List<ItemCollection> childProjectList = findAllSubProjects(project
 				.getItemValueString("$Uniqueid"));
 		String sProjectName = project.getItemValueString("txtName");
@@ -189,7 +206,7 @@ public class ProjectPlugin extends AbstractPlugin {
 				try {
 					this.entityService.save(aSubProject);
 				} catch (Exception sube) {
-					System.out.println("Subproject name could not be updated: "
+					logger.severe("Subproject name could not be updated: "
 							+ sube);
 				}
 			}

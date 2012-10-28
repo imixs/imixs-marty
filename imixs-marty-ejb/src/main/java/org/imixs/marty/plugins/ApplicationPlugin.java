@@ -34,7 +34,7 @@ import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.PluginException;
 
 /**
- * This plugin overwrites the Application Plugin and updates sywapp informations
+ * This plugin overwrites the Application Plugin and updates marty informations
  * like the subject and the workflowgroup name.
  * 
  * @author rsoika
