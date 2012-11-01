@@ -28,11 +28,8 @@
 package org.imixs.marty.profile;
 
 import java.io.Serializable;
-import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
@@ -40,10 +37,8 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.component.UIParameter;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.Cookie;
@@ -87,8 +82,7 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
  */
 @Named("userController")
 @SessionScoped
-public class UserController  implements
-		Serializable {
+public class UserController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private final String COOKIE_LOCALE = "imixs.workflow.locale";
@@ -96,9 +90,7 @@ public class UserController  implements
 
 	final int MAX_CACHE_SIZE = 20;
 	private Cache cache;
-	
-	
-	
+
 	@EJB
 	private org.imixs.workflow.jee.ejb.ModelService modelService;
 
@@ -107,9 +99,9 @@ public class UserController  implements
 
 	@EJB
 	private WorkflowService workflowService;
-	
-	//@EJB
-	//private org.imixs.marty.ejb.WorkitemService workitemService;
+
+	// @EJB
+	// private org.imixs.marty.ejb.WorkitemService workitemService;
 
 	public final static int MAX_PRIMARY_ENTRIES = 5;
 	public final static int START_PROFILE_PROCESS_ID = 200;
@@ -120,35 +112,21 @@ public class UserController  implements
 
 	private String locale;
 
-	
 	@Inject
 	private SetupController setupController = null;
 
-	
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
-	
-	
-	 
 	public UserController() {
 		super();
 		cache = new Cache(MAX_CACHE_SIZE);
-		
+
 	}
 
 	/**
 	 * The init method is used to load a user profile or automatically create a
 	 * new one if no profile for the user is available. A new Profile will be
-	 * filled with default values. Additional the method creates a default
-	 * project if the user is first time loged in.
-	 * 
-	 * 
-	 * After the user values are read out from the database the bean updates the
-	 * Bean skinMB which stores the values in a cookie. JSF Pages use the skinMB
-	 * to determine the user settings skin and locale.
-	 * 
-	 * The Method also updates the Profile Workitem to indicate the last
-	 * Successful Login of the current user
+	 * filled with default values.
 	 * 
 	 * 
 	 * The method also tests if the System Setup is completed. This if for
@@ -170,11 +148,7 @@ public class UserController  implements
 
 			// determine user language and set Modelversion depending on
 			// the selected user locale
-			String sModelVersion = "system-"+getLocale();
-			// terminate excecution if no system model ist defined
-			if (sModelVersion == null) {
-				throw new RuntimeException(" No System Model found!");
-			}
+			String sModelVersion = "system-" + getLocale();
 
 			try {
 				// try to load the profile for the current user
@@ -183,45 +157,25 @@ public class UserController  implements
 
 					// create new Profile for current user
 					profile = new ItemCollection();
-					profile.replaceItemValue("type","profile");
-					profile.replaceItemValue("$processID",START_PROFILE_PROCESS_ID);
+					profile.replaceItemValue("type", "profile");
+					profile.replaceItemValue("$processID",
+							START_PROFILE_PROCESS_ID);
 
 					profile.replaceItemValue("$modelversion", sModelVersion);
 
 					// now set default values for locale
 					profile.replaceItemValue("txtLocale", getLocale());
 
-		
-				
 					// process new profile...
 					profile.replaceItemValue("$ActivityID",
 							CREATE_PROFILE_ACTIVITY_ID);
 					profile = workflowService.processWorkItem(profile);
+					logger.info("New Profile created ");
 
 				} else {
-					// Update Workitem to store last Login Time and logincount
-					Calendar cal = Calendar.getInstance();
-
-					Date datpenultimateLogin = profile
-							.getItemValueDate("datLastLogin");
-					if (datpenultimateLogin == null)
-						datpenultimateLogin = cal.getTime();
-
-					profile.replaceItemValue("datpenultimateLogin",
-							datpenultimateLogin);
-
-					profile.replaceItemValue("datLastLogin", cal.getTime());
-					int logins = profile.getItemValueInteger("numLoginCount");
-					logins++;
-					profile.replaceItemValue("numLoginCount", logins);
-
-					// workitemItemCollection = getEntityService().save(
-					// workitemItemCollection);
-
-					// process profile to trigger ProfilePlugin (Invitations)...
-					profile.replaceItemValue("$ActivityID",
-							UPDATE_PROJECT_ACTIVITY_ID);
-					profile = workflowService.processWorkItem(profile);
+					// no op
+					// in earlier versions teh datlastLogin and numLoginCoutn
+					// property was set
 
 				}
 				// set max History & log length
@@ -256,9 +210,9 @@ public class UserController  implements
 		this.setupController = setupMB;
 	}
 
-	
 	/**
-	 * returns the userPrincipal Name 
+	 * returns the userPrincipal Name
+	 * 
 	 * @return
 	 */
 	public String getUserPrincipal() {
@@ -267,11 +221,6 @@ public class UserController  implements
 		return externalContext.getUserPrincipal() != null ? externalContext
 				.getUserPrincipal().toString() : null;
 	}
-	
-	
-	
-
-	
 
 	public ItemCollection getWorkitem() {
 		if (workitem == null)
@@ -282,10 +231,11 @@ public class UserController  implements
 	public void setWorkitem(ItemCollection aworkitem) {
 		this.workitem = aworkitem;
 	}
-	
+
 	/**
-	 * This method returns the current user locale. If the user is not logged in the method 
-	 * try to get the locale out from the cookie. If no cockie is set the method defaults to "en"
+	 * This method returns the current user locale. If the user is not logged in
+	 * the method try to get the locale out from the cookie. If no cockie is set
+	 * the method defaults to "en"
 	 * 
 	 * @return - ISO Locale format
 	 */
@@ -297,18 +247,13 @@ public class UserController  implements
 					.getCurrentInstance().getExternalContext().getRequest();
 
 			String cookieName = null;
-			String cookiePath = null;
 
 			Cookie cookie[] = ((HttpServletRequest) facesContext
 					.getExternalContext().getRequest()).getCookies();
 			if (cookie != null && cookie.length > 0) {
 				for (int i = 0; i < cookie.length; i++) {
 					cookieName = cookie[i].getName();
-					cookiePath = cookie[i].getPath();
-
-					if (cookieName.equals(COOKIE_LOCALE)
-
-					) {
+					if (cookieName.equals(COOKIE_LOCALE)) {
 						locale = cookie[i].getValue();
 						break;
 					}
@@ -349,8 +294,6 @@ public class UserController  implements
 
 	}
 
-
-
 	/**
 	 * This Method returns the users Model Domain. e.g. 'public'
 	 * 
@@ -364,42 +307,6 @@ public class UserController  implements
 			sDomain = "public";
 		return sDomain;
 	}
-
-	/**
-	 * This method is for saving and processing a profile using the
-	 * profileService EJB
-	 * 
-	 * The method changes the workflow step form 10 to 20 if: $processID=200 &&
-	 * keyagb="true"
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void doProcess(ActionEvent event) throws Exception {
-		// Activity ID raussuchen und in activityID speichern
-		List children = event.getComponent().getChildren();
-		int activityID = -1;
-		for (int i = 0; i < children.size(); i++) {
-			if (children.get(i) instanceof UIParameter) {
-				UIParameter currentParam = (UIParameter) children.get(i);
-				if (currentParam.getName().equals("id")
-						&& currentParam.getValue() != null) {
-					// activityID = (Integer) currentParam.getValue();
-
-					Object o = currentParam.getValue();
-					activityID = Integer.parseInt(o.toString());
-					break;
-				}
-			}
-		}
-
-		
-		
-		// Now reset current Skin
-		updateLocale();
-	}
-
-	
 
 	/**
 	 * This method returns the username (displayname) for a useraccount
@@ -432,7 +339,6 @@ public class UserController  implements
 
 		return userArray[1];
 	}
-
 
 	/*
 	 * HELPER METHODS
@@ -503,7 +409,6 @@ public class UserController  implements
 
 	}
 
-	
 	/**
 	 * this class performes a EJB Lookup for the corresponding userprofile. The
 	 * method stores the username and his email into a string array. So either
@@ -512,6 +417,7 @@ public class UserController  implements
 	 * @param aName
 	 * @return array of username and string
 	 */
+	@SuppressWarnings("unchecked")
 	private String[] lookupUser(String aName) {
 		String[] array = new String[2];
 
@@ -538,33 +444,6 @@ public class UserController  implements
 		return array;
 	}
 
-	/**
-	 * this class performs a EJB Lookup for the corresponding userprofile
-	 * 
-	 * @param aName
-	 * @return
-	 */
-	private String lookupAccount(String aUserName) {
-		String sAccount = null;
-		ItemCollection profile = findProfileByUserName(aUserName);
-		// if profile null cache current name object
-		if (profile == null)
-			sAccount = aUserName;
-		else
-			sAccount = profile.getItemValueString("txtName");
-
-		if ("".equals(sAccount))
-			sAccount = aUserName;
-
-		// put name into cache
-		cache.put(aUserName, sAccount);
-
-		return sAccount;
-	}
-	
-	
-	
-	
 	/**
 	 * This method returns a profile ItemCollection for a specified account
 	 * name. if no name is supported the remote user name will by used to find
@@ -594,37 +473,5 @@ public class UserController  implements
 		return null;
 
 	}
-	
-	
-	
-	/**
-	 * This method returns a profile ItemCollection for a specified username.
-	 * The username is mapped to a technical name inside a profile. The method
-	 * returns null if no Profile for this name was found
-	 * 
-	 * @param aname
-	 * @return
-	 */
-	private ItemCollection findProfileByUserName(String aname) {
-		if (aname == null)
-			aname = getUserPrincipal();
-
-		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-				+ " JOIN profile.textItems AS t2"
-				+ " WHERE  profile.type= 'profile' "
-				+ " AND t2.itemName = 'txtusername' " + " AND t2.itemValue = '"
-				+ aname.trim() + "' ";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, 1);
-
-		if (col.size() > 0) {
-			ItemCollection aworkitem = col.iterator().next();
-			return aworkitem;
-		}
-		return null;
-
-	}
-	
 
 }

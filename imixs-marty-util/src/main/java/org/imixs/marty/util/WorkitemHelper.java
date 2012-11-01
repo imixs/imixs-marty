@@ -24,6 +24,7 @@ public class WorkitemHelper {
 	public static ItemCollection clone(ItemCollection aWorkitem) {
 		ItemCollection clone = new ItemCollection();
 
+		// clone the standard WorkItem properties
 		clone.replaceItemValue("$UniqueID", aWorkitem.getItemValue("$UniqueID"));
 		clone.replaceItemValue("$UniqueIDRef",
 				aWorkitem.getItemValue("$UniqueIDRef"));
@@ -34,7 +35,7 @@ public class WorkitemHelper {
 		clone.replaceItemValue("$Created", aWorkitem.getItemValue("$Created"));
 		clone.replaceItemValue("$Modified", aWorkitem.getItemValue("$Modified"));
 		clone.replaceItemValue("$isAuthor", aWorkitem.getItemValue("$isAuthor"));
-		
+
 		clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
 
 		clone.replaceItemValue("txtWorkflowStatus",
@@ -47,14 +48,29 @@ public class WorkitemHelper {
 				aWorkitem.getItemValue("txtWorkflowSummary"));
 		clone.replaceItemValue("txtWorkflowAbstract",
 				aWorkitem.getItemValue("txtWorkflowAbstract"));
-		
 		clone.replaceItemValue("txtWorkflowImageURL",
 				aWorkitem.getItemValue("txtWorkflowImageURL"));
-	
-		clone.replaceItemValue("txtProjectName",
-				aWorkitem.getItemValue("txtProjectName"));
-	
-		
+
+		// clone the marty WorkItem properties....
+		if (aWorkitem.hasItem("txtName"))
+			clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
+
+		if (aWorkitem.hasItem("txtProjectName"))
+			clone.replaceItemValue("txtProjectName",
+					aWorkitem.getItemValue("txtProjectName"));
+
+		if (aWorkitem.hasItem("datdate"))
+			clone.replaceItemValue("datdate", aWorkitem.getItemValue("datdate"));
+
+		if (aWorkitem.hasItem("datFrom"))
+			clone.replaceItemValue("datFrom", aWorkitem.getItemValue("datFrom"));
+
+		if (aWorkitem.hasItem("datTo"))
+			clone.replaceItemValue("datTo", aWorkitem.getItemValue("datTo"));
+
+		if (aWorkitem.hasItem("numsequencenumber"))
+			clone.replaceItemValue("numsequencenumber",
+					aWorkitem.getItemValue("numsequencenumber"));
 
 		return clone;
 
@@ -75,9 +91,9 @@ public class WorkitemHelper {
 	 */
 	public static boolean matches(ItemCollection workitem, String filter) {
 
-		if (filter==null || "".equals(filter.trim()))
+		if (filter == null || "".equals(filter.trim()))
 			return true;
-		
+
 		// split columns
 		StringTokenizer regexTokens = new StringTokenizer(filter, ")");
 		while (regexTokens.hasMoreElements()) {
@@ -88,7 +104,7 @@ public class WorkitemHelper {
 			regEx.replace(",", "");
 			// test if ':' found
 			if (regEx.indexOf(':') > -1) {
-				regEx=regEx.trim();
+				regEx = regEx.trim();
 				String itemName = regEx.substring(0, regEx.indexOf(':'));
 				regEx = regEx.substring(regEx.indexOf(':') + 1);
 				List<Object> itemValues = workitem.getItemValue(itemName);
