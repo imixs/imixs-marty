@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
@@ -41,8 +40,8 @@ import javax.inject.Named;
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
+
 
 /**
  ** This Bean acts a a front controller for child workitems.
@@ -52,7 +51,7 @@ import org.imixs.workflow.jee.ejb.EntityService;
  */
 @Named("childWorkitemController")
 @SessionScoped
-public class ChildWorkitemController implements Serializable {
+public class ChildWorkitemController extends org.imixs.workflow.jee.faces.workitem.WorkflowController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -131,35 +130,10 @@ public class ChildWorkitemController implements Serializable {
 
 	public void reset() {
 		childList = null;
+		this.setWorkitem(null);
 
 	}
 
-	/**
-	 * The action method processes the current childworkItem. The method returns
-	 * the value of the property 'action' if provided. This property can be
-	 * provided by an application or evaluated from the ResultPlugin. If no
-	 * 'action' property is provided the method evaluates the default property
-	 * 'txtworkflowResultmessage' as a action result.
-	 * 
-	 * @return action result
-	 * @throws AccessDeniedException
-	 */
-	public String process() throws AccessDeniedException,
-			ProcessingErrorException {
-		// clear last action
-		/*
-		 * workitem.removeItem("action");
-		 * 
-		 * // process workItem now... workitem =
-		 * this.getWorkflowService().processWorkItem(workitem); // test if the
-		 * property 'action' is provided String action =
-		 * workitem.getItemValueString("action"); if ("".equals(action)) // get
-		 * default workflowResult message action =
-		 * workitem.getItemValueString("txtworkflowresultmessage"); return
-		 * ("".equals(action) ? null : action);
-		 */
-		return null;
-	}
 	
 	
 	public ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
