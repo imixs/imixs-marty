@@ -292,23 +292,23 @@ public class WorkflowController extends
 					try {
 						ResourceBundle rb = null;
 						if (locale != null)
-							rb = ResourceBundle.getBundle("bundle.forms",
+							rb = ResourceBundle.getBundle("bundle.app",
 									locale);
 						else
-							rb = ResourceBundle.getBundle("bundle.forms");
+							rb = ResourceBundle.getBundle("bundle.app");
 
 						String sResouceURL = sURL.replace('/', '_');
 						sName = rb.getString(sResouceURL);
 					} catch (java.util.MissingResourceException eb) {
 						sName = "";
-						System.out.println(eb.getMessage());
+						logger.warning(eb.getMessage());
 					}
 
 					EditorSection aSection = new EditorSection(sURL, sName);
 					sections.add(aSection);
 
 				} catch (Exception est) {
-					logger.severe("[WorkitemMB] can not parse EditorSections : '"
+					logger.severe("[WorkitemController] can not parse EditorSections : '"
 							+ sEditor + "'");
 					logger.severe(est.getMessage());
 				}
