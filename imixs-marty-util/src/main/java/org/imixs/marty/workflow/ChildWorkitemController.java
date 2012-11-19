@@ -35,13 +35,13 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
+import javax.faces.event.ActionEvent;
 import javax.inject.Named;
 
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.jee.ejb.EntityService;
-
 
 /**
  ** This Bean acts a a front controller for child workitems.
@@ -51,7 +51,9 @@ import org.imixs.workflow.jee.ejb.EntityService;
  */
 @Named("childWorkitemController")
 @SessionScoped
-public class ChildWorkitemController extends org.imixs.workflow.jee.faces.workitem.WorkflowController implements Serializable {
+public class ChildWorkitemController extends
+		org.imixs.workflow.jee.faces.workitem.WorkflowController implements
+		Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -66,10 +68,6 @@ public class ChildWorkitemController extends org.imixs.workflow.jee.faces.workit
 
 	public static Logger logger = Logger.getLogger("org.imixs.marty");
 
-	
-	
-	
-	
 	public String getUniqueIdRef() {
 		return uniqueIdRef;
 	}
@@ -93,7 +91,7 @@ public class ChildWorkitemController extends org.imixs.workflow.jee.faces.workit
 
 		// if workItem has changed, then update the dms list
 		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
-			reset();
+			reset(null);
 			if (workflowEvent.getWorkitem() == null)
 				uniqueIdRef = null;
 			else
@@ -128,16 +126,27 @@ public class ChildWorkitemController extends org.imixs.workflow.jee.faces.workit
 
 	}
 
-	public void reset() {
+	/**
+	 * reset the current childlist
+	 */
+	@Override
+	public void reset(ActionEvent event) {
+		super.reset(event);
 		childList = null;
-		this.setWorkitem(null);
-
 	}
 
-	
-	
+	/**
+	 * create a new childWorkItem with type='childworkitem'
+	 */
+	@Override
+	public void create(ActionEvent event) {
+		super.create(event);
+		// update type property
+		this.getWorkitem().replaceItemValue("type", "childworkitem");
+	}
+
 	public ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
-		return WorkitemHelper.clone(aWorkitem);		
+		return WorkitemHelper.clone(aWorkitem);
 	}
 
 }
