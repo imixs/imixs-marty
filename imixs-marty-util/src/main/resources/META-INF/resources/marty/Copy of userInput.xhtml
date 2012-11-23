@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:cc="http://java.sun.com/jsf/composite">
+
+<cc:interface>
+	<cc:attribute name="value"></cc:attribute>
+	
+	<cc:attribute name="editmode" default="true"
+		type="java.lang.Boolean"></cc:attribute>
+</cc:interface>
+
+<cc:implementation>
+
+	<script type="text/javascript">
+/*<![CDATA[*/
+$(document).ready(function() {
+  // test if delayEvent is defined
+  if (typeof(window.delayEvent)!='function') {
+  	 alert('function delayEvent() not defined! Please check if script library marty/imixs-marty.js is loaded!');
+  }
+ });
+ 
+
+/*]]>*/	
+</script>
+
+
+	<h:panelGroup id="workitemlink_box" layout="block"
+		class="marty-workitemlink">
+
+		<!-- Process references -->
+		<h:panelGroup id="reference_box" layout="block"
+			rendered="#{! cc.attrs.hidereferences}" class="marty-workitemlink-referencebox">
+			<c:forEach var="user"
+				items="#{! cc.attrs.value}">
+					#{user}
+					<br />
+				
+
+				
+
+			</c:forEach>
+		</h:panelGroup>
+		<!-- Input Field -->
+		<h:panelGroup id="input_box" layout="block">
+			<h:inputText value="#{userInputController.input}" class="suggestinput">
+				<f:ajax event="keyup" render="suggest_box"
+					listener="#{userInputController.search}" />
+				<f:ajax event="blur" render="suggest_box"
+					listener="#{userInputController.reset}" />
+			</h:inputText>
+
+
+			<h:panelGroup id="suggest_box">
+				<h:panelGroup id="suggest_resultlist"
+					class="marty-workitemlink-resultlist"
+					rendered="#{! empty userInputController.searchResult}">
+					<c:forEach var="suggest" items="#{linkController.searchResult}">
+						<div class="marty-workitemlink-resultlist-entry">
+							<h:commandLink
+								actionListener="#{userInputController.add(suggest.item['$uniqueid'],cc.attrs.value)}">
+								<h:outputText style="font-weight: bold;"
+									value="#{suggest.item['txtWorkflowSummary']}" escape="false"
+									rendered="#{!empty suggest.item['txtName']}" />
+								
+								<f:ajax render="suggest_box reference_box" />
+							</h:commandLink>
+							
+						</div>
+					</c:forEach>
+
+				</h:panelGroup>
+			</h:panelGroup>
+		</h:panelGroup>
+
+	</h:panelGroup>
+
+
+</cc:implementation>
+
+
+</html>
+
+

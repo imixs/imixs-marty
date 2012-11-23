@@ -28,8 +28,11 @@
 package org.imixs.marty.profile;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
@@ -47,6 +50,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.config.SetupController;
 import org.imixs.marty.util.Cache;
+import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
@@ -89,6 +93,7 @@ public class UserController implements Serializable {
 	private ItemCollection workitem = null;
 
 	final int MAX_CACHE_SIZE = 20;
+	final int MAX_SEARCH_COUNT=10;
 	private Cache cache;
 
 	@EJB
@@ -345,6 +350,56 @@ public class UserController implements Serializable {
 	 */
 
 	/**
+	 * This method returns a list of profile ItemCollections matching the search
+	 * phrase. 
+	 * The JQPL joins over txtEmail and txtUserName
+	 * 
+	 * @param aname
+	 * @return
+	 */
+	public List<ItemCollection> searchProfile(String phrase) {
+	
+		
+		List<ItemCollection> searchResult = new ArrayList<ItemCollection>();
+	
+		if (phrase == null || phrase.isEmpty())
+			return searchResult;
+	
+		phrase="%"+phrase.trim()+"%";
+		
+		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+				+ " JOIN profile.textItems AS t1"
+				+ " JOIN profile.textItems AS t2"
+				+ " WHERE  profile.type= 'profile' "
+				+ " AND "
+				+ " ( (t1.itemName = 'txtusername' " + " AND t1.itemValue LIKE  '"	+ phrase + "') "
+				+ " OR (t2.itemName = 'txtemail' " + " AND t2.itemValue LIKE  '"	+ phrase + "') "
+				+ " )";
+				
+			
+		logger.finest("searchprofile: " + sQuery);
+	
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, MAX_SEARCH_COUNT);
+		
+		for (ItemCollection profile:col) {
+			searchResult.add(cloneWorkitem(profile));
+			
+		}
+		
+		//sort by username..
+		Collections.sort(searchResult,
+				new WorkitemComparator("txtWorkflowGroup",
+						true));
+		
+		
+		return searchResult;
+	
+		
+	
+	}
+
+	/**
 	 * This method updates the current skin and location setting through the
 	 * skinMB Therefore the method checks if skin and locale are still set in
 	 * userprofile. If not than the method updates these attributes for the
@@ -472,6 +527,33 @@ public class UserController implements Serializable {
 		}
 		return null;
 
+	}
+	
+	
+	
+	public ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
+		ItemCollection clone = new ItemCollection();
+
+		// clone the standard WorkItem properties
+		clone.replaceItemValue("$UniqueID", aWorkitem.getItemValue("$UniqueID"));
+		clone.replaceItemValue("$ModelVersion",
+				aWorkitem.getItemValue("$ModelVersion"));
+		clone.replaceItemValue("$ProcessID",
+				aWorkitem.getItemValue("$ProcessID"));
+		clone.replaceItemValue("$Created", aWorkitem.getItemValue("$Created"));
+		clone.replaceItemValue("$Modified", aWorkitem.getItemValue("$Modified"));
+		clone.replaceItemValue("$isAuthor", aWorkitem.getItemValue("$isAuthor"));
+
+		
+		clone.replaceItemValue("txtWorkflowStatus",
+				aWorkitem.getItemValue("txtWorkflowStatus"));
+
+		clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
+		clone.replaceItemValue("txtUserName", aWorkitem.getItemValue("txtUserName"));
+		clone.replaceItemValue("txtEmail", aWorkitem.getItemValue("txtEmail"));
+
+	
+		return clone;
 	}
 
 }

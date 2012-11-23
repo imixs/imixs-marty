@@ -381,8 +381,7 @@ public class SetupController implements Serializable {
 			}
 
 			Collections.sort(localeSelection,
-					new SelectItemComparator(FacesContext.getCurrentInstance()
-							.getViewRoot().getLocale(), true));
+					new SelectItemComparator(true));
 
 
 		}

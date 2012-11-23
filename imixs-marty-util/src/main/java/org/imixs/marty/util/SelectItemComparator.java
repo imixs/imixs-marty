@@ -31,19 +31,23 @@ import java.text.Collator;
 import java.util.Comparator;
 import java.util.Locale;
 
+import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 
 /**
- * Sorts a ArrayList of SelectItems by label 
+ * Sorts a ArrayList of SelectItems by label
+ * 
  * @author rsoika
  * 
- */   
+ */
 public class SelectItemComparator implements Comparator<SelectItem> {
 	private final Collator collator;
 
 	private final boolean ascending;
 
-	public SelectItemComparator(Locale locale, boolean ascending) {
+	public SelectItemComparator(boolean ascending) {
+		Locale locale = FacesContext.getCurrentInstance().getViewRoot()
+				.getLocale();
 		this.collator = Collator.getInstance(locale);
 		this.ascending = ascending;
 	}

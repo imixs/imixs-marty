@@ -44,9 +44,11 @@ import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.imixs.marty.model.ModelController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
  * The marty WorkflowController extends the
@@ -81,6 +83,10 @@ public class WorkflowController extends
 	@EJB
 	private org.imixs.marty.ejb.WorkitemService workitemService;
 
+	@Inject
+	private ModelController modelController;
+
+	
 	@Inject
 	private Event<WorkflowEvent> events;
 
@@ -264,20 +270,20 @@ public class WorkflowController extends
 								break;
 							}
 							// test if user is project member
-							/*
-							 * if ("owner".equalsIgnoreCase(aPermission) &&
-							 * this.projectMB.isProjectOwner()) {
-							 * bPermissionGranted = true; break; } if
-							 * ("manager".equalsIgnoreCase(aPermission) &&
-							 * this.projectMB.isProjectManager()) {
-							 * bPermissionGranted = true; break; } if
-							 * ("team".equalsIgnoreCase(aPermission) &&
-							 * this.projectMB.isProjectTeam()) {
-							 * bPermissionGranted = true; break; } if
-							 * ("assist".equalsIgnoreCase(aPermission) &&
-							 * this.projectMB.isProjectAssist()) {
-							 * bPermissionGranted = true; break; }
-							 */
+							String sProjectUniqueID=this.getWorkitem().getItemValueString("$UniqueIDRef");
+							
+
+							if ("manager".equalsIgnoreCase(aPermission)
+									&& modelController.isProjectManager(sProjectUniqueID)) {
+								bPermissionGranted = true;
+								break;
+							}
+							if ("team".equalsIgnoreCase(aPermission)
+									&& this.modelController.isProjectTeam(sProjectUniqueID)) {
+								bPermissionGranted = true;
+								break;
+							}
+							
 
 						}
 
@@ -292,8 +298,7 @@ public class WorkflowController extends
 					try {
 						ResourceBundle rb = null;
 						if (locale != null)
-							rb = ResourceBundle.getBundle("bundle.app",
-									locale);
+							rb = ResourceBundle.getBundle("bundle.app", locale);
 						else
 							rb = ResourceBundle.getBundle("bundle.app");
 

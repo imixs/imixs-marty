@@ -43,11 +43,11 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
-import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.profile.UserController;
+import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
@@ -55,7 +55,8 @@ import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.ModelService;
 
 /**
- * The ModelController provides informations about workflow models.
+ * The ModelController provides informations about workflow models as also the
+ * process and project structure.
  * 
  * A ModelVersion is always expected in the format
  * 
@@ -202,8 +203,7 @@ public class ModelController implements Serializable {
 	public void setModelVersion(String modelVersion) {
 		this.modelVersion = modelVersion;
 	}
-	
-	
+
 	public String getSystemModelVersion() {
 		return systemModelVersion;
 	}
@@ -248,10 +248,8 @@ public class ModelController implements Serializable {
 
 			}
 
-			Collections.sort(processList,
-					new WorkflowGroupComparator(FacesContext
-							.getCurrentInstance().getViewRoot().getLocale(),
-							true));
+			Collections.sort(processList, new WorkitemComparator(
+					"txtWorkflowGroup", true));
 		}
 
 		return processList;
@@ -339,19 +337,15 @@ public class ModelController implements Serializable {
 
 				ItemCollection clone = WorkitemHelper.clone(project);
 
-				clone.replaceItemValue("isOwner",
-						project.getItemValue("namOwner").indexOf(sUserID) > -1);
 				clone.replaceItemValue("isTeam", project
 						.getItemValue("namTeam").indexOf(sUserID) > -1);
-				clone.replaceItemValue("isAssist",
-						project.getItemValue("namAssist").indexOf(sUserID) > -1);
 				clone.replaceItemValue(
 						"isManager",
 						project.getItemValue("namManager").indexOf(sUserID) > -1);
 
 				boolean bMember = false;
 				if (clone.getItemValueBoolean("isTeam")
-						|| project.getItemValueBoolean("isAssist"))
+						|| project.getItemValueBoolean("namManager"))
 					bMember = true;
 				clone.replaceItemValue("isMember", bMember);
 
@@ -458,29 +452,83 @@ public class ModelController implements Serializable {
 		}
 		return null;
 	}
-	
-	
+
 	/**
 	 * This method computes the modelVersion and than returns the list
+	 * 
 	 * @param sGroup
 	 * @return
 	 */
 	public List<ItemCollection> getProcessEntities(String sGroup) {
-		if (sGroup==null || sGroup.isEmpty())
+		if (sGroup == null || sGroup.isEmpty())
 			return null;
-		
+
 		// find Modelversion..
-		List<ItemCollection> aprocessList=getProcessList();
-		for (ItemCollection aprocess: aprocessList) {
+		List<ItemCollection> aprocessList = getProcessList();
+		for (ItemCollection aprocess : aprocessList) {
 			if (sGroup.equals(aprocess.getItemValueString("txtWorkflowGroup"))) {
-				return getProcessEntities( sGroup,
+				return getProcessEntities(sGroup,
 						aprocess.getItemValueString("$modelVersion"));
 			}
-			
+
 		}
-		
-	
+
 		return null;
+	}
+
+	/**
+	 * Returns true if current user is manager of a given project.
+	 * Therefore the method checks the cloned field 'isManager'
+	 * 
+	 * @return
+	 */
+	public boolean isProjectManager(String aProjectUniqueID) {
+		// find project
+		ItemCollection project = getProjectByID(aProjectUniqueID);
+		if (project != null)
+			return project.getItemValueBoolean("isManager");
+		else
+			return false;
+	}
+
+	/**
+	 * Returns true if current user is member of the teamList of a given project
+	 * Therefore the method checks the cloned field 'isTeam'
+	 *
+	 * @return
+	 */
+	public boolean isProjectTeam(String aProjectUniqueID) {
+		// find project
+		ItemCollection project = getProjectByID(aProjectUniqueID);
+		if (project != null)
+			return project.getItemValueBoolean("isTeam");
+		else
+			return false;
+
+	}
+
+	/**
+	 * Returns true if current user is teamMember or manager of a given project
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public boolean isProjectMember(String aProjectUniqueID) {
+
+		// find project
+		ItemCollection project = getProjectByID(aProjectUniqueID);
+		if (project != null) {
+			String remoteUser = userController.getUserPrincipal();
+			List<String> vTeam = project.getItemValue("namTeam");
+			List<String> vManager = project.getItemValue("namManager");
+
+			if (vTeam.indexOf(remoteUser) > -1
+					|| vManager.indexOf(remoteUser) > -1)
+				return true;
+		}
+
+		return false;
+
 	}
 
 	/**
@@ -539,28 +587,6 @@ public class ModelController implements Serializable {
 			}
 		}
 		return false;
-
-	}
-
-	private class WorkflowGroupComparator implements Comparator<ItemCollection> {
-		private final Collator collator;
-
-		private final boolean ascending;
-
-		public WorkflowGroupComparator(Locale locale, boolean ascending) {
-			this.collator = Collator.getInstance(locale);
-			this.ascending = ascending;
-		}
-
-		public int compare(ItemCollection a, ItemCollection b) {
-			int result = this.collator.compare(
-					a.getItemValueString("txtWorkflowGroup"),
-					b.getItemValueString("txtWorkflowGroup"));
-			if (!this.ascending) {
-				result = -result;
-			}
-			return result;
-		}
 
 	}
 

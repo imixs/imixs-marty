@@ -293,9 +293,7 @@ public class ConfigMB implements Serializable {
 
 			// sort result?
 			if (bSorted)
-				Collections.sort(selection, new SelectItemComparator(
-						FacesContext.getCurrentInstance().getViewRoot()
-								.getLocale(), true));
+				Collections.sort(selection, new SelectItemComparator(true));
 
 			return selection;
 		}
