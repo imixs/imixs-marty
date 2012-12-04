@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -336,16 +337,32 @@ public class ModelController implements Serializable {
 			for (ItemCollection project : col) {
 
 				ItemCollection clone = WorkitemHelper.clone(project);
-
-				clone.replaceItemValue("isTeam", project
-						.getItemValue("namTeam").indexOf(sUserID) > -1);
-				clone.replaceItemValue(
-						"isManager",
-						project.getItemValue("namManager").indexOf(sUserID) > -1);
-
+				clone.replaceItemValue("isTeam", false);
+				clone.replaceItemValue("isManager", false);
+				
+				// check the isTeam status for the current user
+				List<String> userNameList= entityService.getUserNameList();
+				Vector<String> vProjectNameList=(Vector<String>) project.getItemValue("namTeam");
+				// check if one entry matches....
+				for (String username:userNameList) {
+					if (vProjectNameList.indexOf(username)>-1) {
+						clone.replaceItemValue("isTeam", true);
+						break;
+					}
+				}
+				// check the isManager status for the current user
+				vProjectNameList=(Vector<String>) project.getItemValue("namManager");
+				// check if one entry matches....
+				for (String username:userNameList) {
+					if (vProjectNameList.indexOf(username)>-1) {
+						clone.replaceItemValue("isManager", true);
+						break;
+					}
+				}
+				// check if user is member of team or manager list
 				boolean bMember = false;
 				if (clone.getItemValueBoolean("isTeam")
-						|| project.getItemValueBoolean("namManager"))
+						|| clone.getItemValueBoolean("isManager"))
 					bMember = true;
 				clone.replaceItemValue("isMember", bMember);
 
@@ -363,6 +380,21 @@ public class ModelController implements Serializable {
 
 		return projectList;
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 	/**
 	 * this method finds a project by its UniqueID. The projectlist is read from
