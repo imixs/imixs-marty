@@ -59,6 +59,7 @@ import org.imixs.marty.web.util.SetupMB;
 import org.imixs.marty.web.workitem.WorkitemMB;
 import org.imixs.marty.web.workitem.WorklistMB;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.faces.AbstractWorkflowController;
 import org.richfaces.event.DropEvent;
 import org.richfaces.model.TreeNode;
@@ -309,27 +310,26 @@ public class ProjectMB extends AbstractWorkflowController {
 	 **/
 	@SuppressWarnings("unchecked")
 	public boolean isMember(ItemCollection aProject) {
-		FacesContext context = FacesContext.getCurrentInstance();
-		ExternalContext externalContext = context.getExternalContext();
-		String remoteUser = externalContext.getRemoteUser();
+		List<String> userNameList= this.getEntityService().getUserNameList();
+		Vector<String> vProjectNameList=new Vector<String>();
+		
+		vProjectNameList.addAll(aProject.getItemValue("namOwner"));
+		vProjectNameList.addAll(aProject.getItemValue("namTeam"));
+		vProjectNameList.addAll(aProject.getItemValue("namAssist"));
+		vProjectNameList.addAll(aProject.getItemValue("namManager"));
+		vProjectNameList.addAll(aProject.getItemValue("namParentOwner"));
+		vProjectNameList.addAll(aProject.getItemValue("namParentTeam"));
+		vProjectNameList.addAll(aProject.getItemValue("namParentAssist"));
+		vProjectNameList.addAll(aProject.getItemValue("namParentManager"));
+		
+		// check if one entry maches....
+		for (String username:userNameList) {
+			if (vProjectNameList.indexOf(username)>-1)
+				return true;
+		}
 
-		List<String> vOwner = aProject.getItemValue("namOwner");
-		List<String> vTeam = aProject.getItemValue("namTeam");
-		List<String> vAssist = aProject.getItemValue("namAssist");
-		List<String> vManager = aProject.getItemValue("namManager");
-		List<String> vPOwner = aProject.getItemValue("namParentOwner");
-		List<String> vPTeam = aProject.getItemValue("namParentTeam");
-		List<String> vPAssist = aProject.getItemValue("namParentAssist");
-		List<String> vPManager = aProject.getItemValue("namParentManager");
-
-		return (vTeam.indexOf(remoteUser) > -1
-				|| vOwner.indexOf(remoteUser) > -1
-				|| vAssist.indexOf(remoteUser) > -1
-				|| vManager.indexOf(remoteUser) > -1
-				|| vPOwner.indexOf(remoteUser) > -1
-				|| vPManager.indexOf(remoteUser) > -1
-				|| vPAssist.indexOf(remoteUser) > -1 || vPTeam
-				.indexOf(remoteUser) > -1);
+		// not found
+		return false;
 
 	}
 
