@@ -31,10 +31,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
-import java.util.ResourceBundle;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -275,7 +273,7 @@ public class UserController implements Serializable {
 					locale = "en";
 			}
 
-			locale = verifyLocale(locale);
+			
 		}
 		return locale;
 	}
@@ -426,44 +424,7 @@ public class UserController implements Serializable {
 
 	}
 
-	/**
-	 * This method verifies a locale against the current skin configuration
-	 * file: /configuration/skins.properties
-	 * 
-	 * if the locale is not found the method will default to the frist locale
-	 * found in property file So a valid locale will be returned!
-	 * 
-	 * @param aSkin
-	 * @return
-	 */
-	private String verifyLocale(String aLocale) {
-
-		String sBestLocale = null;
-
-		/* Test if current skin is available in the skin configuration */
-		ResourceBundle r = ResourceBundle.getBundle("configuration.locale");
-
-		Enumeration<String> enkeys = r.getKeys();
-		while (enkeys.hasMoreElements()) {
-			String sKey = enkeys.nextElement();
-
-			// save first skin
-			if (sBestLocale == null)
-				sBestLocale = sKey;
-
-			// test if current skin match...
-			if (sKey.equals(aLocale))
-				// yes! aSkin is valid!
-				return aLocale;
-		}
-
-		// aSkin did not match anny of the available skinn in the skin
-		// configuration
-		// so return the first skin found in the configuration
-		return sBestLocale;
-
-	}
-
+	
 	/**
 	 * this class performes a EJB Lookup for the corresponding userprofile. The
 	 * method stores the username and his email into a string array. So either
