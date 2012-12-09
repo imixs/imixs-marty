@@ -38,6 +38,7 @@ import javax.inject.Named;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.jee.ejb.WorkflowSchedulerService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 
 /**
@@ -58,7 +59,7 @@ public class WorkflowSchedulerController  implements Serializable {
 
 	/* EJBs */
 	@EJB
-	org.imixs.marty.ejb.WorkflowSchedulerService workflowSchedulerService;
+	WorkflowSchedulerService workflowSchedulerService;
 	@EJB
 	EntityService entityService;
 	@EJB

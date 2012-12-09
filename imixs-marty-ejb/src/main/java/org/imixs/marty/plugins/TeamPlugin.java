@@ -67,27 +67,11 @@ public class TeamPlugin extends AbstractPlugin {
 			entityService = ws.getEntityService();
 		}
 
-		/*
-		try {
-			projectService = (ProjectService) new InitialContext()
-					.lookup("java:module/ProjectService");
-		} catch (NamingException e) {
-			throw new PluginException(
-					"[TeamPlugin] unable to lookup ProjectService ", e);
-		}
-		*/
+	
 
 	}
 
-	/*
-	public ProjectService getProjectService() {
-		return projectService;
-	}
 
-	public EntityService getEntityService() {
-		return entityService;
-	}
-	*/
 
 	/**
 	 * Each Workitem holds a reference to a Project in the attriubte
@@ -96,12 +80,10 @@ public class TeamPlugin extends AbstractPlugin {
 	 * The Method updates the corresponding Project informations:
 	 * <ul>
 	 * <li>namProjectTeam
-	 * <li>namProjectOwner
 	 * <li>namProjectManager
-	 * <li>namProjectAssist
 	 * <li>namProjectName
 	 * <li>namParentProjectTeam
-	 * <li>namParentProjectOwner
+	 * <li>namParentProjectManager
 	 * 
 	 * Additional the Method also computes the values namSubProjectTeam
 	 * namSubProjectOwner which holds all members of all subprojects
@@ -114,7 +96,7 @@ public class TeamPlugin extends AbstractPlugin {
 	 * the parent project.
 	 * 
 	 **/
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public int run(ItemCollection workItem, ItemCollection documentActivity)
 			throws PluginException {
@@ -138,23 +120,10 @@ public class TeamPlugin extends AbstractPlugin {
 			ItemCollection evalItemCollection = new ItemCollection();
 			ResultPlugin.evaluate(sResult, evalItemCollection);
 
-			// check for old pattern 'project=....' (deprecated!)
-			/*
-			 * if (sResult.indexOf("project=") > -1) { sResult =
-			 * replaceDynamicValues(sResult, workItem); sProjectName = sResult
-			 * .substring(sResult.indexOf("project=") + 8); // cut next newLine
-			 * if (sProjectName.indexOf("\n") > -1) sProjectName =
-			 * sProjectName.substring(0, sProjectName.indexOf("\n"));
-			 * 
-			 * } else {
-			 */
-			// new Pattern
 			sProjectName = evalItemCollection.getItemValueString("project");
-			// }
-
+		
 			if (!"".equals(sProjectName)) {
-				System.out
-						.println("[WorkitemService] Updating Project reference: "
+				logger.fine("[WorkitemService] Updating Project reference: "
 								+ sProjectName);
 				// try to update project reference
 				ItemCollection parent =findProjectByName(sProjectName);
@@ -170,8 +139,7 @@ public class TeamPlugin extends AbstractPlugin {
 			}
 
 		} catch (Exception upr) {
-			System.out
-					.println("[WorkitemServiceBean] WARNING - Unable to update Project ("
+			logger.warning("[WorkitemServiceBean] WARNING - Unable to update Project ("
 							+ sResult + ") reference: " + upr);
 		}
 
@@ -193,56 +161,37 @@ public class TeamPlugin extends AbstractPlugin {
 		ItemCollection itemColProject = entityService.load(sParentID);
 		if (itemColProject != null) {
 			List vTeam = new Vector();
-			List vOwner = new Vector();
 			List vManager = new Vector();
-			List vAssist = new Vector();
 			List vParentTeam = new Vector();
-			List vParentOwner = new Vector();
 			List vParentManager = new Vector();
-			List vParentAssist = new Vector();
 			List vSubTeams = new Vector();
-			List vSubOwner = new Vector();
-			List vSubAssist = new Vector();
 			List vSubManager = new Vector();
 			sProjectName = "";
 
 			String parentType = itemColProject.getItemValueString("type");
 			if ("project".equals(parentType)) {
 				vTeam = itemColProject.getItemValue("namTeam");
-				vOwner = itemColProject.getItemValue("namOwner");
 				vManager = itemColProject.getItemValue("namManager");
-				vAssist = itemColProject.getItemValue("namAssist");
 				vParentTeam = itemColProject.getItemValue("namParentTeam");
-				vParentOwner = itemColProject.getItemValue("namParentOwner");
 				// now add subproject teams and owners to additional attributes
 				// - if
 				// available 
 				List<ItemCollection> subProjects = findAllSubProjects(sParentID);
 				for (ItemCollection aSubProject : subProjects) {
 					vSubTeams.addAll(aSubProject.getItemValue("namTeam"));
-					vSubOwner.addAll(aSubProject.getItemValue("namOwner"));
 					vSubManager.addAll(aSubProject.getItemValue("namManager"));
-					vSubAssist.addAll(aSubProject.getItemValue("namAssist"));
 				}
 
 				sProjectName = itemColProject.getItemValueString("txtname");
 			}
 			if ("workitem".equals(parentType)) {
 				vTeam = itemColProject.getItemValue("namProjectTeam");
-				vOwner = itemColProject.getItemValue("namProjectOwner");
-				vAssist = itemColProject.getItemValue("namProjectAssist");
 				vManager = itemColProject.getItemValue("namProjectManager");
 				vParentTeam = itemColProject
 						.getItemValue("namParentProjectTeam");
-				vParentOwner = itemColProject
-						.getItemValue("namParentProjectOwner");
-				vParentAssist = itemColProject
-						.getItemValue("namParentProjectAssist");
 				vParentManager = itemColProject
 						.getItemValue("namParentProjectManager");
 				vSubTeams = itemColProject.getItemValue("namSubProjectTeam");
-				vSubOwner = itemColProject.getItemValue("namSubProjectOwner");
-				vSubAssist = itemColProject.getItemValue("namSubProjectAssist");
 				vSubManager = itemColProject
 						.getItemValue("namSubProjectManager");
 
@@ -251,20 +200,11 @@ public class TeamPlugin extends AbstractPlugin {
 			}
 
 			// update team lists
-
 			workItem.replaceItemValue("namProjectTeam", vTeam);
-
-			workItem.replaceItemValue("namProjectOwner", vOwner);
 			workItem.replaceItemValue("namParentProjectTeam", vParentTeam);
-			workItem.replaceItemValue("namParentProjectOwner", vParentOwner);
 			workItem.replaceItemValue("namSubProjectTeam", vSubTeams);
-			workItem.replaceItemValue("namSubProjectOwner", vSubOwner);
-
-			workItem.replaceItemValue("namProjectAssist", vAssist);
 			workItem.replaceItemValue("namProjectManager", vManager);
-			workItem.replaceItemValue("namParentProjectAssist", vParentAssist);
 			workItem.replaceItemValue("namParentProjectManager", vParentManager);
-			workItem.replaceItemValue("namSubProjectAssist", vSubAssist);
 			workItem.replaceItemValue("namSubProjectManager", vSubManager);
 
 			// update project name
