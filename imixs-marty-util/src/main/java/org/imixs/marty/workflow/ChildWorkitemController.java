@@ -59,17 +59,28 @@ public class ChildWorkitemController extends
 
 	private List<ItemCollection> childList = null;
 	private String uniqueIdRef = null;
+	private ItemCollection parentWorkitem=null;
 
 	@EJB
 	org.imixs.workflow.jee.ejb.WorkflowService workflowService;
 
-	// @Inject
-	// private WorkflowController workflowController;
-
+	
 	public static Logger logger = Logger.getLogger("org.imixs.marty");
 
+	/**
+	 * Returns the $UniqueID of the parentWorkitem
+	 * @return - string 
+	 */
 	public String getUniqueIdRef() {
 		return uniqueIdRef;
+	}
+
+	/**
+	 * Returns the parentWorkitem
+	 * @return - itemCollection
+	 */
+	public ItemCollection getParentWorkitem() {
+		return parentWorkitem;
 	}
 
 	/**
@@ -89,14 +100,18 @@ public class ChildWorkitemController extends
 						.startsWith("workitem"))
 			return;
 
-		// if workItem has changed, then update the dms list
+		// if workItem has changed, then reset the child list
 		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
 			reset(null);
-			if (workflowEvent.getWorkitem() == null)
+			if (workflowEvent.getWorkitem() == null) {
 				uniqueIdRef = null;
-			else
+				parentWorkitem=null;
+			}
+			else {
 				uniqueIdRef = workflowEvent.getWorkitem().getItemValueString(
 						EntityService.UNIQUEID);
+				parentWorkitem= workflowEvent.getWorkitem();
+			}
 		}
 
 	}
