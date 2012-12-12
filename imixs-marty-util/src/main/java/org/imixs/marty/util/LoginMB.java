@@ -30,6 +30,7 @@ package org.imixs.marty.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -53,13 +54,11 @@ import javax.servlet.http.HttpSession;
  */
 public class LoginMB {
 	public final String COOKIE_LOCALE = "imixs.sywapp.locale";
-	
+
 	private String locale;
 	private String anonymouslocale;
 	private ArrayList<SelectItem> localeSelection = null;
-	
 
-	
 	public boolean isAuthenticated() {
 		return (getUserPrincipal() != null);
 	}
@@ -78,20 +77,30 @@ public class LoginMB {
 		return remoteUser;
 	}
 
-	
-	/*
-	public String getServerURI() {
-		HttpServletRequest servletRequest = (HttpServletRequest) FacesContext
-				.getCurrentInstance().getExternalContext().getRequest();
+	public List<String> getUserRoles() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		ExternalContext ctx = context.getExternalContext();
+		List<String> userRoles = new ArrayList<String>();
+		try {
 
-		
-		String port=""+servletRequest.getLocalPort();
-		
-		String server = servletRequest.getServerName();
-		return "http://"+ server+":"+port+"";
+			String[] sRoleList = { "org.imixs.ACCESSLEVEL.NOACCESS",
+					"org.imixs.ACCESSLEVEL.READERACCESS",
+					"org.imixs.ACCESSLEVEL.AUTHORACCESS",
+					"org.imixs.ACCESSLEVEL.EDITORACCESS",
+					"org.imixs.ACCESSLEVEL.MANAGERACCESS" };
 
+			for (int i = 0; i < sRoleList.length; i++) {
+				String aRole = sRoleList[i];
+				if (ctx.isUserInRole(aRole))
+					userRoles.add(aRole);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return userRoles;
 	}
-	*/
+
+	
 
 	public void doLogout(ActionEvent event) {
 		FacesContext context = FacesContext.getCurrentInstance();
@@ -103,7 +112,6 @@ public class LoginMB {
 
 	}
 
-	
 	/**
 	 * This getter method trys to get the locale out from the cookie if
 	 * available. Otherwise it will default to "en"
@@ -169,9 +177,6 @@ public class LoginMB {
 		response.addCookie(cookieLocale);
 
 	}
-	
-	
-	
 
 	/**
 	 * Anonymous Locale is only a language setting during user is not
@@ -186,7 +191,6 @@ public class LoginMB {
 	public void setAnonymouslocale(String anonymouslocale) {
 		this.anonymouslocale = anonymouslocale;
 	}
-	
 
 	/**
 	 * This method returns a list of SelectItems with the predefined Languages
@@ -215,12 +219,10 @@ public class LoginMB {
 					new SelectItemComparator(FacesContext.getCurrentInstance()
 							.getViewRoot().getLocale(), true));
 
-
 		}
 		return localeSelection;
 	}
 
-	
 	/**
 	 * Methode for language settings in anonymous mode. This method is available
 	 * throug the service nav.
@@ -230,8 +232,7 @@ public class LoginMB {
 	public void doChangeLanguage(ActionEvent event) {
 		this.setLocale(anonymouslocale);
 	}
-	
-	
+
 	/**
 	 * This method verifies a locale against the current skin configuration
 	 * file: /configuration/skins.properties
@@ -269,6 +270,5 @@ public class LoginMB {
 		return sBestLocale;
 
 	}
-
 
 }
