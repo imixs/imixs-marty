@@ -55,6 +55,8 @@ import org.imixs.marty.web.profile.NameLookupMB;
 import org.imixs.marty.web.project.ProjectMB;
 import org.imixs.marty.web.util.SetupMB;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.WorkflowKernel;
+import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.faces.AbstractWorkflowController;
 
 /**
@@ -165,9 +167,6 @@ public class WorkitemMB extends AbstractWorkflowController {
 		return nameLookupMB;
 	}
 
-	
-
-	
 	/**
 	 * returns the workflowEditorID for the current workItem. If no attribute
 	 * with the name "txtWorkflowEditorid" is available then the method return
@@ -283,7 +282,7 @@ public class WorkitemMB extends AbstractWorkflowController {
 									sURL.indexOf('[') + 1, sURL.indexOf(']'));
 
 							// cut the permissions from the URL
-							sURL = sURL.substring(0,sURL.indexOf('['));
+							sURL = sURL.substring(0, sURL.indexOf('['));
 							StringTokenizer stPermission = new StringTokenizer(
 									sPermissions, ",");
 							while (stPermission.hasMoreTokens()) {
@@ -567,6 +566,11 @@ public class WorkitemMB extends AbstractWorkflowController {
 
 		updateDisplayNameFields(workitemItemCollection);
 
+		// generate UniqueID if not yet set.... (needed inside plugins)
+		if ("".equals(getWorkitem().getItemValueString(EntityService.UNIQUEID)))
+			getWorkitem().replaceItemValue(EntityService.UNIQUEID,
+					WorkflowKernel.generateUniqueID());
+
 		// inform Listeners...
 		fireWorkitemProcessEvent();
 
@@ -781,7 +785,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 			// inform Listeners...
 			fireChildDeleteEvent();
 
-			if ("childworkitem".equals(childWorkitemItemCollection.getItemValueString("type")))
+			if ("childworkitem".equals(childWorkitemItemCollection
+					.getItemValueString("type")))
 				workitemService.deleteWorkItem(childWorkitemItemCollection);
 
 			doResetChildWorkitems(event);
@@ -1288,7 +1293,8 @@ public class WorkitemMB extends AbstractWorkflowController {
 	}
 
 	/**
-	 * this method loads all versions to the current workitem. Idependent from the type property!
+	 * this method loads all versions to the current workitem. Idependent from
+	 * the type property!
 	 * 
 	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
 	 */

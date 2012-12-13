@@ -141,6 +141,12 @@ public class WorkitemService {
 		workItem.replaceItemValue("$modelversion", sModelVersion);
 		workItem.replaceItemValue("txtworkflowgroup", sWorkflowGroup);
 		workItem.replaceItemValue("txtworkfloweditorid", sEditorID);
+		
+		
+		
+		// set $WriteAccess with namCreator!
+		workItem.replaceItemValue("$WriteAccess", ctx.getCallerPrincipal().getName());
+		
 
 		return workItem;
 
