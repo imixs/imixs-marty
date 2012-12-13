@@ -175,8 +175,7 @@ public class LDAPLookupService {
 			logger.fine("LDAP find user groups for: " + aUID);
 			ldapCtx = getDirContext();
 			String[] groups= fetchGroups(aUID, ldapCtx);
-			if (logger.getLevel().intValue() <= java.util.logging.Level.FINE
-					.intValue()) {
+			if (logger.isLoggable(java.util.logging.Level.FINE)) {
 				String groupListe = "";
 				for (String aGroup : groups)
 					groupListe += aGroup + " ";
@@ -260,8 +259,7 @@ public class LDAPLookupService {
 			ldapCache.put(aUID, user);
 		} catch (NamingException e) {
 			logger.warning("Unable to fetch DN for: " + aUID);
-			if (logger.getLevel().intValue() <= java.util.logging.Level.FINEST
-					.intValue())
+			if (logger.isLoggable(java.util.logging.Level.FINEST))
 				e.printStackTrace();
 		} finally {
 			if (answer != null)
@@ -356,8 +354,7 @@ public class LDAPLookupService {
 
 		} catch (NamingException e) {
 			logger.warning("Unable to fetch groups for: " + aUID);
-			if (logger.getLevel().intValue() <= java.util.logging.Level.FINEST
-					.intValue())
+			if (logger.isLoggable(java.util.logging.Level.FINEST))
 				e.printStackTrace();
 		} finally {
 			if (answer != null)
@@ -433,8 +430,7 @@ public class LDAPLookupService {
 		} catch (NamingException e) {
 			logger.warning("Unable to fetch attribute '" + sAttriubteName
 					+ "' for: " + aUID);
-			if (logger.getLevel().intValue() <= java.util.logging.Level.FINEST
-					.intValue())
+			if (logger.isLoggable(java.util.logging.Level.FINEST))
 				e.printStackTrace();
 		} finally {
 			if (answer != null)
@@ -532,8 +528,7 @@ public class LDAPLookupService {
 
 		} catch (NamingException e) {
 			logger.severe("Unable to open ldap context: " + ldapJndiName);
-			if (logger.getLevel().intValue() <= java.util.logging.Level.FINE
-					.intValue())
+			if (logger.isLoggable(java.util.logging.Level.FINE))
 				e.printStackTrace();
 		}
 
