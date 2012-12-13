@@ -78,8 +78,11 @@ public class WorkitemService {
 	 * ProcessID. The method throws an exception if the ProcessEntity did not
 	 * exist in the model.
 	 * 
+	 * The Method set the property '$WriteAccess' to the default value of the
+	 * current Principal name. This allows initial updates of BlobWorkitems
+	 * 
 	 * The Method creates an new property 'txtProjectName' which holds the
-	 * property 'txtName' from the parent WOrkitem. This is normally the project
+	 * property 'txtName' from the parent Workitem. This is normally the project
 	 * name where the workItem is assigned to. But in cases where the WorkItem
 	 * is created as a subprocess to another workItem the property can be mapped
 	 * to an individual value provided by the Parent workItem.
@@ -119,6 +122,9 @@ public class WorkitemService {
 		workItem = new ItemCollection();
 		workItem.replaceItemValue("type", "workitem");
 		workItem.replaceItemValue("$processID", processID);
+		
+		// set default writeAccess
+		workItem.replaceItemValue("$writeAccess", workflowService.getUserName());
 
 		// assign project name and reference
 		workItem.replaceItemValue("$uniqueidRef",
