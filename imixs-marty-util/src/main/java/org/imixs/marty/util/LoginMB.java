@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import javax.ejb.EJB;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
@@ -42,6 +43,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
  * This Backing Bean acts as a Login Helper Class. Can be used to identify the
@@ -58,6 +61,10 @@ public class LoginMB {
 	private String locale;
 	private String anonymouslocale;
 	private ArrayList<SelectItem> localeSelection = null;
+	
+	@EJB
+	EntityService entityService;
+
 
 	public boolean isAuthenticated() {
 		return (getUserPrincipal() != null);
@@ -100,6 +107,15 @@ public class LoginMB {
 		return userRoles;
 	}
 
+	
+	/**
+	 * returns the current user name list from the EntityService EJB
+	 * @return
+	 */
+	public List<String> getUserNameList() {
+		
+		return entityService.getUserNameList();
+	}
 	
 
 	public void doLogout(ActionEvent event) {
