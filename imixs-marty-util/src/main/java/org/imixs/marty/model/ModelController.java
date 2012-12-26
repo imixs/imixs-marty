@@ -211,6 +211,19 @@ public class ModelController implements Serializable {
 	}
 
 	/**
+	 * This method returns a process entity for a given modelversion
+	 * 
+	 * @param modelVersion
+	 *            - version for the model to search the process entity
+	 * @param processid
+	 *            - id of the process entity
+	 * @return an instance of the matching process entity
+	 */
+	public ItemCollection getProcessEntity(int processid, String modelversion) {
+		return modelService.getProcessEntityByVersion(processid, modelversion);
+	}
+
+	/**
 	 * This method returns all process entities for modelVersion|workflowGroup
 	 * This list can be used to display state/flow informations inside a form
 	 * 
@@ -222,12 +235,12 @@ public class ModelController implements Serializable {
 	public List<ItemCollection> getProcessEntitiesByGroupVersion(String sGroup,
 			String sVersion) {
 		List<ItemCollection> result = null;
-	
+
 		if (sGroup != null && sVersion != null) {
-	
+
 			setWorkflowGroup(sGroup);
 			setModelVersion(sVersion);
-	
+
 			// test if list is already cached?
 			result = processEntityCache.get(sGroup + "|" + sVersion);
 			if (result == null) {
@@ -254,7 +267,7 @@ public class ModelController implements Serializable {
 	public List<ItemCollection> getProcessEntitiesByGroup(String sGroup) {
 		if (sGroup == null || sGroup.isEmpty())
 			return null;
-	
+
 		// find Modelversion..
 		List<ItemCollection> aprocessList = getInitialProcessEntities();
 		for (ItemCollection aprocess : aprocessList) {
@@ -262,9 +275,9 @@ public class ModelController implements Serializable {
 				return getProcessEntitiesByGroupVersion(sGroup,
 						aprocess.getItemValueString("$modelVersion"));
 			}
-	
+
 		}
-	
+
 		return null;
 	}
 
@@ -286,34 +299,34 @@ public class ModelController implements Serializable {
 	 * @return
 	 */
 	public List<ItemCollection> getInitialProcessEntities() {
-	
+
 		if (initialProcessEntityList == null) {
 			// build new groupSelection
 			initialProcessEntityList = new ArrayList<ItemCollection>();
-	
+
 			Collection<String> models = modelVersionCache.values();
 			for (String modelVersion : models) {
-	
+
 				List<ItemCollection> startProcessList = modelService
 						.getAllStartProcessEntitiesByVersion(modelVersion);
-	
+
 				for (ItemCollection process : startProcessList) {
 					String sGroupName = process
 							.getItemValueString("txtWorkflowGroup");
 					if (sGroupName.contains("~"))
 						continue; // childProcess is skipped
-	
+
 					initialProcessEntityList.add(process);
 				}
-	
+
 			}
-	
+
 			Collections.sort(initialProcessEntityList, new WorkitemComparator(
 					"txtWorkflowGroup", true));
 		}
-	
+
 		return initialProcessEntityList;
-	
+
 	}
 
 	/**
@@ -333,23 +346,25 @@ public class ModelController implements Serializable {
 	 * 
 	 * @param uniqueid
 	 *            - $UniqueId of a project
-	 * @return - a collection of ProcessEntities or an empty arrayList if not processes are defined
+	 * @return - a collection of ProcessEntities or an empty arrayList if not
+	 *         processes are defined
 	 */
-	public List<ItemCollection> getInitialProcessEntitiesByProject(String uniqueid) {
-	
+	public List<ItemCollection> getInitialProcessEntitiesByProject(
+			String uniqueid) {
+
 		List<ItemCollection> result = new ArrayList<ItemCollection>();
 		ItemCollection project = getProjectByID(uniqueid);
 		if (project == null)
 			return result;
-	
+
 		List<String> aprocessList = null;
-	
+
 		aprocessList = project.getItemValue("txtprocesslist");
-	
+
 		// if no processList was defined return an empty array
 		if (aprocessList == null || aprocessList.isEmpty())
 			return result;
-	
+
 		// now add all matching workflowGroups
 		List<ItemCollection> processEntityList = getInitialProcessEntities();
 		for (ItemCollection aProcessEntity : processEntityList) {
@@ -357,9 +372,9 @@ public class ModelController implements Serializable {
 			if (isProcessEntityInList(aProcessEntity, aprocessList))
 				result.add(aProcessEntity);
 		}
-	
+
 		return result;
-	
+
 	}
 
 	/**
@@ -376,7 +391,6 @@ public class ModelController implements Serializable {
 		if (projectList == null) {
 			projectList = new ArrayList<ItemCollection>();
 
-			
 			String sQuery = "SELECT projct FROM Entity AS projct "
 					+ " JOIN projct.textItems AS t2"
 					+ " WHERE projct.type = 'project'"
@@ -431,7 +445,7 @@ public class ModelController implements Serializable {
 			}
 
 		}
-		
+
 		return projectList;
 	}
 

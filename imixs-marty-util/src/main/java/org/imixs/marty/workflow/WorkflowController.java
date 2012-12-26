@@ -76,7 +76,7 @@ public class WorkflowController extends
 	// private String lastUniqueID = null;
 
 	private static final long serialVersionUID = 1L;
-	private static final String DEFAULT_EDITOR_ID = "default";
+	private static final String DEFAULT_EDITOR_ID = "form_default";
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	/* Services */
