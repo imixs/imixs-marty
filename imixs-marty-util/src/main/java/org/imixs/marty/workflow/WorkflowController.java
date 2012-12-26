@@ -76,7 +76,7 @@ public class WorkflowController extends
 	// private String lastUniqueID = null;
 
 	private static final long serialVersionUID = 1L;
-	private static final String DEFAULT_EDITOR_ID = "form_default";
+	private static final String DEFAULT_EDITOR_ID = "form_panel_simple#basic";
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	/* Services */
@@ -86,7 +86,6 @@ public class WorkflowController extends
 	@Inject
 	private ModelController modelController;
 
-	
 	@Inject
 	private Event<WorkflowEvent> events;
 
@@ -188,14 +187,15 @@ public class WorkflowController extends
 
 		String sEditor = getWorkitem()
 				.getItemValueString("txtWorkflowEditorid");
-		if (!"".equals(sEditor)) {
-			// test if # is provides to indicate optinal section
-			// informations
-			if (sEditor.indexOf('#') > -1)
-				sEditor = sEditor.substring(0, sEditor.indexOf('#'));
-			return sEditor;
-		} else
-			return DEFAULT_EDITOR_ID;
+
+		if ("".equals(sEditor))
+			sEditor = DEFAULT_EDITOR_ID;
+
+		// test if # is provides to indicate optional section
+		// informations
+		if (sEditor.indexOf('#') > -1)
+			sEditor = sEditor.substring(0, sEditor.indexOf('#'));
+		return sEditor;
 
 	}
 
@@ -239,6 +239,9 @@ public class WorkflowController extends
 
 		String sEditor = getWorkitem()
 				.getItemValueString("txtWorkflowEditorid");
+		if ("".equals(sEditor))
+			sEditor = DEFAULT_EDITOR_ID;
+		
 		if (sEditor.indexOf('#') > -1) {
 			String liste = sEditor.substring(sEditor.indexOf('#') + 1);
 
@@ -270,20 +273,21 @@ public class WorkflowController extends
 								break;
 							}
 							// test if user is project member
-							String sProjectUniqueID=this.getWorkitem().getItemValueString("$UniqueIDRef");
-							
+							String sProjectUniqueID = this.getWorkitem()
+									.getItemValueString("$UniqueIDRef");
 
 							if ("manager".equalsIgnoreCase(aPermission)
-									&& modelController.isProjectManager(sProjectUniqueID)) {
+									&& modelController
+											.isProjectManager(sProjectUniqueID)) {
 								bPermissionGranted = true;
 								break;
 							}
 							if ("team".equalsIgnoreCase(aPermission)
-									&& this.modelController.isProjectTeam(sProjectUniqueID)) {
+									&& this.modelController
+											.isProjectTeam(sProjectUniqueID)) {
 								bPermissionGranted = true;
 								break;
 							}
-							
 
 						}
 
