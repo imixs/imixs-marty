@@ -42,7 +42,6 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
 import javax.inject.Named;
@@ -50,8 +49,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
 import org.imixs.marty.ejb.ConfigService;
-import org.imixs.marty.util.SelectItemComparator;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.faces.util.SelectItemComparator;
 import org.imixs.workflow.jee.jpa.EntityIndex;
 import org.imixs.workflow.xml.EntityCollection;
 import org.imixs.workflow.xml.XMLItemCollection;

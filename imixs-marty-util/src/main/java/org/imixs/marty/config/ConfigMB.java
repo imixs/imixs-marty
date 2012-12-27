@@ -38,13 +38,12 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
 import javax.inject.Named;
 
-import org.imixs.marty.util.SelectItemComparator;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.faces.util.SelectItemComparator;
 
 /**
  * This ConfigMB acts as a generic config bean. The bean manages an
@@ -295,7 +294,7 @@ public class ConfigMB implements Serializable {
 			if (bSorted)
 				Collections.sort(selection, new SelectItemComparator(true));
 
-			return selection;
+			return selection; 
 		}
 	}
 
