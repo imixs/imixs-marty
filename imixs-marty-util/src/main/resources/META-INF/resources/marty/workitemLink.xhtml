@@ -37,7 +37,7 @@ $(document).ready(function() {
 		<h:panelGroup id="reference_box" layout="block"
 			rendered="#{! cc.attrs.hidereferences}" class="marty-workitemlink-referencebox">
 			<c:forEach var="workitem"
-				items="#{linkController.getReferences(cc.attrs.filter)}">
+				items="#{workitemLinkController.getReferences(cc.attrs.filter)}">
 				<div class="marty-workitemlink-referencebox-entry">
 					<h:commandLink
 						action="#{workflowController.load(workitem.item['$uniqueid'],'/pages/workitems/workitem')}">
@@ -55,7 +55,7 @@ $(document).ready(function() {
 
 
 					<h:commandLink
-						actionListener="#{linkController.remove(workitem.item['$uniqueid'],cc.attrs.workitem)}">
+						actionListener="#{workitemLinkController.remove(workitem.item['$uniqueid'],cc.attrs.workitem)}">
 						<h:outputText value=" [#{message.remove}]" />
 						<f:ajax render="reference_box" />
 
@@ -68,22 +68,22 @@ $(document).ready(function() {
 		<!-- Input Field -->
 		<h:panelGroup id="input_box"
 			class="marty-workitemlink-inputbox" layout="block">
-			<h:inputText value="#{linkController.input}" class="suggestinput">
+			<h:inputText value="#{workitemLinkController.input}" class="suggestinput">
 				<f:ajax event="keyup" render="suggest_box"
-					listener="#{linkController.search(cc.attrs.filter)}" />
+					listener="#{workitemLinkController.search(cc.attrs.filter)}" />
 				<f:ajax event="blur" render="suggest_box"
-					listener="#{linkController.reset}" />
+					listener="#{workitemLinkController.reset}" />
 			</h:inputText>
 
 
 			<h:panelGroup id="suggest_box">
 				<h:panelGroup id="suggest_resultlist"
 					class="marty-workitemlink-resultlist"
-					rendered="#{! empty linkController.searchResult}">
-					<c:forEach var="suggest" items="#{linkController.searchResult}">
+					rendered="#{! empty workitemLinkController.searchResult}">
+					<c:forEach var="suggest" items="#{workitemLinkController.searchResult}">
 						<div class="marty-workitemlink-resultlist-entry">
 							<h:commandLink
-								actionListener="#{linkController.add(suggest.item['$uniqueid'],cc.attrs.workitem)}">
+								actionListener="#{workitemLinkController.add(suggest.item['$uniqueid'],cc.attrs.workitem)}">
 								<h:outputText style="font-weight: bold;"
 									value="#{suggest.item['txtWorkflowSummary']}" escape="false"
 									rendered="#{!empty suggest.item['txtWorkflowSummary']}" />

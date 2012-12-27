@@ -46,8 +46,8 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
 
 /**
- * The ReferenceController provides suggest-box behavior based on the JSF 2.0
- * ajax capability to add WorkItem references to the curren WorkItem.
+ * The WorkitemLinkController provides suggest-box behavior based on the JSF 2.0
+ * ajax capability to add WorkItem references to the current WorkItem.
  * 
  * All WorkItem references will be stored in the property 'txtworkitemref' Note: @RequestScoped
  * did not work because the ajax request will reset the result during submit
@@ -58,9 +58,9 @@ import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
  * @version 1.0
  */
 
-@Named("linkController")
+@Named("workitemLinkController")
 @SessionScoped
-public class LinkController implements Serializable {
+public class WorkitemLinkController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -80,7 +80,7 @@ public class LinkController implements Serializable {
 
 	private String input = null;
 
-	public LinkController() {
+	public WorkitemLinkController() {
 		super();
 		searchResult = new ArrayList<ItemCollection>();
 	}
