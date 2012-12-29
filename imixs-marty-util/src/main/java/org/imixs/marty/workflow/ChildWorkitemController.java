@@ -59,17 +59,17 @@ public class ChildWorkitemController extends
 
 	private List<ItemCollection> childList = null;
 	private String uniqueIdRef = null;
-	private ItemCollection parentWorkitem=null;
+	private ItemCollection parentWorkitem = null;
 
 	@EJB
 	org.imixs.workflow.jee.ejb.WorkflowService workflowService;
 
-	
 	public static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	/**
 	 * Returns the $UniqueID of the parentWorkitem
-	 * @return - string 
+	 * 
+	 * @return - string
 	 */
 	public String getUniqueIdRef() {
 		return uniqueIdRef;
@@ -77,6 +77,7 @@ public class ChildWorkitemController extends
 
 	/**
 	 * Returns the parentWorkitem
+	 * 
 	 * @return - itemCollection
 	 */
 	public ItemCollection getParentWorkitem() {
@@ -84,7 +85,9 @@ public class ChildWorkitemController extends
 	}
 
 	/**
-	 * WorkflowEvent listener to update the child list of a workitem
+	 * WorkflowEvent listener to update the child list of the current parent
+	 * workitem. The method also updates the uniqueIDRef to identify the parent
+	 * workitem
 	 * 
 	 * @param workflowEvent
 	 * @throws AccessDeniedException
@@ -100,17 +103,21 @@ public class ChildWorkitemController extends
 						.startsWith("workitem"))
 			return;
 
-		// if workItem has changed, then reset the child list
-		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
+		// if workItem has changed or was processed, then reset the child list
+		// and update the UniqeIDRef
+		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()
+				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
+						.getEventType()) {
+			// clear current child workitem
 			reset(null);
+			// check if parent workitem is available
 			if (workflowEvent.getWorkitem() == null) {
 				uniqueIdRef = null;
-				parentWorkitem=null;
-			}
-			else {
+				parentWorkitem = null;
+			} else {
 				uniqueIdRef = workflowEvent.getWorkitem().getItemValueString(
 						EntityService.UNIQUEID);
-				parentWorkitem= workflowEvent.getWorkitem();
+				parentWorkitem = workflowEvent.getWorkitem();
 			}
 		}
 

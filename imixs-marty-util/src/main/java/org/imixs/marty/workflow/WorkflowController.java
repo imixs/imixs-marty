@@ -404,22 +404,6 @@ public class WorkflowController extends
 
 	}
 
-	/**
-	 * returns the last workflow result to control the navigation flow if no
-	 * result is found open_workitem will be returned.
-	 * 
-	 * The property 'action' is computed by teh result plugin
-	 * 
-	 * @return
-	 */
-	public String getAction() {
-
-		String sResult = getWorkitem().getItemValueString("action");
-		if ("".equals(sResult))
-			return "open_workitem";
-		else
-			return sResult;
-
-	}
+	
 
 }
