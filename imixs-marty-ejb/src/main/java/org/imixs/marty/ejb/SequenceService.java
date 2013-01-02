@@ -98,12 +98,13 @@ public class SequenceService {
 	 * 'sequencenumbers' with the current number range for each workflowGroup.
 	 * If a Workitem have a WorkflowGroup with no corresponding entry the method
 	 * will not compute a new number.
-	 * @throws InvalidWorkitemException 
-	 * @throws AccessDeniedException 
+	 * 
+	 * @throws InvalidWorkitemException
+	 * @throws AccessDeniedException
 	 * 
 	 */
-	public int getNextSequenceNumberByGroup(ItemCollection aworkitem) throws AccessDeniedException
-			 {
+	public int getNextSequenceNumberByGroup(ItemCollection aworkitem)
+			throws AccessDeniedException {
 
 		ItemCollection configItemCollection = null;
 
@@ -154,21 +155,22 @@ public class SequenceService {
 	/**
 	 * this method computes the next sequence number and updates the parent
 	 * workitem where the last sequence number will be stored.
-	 * @throws InvalidWorkitemException 
-	 * @throws AccessDeniedException 
-	 * @throws Exception 
+	 * 
+	 * @throws InvalidWorkitemException
+	 * @throws AccessDeniedException
+	 * @throws Exception
 	 */
-	public int getNextSequenceNumberByParent(ItemCollection aworkitem) throws  AccessDeniedException 
-			 {
+	public int getNextSequenceNumberByParent(ItemCollection aworkitem)
+			throws AccessDeniedException {
 		// load current Number
 		ItemCollection sequenceNumberObject = loadParentWorkitem(aworkitem);
 		int currentSequenceNumber = sequenceNumberObject
 				.getItemValueInteger(SEQUENCE_NAME);
-		
+
 		// skip number 0
-		if (currentSequenceNumber==0)
-			currentSequenceNumber=1;
-		
+		if (currentSequenceNumber == 0)
+			currentSequenceNumber = 1;
+
 		int sequenceNumber = currentSequenceNumber;
 		sequenceNumber++;
 		// Save new Number
@@ -211,11 +213,10 @@ public class SequenceService {
 	 * this method loads the parent Workitem of the given workitem
 	 * 
 	 * @return
-	 * @throws InvalidWorkitemException 
+	 * @throws InvalidWorkitemException
 	 * @throws Exception
 	 */
-	private ItemCollection loadParentWorkitem(ItemCollection aworkitem)  
-			{
+	private ItemCollection loadParentWorkitem(ItemCollection aworkitem) {
 		String sParentID = aworkitem.getItemValueString("$UniqueIDRef");
 
 		if ("".equals(sParentID))

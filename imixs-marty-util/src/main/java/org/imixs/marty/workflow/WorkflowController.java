@@ -44,11 +44,10 @@ import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.marty.model.ModelController;
+import org.imixs.marty.model.ProcessController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
-import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
  * The marty WorkflowController extends the
@@ -84,7 +83,7 @@ public class WorkflowController extends
 	private org.imixs.marty.ejb.WorkitemService workitemService;
 
 	@Inject
-	private ModelController modelController;
+	private ProcessController processController;
 
 	@Inject
 	private Event<WorkflowEvent> events;
@@ -277,13 +276,13 @@ public class WorkflowController extends
 									.getItemValueString("$UniqueIDRef");
 
 							if ("manager".equalsIgnoreCase(aPermission)
-									&& modelController
+									&& processController
 											.isProjectManager(sProjectUniqueID)) {
 								bPermissionGranted = true;
 								break;
 							}
 							if ("team".equalsIgnoreCase(aPermission)
-									&& this.modelController
+									&& this.processController
 											.isProjectTeam(sProjectUniqueID)) {
 								bPermissionGranted = true;
 								break;

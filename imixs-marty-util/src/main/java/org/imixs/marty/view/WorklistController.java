@@ -39,13 +39,12 @@ import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ViewScoped;
 import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.config.SetupController;
+import org.imixs.marty.ejb.ConfigService;
 import org.imixs.marty.profile.UserController;
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
@@ -97,7 +96,11 @@ public class WorklistController extends
 	final String QUERY_WORKLIST_ALL = "worklist";
 	final String QUERY_WORKLIST_ARCHIVE = "archive";
 	final String QUERY_WORKLIST_DELETIONS = "deletions";
-
+	final int SORT_BY_CREATED=0;
+	final int SORT_BY_MODIFIED=1;
+	final int SORT_ORDER_DESC=0;
+	final int SORT_ORDER_ASC=1;
+	
 	@Inject
 	private UserController userController = null;
 
@@ -109,6 +112,9 @@ public class WorklistController extends
 
 	@EJB
 	private EntityService entityService;
+	
+	@EJB
+	private ConfigService configService;
 
 	/**
 	 * Constructor sets the new ViewController
@@ -380,6 +386,24 @@ public class WorklistController extends
 				sQuery += " AND processid.itemName = '$processid' AND processid.itemValue ='"
 						+ processID + "'";
 
+			
+			// add ORDER BY phrase
+			
+			// read configuration for the sort order
+			ItemCollection config=configService.loadConfiguration("BASIC");
+			int sortby=config.getItemValueInteger("Sortby");
+			int sortorder =config.getItemValueInteger("Sortorder");
+			sQuery += " ORDER BY wi.";
+			if (sortby == SORT_BY_CREATED)
+				sQuery += "created ";
+			else
+				sQuery += "modified ";
+			if (sortorder == SORT_ORDER_ASC)
+				sQuery += "asc";
+			else
+				sQuery += "desc";
+			
+			
 			return sQuery;
 		}
 

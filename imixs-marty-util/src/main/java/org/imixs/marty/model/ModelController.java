@@ -27,33 +27,37 @@
 
 package org.imixs.marty.model;
 
+import java.io.ByteArrayInputStream;
 import java.io.Serializable;
-import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.enterprise.context.SessionScoped;
-import javax.enterprise.event.Observes;
+import javax.enterprise.context.ApplicationScoped;
+import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
 
 import org.imixs.marty.profile.UserController;
 import org.imixs.marty.util.WorkitemComparator;
-import org.imixs.marty.util.WorkitemHelper;
-import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.ModelService;
+import org.imixs.workflow.jee.faces.fileupload.FileData;
+import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
+import org.imixs.workflow.xml.EntityCollection;
+import org.imixs.workflow.xml.XMLItemCollection;
+import org.imixs.workflow.xml.XMLItemCollectionAdapter;
 
 /**
  * The ModelController provides informations about workflow models as also the
@@ -73,7 +77,7 @@ import org.imixs.workflow.jee.ejb.ModelService;
  * 
  */
 @Named("modelController")
-@SessionScoped
+@ApplicationScoped
 public class ModelController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -81,16 +85,19 @@ public class ModelController implements Serializable {
 	private String systemModelVersion = null;
 
 	private List<ItemCollection> initialProcessEntityList = null;
-	private List<ItemCollection> projectList = null;
 
 	private String workflowGroup = null;
 	private String modelVersion = null;
 
 	private HashMap<String, String> modelVersionCache = null;
 	private HashMap<String, List<ItemCollection>> processEntityCache = null;
+	private HashMap<String, ItemCollection> prjectEntityCache = null;
 
 	@Inject
 	private UserController userController = null;
+
+	@Inject
+	private FileUploadController fileUploadController;
 
 	@EJB
 	EntityService entityService;
@@ -98,7 +105,8 @@ public class ModelController implements Serializable {
 	@EJB
 	ModelService modelService;
 
-	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	private static Logger logger = Logger.getLogger(ModelController.class
+			.getName());
 
 	/**
 	 * The init method is used load all model versions and store the latest
@@ -128,9 +136,10 @@ public class ModelController implements Serializable {
 	 **/
 	@PostConstruct
 	public void init() {
-
+		initialProcessEntityList = null;
 		modelVersionCache = new HashMap<String, String>();
 		processEntityCache = new HashMap<String, List<ItemCollection>>();
+		prjectEntityCache = new HashMap<String, ItemCollection>();
 
 		List<String> col;
 
@@ -181,10 +190,7 @@ public class ModelController implements Serializable {
 
 	}
 
-	public void reset() {
-		initialProcessEntityList = null;
-		projectList = null;
-	}
+	
 
 	public String getWorkflowGroup() {
 		if (workflowGroup == null)
@@ -208,6 +214,15 @@ public class ModelController implements Serializable {
 
 	public String getSystemModelVersion() {
 		return systemModelVersion;
+	}
+
+	/**
+	 * determine if a system model is available
+	 * 
+	 * @return true if a system model was found
+	 */
+	public boolean hasSystemModel() {
+		return (systemModelVersion != null && !systemModelVersion.isEmpty());
 	}
 
 	/**
@@ -353,7 +368,14 @@ public class ModelController implements Serializable {
 			String uniqueid) {
 
 		List<ItemCollection> result = new ArrayList<ItemCollection>();
-		ItemCollection project = getProjectByID(uniqueid);
+		ItemCollection project = (ItemCollection) prjectEntityCache
+				.get(uniqueid);
+		if (project == null) {
+			project = entityService.load(uniqueid);
+			if (project != null)
+				prjectEntityCache.put(uniqueid, project);
+		}
+
 		if (project == null)
 			return result;
 
@@ -378,125 +400,6 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * This method returns all project entities for the current user. This list
-	 * can be used to display project informations inside a form. The returned
-	 * project list is optimized and provides additional the following
-	 * attributes
-	 * <p>
-	 * isMember, isTeam, isOwner, isManager, isAssist
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getProjectList() {
-		if (projectList == null) {
-			projectList = new ArrayList<ItemCollection>();
-
-			String sQuery = "SELECT projct FROM Entity AS projct "
-					+ " JOIN projct.textItems AS t2"
-					+ " WHERE projct.type = 'project'"
-					+ " AND t2.itemName = 'txtname'"
-					+ " ORDER BY t2.itemValue asc";
-			Collection<ItemCollection> col = entityService.findAllEntities(
-					sQuery, 0, -1);
-
-			// create optimized list
-			for (ItemCollection project : col) {
-
-				ItemCollection clone = WorkitemHelper.clone(project);
-				clone.replaceItemValue("isTeam", false);
-				clone.replaceItemValue("isManager", false);
-
-				// check the isTeam status for the current user
-				List<String> userNameList = entityService.getUserNameList();
-				Vector<String> vProjectNameList = (Vector<String>) project
-						.getItemValue("namTeam");
-				// check if one entry matches....
-				for (String username : userNameList) {
-					if (vProjectNameList.indexOf(username) > -1) {
-						clone.replaceItemValue("isTeam", true);
-						break;
-					}
-				}
-				// check the isManager status for the current user
-				vProjectNameList = (Vector<String>) project
-						.getItemValue("namManager");
-				// check if one entry matches....
-				for (String username : userNameList) {
-					if (vProjectNameList.indexOf(username) > -1) {
-						clone.replaceItemValue("isManager", true);
-						break;
-					}
-				}
-				// check if user is member of team or manager list
-				boolean bMember = false;
-				if (clone.getItemValueBoolean("isTeam")
-						|| clone.getItemValueBoolean("isManager"))
-					bMember = true;
-				clone.replaceItemValue("isMember", bMember);
-
-				// add custom fields into clone...
-				clone.replaceItemValue("txtProcessList",
-						project.getItemValue("txtProcessList"));
-				clone.replaceItemValue("txtdescription",
-						project.getItemValue("txtdescription"));
-
-				projectList.add(clone);
-
-			}
-
-		}
-
-		return projectList;
-	}
-
-	/**
-	 * this method finds a project by its UniqueID. The projectList is read from
-	 * the project cache
-	 * 
-	 * @param uniqueid
-	 * @return
-	 */
-	public ItemCollection getProjectByID(String uniqueid) {
-		if (uniqueid == null || uniqueid.isEmpty())
-			return null;
-
-		// get the project list form local cache
-		List<ItemCollection> projectList = getProjectList();
-		for (ItemCollection aProject : projectList) {
-			if (uniqueid.equals(aProject
-					.getItemValueString(EntityService.UNIQUEID)))
-				return aProject;
-		}
-		return null;
-
-	}
-
-	/**
-	 * Returns a list of all projects which are siblings to a given project
-	 * unqiueid.
-	 * 
-	 * @param uniqueIdRef
-	 * @return
-	 */
-	public List<ItemCollection> getProjectsByRef(String uniqueIdRef) {
-
-		List<ItemCollection> result = new ArrayList<ItemCollection>();
-
-		if (uniqueIdRef != null) {
-			// iterate over all projects and compare the $UniqueIDRef
-			List<ItemCollection> list = getProjectList();
-			for (ItemCollection project : list) {
-				if (uniqueIdRef.equals(project
-						.getItemValueString("$UniqueIDRef"))) {
-					result.add(project);
-				}
-
-			}
-		}
-		return result;
-	}
-
-	/**
 	 * Returns a List with all available model versions
 	 * 
 	 * @return
@@ -517,83 +420,152 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * Returns true if current user is manager of a given project. Therefore the
-	 * method checks the cloned field 'isManager'
+	 * Returns a list of all uploaded model profile entities.
 	 * 
-	 * @return
+	 * @return list of ItemCollections
 	 */
-	public boolean isProjectManager(String aProjectUniqueID) {
-		// find project
-		ItemCollection project = getProjectByID(aProjectUniqueID);
-		if (project != null)
-			return project.getItemValueBoolean("isManager");
-		else
-			return false;
-	}
-
-	/**
-	 * Returns true if current user is member of the teamList of a given project
-	 * Therefore the method checks the cloned field 'isTeam'
-	 * 
-	 * @return
-	 */
-	public boolean isProjectTeam(String aProjectUniqueID) {
-		// find project
-		ItemCollection project = getProjectByID(aProjectUniqueID);
-		if (project != null)
-			return project.getItemValueBoolean("isTeam");
-		else
-			return false;
-
-	}
-
-	/**
-	 * Returns true if current user is teamMember or manager of a given project
-	 * 
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public boolean isProjectMember(String aProjectUniqueID) {
-
-		// find project
-		ItemCollection project = getProjectByID(aProjectUniqueID);
-		if (project != null) {
-			String remoteUser = userController.getUserPrincipal();
-			List<String> vTeam = project.getItemValue("namTeam");
-			List<String> vManager = project.getItemValue("namManager");
-
-			if (vTeam.indexOf(remoteUser) > -1
-					|| vManager.indexOf(remoteUser) > -1)
-				return true;
-		}
-
-		return false;
-
-	}
-
-	/**
-	 * WorkflowEvent listener
-	 * 
-	 * If a project WorkItem was processed the modellController will be reseted.
-	 * 
-	 * @param workflowEvent
-	 */
-	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
-		if (workflowEvent == null)
-			return;
-
-		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
-				.getEventType()) {
-			// test if project was processed
-			if ("project".equals(workflowEvent.getWorkitem()
-					.getItemValueString("type"))) {
-
-				reset();
-				logger.info("ModelController:WorkflowEvent="
-						+ workflowEvent.getEventType());
-
+	public List<ItemCollection> getModelProfileList() {
+		List<ItemCollection> result = new ArrayList<ItemCollection>();
+		Collection<ItemCollection> colEntities = modelService
+				.getEnvironmentEntityList();
+		for (ItemCollection aworkitem : colEntities) {
+			String sName = aworkitem.getItemValueString("txtName");
+			if ("environment.profile".equals(sName)) {
+				result.add(aworkitem);
 			}
 		}
+		return result;
+	}
+
+	/**
+	 * adds all uploaded files.
+	 * 
+	 * @param event
+	 * 
+	 */
+	public void doUploadModel(ActionEvent event) {
+
+		List<FileData> fileList = fileUploadController.getUploadedFiles();
+		for (FileData file : fileList) {
+
+			logger.info("ModelController - starting xml model file upload: "
+					+ file.getName());
+			importXmlEntityData(file.getData());
+
+		}
+
+		fileUploadController.doClear(null);
+	}
+
+	/**
+	 * This Method deletes the given model
+	 * 
+	 * @throws AccessDeniedException
+	 */
+	public void deleteModel(String currentModelVersion)
+			throws AccessDeniedException {
+
+		String sQuery;
+
+		sQuery = "SELECT process FROM Entity AS process "
+				+ "	 JOIN process.textItems as t"
+				+ "	 JOIN process.textItems as v"
+				+ "	 WHERE t.itemName = 'type' AND t.itemValue IN('ProcessEntity', 'ActivityEntity', 'WorkflowEnvironmentEntity')"
+				+ " 	 AND v.itemName = '$modelversion' AND v.itemValue = '"
+				+ currentModelVersion + "'";
+
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, -1);
+
+		for (ItemCollection aworkitem : col) {
+
+			entityService.remove(aworkitem);
+
+		}
+
+		// reset model info
+		init();
+
+	}
+
+	/**
+	 * this method imports an xml entity data stream. This is used to provide
+	 * model uploads during the system setup. The method can also import general
+	 * entity data like project data.
+	 * 
+	 * @param event
+	 * @throws Exception
+	 */
+	public void importXmlEntityData(byte[] filestream) {
+		XMLItemCollection entity;
+		ItemCollection itemCollection;
+		String sModelVersion = null;
+
+		if (filestream == null)
+			return;
+		try {
+			EntityCollection ecol = null;
+			logger.info("[SetupController] verifing file content....");
+			JAXBContext context = JAXBContext
+					.newInstance(EntityCollection.class);
+			Unmarshaller m = context.createUnmarshaller();
+
+			ByteArrayInputStream input = new ByteArrayInputStream(filestream);
+			Object jaxbObject = m.unmarshal(input);
+			if (jaxbObject == null) {
+				throw new RuntimeException(
+						"[SetupController] error - wrong xml file format - unable to import file!");
+			}
+
+			ecol = (EntityCollection) jaxbObject;
+
+			// import entities....
+			if (ecol.getEntity().length > 0) {
+
+				Vector<String> vModelVersions = new Vector<String>();
+				// first iterrate over all enttity and find if model entries are
+				// included
+				for (XMLItemCollection aentity : ecol.getEntity()) {
+					itemCollection = XMLItemCollectionAdapter
+							.getItemCollection(aentity);
+					// test if this is a model entry
+					// (type=WorkflowEnvironmentEntity)
+					if ("WorkflowEnvironmentEntity".equals(itemCollection
+							.getItemValueString("type"))
+							&& "environment.profile".equals(itemCollection
+									.getItemValueString("txtName"))) {
+
+						sModelVersion = itemCollection
+								.getItemValueString("$ModelVersion");
+						if (vModelVersions.indexOf(sModelVersion) == -1)
+							vModelVersions.add(sModelVersion);
+					}
+				}
+				// now remove old model entries....
+				for (String aModelVersion : vModelVersions) {
+					logger.info("[SetupController] removing existing configuration for model version '"
+							+ aModelVersion + "'");
+					modelService.removeModelVersion(aModelVersion);
+				}
+				// save new entities into database and update modelversion.....
+				for (int i = 0; i < ecol.getEntity().length; i++) {
+					entity = ecol.getEntity()[i];
+					itemCollection = XMLItemCollectionAdapter
+							.getItemCollection(entity);
+					// save entity
+					entityService.save(itemCollection);
+				}
+
+				logger.info("[SetupController] " + ecol.getEntity().length
+						+ " entries sucessfull imported");
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		// reinitialize models
+		init();
 
 	}
 

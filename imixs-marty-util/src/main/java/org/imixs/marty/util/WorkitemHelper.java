@@ -42,6 +42,10 @@ public class WorkitemHelper {
 				aWorkitem.getItemValue("txtWorkflowStatus"));
 		clone.replaceItemValue("txtWorkflowGroup",
 				aWorkitem.getItemValue("txtWorkflowGroup"));
+		clone.replaceItemValue("namCreator",
+				aWorkitem.getItemValue("namCreator"));
+		clone.replaceItemValue("namCurrentEditor",
+				aWorkitem.getItemValue("namCurrentEditor"));
 		clone.replaceItemValue("namOwner", aWorkitem.getItemValue("namOwner"));
 
 		clone.replaceItemValue("txtWorkflowSummary",

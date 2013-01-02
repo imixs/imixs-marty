@@ -43,9 +43,9 @@ import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
- * This Plugin handles a unique sequence number for all workItems from a project
- * based on the WorkflowGroup of the workItem. The current sequenceNumber for a
- * workflowGroup will be stored in the configuration Entity 'BASIC'. The
+ * This Plugin handles a unique sequence number for all workItems. The current
+ * sequenceNumber for a workitem is based on the workflowGroup. The next free
+ * sequence number will be stored in the configuration Entity 'BASIC'. The
  * configuration entity provides a property named 'sequencenumbers' with the
  * current number range for each workflowGroup.
  * 
@@ -53,18 +53,27 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * the BASIC configuration, the Plugin will not compute a new number for the
  * workitem.
  * 
- * If the WorkItem is a ChildWorkitem (type=childworkitem) then the
- * sequcenceNumber will be computed based on the LastSequenceNumber stored in
- * the parentWorkitem. In this case the parent Workitem is the configuration
- * entity for the next sequenceNumber
- * 
  * If the Workitem still have a sequence number stored the plugin will not run.
- * 
  * The new computed SequenceNumer will be stored into the property
- * 'numsequencenumber'.
+ * 'numsequencenumber'. To compute the sequence Number the plugin uses the
+ * stateless session EJB SequeceService which updates the latest used sequence
+ * Number.
  * 
- * To compute the sequence Number the plugin uses the stateless session EJB
- * SequeceService which updates the latest used sequence Number..
+ * --- Optimistic Locking---------
+ * <p>
+ * If the WorkItem is a ChildWorkitem (type=childworkitem) then the mechanism is
+ * stopped. In earlier version the sequcenceNumber was computed based on the
+ * LastSequenceNumber stored in the parentWorkitem. In this case the parent
+ * Workitem was the configuration entity for the next sequenceNumber. But
+ * because of Optmistic locking this leads into a exception in the frontend
+ * (because of the fact, that the frontend controller holds a local copy of the
+ * parent workitem) This is the reason why the mechanism is disabled here!
+ * <p>
+ * --- Solution-------------------
+ * <p>
+ * The 'Optimistic Locking' problem could be solved if the client removes the
+ * property '$version' from the parent workitem.
+ * 
  * 
  * @see SequenceService
  * @author rsoika
@@ -113,25 +122,31 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 		workitem = documentContext;
 
 		// check type
+
+		/*
+		 * The plugin will only run for type='worktiem'. Childworkitems are no
+		 * longer supported as a optimistic locking exception will be forced in
+		 * the frontend (because of updated version id)
+		 * 
+		 * || "childworkitem".equals(sType)
+		 */
 		String sType = workitem.getItemValueString("Type");
-		if (!("workitem".equals(sType) || "childworkitem".equals(sType)))
+		if (!("workitem".equals(sType)))
 			return Plugin.PLUGIN_OK;
 
 		/* check if worktitem still have a sequence number? */
 		if (workitem.getItemValueInteger("numsequencenumber") == 0) {
 			try {
-			// load next Number based on the type of workitem
-			if ("workitem".equals(sType))
-				
+				// load next Number based on the type of workitem
+				if ("workitem".equals(sType))
 					sequenceNumber = sequenceService
 							.getNextSequenceNumberByGroup(documentContext);
-				
-			else
-				sequenceNumber = sequenceService
-						.getNextSequenceNumberByParent(documentContext);
+				else
+					sequenceNumber = sequenceService
+							.getNextSequenceNumberByParent(documentContext);
 
 			} catch (AccessDeniedException e) {
-				throw new PluginException("[SequenceNumberPlugin] error ",e);
+				throw new PluginException("[SequenceNumberPlugin] error ", e);
 			}
 			if (sequenceNumber > 0)
 				workitem.replaceItemValue("numsequencenumber", new Integer(

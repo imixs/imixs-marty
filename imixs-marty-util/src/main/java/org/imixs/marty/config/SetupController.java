@@ -27,34 +27,21 @@
 
 package org.imixs.marty.config;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.ResourceBundle;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.enterprise.context.SessionScoped;
+import javax.enterprise.context.ApplicationScoped;
 import javax.faces.event.ActionEvent;
-import javax.faces.model.SelectItem;
+import javax.inject.Inject;
 import javax.inject.Named;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
 
-import org.imixs.marty.ejb.ConfigService;
-import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.faces.util.SelectItemComparator;
+import org.imixs.marty.model.ModelController;
 import org.imixs.workflow.jee.jpa.EntityIndex;
-import org.imixs.workflow.xml.EntityCollection;
-import org.imixs.workflow.xml.XMLItemCollection;
-import org.imixs.workflow.xml.XMLItemCollectionAdapter;
 
 /**
  * This Backing Bean acts as a application wide config Bean. It holds general
@@ -64,44 +51,26 @@ import org.imixs.workflow.xml.XMLItemCollectionAdapter;
  * The method doSetup() initializes the system. The method also loads a default
  * model configuration if no model yet exists.
  * 
- * @author rsoika 
+ * @author rsoika
  * 
  */
 @Named("setupController")
-@SessionScoped
-public class SetupController implements Serializable {
+@ApplicationScoped
+public class SetupController extends ConfigController {
 
 	private static final long serialVersionUID = 1L;
 
-	/**
-	 * Default values for maximum history entries are currently hard coded
-	 */
-	private int maxProjectHistoryLength = 10;
-	private int maxProfileHistoryLength = 10;
-	private int maxWorkitemHistoryLength = 10;
-	private int sortby = 0;
-	private int sortorder = 0;
-	private int maxviewentriesperpage = 10;
-	private int defaultworklistview = 0;
-	private boolean createDefaultProject = false;
-	private String defaultPage = "pages/notes";
-	private ArrayList<SelectItem> localeSelection = null;
-
-	
-	public final static String CONFIGURATION_NAME = "BASIC";
+	private final static String CONFIGURATION_NAME = "BASIC";
 
 	private boolean setupOk = false;
 
-	private ItemCollection configItemCollection = null;
-
-	@EJB
-	ConfigService configService;
+	@Inject
+	private ModelController modelController;
+	
+	
 	@EJB
 	org.imixs.workflow.jee.ejb.EntityService entityService;
-
-	@EJB
-	org.imixs.workflow.jee.ejb.EntityService epm;
-
+	
 	@EJB
 	org.imixs.workflow.jee.ejb.ModelService modelService;
 
@@ -109,71 +78,27 @@ public class SetupController implements Serializable {
 
 	public SetupController() {
 		super();
-	}
-
-	public ItemCollection getWorkitem() {
-
-		return configItemCollection;
+		// set name
+		this.setName(CONFIGURATION_NAME);
 	}
 
 	/**
-	 * This method tries to load the config entity to read default values. If no
-	 * configuration exists the method creates a new config entity. Next the
-	 * method verifies if the system models are available and if the doSetup()
-	 * method was triggered once before. The method set the boolean 'setupOk'. This Booelan 
-	 * indicates if the user need to start a doSetup() method call (see layout.xhtml)
+	 * This method loads the config entity.
+	 * 
+	 * Next the method verifies if the system models are available and if the
+	 * doSetup() method was triggered once before. The method set the boolean
+	 * 'setupOk'. This Booelan indicates if the user need to start a doSetup()
+	 * method call (see layout.xhtml)
 	 */
 	@PostConstruct
 	public void init() {
-		configItemCollection = configService
-				.loadConfiguration(CONFIGURATION_NAME);
 
-		if (configItemCollection == null) {
-
-			try {
-				configItemCollection = configService
-						.createConfiguration(CONFIGURATION_NAME);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			// set default values
-			try {
-				configItemCollection.replaceItemValue(
-						"maxProjectHistoryLength", maxProjectHistoryLength);
-
-				configItemCollection.replaceItemValue(
-						"maxProfileHistoryLength", maxProfileHistoryLength);
-				configItemCollection.replaceItemValue(
-						"maxWorkitemHistoryLength", maxWorkitemHistoryLength);
-				configItemCollection.replaceItemValue("createDefaultProject",
-						createDefaultProject);
-
-				configItemCollection.replaceItemValue("defaultPage",
-						defaultPage);
-				// configItemCollection.replaceItemValue("defaultworklistview",
-				// defaultworklistview);
-				configItemCollection.replaceItemValue("maxviewentriesperpage",
-						maxviewentriesperpage);
-				configItemCollection.replaceItemValue("sortby", sortby);
-				configItemCollection.replaceItemValue("sortorder", sortorder);
-				configItemCollection.replaceItemValue(
-						"maxProjectHistoryLength", maxProjectHistoryLength);
-				configItemCollection.replaceItemValue(
-						"maxProjectHistoryLength", maxProjectHistoryLength);
-				configItemCollection.replaceItemValue("defaultworklistview",
-						defaultworklistview);
-
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-		}
+		super.init();
 
 		// now test if system model exists and if the systemSetup was
 		// successfully completed.
-		setupOk = (hasSystemModel() && configItemCollection
-				.getItemValueBoolean("keySystemSetupCompleted") == true);
+		setupOk = (modelController.hasSystemModel() && getWorkitem().getItemValueBoolean(
+				"keySystemSetupCompleted") == true);
 
 	}
 
@@ -185,25 +110,7 @@ public class SetupController implements Serializable {
 		this.setupOk = systemSetupOk;
 	}
 
-	/**
-	 * save method tries to load the config entity. if not availabe. the method
-	 * will create the entity the first time
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-
-	public void doSave(ActionEvent event) throws Exception {
-		// update write and read access
-		// configItemCollection.replaceItemValue("type", TYPE);
-		configItemCollection.replaceItemValue("txtname", CONFIGURATION_NAME);
-		configItemCollection.replaceItemValue("$writeAccess",
-				"org.imixs.ACCESSLEVEL.MANAGERACCESS");
-		configItemCollection.replaceItemValue("$readAccess", "");
-		// save entity
-		configItemCollection = entityService.save(configItemCollection);
-
-	}
+	
 
 	/**
 	 * starts a ConsistencyCheck without updating values
@@ -212,48 +119,47 @@ public class SetupController implements Serializable {
 	 * @throws Exception
 	 */
 	public void doSetup(ActionEvent event) throws Exception {
-		
-		
+
 		logger.info("[SetupController starting System Setup...");
 		// model
-		epm.addIndex("numprocessid", EntityIndex.TYP_INT);
-		epm.addIndex("numactivityid", EntityIndex.TYP_INT);
+		entityService.addIndex("numprocessid", EntityIndex.TYP_INT);
+		entityService.addIndex("numactivityid", EntityIndex.TYP_INT);
 
 		// workflow
-		epm.addIndex("type", EntityIndex.TYP_TEXT);
-		epm.addIndex("$uniqueidref", EntityIndex.TYP_TEXT);
-		epm.addIndex("$workitemid", EntityIndex.TYP_TEXT);
-		epm.addIndex("$processid", EntityIndex.TYP_INT);
-		epm.addIndex("txtworkflowgroup", EntityIndex.TYP_TEXT);
-		
-		
+		entityService.addIndex("type", EntityIndex.TYP_TEXT);
+		entityService.addIndex("$uniqueidref", EntityIndex.TYP_TEXT);
+		entityService.addIndex("$workitemid", EntityIndex.TYP_TEXT);
+		entityService.addIndex("$processid", EntityIndex.TYP_INT);
+		entityService.addIndex("txtworkflowgroup", EntityIndex.TYP_TEXT);
+
 		// remove txtworkflowSummary (deprecated index field!)
-		// this field was only for an older search feature which is no longer necessary.
-		//epm.addIndex("txtworkflowsummary", EntityIndex.TYP_TEXT);
-		epm.removeIndex("txtworkflowsummary");
-		
-		epm.addIndex("namcreator", EntityIndex.TYP_TEXT);
-		epm.addIndex("$modelversion", EntityIndex.TYP_TEXT);
+		// this field was only for an older search feature which is no longer
+		// necessary.
+		// epm.addIndex("txtworkflowsummary", EntityIndex.TYP_TEXT);
+		entityService.removeIndex("txtworkflowsummary");
+
+		entityService.addIndex("namcreator", EntityIndex.TYP_TEXT);
+		entityService.addIndex("$modelversion", EntityIndex.TYP_TEXT);
 
 		// app
-		epm.addIndex("txtworkitemref", EntityIndex.TYP_TEXT);
-		epm.addIndex("txtname", EntityIndex.TYP_TEXT);
-		epm.addIndex("txtemail", EntityIndex.TYP_TEXT);
-		epm.addIndex("namteam", EntityIndex.TYP_TEXT);
-		epm.addIndex("namowner", EntityIndex.TYP_TEXT);
-		epm.addIndex("datdate", EntityIndex.TYP_CALENDAR);
-		epm.addIndex("datfrom", EntityIndex.TYP_CALENDAR);
-		epm.addIndex("datto", EntityIndex.TYP_CALENDAR);
-		epm.addIndex("numsequencenumber", EntityIndex.TYP_INT);
+		entityService.addIndex("txtworkitemref", EntityIndex.TYP_TEXT);
+		entityService.addIndex("txtname", EntityIndex.TYP_TEXT);
+		entityService.addIndex("txtemail", EntityIndex.TYP_TEXT);
+		entityService.addIndex("namteam", EntityIndex.TYP_TEXT);
+		entityService.addIndex("namowner", EntityIndex.TYP_TEXT);
+		entityService.addIndex("datdate", EntityIndex.TYP_CALENDAR);
+		entityService.addIndex("datfrom", EntityIndex.TYP_CALENDAR);
+		entityService.addIndex("datto", EntityIndex.TYP_CALENDAR);
+		entityService.addIndex("numsequencenumber", EntityIndex.TYP_INT);
 
-		epm.addIndex("txtProjectName", EntityIndex.TYP_TEXT);
-		epm.addIndex("txtUsername", EntityIndex.TYP_TEXT);
+		entityService.addIndex("txtProjectName", EntityIndex.TYP_TEXT);
+		entityService.addIndex("txtUsername", EntityIndex.TYP_TEXT);
 
 		logger.info("[SetupController] index configuration - ok");
 
 		// update System configuration.....
 		getWorkitem().replaceItemValue("keySystemSetupCompleted", true);
-		doSave(event);
+		save();
 
 		// load default models
 		loadDefaultModels();
@@ -264,17 +170,7 @@ public class SetupController implements Serializable {
 
 	}
 
-	/**
-	 * THis method reloads the configuration Entity
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void doReset(ActionEvent event) throws Exception {
-		configItemCollection = configService
-				.loadConfiguration(CONFIGURATION_NAME);
-
-	}
+	
 
 	/**
 	 * This method loads the default model files defined by the configuration
@@ -290,7 +186,7 @@ public class SetupController implements Serializable {
 
 		logger.info("[SetupController] searching system model...");
 		try {
-			if (hasSystemModel()) {
+			if (modelController.hasSystemModel()) {
 				logger.info("[SetupController] system model found - skip loading default models");
 				return;
 			}
@@ -305,11 +201,11 @@ public class SetupController implements Serializable {
 				String sKey = enkeys.nextElement();
 				// try to load this model
 				String filePath = r.getString(sKey);
-				logger.info("[SetupController] loading model configuration '" + sKey
-						+ "=" + filePath + "'");
+				logger.info("[SetupController] loading model configuration '"
+						+ sKey + "=" + filePath + "'");
 
-				InputStream inputStream = SetupController.class.getClassLoader()
-						.getResourceAsStream(filePath);
+				InputStream inputStream = SetupController.class
+						.getClassLoader().getResourceAsStream(filePath);
 				// byte[] bytes = IOUtils.toByteArray(inputStream);
 
 				ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -324,7 +220,7 @@ public class SetupController implements Serializable {
 				bos.flush();
 				byte[] result = bos.toByteArray();
 
-				this.importXmlEntityData(result);
+				modelController.importXmlEntityData(result);
 			}
 		} catch (Exception e) {
 			logger.severe("[SetupController] unable to load model configuration - please check configuration/model.properties file!");
@@ -334,135 +230,7 @@ public class SetupController implements Serializable {
 
 	}
 
-	/**
-	 * determine if a system model is available
-	 * 
-	 * @return true if a system model was found
-	 */
-	public boolean hasSystemModel() {
-		List<String> col = modelService.getAllModelVersions();
-		// check if system model is available
-		for (String sversion : col) {
-
-			String sModelDomain = sversion.substring(0, sversion.indexOf("-"));
-
-			if ("system".equals(sModelDomain)) {
-
-				// system model found
-				return true;
-
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * This method returns a list of SelectItems with the predefined Languages
-	 * The locale is configured in the property file
-	 * configuration/locale.properties
-	 * 
-	 * If a locale is supported also the resource bundles in directory /bundle/
-	 * need to be supported
-	 * 
-	 * @return
-	 */
-	public ArrayList<SelectItem> getLocaleSelection() {
-		// load My projects only once...
-		if (localeSelection == null) {
-			// build new localeSelection
-			localeSelection = new ArrayList<SelectItem>();
-			ResourceBundle r = ResourceBundle.getBundle("configuration.locale");
-			Enumeration<String> enkeys = r.getKeys();
-			while (enkeys.hasMoreElements()) {
-				String sKey = enkeys.nextElement();
-				String sValue = r.getString(sKey);
-				localeSelection.add(new SelectItem(sKey, sValue));
-			}
-
-			Collections.sort(localeSelection,
-					new SelectItemComparator(true));
-
-
-		}
-		return localeSelection;
-	}
 	
-	/**
-	 * this method imports an xml entity data stream. This is used to provide
-	 * model uploads during the system setup. The method can also import general
-	 * entity data like project data.
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void importXmlEntityData(byte[] filestream) throws Exception {
-		XMLItemCollection entity;
-		ItemCollection itemCollection;
-		String sModelVersion = null;
-
-		if (filestream == null)
-			return;
-		try {
-			EntityCollection ecol = null;
-			logger.info("[SetupController] verifing file content....");
-			JAXBContext context = JAXBContext
-					.newInstance(EntityCollection.class);
-			Unmarshaller m = context.createUnmarshaller();
-
-			ByteArrayInputStream input = new ByteArrayInputStream(filestream);
-			Object jaxbObject = m.unmarshal(input);
-			if (jaxbObject == null) {
-				throw new RuntimeException(
-						"[SetupController] error - wrong xml file format - unable to import file!");
-			}
-
-			ecol = (EntityCollection) jaxbObject;
-
-			// import entities....
-			if (ecol.getEntity().length > 0) {
-
-				Vector<String> vModelVersions = new Vector<String>();
-				// first iterrate over all enttity and find if model entries are
-				// included
-				for (XMLItemCollection aentity : ecol.getEntity()) {
-					itemCollection = XMLItemCollectionAdapter
-							.getItemCollection(aentity);
-					// test if this is a model entry
-					// (type=WorkflowEnvironmentEntity)
-					if ("WorkflowEnvironmentEntity".equals(itemCollection
-							.getItemValueString("type"))
-							&& "environment.profile".equals(itemCollection
-									.getItemValueString("txtName"))) {
-
-						sModelVersion = itemCollection
-								.getItemValueString("$ModelVersion");
-						if (vModelVersions.indexOf(sModelVersion) == -1)
-							vModelVersions.add(sModelVersion);
-					}
-				}
-				// now remove old model entries....
-				for (String aModelVersion : vModelVersions) {
-					logger.info("[SetupController] removing existing configuration for model version '"
-							+ aModelVersion + "'");
-					modelService.removeModelVersion(aModelVersion);
-				}
-				// save new entities into database and update modelversion.....
-				for (int i = 0; i < ecol.getEntity().length; i++) {
-					entity = ecol.getEntity()[i];
-					itemCollection = XMLItemCollectionAdapter
-							.getItemCollection(entity);
-					// save entity
-					entityService.save(itemCollection);
-				}
-
-				logger.info("[SetupController] " + ecol.getEntity().length
-						+ " entries sucessfull imported");
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-	}
+	
 
 }
