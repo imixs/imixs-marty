@@ -38,7 +38,6 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -52,6 +51,7 @@ import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
+import org.imixs.workflow.jee.faces.util.LoginController;
 
 /**
  * This backing beans handles the Profile of the current user. The user is
@@ -116,8 +116,12 @@ public class UserController implements Serializable {
 	private String locale;
 
 	@Inject
-	private SetupController setupController = null;
+	private SetupController setupController;
 
+	@Inject
+	private LoginController loginController;
+
+	
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
 	public UserController() {
@@ -205,25 +209,8 @@ public class UserController implements Serializable {
 
 	}
 
-	public SetupController getSetupController() {
-		return setupController;
-	}
 
-	public void setSetupController(SetupController setupMB) {
-		this.setupController = setupMB;
-	}
-
-	/**
-	 * returns the userPrincipal Name
-	 * 
-	 * @return
-	 */
-	public String getUserPrincipal() {
-		FacesContext context = FacesContext.getCurrentInstance();
-		ExternalContext externalContext = context.getExternalContext();
-		return externalContext.getUserPrincipal() != null ? externalContext
-				.getUserPrincipal().toString() : null;
-	}
+	
 
 	public ItemCollection getWorkitem() {
 		if (workitem == null)
@@ -471,7 +458,7 @@ public class UserController implements Serializable {
 	private ItemCollection findProfileByName(String aname) {
 
 		if (aname == null)
-			aname = getUserPrincipal();
+			aname = loginController.getUserPrincipal();
 
 		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
 				+ " JOIN profile.textItems AS t2"

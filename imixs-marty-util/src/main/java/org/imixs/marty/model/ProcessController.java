@@ -30,10 +30,7 @@ package org.imixs.marty.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Logger;
 
@@ -41,19 +38,14 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
-import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.marty.profile.UserController;
-import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.ModelService;
-import org.imixs.workflow.jee.faces.fileupload.FileData;
-import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
+import org.imixs.workflow.jee.faces.util.LoginController;
  
 /**
  * The ProcessController provides informations about the process and project
@@ -74,7 +66,7 @@ public class ProcessController implements Serializable {
 	private List<ItemCollection> projectList = null;
 
 	@Inject
-	private UserController userController = null;
+	private LoginController loginController = null;
 
 	
 	@EJB
@@ -283,7 +275,7 @@ public class ProcessController implements Serializable {
 		// find project
 		ItemCollection project = getProjectByID(aProjectUniqueID);
 		if (project != null) {
-			String remoteUser = userController.getUserPrincipal();
+			String remoteUser = loginController.getUserPrincipal();
 			List<String> vTeam = project.getItemValue("namTeam");
 			List<String> vManager = project.getItemValue("namManager");
 
