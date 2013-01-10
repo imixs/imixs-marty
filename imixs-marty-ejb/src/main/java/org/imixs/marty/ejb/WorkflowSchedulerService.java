@@ -470,11 +470,14 @@ public class WorkflowSchedulerService {
 
 	/**
 	 * This method processes all workitems for a specific processID. the
-	 * processID is idenfied by the activityEntity Object (numprocessid)
+	 * processID is identified by the activityEntity Object (numprocessid)
 	 * 
 	 * If the ActivityEntity has defined a EQL statement (attribute
 	 * txtscheduledview) then the method selects the workitems by this query.
-	 * Otherwise the method use the standard method getWorklistByProcessID()
+	 * Otherwise the method use a standard method to getWorklist By ProcessID.
+	 * 
+	 * Only workitems from type='workitem' will be processed per default.
+	 * 
 	 * 
 	 * @param aProcessID
 	 * @throws Exception
@@ -487,23 +490,28 @@ public class WorkflowSchedulerService {
 		String sModelVersion = activityEntity
 				.getItemValueString("$modelversion");
 
-		// if a query is defined in the activityEntity then use the EQL
-		// statement
-		// to query the items. Otherwise use standard method
-		// getWorklistByProcessID()
-		String sQuery = activityEntity.getItemValueString("txtscheduledview");
-
 		// get all workitems...
 		Collection<ItemCollection> worklist = null;
-		if (sQuery != null && !"".equals(sQuery)) {
-			logger.fine("[WorkflowSchedulerService] Query=" + sQuery);
-			worklist = entityService.findAllEntities(sQuery, 0, -1);
-		} else {
-			logger.fine("[WorkflowSchedulerService] getWorkListByProcessID.."
-			 + sQuery);
-			worklist = workflowService.getWorkListByProcessID(iProcessID, 0,
-					-1, null, 0);
+
+		// if a query is defined in the activityEntity then use the EQL
+		// statement
+		// to query the items. Otherwise use a standard eql statement
+		String sQuery = activityEntity.getItemValueString("txtscheduledview");
+
+		if ("".equals(sQuery.trim())) {
+			// create default query
+			sQuery = "SELECT";
+			sQuery += " wi FROM Entity as wi "
+					+ " JOIN wi.integerItems as t JOIN wi.textItems as s "
+					+ " WHERE ";
+			sQuery += " wi.type='workitem' AND ";
+			sQuery += " t.itemName = '$processid' and t.itemValue = '"
+					+ iProcessID + "' AND s.itemName = '$workitemid' ";
 		}
+		// start query....
+		logger.fine("[WorkflowSchedulerService] Query=" + sQuery);
+		worklist = entityService.findAllEntities(sQuery, 0, -1);
+
 		iScheduledWorkItems += worklist.size();
 		for (ItemCollection workitem : worklist) {
 			// verify processID
@@ -582,8 +590,8 @@ public class WorkflowSchedulerService {
 				if ("3".equals(sDelayUnit))
 					sDelayUnit = "days";
 
-				logger.fine("[WorkflowSchedulerService] " + suniqueid + " delay ="
-						+ iActivityDelay + " " + sDelayUnit);
+				logger.fine("[WorkflowSchedulerService] " + suniqueid
+						+ " delay =" + iActivityDelay + " " + sDelayUnit);
 
 			}
 			// Delay in sekunden umrechnen
@@ -665,23 +673,23 @@ public class WorkflowSchedulerService {
 						+ ": CompareType = field: '" + sNameOfField + "'");
 
 				if (!doc.hasItem(sNameOfField)) {
-					System.out.println("[WorkflowSchedulerService] " + suniqueid
-							+ ": CompareType =" + sNameOfField
+					System.out.println("[WorkflowSchedulerService] "
+							+ suniqueid + ": CompareType =" + sNameOfField
 							+ " no value found!");
 					return false;
 				}
 
 				dateTimeCompare = doc.getItemValueDate(sNameOfField);
 
-				System.out.println("[WorkflowSchedulerService] " + suniqueid + ": "
-						+ sNameOfField + "=" + dateTimeCompare);
+				System.out.println("[WorkflowSchedulerService] " + suniqueid
+						+ ": " + sNameOfField + "=" + dateTimeCompare);
 
 				dateTimeCompare = adjustSecond(dateTimeCompare, iActivityDelay);
 
 				if (true) {
-					System.out.println("[WorkflowSchedulerService] " + suniqueid
-							+ ": Compare " + dateTimeCompare + " <-> "
-							+ dateTimeNow);
+					System.out.println("[WorkflowSchedulerService] "
+							+ suniqueid + ": Compare " + dateTimeCompare
+							+ " <-> " + dateTimeNow);
 				}
 				return dateTimeCompare.before(dateTimeNow);
 			}
