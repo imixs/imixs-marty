@@ -128,6 +128,9 @@ public class CommentMB implements WorkitemListener {
 
 				// clear comment
 				workitem.replaceItemValue("txtComment", "");
+				
+				// save last comment
+				workitem.replaceItemValue("txtLastComment", sComment);
 			}
 		} catch (Exception e) {
 			// unable to copy comment

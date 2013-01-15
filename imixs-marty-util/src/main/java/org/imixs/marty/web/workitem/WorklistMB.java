@@ -382,6 +382,25 @@ public class WorklistMB implements WorkitemListener {
 		}
 	}
 
+	
+	/**
+	 * this method is called by the datatables to delete a workitem
+	 * 
+	 * @return
+	 */
+	public void doDelete(ActionEvent event) throws Exception {
+		ItemCollection currentSelection = getCurrentSelection(event);
+		if (currentSelection != null) {
+			getWorkitemMB().setWorkitem(currentSelection);
+			getWorkitemMB().doDelete(event);
+			
+			doRefresh(event);
+
+		}
+	}
+
+	
+	
 	/**
 	 * this method toogles the ajax attribute a4j:showDetails This Attriubte is
 	 * used to display the WorkitemDetails inside the Worklist View.
