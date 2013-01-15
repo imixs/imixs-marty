@@ -106,6 +106,9 @@ public class CommentController implements Serializable {
 
 				// clear comment
 				workitem.replaceItemValue("txtComment", "");
+				
+				// save last comment
+				workitem.replaceItemValue("txtLastComment", sComment);
 
 			}
 		}
