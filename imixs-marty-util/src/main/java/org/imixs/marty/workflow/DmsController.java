@@ -89,21 +89,15 @@ public class DmsController implements Serializable {
 		String path = ctx.getExternalContext().getRequestContextPath();
 
 		fileUploadController.setRestServiceURI(path
-				+ "/RestService/workflow/workitem/");
+				+ "/rest-service/workflow/workitem/");
 
 	}
-
-
 
 	public void setFileUploadController(FileUploadController fleUploadController) {
 		this.fileUploadController = fleUploadController;
 
-		// update restService URL
-		fleUploadController
-				.setRestServiceURI("/office/rest/workflow/workitem/");
+		init();
 	}
-
-	
 
 	/**
 	 * WorkflowEvent listener to update the DMS property if a WorkItem has
@@ -203,6 +197,27 @@ public class DmsController implements Serializable {
 			dmsList = new ArrayList<ItemCollection>();
 		return dmsList;
 
+	}
+
+	/**
+	 * This method removes a file form the current dms list and also from the workitem
+	 * 
+	 * @param aFile
+	 */
+	public void removeFile(String aFile) {
+
+		// remove file from dms list
+		for (ItemCollection aEntry : dmsList) {
+			if (aFile.equals(aEntry.getItemValueString("txtname"))) {
+				dmsList.remove(aEntry);
+				break;
+			}
+		}
+
+		// now remove the entry also from the $file property
+		fileUploadController.removeAttachmentAction(aFile);
+		workflowController.getWorkitem().removeFile(aFile);
+		
 	}
 
 	/**
