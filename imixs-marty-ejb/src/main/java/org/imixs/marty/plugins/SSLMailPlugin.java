@@ -27,6 +27,7 @@
 
 package org.imixs.marty.plugins;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.mail.Message;
@@ -77,6 +78,9 @@ import org.imixs.workflow.exceptions.PluginException;
     "mail-smtps.host" = "...."
  * </code>
  * 
+ * Also mail-smtp.* should be tested if no success.
+ * 
+ * Loglevel for org.imixs.marty.plugins.SSLMailPlugin can be set to 'FINE'
  * 
  * @author rsoika
  * @version 1.0
@@ -139,6 +143,9 @@ public class SSLMailPlugin extends org.imixs.marty.plugins.MailPlugin {
 				} catch (Exception esend) {
 					logger.warning("[SSLMailPlugin] close - Warning:"
 							+ esend.toString());
+					
+					if (logger.isLoggable(Level.FINE))
+						esend.printStackTrace();
 				}
 			}
 
