@@ -76,6 +76,10 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
+	public boolean hasMailSession() {
+		return hasMailSession;
+	}
+
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
 
