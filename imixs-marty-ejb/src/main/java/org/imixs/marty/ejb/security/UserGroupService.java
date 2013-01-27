@@ -115,7 +115,7 @@ public class UserGroupService {
 	}
 
 	/**
-	 * This method verifies if a default user id allredy exists. If no userID
+	 * This method verifies if a default user id already exists. If no userID
 	 * exists the method generates a default account 'admin' with password
 	 * 'adminadmin'
 	 * @throws AccessDeniedException 
