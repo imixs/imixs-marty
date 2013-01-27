@@ -113,7 +113,9 @@ public class SetupController extends ConfigController {
 	
 
 	/**
-	 * starts a ConsistencyCheck without updating values
+	 * This method starts a ConsistencyCheck without updating values.
+	 * 
+	 * Also the modelController (application scoped) will be reinitialized.
 	 * 
 	 * @param event
 	 * @throws Exception
@@ -161,11 +163,14 @@ public class SetupController extends ConfigController {
 		getWorkitem().replaceItemValue("keySystemSetupCompleted", true);
 		save();
 
+		// initialize modelController
+		modelController.init();
+		
 		// load default models
 		loadDefaultModels();
 
 		setupOk = true;
-
+	
 		logger.info("[SetupController] system setup completed");
 
 	}
