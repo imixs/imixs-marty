@@ -151,7 +151,10 @@ private String aBodyText=null;
 					trans.connect(mailSession.getProperty("mail.smtps.user"),
 							mailSession.getProperty("mail.smtps.password"));
 
-					mailMessage.setContent(getMultipart());
+					
+					logger.info("SSLMailPlugin - disable mulitpart content");
+					
+					//mailMessage.setContent(getMultipart());
 					
 					
 					logger.info("SSLMailPlugin - setting plain text content 'text/plain'");
