@@ -33,7 +33,9 @@ import java.util.logging.Logger;
 import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.Transport;
+import javax.mail.internet.MimeBodyPart;
 
+import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.exceptions.PluginException;
@@ -86,10 +88,26 @@ import org.imixs.workflow.exceptions.PluginException;
  * @version 1.0
  */
 public class SSLMailPlugin extends org.imixs.marty.plugins.MailPlugin {
-
+private String aBodyText=null;
 	private static Logger logger = Logger.getLogger(SSLMailPlugin.class
 			.getName());
 
+	
+	
+	// simply get the plain text body.....
+	public int run(ItemCollection documentContext,
+			ItemCollection documentActivity) throws PluginException {
+		// build mail body...
+		 aBodyText = documentActivity
+				.getItemValueString("rtfMailBody");
+		if (aBodyText != null) {
+			aBodyText = replaceDynamicValues(aBodyText, documentContext);
+		
+		}
+		
+		return super.run(documentContext,documentActivity);
+	}
+	
 	/**
 	 * This method overwrites the close method of the marty mail plugin and the
 	 * Imixs Workflow MailPlugin.
@@ -134,6 +152,12 @@ public class SSLMailPlugin extends org.imixs.marty.plugins.MailPlugin {
 							mailSession.getProperty("mail.smtps.password"));
 
 					mailMessage.setContent(getMultipart());
+					
+					
+					logger.info("SSLMailPlugin - setting plain text content 'text/plain'");
+				
+					
+					mailMessage.setContent(aBodyText,"text/plain");
 
 					mailMessage.saveChanges();
 					trans.sendMessage(mailMessage,
