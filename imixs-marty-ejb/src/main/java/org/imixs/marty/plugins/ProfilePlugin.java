@@ -53,6 +53,10 @@ public class ProfilePlugin extends AbstractPlugin {
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 	private ItemCollection profile = null;
 
+	// error codes
+	public static String USERNAME_ALREADY_TAKEN = "USERNAME_ALREADY_TAKEN";
+	public static String EMAIL_ALREADY_TAKEN = "EMAIL_ALREADY_TAKEN";
+
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
@@ -84,16 +88,22 @@ public class ProfilePlugin extends AbstractPlugin {
 
 		// update the txtname if not already set
 		if ("".equals(sUsername)) {
-			logger.fine("initialize profile with username: " + this.getUserName());
+			logger.fine("initialize profile with username: "
+					+ this.getUserName());
 			profile.replaceItemValue("txtName", this.getUserName());
 		}
 		if (!isValidUserName())
 			throw new PluginException(
-					"Username is already taken - verifiy txtname and txtusername");
+					ProfilePlugin.class.getSimpleName(),
+					USERNAME_ALREADY_TAKEN,
+					"Username is already taken - verifiy txtname and txtusername",
+					new Object[] { profile.getItemValueString("txtName") });
 
 		if (!isValidEmail())
-			throw new PluginException(
-					"Email is already taken - verifiy txtemail");
+			throw new PluginException(ProfilePlugin.class.getSimpleName(),
+					EMAIL_ALREADY_TAKEN,
+					"Email is already taken - verifiy txtemail",
+					new Object[] { profile.getItemValueString("txtEmail") });
 
 		return Plugin.PLUGIN_OK;
 	}

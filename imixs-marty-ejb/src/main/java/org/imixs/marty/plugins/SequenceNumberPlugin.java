@@ -86,6 +86,7 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 	int sequenceNumber = -1;
 	ItemCollection workitem = null;
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	public static String NO_SEQUENCE_SERVICE_FOUND = "NO_SEQUENCE_SERVICE_FOUND";
 
 	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
@@ -100,6 +101,8 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 			sequenceService = (SequenceService) ctx.lookup(jndiName);
 		} catch (NamingException e) {
 			throw new PluginException(
+					SequenceNumberPlugin.class.getSimpleName(),
+					NO_SEQUENCE_SERVICE_FOUND,
 					"[SequenceNumberPlugin] unable to lookup sequenceService: ",
 					e);
 		}
@@ -146,7 +149,8 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 							.getNextSequenceNumberByParent(documentContext);
 
 			} catch (AccessDeniedException e) {
-				throw new PluginException("[SequenceNumberPlugin] error ", e);
+				throw new PluginException(e.getErrorContext(),
+						e.getErrorCode(), "[SequenceNumberPlugin] error ", e);
 			}
 			if (sequenceNumber > 0)
 				workitem.replaceItemValue("numsequencenumber", new Integer(

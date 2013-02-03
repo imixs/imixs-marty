@@ -53,6 +53,7 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * 
  */
 public class UserGroupPlugin extends AbstractPlugin {
+	public  static final String INVALID_CONTEXT = "INVALID_CONTEXT";
 	EntityService entityService = null;
 	UserGroupService userGroupService = null;;
 
@@ -79,7 +80,7 @@ public class UserGroupPlugin extends AbstractPlugin {
 			Context ctx = (Context) ictx.lookup("java:comp/env");
 			userGroupService = (UserGroupService) ctx.lookup(jndiName);
 		} catch (NamingException e) {
-			throw new PluginException(
+			throw new PluginException(UserGroupPlugin.class.getSimpleName(),INVALID_CONTEXT,
 					"[UserGroupPlugin] unable to lookup UserGroupService: ", e);
 		}
 	}
