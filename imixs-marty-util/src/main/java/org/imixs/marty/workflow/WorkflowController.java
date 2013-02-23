@@ -240,7 +240,7 @@ public class WorkflowController extends
 				.getItemValueString("txtWorkflowEditorid");
 		if ("".equals(sEditor))
 			sEditor = DEFAULT_EDITOR_ID;
-		
+
 		if (sEditor.indexOf('#') > -1) {
 			String liste = sEditor.substring(sEditor.indexOf('#') + 1);
 
@@ -350,9 +350,17 @@ public class WorkflowController extends
 	 * @throws Exception
 	 */
 	public void doMoveIntoArchive(ActionEvent event) throws Exception {
+
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_BEFORE_ARCHIVE));
+
 		ItemCollection workitem = workitemService
 				.moveIntoArchive(getWorkitem());
 		setWorkitem(workitem);
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_AFTER_ARCHIVE));
 
 	}
 
@@ -369,15 +377,14 @@ public class WorkflowController extends
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_BEFORE_SOFTDELETE));
-		
+
 		ItemCollection workitem = workitemService
 				.moveIntoDeletions(getWorkitem());
 		setWorkitem(workitem);
-		
-		
+
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
-						WorkflowEvent.WORKITEM_AFTER_SOFTDELETE));
+				WorkflowEvent.WORKITEM_AFTER_SOFTDELETE));
 
 	}
 
@@ -390,10 +397,17 @@ public class WorkflowController extends
 	 * @throws Exception
 	 */
 	public void doRestoreFromArchive(ActionEvent event) throws Exception {
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_BEFORE_RESTOREFROMARCHIVE));
+
 		ItemCollection workitem = workitemService
 				.restoreFromArchive(getWorkitem());
 
 		setWorkitem(workitem);
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_AFTER_RESTOREFROMARCHIVE));
 
 	}
 
@@ -406,12 +420,18 @@ public class WorkflowController extends
 	 * @throws Exception
 	 */
 	public void doRestoreFromDeletions(ActionEvent event) throws Exception {
+
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_BEFORE_RESTOREFROMSOFTDELETE));
+
 		ItemCollection workitem = workitemService
 				.restoreFromDeletions(getWorkitem());
 		setWorkitem(workitem);
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_AFTER_RESTOREFROMSOFTDELETE));
 
 	}
-
-	
 
 }
