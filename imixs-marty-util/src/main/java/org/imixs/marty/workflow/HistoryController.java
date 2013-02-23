@@ -127,6 +127,7 @@ public class HistoryController implements Serializable {
 
 	/**
 	 * This action listener removes the current WorkItem from the history nav
+	 * 
 	 * @param aWorkitem
 	 */
 	public void closeCurrentWorkitem(ActionEvent event) {
@@ -134,15 +135,20 @@ public class HistoryController implements Serializable {
 		if (iPos > -1) {
 			workitems.remove(iPos);
 		}
-		currentId=null;
+		currentId = null;
 	}
-	
+
 	/**
-	 * WorkflowEvent listener listens to WORKITEM_CHANGED events and adds the
-	 * current WorkItem into the history nav.
+	 * WorkflowEvent listener listens to WORKITEM events and adds or removes the
+	 * current WorkItem from the history nav.
 	 * 
-	 * If a WorkItem was processed, and the property 'action' is 'home' or
-	 * 'notes' then the WorkItem will be removed from the history
+	 * If a WorkItem was processed (WORKITEM_AFTER_PROCESS), and the property
+	 * 'action' is 'home' or 'notes' then the WorkItem will be removed from the
+	 * history
+	 * 
+	 * 
+	 * If a WorkItem was soft deleted (WORKITEM_AFTER_SOFTDELETE), the WorkItem
+	 * will be removed from the history
 	 * 
 	 * @param workflowEvent
 	 * 
@@ -177,6 +183,16 @@ public class HistoryController implements Serializable {
 				addWorkItem(workflowEvent.getWorkitem());
 			}
 		}
+
+		// remove after softdelte
+		if (WorkflowEvent.WORKITEM_AFTER_SOFTDELETE == workflowEvent
+				.getEventType()) {
+			removeWorkitem(workflowEvent.getWorkitem().getItemValueString(
+					EntityService.UNIQUEID));
+			setCurrentId("");
+
+		}
+
 	}
 
 	/**

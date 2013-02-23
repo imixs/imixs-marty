@@ -366,9 +366,18 @@ public class WorkflowController extends
 	 */
 	public void doMoveIntoDeletions(ActionEvent event) throws Exception {
 
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_BEFORE_SOFTDELETE));
+		
 		ItemCollection workitem = workitemService
 				.moveIntoDeletions(getWorkitem());
 		setWorkitem(workitem);
+		
+		
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+						WorkflowEvent.WORKITEM_AFTER_SOFTDELETE));
 
 	}
 
