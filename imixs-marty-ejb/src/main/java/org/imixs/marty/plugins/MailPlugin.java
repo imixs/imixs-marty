@@ -27,40 +27,47 @@
 
 package org.imixs.marty.plugins;
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Vector;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.util.ByteArrayDataSource;
 import javax.naming.NamingException;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 
 public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
-	private EntityService entityService = null;
+	private WorkflowService workflowService = null;
 	private boolean hasMailSession = false;
-	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	private static Logger logger = Logger.getLogger(MailPlugin.class.getName());
 
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
-
 		super.init(actx);
-
-		// check for an instance of WorkflowService
-		if (actx instanceof WorkflowService) {
-			// yes we are running in a WorkflowService EJB
-			WorkflowService ws = (WorkflowService) actx;
-			entityService = ws.getEntityService();
-		}
-
 		hasMailSession = true;
 
+		// get workflow service instance
+		if (actx instanceof WorkflowService) {
+			// yes we are running in a WorkflowService EJB
+			workflowService = (WorkflowService) actx;
+		}
 	}
 
 	@Override
@@ -71,13 +78,37 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 	}
 
 	@Override
-	public int run(ItemCollection arg0, ItemCollection arg1)
-			throws PluginException {
+	public int run(ItemCollection documentContext,
+			ItemCollection documentActivity) throws PluginException {
 
-		if (hasMailSession)
-			return super.run(arg0, arg1);
-		else
-			return Plugin.PLUGIN_OK;
+		if (hasMailSession) {
+
+			// run default functionallity
+			int result = super.run(documentContext, documentActivity);
+
+			// terminate if the result was an error
+			if (result == Plugin.PLUGIN_ERROR)
+				return Plugin.PLUGIN_ERROR;
+
+			// now get the Mail Session object
+			MimeMessage mailMessage = (MimeMessage) super.getMailMessage();
+			if (mailMessage == null) {
+				// no Mail message - so we can return
+				return Plugin.PLUGIN_OK;
+			}
+
+			// test for blob workitem
+			ItemCollection blobWorkitem = loadBlob(documentContext);
+			if (blobWorkitem != null)
+				try {
+					attachFiles(blobWorkitem);
+				} catch (MessagingException e) {
+					logger.warning("unable to attach files!");
+					e.printStackTrace();
+				}
+
+		}
+		return Plugin.PLUGIN_OK;
 	}
 
 	/**
@@ -174,8 +205,8 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 				+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
 				+ aname + "' ";
 
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, 1);
+		Collection<ItemCollection> col = workflowService.getEntityService()
+				.findAllEntities(sQuery, 0, 1);
 
 		if (col.size() > 0) {
 			ItemCollection aworkitem = col.iterator().next();
@@ -185,4 +216,231 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
 	}
 
+	/**
+	 * This method adds all files of a given BlobWOrkitem to the current
+	 * MailMessage
+	 * 
+	 * 
+	 * @param blobWorkitem
+	 * @throws MessagingException
+	 */
+	private void attachFiles(ItemCollection blobWorkitem)
+			throws MessagingException {
+
+		String sFilePattern = null;
+
+		while ((sFilePattern = getAttachmentName()) != null) {
+			logger.fine("MailPlugin attach file pattern: \"" + sFilePattern
+					+ "\"");
+			// get all fileNames....
+			List<String> fileNames = blobWorkitem.getFileNames();
+			// iterate over all files ....
+			for (String aFileName : fileNames) {
+				// test if aFilename matches the pattern
+				if (sFilePattern.isEmpty()
+						|| Pattern.matches(sFilePattern, aFileName)) {
+
+					// fetch the file content
+					FileInfo fileInfo = getFileFromWorkItem(aFileName,
+							blobWorkitem);
+
+					logger.fine("MailPlugin - attach : " + aFileName);
+
+					// get Mulitpart Message
+					Multipart multipart = super.getMultipart();
+					// now attache the file
+					MimeBodyPart attachmentPart = new MimeBodyPart();
+
+					// construct the body part from the byte array
+					DataSource dataSource = new ByteArrayDataSource(
+							fileInfo.content, fileInfo.contentType);
+					attachmentPart.setDataHandler(new DataHandler(dataSource));
+					attachmentPart.setFileName(aFileName);
+					attachmentPart.setDescription("");
+					multipart.addBodyPart(attachmentPart);
+				}
+
+			}
+
+		}
+
+	}
+
+	/**
+	 * this method parses a mail body for the xml tag
+	 * <attachments>name</attachments>. If an tag exists the method removes the
+	 * tag and returns the value. The value is used by the method attachFile()
+	 * to add files into the mail body.
+	 * 
+	 * 
+	 */
+	private String getAttachmentName() {
+		int iTagStartPos;
+		int iTagEndPos;
+
+		int iContentStartPos;
+		int iContentEndPos;
+
+		String content = null;
+		MimeBodyPart messagePart = null;
+
+		Multipart multipart = super.getMultipart();
+
+		try {
+			
+			
+			
+			messagePart = (MimeBodyPart) multipart.getBodyPart(0);
+			if (messagePart!=null)
+				content = (String) messagePart.getContent();
+
+		} catch (MessagingException e) {
+			logger.warning("Unable to parse tag 'attachments' !");
+			e.printStackTrace();
+			return null;
+		} catch (IOException e) {
+			logger.warning("Unable to parse tag 'attachments' !");
+			e.printStackTrace();
+			return null;
+		}
+
+		if (content == null || content.isEmpty())
+			return null;
+
+		// test if a <value> tag exists...
+		if ((iTagStartPos = content.toLowerCase().indexOf("<attachments")) != -1) {
+
+			iTagEndPos = content.toLowerCase().indexOf("</attachments>",
+					iTagStartPos);
+
+			// if no end tag found return string unchanged...
+			if (iTagEndPos == -1)
+				return null;
+
+			// reset pos vars
+			iContentStartPos = 0;
+			iContentEndPos = 0;
+
+			// so we now search the beginning of the tag content
+			iContentEndPos = iTagEndPos;
+			// start pos is the last > before the iContentEndPos
+			String sTestString = content.substring(0, iContentEndPos);
+			iContentStartPos = sTestString.lastIndexOf('>') + 1;
+
+			// if no end tag found return string unchanged...
+			if (iContentStartPos > iContentEndPos)
+				return null;
+
+			iTagEndPos = iTagEndPos + "</attachments>".length();
+
+			// now we have the start and end position of a tag and also the
+			// start and end pos of the value
+
+			// extract Item Value
+			String sFilename = content.substring(iContentStartPos,
+					iContentEndPos);
+
+			String sEMTY = "";
+
+			// now replace the tag with an empty string
+			content = content.substring(0, iTagStartPos) + sEMTY
+					+ content.substring(iTagEndPos);
+
+			// update mail body
+			try {
+				messagePart.setText(content);
+			} catch (MessagingException e) {
+				logger.warning("Unable to parse tag 'attachments' !");
+				e.printStackTrace();
+			}
+			// return the file pattern
+			return sFilename;
+		}
+
+		return null;
+
+	}
+
+	/**
+	 * This method returns a FileInfo object for a specific FilenName. The
+	 * FileInfo contains the Content (byte[]) and the ContentType
+	 * 
+	 * @param uniqueid
+	 * @param fileName
+	 * @return
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private FileInfo getFileFromWorkItem(String fileName,
+			ItemCollection blobWorkitem) {
+
+		// fetch $file from hashmap....
+
+		HashMap mapFiles = null;
+		Vector vFiles = (Vector) blobWorkitem.getItemValue("$file");
+		if (vFiles != null && vFiles.size() > 0) {
+			mapFiles = (HashMap) vFiles.elementAt(0);
+
+			Vector<Object> vectorFileInfo = new Vector<Object>();
+			vectorFileInfo = (Vector) mapFiles.get(fileName);
+			if (vectorFileInfo != null) {
+				String sContentType = vectorFileInfo.elementAt(0).toString();
+				byte[] fileContent = (byte[]) vectorFileInfo.elementAt(1);
+
+				FileInfo fileInfo = new FileInfo(fileContent, sContentType);
+				return fileInfo;
+			}
+		}
+		return null;
+
+	}
+
+	/**
+	 * Loads the BlobWorkitem of a given parent Workitem. The BlobWorkitem is
+	 * identified by the $unqiueidRef. If no BlobWorkitem exists the method
+	 * returns null;
+	 * 
+	 * @param itemCol
+	 *            - parent workitem where the BlobWorkitem will be attached to
+	 * @throws Exception
+	 */
+	private ItemCollection loadBlob(ItemCollection itemCol) {
+		ItemCollection blobWorkitem = null;
+		String sUniqueID = itemCol.getItemValueString("$uniqueid");
+
+		// search entity...
+		String sQuery = " SELECT lobitem FROM Entity as lobitem"
+				+ " join lobitem.textItems as t1"
+				+ " join lobitem.textItems as t2"
+				+ " WHERE t1.itemName = 'type'"
+				+ " AND t1.itemValue = 'workitemlob'"
+				+ " AND t2.itemName = '$uniqueidref'" + " AND t2.itemValue = '"
+				+ sUniqueID + "'";
+
+		Collection<ItemCollection> itemcol = workflowService.getEntityService()
+				.findAllEntities(sQuery, 0, 1);
+		if (itemcol != null && itemcol.size() > 0) {
+			blobWorkitem = itemcol.iterator().next();
+		}
+
+		return blobWorkitem;
+
+	}
+
+	/**
+	 * Cache implementation to hold userData objects
+	 * 
+	 * @author rsoika
+	 * 
+	 */
+	class FileInfo {
+		String contentType;
+		byte[] content = null;
+
+		public FileInfo(byte[] acontent, String aContentType) {
+
+			this.content = acontent;
+			this.contentType = aContentType;
+		}
+
+	}
 }
