@@ -44,12 +44,21 @@ import org.imixs.marty.model.ModelController;
 import org.imixs.workflow.jee.jpa.EntityIndex;
 
 /**
- * This Backing Bean acts as a application wide config Bean. It holds general
- * config parms like the current historyLength. The parameters are stored in a
- * configuration entity.
+ * This Marty SetupController extends the Marty ConfigController and holds the
+ * data from the configuration entity 'BASIC'. This is the general configuration
+ * entity.
  * 
- * The method doSetup() initializes the system. The method also loads a default
- * model configuration if no model yet exists.
+ * NOTE: A configuration entity provides a common way to manage application
+ * specific complex config data. The configuration entity is database controlled
+ * and more flexible as the file based imixs.properties provided by the Imixs
+ * Workflow Engine.
+ * 
+ * The SetupController extends the ConfigController and provides additional methods to 
+ * setup and initialize a marty application. 
+ * The method doSetup() creates and updates index fields. The method loadDefaultModels checks if
+ * default (file based) models need to be initialized. 
+ * 
+ *
  * 
  * @author rsoika
  * 
@@ -66,15 +75,14 @@ public class SetupController extends ConfigController {
 
 	@Inject
 	private ModelController modelController;
-	
-	
+
 	@EJB
 	org.imixs.workflow.jee.ejb.EntityService entityService;
-	
+
 	@EJB
 	org.imixs.workflow.jee.ejb.ModelService modelService;
 
-	private static Logger logger = Logger.getLogger("org.imixs.workflow");
+	private static Logger logger = Logger.getLogger(SetupController.class.getName());
 
 	public SetupController() {
 		super();
@@ -91,14 +99,15 @@ public class SetupController extends ConfigController {
 	 * method call (see layout.xhtml)
 	 */
 	@PostConstruct
+	@Override
 	public void init() {
 
 		super.init();
 
 		// now test if system model exists and if the systemSetup was
 		// successfully completed.
-		setupOk = (modelController.hasSystemModel() && getWorkitem().getItemValueBoolean(
-				"keySystemSetupCompleted") == true);
+		setupOk = (modelController.hasSystemModel() && getWorkitem()
+				.getItemValueBoolean("keySystemSetupCompleted") == true);
 
 	}
 
@@ -109,8 +118,6 @@ public class SetupController extends ConfigController {
 	public void setSetupOk(boolean systemSetupOk) {
 		this.setupOk = systemSetupOk;
 	}
-
-	
 
 	/**
 	 * This method starts a ConsistencyCheck without updating values.
@@ -133,13 +140,6 @@ public class SetupController extends ConfigController {
 		entityService.addIndex("$workitemid", EntityIndex.TYP_TEXT);
 		entityService.addIndex("$processid", EntityIndex.TYP_INT);
 		entityService.addIndex("txtworkflowgroup", EntityIndex.TYP_TEXT);
-
-		// remove txtworkflowSummary (deprecated index field!)
-		// this field was only for an older search feature which is no longer
-		// necessary.
-		// epm.addIndex("txtworkflowsummary", EntityIndex.TYP_TEXT);
-		entityService.removeIndex("txtworkflowsummary");
-
 		entityService.addIndex("namcreator", EntityIndex.TYP_TEXT);
 		entityService.addIndex("$modelversion", EntityIndex.TYP_TEXT);
 
@@ -165,17 +165,15 @@ public class SetupController extends ConfigController {
 
 		// initialize modelController
 		modelController.init();
-		
+
 		// load default models
 		loadDefaultModels();
 
 		setupOk = true;
-	
+
 		logger.info("[SetupController] system setup completed");
 
 	}
-
-	
 
 	/**
 	 * This method loads the default model files defined by the configuration
@@ -234,8 +232,5 @@ public class SetupController extends ConfigController {
 		}
 
 	}
-
-	
-	
 
 }

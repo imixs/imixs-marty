@@ -44,16 +44,19 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 
 /**
- * The Manik Config Service extends the functionality of the Imixs
- * ProfileService. This singleton EJB provides access to Config Entities
- * (type='CONFIGURATION) stored in the database. A configuration Entity is
- * identified by its name (property txtName). So different configuration
- * Entities can be managed in one application.
+ * The Manik Config Service can be used to store and access configuration values
+ * stored in a configuration entity (type='CONFIGURATION).
  * 
+ * The ConfigService EJB provides access to named Config Entities stored in the
+ * database. A configuration Entity is identified by its name (property
+ * txtName). So different configuration Entities can be managed in one
+ * application.
+ * 
+ * The ConfigService ejb is implemented as a sigelton and uses an internal cache
+ * to cache config entities.
  * 
  * 
  * @author rsoika
- * 
  */
 
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",

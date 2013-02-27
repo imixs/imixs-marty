@@ -42,7 +42,7 @@ import org.imixs.workflow.jee.util.PropertyService;
 
 public class ImageInterceptor {
 
-	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	private static Logger logger = Logger.getLogger(ImageInterceptor.class.getName());
 	private int imageMaxWidth;
 	
 	@EJB
@@ -74,7 +74,7 @@ public class ImageInterceptor {
 							.equals(workitem.getItemValueString("Type"))) {
 
 				Properties prop =  propertyService.getProperties();
-				String sMaxWidth = prop.getProperty("imageHanlder.maxWidth",
+				String sMaxWidth = prop.getProperty("image.maxWidth",
 						"1024");
 				try {
 					imageMaxWidth = Integer.parseInt(sMaxWidth);
