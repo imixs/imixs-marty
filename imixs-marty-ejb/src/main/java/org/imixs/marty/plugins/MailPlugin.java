@@ -31,8 +31,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Vector;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
@@ -144,11 +144,39 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		return Plugin.PLUGIN_OK;
 	}
 
+	/**
+	 * The method checks if a defaultSenderAddress was configured in the BASIC configuration entity. 
+	 * Only in this case the plugin changes the 'from' property of the current Message object. 
+	 */
 	@Override
 	public void close(int arg0) throws PluginException {
 
-		if (hasMailSession)
+		if (hasMailSession) {
+			// Test if a default From address was configured - if then change
+			// from property now!
+			String sFrom = getDefaultSenderAddress();
+			if (sFrom != null && !"".equals(sFrom)) {
+				MimeMessage mailMessage = (MimeMessage) super.getMailMessage();
+				if (mailMessage != null) {
+					try {
+						logger.fine("[MartyMailPlugin] set from address: " + sFrom);
+						mailMessage.setFrom(getInternetAddress(sFrom));
+					} catch (AddressException e) {
+						logger.warning("[MartyMailPlugin] unable to set default From address into MailSession - error: "
+								+ e.getMessage());
+						if (logger.isLoggable(Level.FINE))
+							e.printStackTrace();
+					} catch (MessagingException e) {
+						logger.warning("[MartyMailPlugin] unable to set default From address into MailSession - error: "
+								+ e.getMessage());
+						if (logger.isLoggable(Level.FINE))
+							e.printStackTrace();
+					}
+				}
+			}
 			super.close(arg0);
+
+		}
 	}
 
 	/**
@@ -186,6 +214,42 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 			return null;
 		}
 		return super.getInternetAddress(aAddr);
+	}
+
+	/**
+	 * This method returns the default mail from address if configured in the
+	 * BASIC configuration entity.
+	 * 
+	 */
+	private String getDefaultSenderAddress() {
+		try {
+			ItemCollection configItemCollection = null;
+
+			String sQuery = "SELECT config FROM Entity AS config "
+					+ " JOIN config.textItems AS t2"
+					+ " WHERE config.type = 'configuration'"
+					+ " AND t2.itemName = 'txtname'"
+					+ " AND t2.itemValue = 'BASIC'"
+					+ " ORDER BY t2.itemValue asc";
+			Collection<ItemCollection> col = workflowService.getEntityService()
+					.findAllEntities(sQuery, 0, 1);
+
+			if (col.size() > 0) {
+				configItemCollection = col.iterator().next();
+				String sFromAddress = configItemCollection
+						.getItemValueString("defaultMailaddressFrom");
+				logger.fine("[MartyMailPlugin] using defaultMailaddressFrom: "
+						+ sFromAddress);
+				return sFromAddress;
+			}
+		} catch (Exception e) {
+			logger.warning("[MartyMailPlugin] unable to get defaultMailaddressFrom from configuration entity 'BASIC'. Error: "
+					+ e.getMessage());
+			if (logger.isLoggable(Level.FINE)) {
+				e.printStackTrace();
+			}
+		}
+		return "";
 	}
 
 	/**
