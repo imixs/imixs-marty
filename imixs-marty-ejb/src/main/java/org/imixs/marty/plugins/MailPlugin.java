@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -44,6 +45,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.ByteArrayDataSource;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.imixs.workflow.ItemCollection;
@@ -51,9 +54,25 @@ import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.jee.ejb.WorkflowService;
+import org.imixs.workflow.jee.util.PropertyService;
 
+/**
+ * This Plugin extends the functionality of the Imixs JEE Mail Plugin. The
+ * Plugin translates user names into the mail addresses configured in the user
+ * profile.
+ * 
+ * In addition the Plugin checks if the property 'mail.defaultSender' was
+ * defined. In this case the plugin overwrites the 'From' attribute of every
+ * mail with the DefaultSender address.
+ * 
+ * @author rsoika
+ * 
+ */
 public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
+	public static String PROPERTY_SERVICE_NOT_BOUND = "PROPERTY_SERVICE_NOT_BOUND";
+
+	private PropertyService propertyService = null;
 	private WorkflowService workflowService = null;
 	private boolean hasMailSession = false;
 	private static Logger logger = Logger.getLogger(MailPlugin.class.getName());
@@ -68,13 +87,60 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 			// yes we are running in a WorkflowService EJB
 			workflowService = (WorkflowService) actx;
 		}
+
+		// lookup PropertyService
+		String jndiName = "ejb/PropertyService";
+		InitialContext ictx;
+		try {
+
+			ictx = new InitialContext();
+			Context ctx = (Context) ictx.lookup("java:comp/env");
+			propertyService = (PropertyService) ctx.lookup(jndiName);
+		} catch (NamingException e) {
+			propertyService=null;
+			logger.warning("[MartyMailPlugin] unable to lookup propertyService - could not read defaultSender address! Please verify ejb-jar.xml!");			
+		}
 	}
 
+	/**
+	 * The method checks if a defaultSenderAddress was configured in the
+	 * imixs.properties file. Only in this case the plugin changes the 'from'
+	 * property of the current Message object.
+	 */
 	@Override
 	public void close(int arg0) throws PluginException {
 
-		if (hasMailSession)
+		if (hasMailSession) {
+			// Test if a default From address was configured - if then change
+			// from property now!
+			if (propertyService != null) {
+				String sFrom = (String) propertyService.getProperties().get(
+						"mail.defaultSender");
+				if (sFrom != null && !"".equals(sFrom)) {
+					MimeMessage mailMessage = (MimeMessage) super
+							.getMailMessage();
+					if (mailMessage != null) {
+						try {
+							logger.fine("[MartyMailPlugin] set from address: "
+									+ sFrom);
+							mailMessage.setFrom(getInternetAddress(sFrom));
+						} catch (AddressException e) {
+							logger.warning("[MartyMailPlugin] unable to set default From address into MailSession - error: "
+									+ e.getMessage());
+							if (logger.isLoggable(Level.FINE))
+								e.printStackTrace();
+						} catch (MessagingException e) {
+							logger.warning("[MartyMailPlugin] unable to set default From address into MailSession - error: "
+									+ e.getMessage());
+							if (logger.isLoggable(Level.FINE))
+								e.printStackTrace();
+						}
+					}
+				}
+			}
 			super.close(arg0);
+
+		}
 	}
 
 	@Override
@@ -287,11 +353,9 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		Multipart multipart = super.getMultipart();
 
 		try {
-			
-			
-			
+
 			messagePart = (MimeBodyPart) multipart.getBodyPart(0);
-			if (messagePart!=null)
+			if (messagePart != null)
 				content = (String) messagePart.getContent();
 
 		} catch (MessagingException e) {

@@ -42,6 +42,7 @@ import javax.inject.Named;
 
 import org.imixs.marty.model.ModelController;
 import org.imixs.workflow.jee.jpa.EntityIndex;
+import org.imixs.workflow.jee.util.PropertyService;
 
 /**
  * This Marty SetupController extends the Marty ConfigController and holds the
@@ -82,6 +83,9 @@ public class SetupController extends ConfigController {
 	@EJB
 	org.imixs.workflow.jee.ejb.ModelService modelService;
 
+	@EJB
+	PropertyService propertyService;
+	
 	private static Logger logger = Logger.getLogger(SetupController.class.getName());
 
 	public SetupController() {
@@ -89,6 +93,12 @@ public class SetupController extends ConfigController {
 		// set name
 		this.setName(CONFIGURATION_NAME);
 	}
+
+	
+	
+	
+
+
 
 	/**
 	 * This method loads the config entity.
@@ -162,6 +172,10 @@ public class SetupController extends ConfigController {
 		// update System configuration.....
 		getWorkitem().replaceItemValue("keySystemSetupCompleted", true);
 		save();
+		
+		// reset propertyService
+		logger.info("[SetupController] reset property service");
+		propertyService.reset();
 
 		// initialize modelController
 		modelController.init();

@@ -81,7 +81,7 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * 
  */
 public class SequenceNumberPlugin extends AbstractPlugin {
-	SequenceService sequenceService = null;;
+	SequenceService sequenceService = null;
 
 	int sequenceNumber = -1;
 	ItemCollection workitem = null;
