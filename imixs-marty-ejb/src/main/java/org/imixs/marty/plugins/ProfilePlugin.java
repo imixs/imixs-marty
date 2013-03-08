@@ -127,6 +127,18 @@ public class ProfilePlugin extends AbstractPlugin {
 		String sName = profile.getItemValueString("txtName");
 		String sUserName = profile.getItemValueString("txtUserName");
 		String sID = profile.getItemValueString("$uniqueid");
+		
+		
+		// Trim names....
+		if (!sName.equals(sName.trim())) {
+			sName=sName.trim();
+			profile.replaceItemValue("txtName", sName);
+		}
+		if (!sUserName.equals(sUserName.trim())) {
+			sUserName=sUserName.trim();
+			profile.replaceItemValue("txtUserName", sUserName);
+		}
+			
 
 		String sQuery;
 
@@ -167,6 +179,13 @@ public class ProfilePlugin extends AbstractPlugin {
 		String sEmail = profile.getItemValueString("txtEmail");
 		String sID = profile.getItemValueString("$uniqueid");
 
+		
+		// Trim email....
+		if (!sEmail.equals(sEmail.trim())) {
+			sEmail=sEmail.trim();
+			profile.replaceItemValue("txtEmail", sEmail);
+		}
+		
 		String sQuery;
 
 		// username provided?
