@@ -46,13 +46,14 @@ import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.faces.util.LoginController;
- 
+
 /**
- * The ProcessController provides informations about the process and project
- * structure. The controller is session scoped and holds information depending
- * on the current user grants. The ProcessController interacts with the
- * application scoped ModelController which holds information about the workflow
- * models. *
+ * The ProcessController provides informations about the core-process and
+ * project structure. The controller is session scoped and holds information
+ * depending on the current user grants.
+ * 
+ * The ProcessController interacts with the application scoped ModelController
+ * which holds information about the workflow models.
  * 
  * @author rsoika
  * 
@@ -64,15 +65,17 @@ public class ProcessController implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private List<ItemCollection> projectList = null;
+	private List<ItemCollection> coreProcessList = null;
 
 	@Inject
 	private LoginController loginController = null;
 
-	
+	@Inject
+	private ModelController modelController = null;
+
 	@EJB
 	EntityService entityService;
 
-	
 	private static Logger logger = Logger.getLogger(ProcessController.class
 			.getName());
 
@@ -108,8 +111,8 @@ public class ProcessController implements Serializable {
 	}
 
 	public void reset() {
-		// initialProcessEntityList = null;
 		projectList = null;
+		coreProcessList = null;
 	}
 
 	/**
@@ -170,8 +173,6 @@ public class ProcessController implements Serializable {
 				clone.replaceItemValue("isMember", bMember);
 
 				// add custom fields into clone...
-				clone.replaceItemValue("txtProcessList",
-						project.getItemValue("txtProcessList"));
 				clone.replaceItemValue("txtdescription",
 						project.getItemValue("txtdescription"));
 
@@ -196,8 +197,8 @@ public class ProcessController implements Serializable {
 			return null;
 
 		// get the project list form local cache
-		List<ItemCollection> projectList = getProjectList();
-		for (ItemCollection aProject : projectList) {
+		List<ItemCollection> alist = getProjectList();
+		for (ItemCollection aProject : alist) {
 			if (uniqueid.equals(aProject
 					.getItemValueString(EntityService.UNIQUEID)))
 				return aProject;
@@ -230,8 +231,6 @@ public class ProcessController implements Serializable {
 		}
 		return result;
 	}
-
-	
 
 	/**
 	 * Returns true if current user is manager of a given project. Therefore the
@@ -289,6 +288,146 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
+	 * This method returns all project entities for the current user. This list
+	 * can be used to display project informations inside a form. The returned
+	 * project list is optimized and provides additional the following
+	 * attributes
+	 * <p>
+	 * isMember, isTeam, isOwner, isManager, isAssist
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getCoreProcessList() {
+		if (coreProcessList == null) {
+			coreProcessList = new ArrayList<ItemCollection>();
+
+			String sQuery = "SELECT projct FROM Entity AS projct "
+					+ " JOIN projct.textItems AS t2"
+					+ " WHERE projct.type = 'coreprocess'"
+					+ " AND t2.itemName = 'txtname'"
+					+ " ORDER BY t2.itemValue asc";
+			Collection<ItemCollection> col = entityService.findAllEntities(
+					sQuery, 0, -1);
+
+			// create optimized list
+			for (ItemCollection project : col) {
+
+				ItemCollection clone = WorkitemHelper.clone(project);
+				clone.replaceItemValue("isTeam", false);
+				clone.replaceItemValue("isManager", false);
+
+				// check the isTeam status for the current user
+				List<String> userNameList = entityService.getUserNameList();
+				Vector<String> vProjectNameList = (Vector<String>) project
+						.getItemValue("namTeam");
+				// check if one entry matches....
+				for (String username : userNameList) {
+					if (vProjectNameList.indexOf(username) > -1) {
+						clone.replaceItemValue("isTeam", true);
+						break;
+					}
+				}
+				// check the isManager status for the current user
+				vProjectNameList = (Vector<String>) project
+						.getItemValue("namManager");
+				// check if one entry matches....
+				for (String username : userNameList) {
+					if (vProjectNameList.indexOf(username) > -1) {
+						clone.replaceItemValue("isManager", true);
+						break;
+					}
+				}
+				// check if user is member of team or manager list
+				boolean bMember = false;
+				if (clone.getItemValueBoolean("isTeam")
+						|| clone.getItemValueBoolean("isManager"))
+					bMember = true;
+				clone.replaceItemValue("isMember", bMember);
+
+				// add custom fields into clone...
+				clone.replaceItemValue("txtProcessList",
+						project.getItemValue("txtProcessList"));
+				clone.replaceItemValue("txtdescription",
+						project.getItemValue("txtdescription"));
+
+				coreProcessList.add(clone);
+
+			}
+
+		}
+
+		return coreProcessList;
+	}
+
+	/**
+	 * this method finds a project by its UniqueID. The projectList is read from
+	 * the project cache
+	 * 
+	 * @param uniqueid
+	 * @return
+	 */
+	public ItemCollection getCoreProcessByID(String uniqueid) {
+		if (uniqueid == null || uniqueid.isEmpty())
+			return null;
+
+		// get the project list form local cache
+		List<ItemCollection> aList = getCoreProcessList();
+		for (ItemCollection aCoreProcess : aList) {
+			if (uniqueid.equals(aCoreProcess
+					.getItemValueString(EntityService.UNIQUEID)))
+				return aCoreProcess;
+		}
+		return null;
+
+	}
+
+	/**
+	 * Returns a list of ItemCollection representing the first Start Process
+	 * defined for a specific coreProcess entity. Each ItemCollection provides at
+	 * least the properties
+	 * <ul>
+	 * <li>txtmodelVersion (model version)
+	 * <li>numprocessID (first process of a group)
+	 * <li>txtWorklfowGroup (name of group)
+	 * 
+	 * 
+	 * The worflowGroup list is used to display the start process list for a
+	 * coreProcess selection
+	 * 
+	 * @param uniqueid
+	 *            - $UniqueId of a project
+	 * @return - a collection of ProcessEntities or an empty arrayList if not
+	 *         processes are defined
+	 */
+//	public List<ItemCollection> getProcessEntitiesByCoreProcess(String uniqueid) {
+//
+//		List<ItemCollection> result = new ArrayList<ItemCollection>();
+//		ItemCollection coreProcess = getCoreProcessByID(uniqueid);
+//
+//		if (coreProcess == null)
+//			return result;
+//
+//		List<String> aprocessList = null;
+//		aprocessList = coreProcess.getItemValue("txtprocesslist");
+//
+//		// if no processList was defined return an empty array
+//		if (aprocessList == null || aprocessList.isEmpty())
+//			return result;
+//
+//		// now add all matching Process Entities
+//		List<ItemCollection> processEntityList = modelController
+//				.getInitialProcessEntities();
+//		for (ItemCollection aProcessEntity : processEntityList) {
+//			// test if the $modelVersion matches....
+//			if (isProcessEntityInList(aProcessEntity, aprocessList))
+//				result.add(aProcessEntity);
+//		}
+//
+//		return result;
+//
+//	}
+
+	/**
 	 * WorkflowEvent listener
 	 * 
 	 * If a project WorkItem was processed the modellController will be reseted.
@@ -301,12 +440,13 @@ public class ProcessController implements Serializable {
 
 		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
 				.getEventType()) {
-			// test if project was processed
-			if ("project".equals(workflowEvent.getWorkitem()
-					.getItemValueString("type"))) {
+			// test if a project or coreprocess was processed
+			String sType=workflowEvent.getWorkitem()
+					.getItemValueString("type");
+			if ("project".equals(sType) || "coreprocess".equals(sType)) {
 
 				reset();
-				logger.info("ModelController:WorkflowEvent="
+				logger.fine("ModelController:WorkflowEvent="
 						+ workflowEvent.getEventType());
 
 			}
@@ -314,5 +454,4 @@ public class ProcessController implements Serializable {
 
 	}
 
-	
 }
