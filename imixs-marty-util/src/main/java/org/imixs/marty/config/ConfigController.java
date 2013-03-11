@@ -28,18 +28,14 @@
 package org.imixs.marty.config;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
-import javax.faces.event.ActionEvent;
-import javax.faces.model.SelectItem;
 
 import org.imixs.marty.ejb.ConfigService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.jee.faces.workitem.DataController;
 
 /**
  * This ConfigController acts as a frontend controller for a Config Entity. The
@@ -144,10 +140,5 @@ public class ConfigController implements Serializable {
 
 	}
 
-	@Deprecated
-	private ArrayList<SelectItem> getLocaleSelection() {
-		return null;
-
-	}
-
+	
 }
