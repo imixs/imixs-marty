@@ -163,14 +163,14 @@ public class ModelController implements Serializable {
 			 * version is higher then the last stored version with the same
 			 * domain in the modelVersionCache....
 			 */
-			boolean bModelCached=false;
+			boolean bModelCached = false;
 			for (String aStoredModel : modelVersionCache) {
 				// has a stored model version the same domain and is it older?
 				if ((aStoredModel.startsWith(sDomain))
 						&& (aStoredModel.compareTo(aModelVersion) < 0)) {
 					modelVersionCache.remove(aStoredModel);
 					modelVersionCache.add(aModelVersion);
-					bModelCached=true;
+					bModelCached = true;
 					// leave the block now
 					break;
 				}
@@ -181,6 +181,18 @@ public class ModelController implements Serializable {
 		}
 		// sort model versions
 		Collections.sort(modelVersionCache);
+
+		// now compute all workflow groups..
+		workflowGroups = new HashMap<String, String>();
+		for (String aModelVersion : modelVersionCache) {
+			List<String> groupList = modelService
+					.getAllWorkflowGroupsByVersion(aModelVersion);
+			for (String sGroupName : groupList) {
+				if (sGroupName.contains("~"))
+					continue; // childProcess is skipped
+				workflowGroups.put(sGroupName, aModelVersion);
+			}
+		}
 
 	}
 
@@ -232,21 +244,6 @@ public class ModelController implements Serializable {
 	 * @return list of workflow groups
 	 */
 	public List<String> getWorkflowGroups() {
-
-		if (workflowGroups == null) {
-			// build new groupSelection
-			workflowGroups = new HashMap<String, String>();
-			for (String aModelVersion : modelVersionCache) {
-				List<String> groupList = modelService
-						.getAllWorkflowGroupsByVersion(aModelVersion);
-				for (String sGroupName : groupList) {
-					if (sGroupName.contains("~"))
-						continue; // childProcess is skipped
-					workflowGroups.put(sGroupName, aModelVersion);
-				}
-			}
-
-		}
 
 		// return a sorted list of all workflow groups....
 		@SuppressWarnings({ "unchecked", "rawtypes" })
