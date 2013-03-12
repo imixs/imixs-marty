@@ -42,58 +42,80 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * This plugin supports additional workflow properties for further processing.
- * The method computes the team members of a corresponding parent project so
- * these teams can be used in security and mail plugins.
+ * The method computes the team members and additional information of the
+ * assigned core process and project from a workItem. The references to a core
+ * process and a project are stored in the attribute '$uniqueIdref'.
+ * 
  * <p>
- * The Plugin should run first
+ * The plugin updates the corresponding CoreProcess and Project informations:
+ * <ul>
+ * <li>namProjectTeam
+ * <li>namProjectManager
+ * <li>namProjectName
+ * <li>namCoreProcessManager
+ * <li>txtProjectname
+ * <li>txtCoreProcessName
+ * 
+ * The name properties are used in security and mail plugins.
+ * 
+ * If the workitem is a child to another workitem (ChildWorkitem) the
+ * information is fetched from the parent workitem.
+ * 
+ * If the workflowresultmessage of the ActivityEntity contains a project
+ * reference the plugin will update the reference in the property $uniqueIdRef.
+ * 
+ * Example:
+ * 
+ * <code>
+			<item name="project">...</item>
+   </code>
+ * 
+ * The Plugin should run before Access-, Application- and Mail-Plguin.
  * 
  * @author rsoika
- * 
+ * @version 2.0
  */
 public class TeamPlugin extends AbstractPlugin {
 
-	//private ProjectService projectService = null;
+	private WorkflowService workflowService = null;
 	private EntityService entityService = null;
-	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	private static Logger logger = Logger.getLogger(TeamPlugin.class.getName());
 
+	/**
+	 * Fetch workflowService and entityService from WorkflowContext
+	 */
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
 		// check for an instance of WorkflowService
 		if (actx instanceof WorkflowService) {
-			// yes we are running in a WorkflowService EJB
-			WorkflowService ws = (WorkflowService) actx;
-			// get latest model version....
-			entityService = ws.getEntityService();
+			workflowService = (WorkflowService) actx;
+			entityService = workflowService.getEntityService();
 		}
-
-	
-
 	}
 
-
-
 	/**
-	 * Each Workitem holds a reference to a Project in the attriubte
-	 * '$uniqueidref'.
-	 * <p>
-	 * The Method updates the corresponding Project informations:
+	 * The method updates information from the CoreProcess and Project
+	 * (optional) stored in the attribute '$uniqueIdref':
 	 * <ul>
 	 * <li>namProjectTeam
 	 * <li>namProjectManager
 	 * <li>namProjectName
-	 * <li>namParentProjectTeam
-	 * <li>namParentProjectManager
+	 * <li>namCoreProcessManager
+	 * <li>txtProjectname
+	 * <li>txtCoreProcessName
 	 * 
-	 * Additional the Method also computes the values namSubProjectTeam
-	 * namSubProjectOwner which holds all members of all subprojects
+	 * If the workitem is a child to another workitem (ChildWorkitem) the
+	 * information is fetched from the parent workitem.
 	 * 
-	 * If the workitem is not a child to a project but to a other workitem
-	 * (Child Process) then these informations are fetched from the parent
-	 * workitem.
+	 * If the workflowresultmessage contains a project reference the plugin will
+	 * update the reference in the property $uniqueIdRef.
 	 * 
-	 * Finally the Method updates the field "txtProjectname" with the name of
-	 * the parent project.
+	 * Example:
+	 * 
+	 * <code>
+			<item name="project">...</item>
+	   </code>
 	 * 
 	 **/
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -101,114 +123,105 @@ public class TeamPlugin extends AbstractPlugin {
 	public int run(ItemCollection workItem, ItemCollection documentActivity)
 			throws PluginException {
 
-		String sProjectName = null;
-		String sResult = null;
-
 		/*
-		 * the following code updates a project reference if the
-		 * workflowresultmessage contains a project= ref test if a new project
-		 * reference need to be set now! we support both - old pattern
-		 * 'project=....' and new pattern
+		 * Check the txtActivityResult for a new Project reference.
 		 * 
-		 * '<item name="_project">...</item>'
+		 * Pattern:
+		 * 
+		 * '<item name="project">...</item>'
 		 */
-
+		String sResult="";
 		try {
 			// Read workflow result directly from the activity definition
 			sResult = documentActivity.getItemValueString("txtActivityResult");
 
 			ItemCollection evalItemCollection = new ItemCollection();
 			ResultPlugin.evaluate(sResult, evalItemCollection);
+			String aProjectName = evalItemCollection.getItemValueString("project");
 
-			sProjectName = evalItemCollection.getItemValueString("project");
-		
-			if (!"".equals(sProjectName)) {
-				logger.fine("[WorkitemService] Updating Project reference: "
-								+ sProjectName);
-				// try to update project reference
-				ItemCollection parent =findProjectByName(sProjectName);
+			if (!"".equals(aProjectName)) {
+				logger.fine("[TeamPlugin] Updating Project reference: "
+						+ aProjectName);
+				// load project reference
+				ItemCollection parent = findProjectByName(aProjectName);
 				if (parent != null) {
+					// first remove all older project references
+					List<String> refList = workItem
+							.getItemValue("$uniqueidRef");
+					for (String aUniqueID : refList) {
+						// test ref to type 'project'
+						ItemCollection entity = entityService.load(aUniqueID);
+						if (entity != null
+								&& "project".equals(entity
+										.getItemValueString("type"))) {
+							refList.remove(aUniqueID);
+						}
+					}
+					// add new ref
+					refList.add(parent.getItemValueString("$uniqueid"));
 
 					// assign project name and reference
-					workItem.replaceItemValue("$uniqueidRef",
-							parent.getItemValueString("$uniqueid"));
+					workItem.replaceItemValue("$uniqueidRef", refList);
 					workItem.replaceItemValue("txtProjectName",
 							parent.getItemValueString("txtname"));
 
+					logger.fine("[TeamPlugin] new $uniqueidRef= " + refList);
 				}
 			}
 
 		} catch (Exception upr) {
-			logger.warning("[WorkitemServiceBean] WARNING - Unable to update Project ("
-							+ sResult + ") reference: " + upr);
+			logger.warning("[TeamPlugin] WARNING - Unable to update Project ("
+					+ sResult + ") reference: " + upr);
 		}
 
 		/*
 		 * Now the team lists will be updated depending of the current
 		 * $uniqueidref
 		 */
-
-		String sParentID = workItem.getItemValueString("$uniqueidref");
-
-		// now add project Team and Owners to the current Workitem
-
-		// there are two different situations.
-		// if the parent is a project the method fetches team and owner form
-		// project
-		// if the parent is a workitem the method fetches the team and owner
-		// from the workitem
-
+		List vProjectTeam = new Vector();
+		List vProjectManager = new Vector();
+		List vCoreProcessTeam = new Vector();
+		List vCoreProcessManager = new Vector();
+		List<String> parentRefs = workItem.getItemValue("$uniqueidref");
+		String sProjectName = "";
+		String sCoreProcessName="";
+		for (String sParentID: parentRefs) {
+	
+		// the fetched information depends on the type of the reference!
 		ItemCollection itemColProject = entityService.load(sParentID);
 		if (itemColProject != null) {
-			List vTeam = new Vector();
-			List vManager = new Vector();
-			List vParentTeam = new Vector();
-			List vParentManager = new Vector();
-			List vSubTeams = new Vector();
-			List vSubManager = new Vector();
-			sProjectName = "";
-
+			
 			String parentType = itemColProject.getItemValueString("type");
-			if ("project".equals(parentType)) {
-				vTeam = itemColProject.getItemValue("namTeam");
-				vManager = itemColProject.getItemValue("namManager");
-				vParentTeam = itemColProject.getItemValue("namParentTeam");
-				// now add subproject teams and owners to additional attributes
-				// - if
-				// available 
-				List<ItemCollection> subProjects = findAllSubProjects(sParentID);
-				for (ItemCollection aSubProject : subProjects) {
-					vSubTeams.addAll(aSubProject.getItemValue("namTeam"));
-					vSubManager.addAll(aSubProject.getItemValue("namManager"));
-				}
 
+			// Test type property....
+			
+			if ("coreprocess".equals(parentType)) {
+				vCoreProcessTeam.addAll(itemColProject.getItemValue("namTeam"));
+				vCoreProcessManager.addAll(itemColProject.getItemValue("namManager"));
+				sCoreProcessName = itemColProject.getItemValueString("txtname");
+			}
+			if ("project".equals(parentType)) {
+				vProjectTeam.addAll(itemColProject.getItemValue("namTeam"));
+				vProjectManager.addAll(itemColProject.getItemValue("namManager"));				
 				sProjectName = itemColProject.getItemValueString("txtname");
 			}
 			if ("workitem".equals(parentType)) {
-				vTeam = itemColProject.getItemValue("namProjectTeam");
-				vManager = itemColProject.getItemValue("namProjectManager");
-				vParentTeam = itemColProject
-						.getItemValue("namParentProjectTeam");
-				vParentManager = itemColProject
-						.getItemValue("namParentProjectManager");
-				vSubTeams = itemColProject.getItemValue("namSubProjectTeam");
-				vSubManager = itemColProject
-						.getItemValue("namSubProjectManager");
-
-				sProjectName = itemColProject
-						.getItemValueString("txtProjectName");
+				vProjectTeam = itemColProject.getItemValue("namProjectTeam");
+				vProjectManager = itemColProject.getItemValue("namProjectManager");
+				vCoreProcessTeam = itemColProject.getItemValue("namCoreProcessTeam");
+				vCoreProcessManager = itemColProject.getItemValue("namCoreProcessManager");
+				sProjectName = itemColProject.getItemValueString("txtProjectName");
+				sCoreProcessName = itemColProject.getItemValueString("txtname");
 			}
+		}
 
-			// update team lists
-			workItem.replaceItemValue("namProjectTeam", vTeam);
-			workItem.replaceItemValue("namParentProjectTeam", vParentTeam);
-			workItem.replaceItemValue("namSubProjectTeam", vSubTeams);
-			workItem.replaceItemValue("namProjectManager", vManager);
-			workItem.replaceItemValue("namParentProjectManager", vParentManager);
-			workItem.replaceItemValue("namSubProjectManager", vSubManager);
-
-			// update project name
+			// update properties
+			workItem.replaceItemValue("namProjectTeam", vProjectTeam);
+			workItem.replaceItemValue("namProjectManager", vProjectManager);
+			workItem.replaceItemValue("namCoreProcessTeam", vCoreProcessTeam);
+			workItem.replaceItemValue("namCoreProcessManager", vCoreProcessManager);
 			workItem.replaceItemValue("txtProjectName", sProjectName);
+			workItem.replaceItemValue("txtCoreProcessName", sCoreProcessName);
 
 		}
 		return Plugin.PLUGIN_OK;
@@ -222,20 +235,6 @@ public class TeamPlugin extends AbstractPlugin {
 
 	
 
-	private List<ItemCollection> findAllSubProjects(String sIDRef) {
-
-		String sQuery = "SELECT project FROM Entity AS project "
-				+ " JOIN project.textItems AS r"
-				+ " JOIN project.textItems AS n"
-				+ " WHERE project.type = 'project'"
-				+ " AND n.itemName = 'txtname' "
-				+ " AND r.itemName='$uniqueidref'" + " AND r.itemValue = '"
-				+ sIDRef + "' " + " ORDER BY n.itemValue asc";
-
-		return entityService.findAllEntities(sQuery, 0, -1);
-	}
-	
-	
 	/**
 	 * This method returns a project ItemCollection for a specified name.
 	 * Returns null if no project with the provided name was found
@@ -248,8 +247,7 @@ public class TeamPlugin extends AbstractPlugin {
 				+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
 				+ aName + "'";
 
-		List<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, 1);
+		List<ItemCollection> col = entityService.findAllEntities(sQuery, 0, 1);
 		if (col.size() > 0)
 			return col.iterator().next();
 		else
