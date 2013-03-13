@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
+import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.internet.AddressException;
@@ -130,7 +131,32 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 				return Plugin.PLUGIN_OK;
 			}
 
-			// test for blob workitem
+			// check if html mail?
+			String htmlText = documentActivity
+					.getItemValueString("rtfMailBody");
+			String sTestHTML = htmlText.trim().toLowerCase();
+			if (sTestHTML.startsWith("<!doctype")
+					|| sTestHTML.startsWith("<html")
+					|| sTestHTML.startsWith("<?xml")) {
+				try {
+					htmlText = replaceDynamicValues(htmlText, documentContext);
+					logger.fine("[MailPlugin] converting plain text into html mail ...");
+					// get Mulitpart Message
+					Multipart multipart = super.getMultipart();
+					// remove body part and build it new!
+					multipart.removeBodyPart(0);
+					BodyPart messageBodyPart = new MimeBodyPart();
+					messageBodyPart.setContent(htmlText.trim(), "text/html");
+					// add it
+					multipart.addBodyPart(messageBodyPart);
+				} catch (MessagingException e) {
+					logger.severe("[MailPlugin] error converting plain text mail into html: "
+							+ e.getMessage());
+					e.printStackTrace();
+				}
+			}
+
+			// test for blob workitem to add attachemtns
 			ItemCollection blobWorkitem = loadBlob(documentContext);
 			if (blobWorkitem != null)
 				try {
@@ -145,8 +171,9 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 	}
 
 	/**
-	 * The method checks if a defaultSenderAddress was configured in the BASIC configuration entity. 
-	 * Only in this case the plugin changes the 'from' property of the current Message object. 
+	 * The method checks if a defaultSenderAddress was configured in the BASIC
+	 * configuration entity. Only in this case the plugin changes the 'from'
+	 * property of the current Message object.
 	 */
 	@Override
 	public void close(int arg0) throws PluginException {
@@ -159,7 +186,8 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 				MimeMessage mailMessage = (MimeMessage) super.getMailMessage();
 				if (mailMessage != null) {
 					try {
-						logger.fine("[MartyMailPlugin] set from address: " + sFrom);
+						logger.fine("[MartyMailPlugin] set from address: "
+								+ sFrom);
 						mailMessage.setFrom(getInternetAddress(sFrom));
 					} catch (AddressException e) {
 						logger.warning("[MartyMailPlugin] unable to set default From address into MailSession - error: "
