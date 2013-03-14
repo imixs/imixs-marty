@@ -73,8 +73,8 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
 	private ProfileService profileService = null;
 	private boolean hasMailSession = false;
+	private boolean isHTMLMail = false;
 	private WorkflowService workflowService = null;
-
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	public boolean hasMailSession() {
@@ -139,6 +139,7 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 					|| sTestHTML.startsWith("<html")
 					|| sTestHTML.startsWith("<?xml")) {
 				try {
+					isHTMLMail = true;
 					htmlText = replaceDynamicValues(htmlText, documentContext);
 					logger.fine("[MailPlugin] converting plain text into html mail ...");
 					// get Mulitpart Message
@@ -158,13 +159,14 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
 			// test for blob workitem to add attachemtns
 			ItemCollection blobWorkitem = loadBlob(documentContext);
-			if (blobWorkitem != null)
+			if (blobWorkitem != null) {
 				try {
 					attachFiles(blobWorkitem);
 				} catch (MessagingException e) {
 					logger.warning("unable to attach files!");
 					e.printStackTrace();
 				}
+			}
 
 		}
 		return Plugin.PLUGIN_OK;
@@ -391,7 +393,6 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		try {
 			messagePart = (MimeBodyPart) multipart.getBodyPart(0);
 			content = (String) messagePart.getContent();
-
 		} catch (MessagingException e) {
 			logger.warning("Unable to parse tag 'attachments' !");
 			e.printStackTrace();
@@ -446,7 +447,10 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
 			// update mail body
 			try {
-				messagePart.setText(content);
+				if (isHTMLMail)
+					messagePart.setContent(content, "text/html");
+				else
+					messagePart.setText(content);
 			} catch (MessagingException e) {
 				logger.warning("Unable to parse tag 'attachments' !");
 				e.printStackTrace();
