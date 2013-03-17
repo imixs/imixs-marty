@@ -76,6 +76,8 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 	private boolean isHTMLMail = false;
 	private WorkflowService workflowService = null;
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	
+	public static String CHAR_SET="text/html; charset=ISO-8859-1";
 
 	public boolean hasMailSession() {
 		return hasMailSession;
@@ -147,7 +149,7 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 					// remove body part and build it new!
 					multipart.removeBodyPart(0);
 					BodyPart messageBodyPart = new MimeBodyPart();
-					messageBodyPart.setContent(htmlText.trim(), "text/html");
+					messageBodyPart.setContent(htmlText.trim(), CHAR_SET);
 					// add it
 					multipart.addBodyPart(messageBodyPart);
 				} catch (MessagingException e) {
@@ -448,7 +450,7 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 			// update mail body
 			try {
 				if (isHTMLMail)
-					messagePart.setContent(content, "text/html");
+					messagePart.setContent(content, CHAR_SET);
 				else
 					messagePart.setText(content);
 			} catch (MessagingException e) {
