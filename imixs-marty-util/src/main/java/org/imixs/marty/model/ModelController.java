@@ -119,7 +119,7 @@ public class ModelController implements Serializable {
 	 **/
 	@PostConstruct
 	public void init() {
-		// initialProcessEntityList = null;
+		systemModelVersion = null;
 		workflowGroups = null;
 		modelVersionCache = new ArrayList<String>();
 		processEntityCache = new HashMap<String, List<ItemCollection>>();
@@ -336,12 +336,49 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * Returns a List with all available model versions
+	 * Returns a List with all available model versions. The list contains the
+	 * latest version of each model group.
 	 * 
 	 * @return list of model versions
 	 */
 	public List<String> getModelVersions() {
 		return modelVersionCache;
+	}
+
+	/**
+	 * Returns a list of all uploaded model profile entities. This list is used
+	 * to give an overview about all uploaded models. Different versions of the
+	 * same model group will be returned.
+	 * 
+	 * @see modellist.xhtml
+	 * @return list of ItemCollections
+	 */
+	public List<ItemCollection> getAllProfileEntities() {
+		List<ItemCollection> result = new ArrayList<ItemCollection>();
+		List<ItemCollection> colEntities = modelService
+				.getEnvironmentEntityList();
+		for (ItemCollection aworkitem : colEntities) {
+			String sName = aworkitem.getItemValueString("txtName");
+			if ("environment.profile".equals(sName)) {
+				result.add(aworkitem);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Returns the profile entity for a given model version.
+	 * 
+	 * @return ItemCollection
+	 */
+	public ItemCollection getProfileEntityByVersion(String sVersion) {
+		List<ItemCollection> profiles = getAllProfileEntities();
+		for (ItemCollection aworkitem : profiles) {
+			if (sVersion.equals(sVersion))
+				return aworkitem;
+
+		}
+		return null;
 	}
 
 	/**
@@ -558,25 +595,6 @@ public class ModelController implements Serializable {
 
 		return initialProcessEntityList;
 
-	}
-
-	/**
-	 * Returns a list of all uploaded model profile entities.
-	 * 
-	 * @return list of ItemCollections
-	 */
-	@Deprecated
-	public List<ItemCollection> xxxgetModelProfileList() {
-		List<ItemCollection> result = new ArrayList<ItemCollection>();
-		Collection<ItemCollection> colEntities = modelService
-				.getEnvironmentEntityList();
-		for (ItemCollection aworkitem : colEntities) {
-			String sName = aworkitem.getItemValueString("txtName");
-			if ("environment.profile".equals(sName)) {
-				result.add(aworkitem);
-			}
-		}
-		return result;
 	}
 
 	/**

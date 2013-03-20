@@ -143,6 +143,20 @@ public class SearchController extends
 		super.doReset(event);
 	}
 
+	/**
+	 * Searches for the a search phrase. The search phrase is stored in the
+	 * search filter property 'txtSearch' which is evaluated by the ViewAdapter.
+	 * 
+	 * @param phrase - search phrase
+	 * @param action - jsf navigation action
+	 */
+	public String search(String phrase, String action) {
+
+		searchFilter.replaceItemValue("txtSearch", phrase);
+
+		return action;
+	}
+
 	public ItemCollection getSearchFilter() {
 		if (searchFilter == null)
 			searchFilter = new ItemCollection();
