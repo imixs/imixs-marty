@@ -143,6 +143,49 @@ public class SearchController extends
 		super.doReset(event);
 	}
 
+
+	/**
+	 * rebuilds the full text search index for all workitems
+	 * @param event
+	 * @throws Exception
+	 */
+	public void doRebuildFullTextIndex(ActionEvent event) throws Exception {
+		int JUNK_SIZE = 100;
+		long totalcount = 0;
+		int startpos = 0;
+		int icount = 0;
+		boolean hasMoreData = true;
+
+		// find all workitems
+		long ltime = System.currentTimeMillis();
+		String sQuery = "SELECT entity FROM Entity entity ";
+
+		logger.info("[SearchController] UpdateFulltextIndex starting....");
+
+		while (hasMoreData) {
+			// read a junk....
+			Collection<ItemCollection> col = entityService.findAllEntities(
+					sQuery, startpos, JUNK_SIZE);
+
+			if (col.size() < JUNK_SIZE)
+				hasMoreData = false;
+			startpos = startpos + col.size();
+			totalcount = totalcount + col.size();
+			logger.info("[SearchController]  UpdateFulltextIndex - read " + totalcount
+					+ " workitems....");
+
+			icount = icount + col.size();
+			// Update index
+			LucenePlugin.addWorklist(col);
+
+		}
+		logger.info("[SearchController]  UpdateFulltextIndex finished - " + icount
+				+ " workitems updated in "
+				+ (System.currentTimeMillis() - ltime) + " ms");
+
+	}
+	
+	
 	/**
 	 * Searches for the a search phrase. The search phrase is stored in the
 	 * search filter property 'txtSearch' which is evaluated by the ViewAdapter.

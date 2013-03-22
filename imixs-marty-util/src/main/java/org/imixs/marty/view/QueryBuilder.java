@@ -31,9 +31,9 @@ public class QueryBuilder implements IQueryBuilder {
 		String sSearchTerm = "";
 
 		List<String> typeList = searchFilter.getItemValue("Type");
-		if (typeList.isEmpty()) {
+		if (typeList.isEmpty() || "".equals(typeList.get(0))) {
 			typeList = Arrays.asList(new String[] { "workitem",
-					"workitemarchive", "workitemdeleted" });
+					"workitemarchive" });
 		}
 
 		// convert type list into comma separated list
@@ -80,9 +80,9 @@ public class QueryBuilder implements IQueryBuilder {
 			workflowGroups.remove("");
 
 		List<String> typeList = searchFilter.getItemValue("Type");
-		if (typeList.isEmpty()) {
+		if (typeList.isEmpty() || "".equals(typeList.get(0))) {
 			typeList = Arrays.asList(new String[] { "workitem",
-					"workitemarchive", "workitemdeleted" });
+					"workitemarchive" });
 		}
 
 		// construct query

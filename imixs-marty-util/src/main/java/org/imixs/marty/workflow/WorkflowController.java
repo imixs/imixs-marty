@@ -48,6 +48,7 @@ import org.imixs.marty.model.ProcessController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
 
 /**
  * The marty WorkflowController extends the
@@ -357,6 +358,10 @@ public class WorkflowController extends
 
 		ItemCollection workitem = workitemService
 				.moveIntoArchive(getWorkitem());
+		
+		// update lucene index
+		LucenePlugin.addWorkitem(workitem);
+				
 		setWorkitem(workitem);
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
@@ -366,7 +371,10 @@ public class WorkflowController extends
 
 	/**
 	 * moves a workitem into the archive by changing the attribute type to
-	 * 'workitemdeleted'
+	 * 'workitemdeleted'.
+	 * The workitem will be excluded from the Lucene search index.
+	 * 
+	 * 
 	 * 
 	 * @param event
 	 * @return
@@ -380,6 +388,10 @@ public class WorkflowController extends
 
 		ItemCollection workitem = workitemService
 				.moveIntoDeletions(getWorkitem());
+				
+		// update lucene index
+		LucenePlugin.addWorkitem(workitem);		
+		
 		setWorkitem(workitem);
 
 		// fire event
@@ -404,6 +416,9 @@ public class WorkflowController extends
 		ItemCollection workitem = workitemService
 				.restoreFromArchive(getWorkitem());
 
+		// update lucene index
+		LucenePlugin.addWorkitem(workitem);
+				
 		setWorkitem(workitem);
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
@@ -414,6 +429,9 @@ public class WorkflowController extends
 	/**
 	 * restores a workitem from the archive by changing the attribute type to
 	 * 'workitemarchive'
+	 * 
+	 * The workitem will be added into the Lucene search index.
+	 * 
 	 * 
 	 * @param event
 	 * @return
@@ -427,7 +445,12 @@ public class WorkflowController extends
 
 		ItemCollection workitem = workitemService
 				.restoreFromDeletions(getWorkitem());
-		setWorkitem(workitem);
+			
+		// update lucene index
+		LucenePlugin.addWorkitem(workitem);
+		
+		setWorkitem(workitem);		
+		
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_AFTER_RESTOREFROMSOFTDELETE));
