@@ -1,8 +1,8 @@
 package org.imixs.marty.view;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -11,10 +11,11 @@ import javax.enterprise.context.ApplicationScoped;
 
 import org.imixs.marty.ejb.ConfigService;
 import org.imixs.workflow.ItemCollection;
+
 /**
- * The default implementation of a QueryBuilder. The SearchController can
- * use custom instances of a IQueryBuilder implementation to customize the
- * search queries.
+ * The default implementation of a QueryBuilder. The SearchController can use
+ * custom instances of a IQueryBuilder implementation to customize the search
+ * queries.
  * 
  * @author rsoika
  * 
@@ -25,21 +26,25 @@ public class QueryBuilder implements IQueryBuilder {
 	@EJB
 	private ConfigService configService;
 
-	
 	@Override
 	public String getSearchQuery(ItemCollection searchFilter) {
 		String sSearchTerm = "";
 
-		Date datum = searchFilter.getItemValueDate("datdate");
-		if (datum != null) {
-			SimpleDateFormat dateformat = new SimpleDateFormat(
-					"yyyyMMddHHmm");
-
-			// convert calendar to string
-			String sDateValue = dateformat.format(datum);
-			if (!"".equals(sDateValue))
-				sSearchTerm += " (datdate:\"" + sDateValue + "\") AND";
+		List<String> typeList = searchFilter.getItemValue("Type");
+		if (typeList.isEmpty()) {
+			typeList = Arrays.asList(new String[] { "workitem",
+					"workitemarchive", "workitemdeleted" });
 		}
+
+		// convert type list into comma separated list
+		String sTypeQuery = "";
+		Iterator<String> iterator = typeList.iterator();
+		while (iterator.hasNext()) {
+			sTypeQuery += "type:\"" + iterator.next() + "\"";
+			if (iterator.hasNext())
+				sTypeQuery += " OR ";
+		}
+		sSearchTerm += "(" +sTypeQuery + ") AND";
 
 		String searchphrase = searchFilter.getItemValueString("txtSearch");
 
@@ -49,8 +54,7 @@ public class QueryBuilder implements IQueryBuilder {
 		} else
 		// cut last AND
 		if (sSearchTerm.endsWith("AND"))
-			sSearchTerm = sSearchTerm
-					.substring(0, sSearchTerm.length() - 3);
+			sSearchTerm = sSearchTerm.substring(0, sSearchTerm.length() - 3);
 
 		return sSearchTerm;
 	}
@@ -75,9 +79,11 @@ public class QueryBuilder implements IQueryBuilder {
 		while (workflowGroups.contains(""))
 			workflowGroups.remove("");
 
-		String type = searchFilter.getItemValueString("Type");
-		if ("".equals(type))
-			type = "workitem";
+		List<String> typeList = searchFilter.getItemValue("Type");
+		if (typeList.isEmpty()) {
+			typeList = Arrays.asList(new String[] { "workitem",
+					"workitemarchive", "workitemdeleted" });
+		}
 
 		// construct query
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
@@ -89,7 +95,14 @@ public class QueryBuilder implements IQueryBuilder {
 		if (processID > 0)
 			sQuery += " JOIN wi.integerItems as processid ";
 
-		sQuery += " WHERE wi.type = '" + type + "'";
+		// convert type list into comma separated list
+		String sType = "";
+		for (String aValue : typeList) {
+			sType += "'" + aValue + "',";
+		}
+		sType = sType.substring(0, sType.length() - 1);
+
+		sQuery += " WHERE wi.type IN(" + sType + ")";
 
 		if (!uniqueIdRefList.isEmpty()) {
 			sQuery += " AND pref.itemName = '$uniqueidref' and pref.itemValue IN (";
@@ -114,13 +127,12 @@ public class QueryBuilder implements IQueryBuilder {
 			sQuery += " AND processid.itemName = '$processid' AND processid.itemValue ='"
 					+ processID + "'";
 
-		
 		// add ORDER BY phrase
-		
+
 		// read configuration for the sort order
-		ItemCollection config=configService.loadConfiguration("BASIC");
-		int sortby=config.getItemValueInteger("Sortby");
-		int sortorder =config.getItemValueInteger("Sortorder");
+		ItemCollection config = configService.loadConfiguration("BASIC");
+		int sortby = config.getItemValueInteger("Sortby");
+		int sortorder = config.getItemValueInteger("Sortorder");
 		sQuery += " ORDER BY wi.";
 		if (sortby == SearchController.SORT_BY_CREATED)
 			sQuery += "created ";
@@ -130,8 +142,7 @@ public class QueryBuilder implements IQueryBuilder {
 			sQuery += "asc";
 		else
 			sQuery += "desc";
-		
-		
+
 		return sQuery;
 	}
 
