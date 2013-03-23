@@ -39,7 +39,7 @@ $(document).ready(function() {
 			<c:forEach var="workitem"
 				items="#{workitemLinkController.getReferences(cc.attrs.filter)}">
 				<div class="marty-workitemlink-referencebox-entry">
-					<h:commandLink
+					<h:commandLink class="marty-workitemlink-entry-link"
 						action="#{workflowController.load(workitem.item['$uniqueid'],'/pages/workitems/workitem')}">
 						<h:outputText value="#{workitem.item['txtWorkflowSummary']}"
 							rendered="#{!empty workitem.item['txtWorkflowSummary']}" />
@@ -50,11 +50,13 @@ $(document).ready(function() {
 						</h:outputText>
 					</h:commandLink>
 					<br />
-					<h:outputText value="#{workitem.item['txtworkflowgroup']}: " />
-					<h:outputText value="#{workitem.item['txtworkflowstatus']}" />
+					<span class="marty-workitemlink-entry-abstract">
+						<h:outputText value="#{workitem.item['txtworkflowgroup']}: " />
+						<h:outputText value="#{workitem.item['txtworkflowstatus']}" />
+					</span>
 
 
-					<h:commandLink
+					<h:commandLink class="marty-workitemlink-entry-remove"
 						actionListener="#{workitemLinkController.remove(workitem.item['$uniqueid'],cc.attrs.workitem)}">
 						<h:outputText value=" [#{message.remove}]" />
 						<f:ajax render="reference_box" />
