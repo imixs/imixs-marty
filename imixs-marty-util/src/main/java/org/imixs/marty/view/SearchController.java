@@ -176,7 +176,7 @@ public class SearchController extends
 
 			icount = icount + col.size();
 			// Update index
-			LucenePlugin.addWorklist(col);
+			LucenePlugin.updateWorklist(col);
 
 		}
 		logger.info("[SearchController]  UpdateFulltextIndex finished - " + icount

@@ -183,7 +183,7 @@ public class WorkitemService {
 
 			// update search index
 			try {
-				LucenePlugin.addWorkitem(workitem);
+				LucenePlugin.updateWorkitem(workitem);
 			} catch (Exception e) {
 				// no op
 			}
@@ -223,7 +223,7 @@ public class WorkitemService {
 
 			// update search index
 			try {
-				LucenePlugin.addWorkitem(workitem);
+				LucenePlugin.updateWorkitem(workitem);
 			} catch (Exception e) {
 				// no op
 			}
@@ -253,7 +253,7 @@ public class WorkitemService {
 
 			// update search index
 			try {
-				LucenePlugin.addWorkitem(workitem);
+				LucenePlugin.updateWorkitem(workitem);
 			} catch (Exception e) {
 				// no op
 			}
@@ -292,7 +292,7 @@ public class WorkitemService {
 
 			// update search index
 			try {
-				LucenePlugin.addWorkitem(workitem);
+				LucenePlugin.updateWorkitem(workitem);
 			} catch (Exception e) {
 				// no op
 
