@@ -257,6 +257,14 @@ public class WorkitemService {
 			// recursive method call
 			deleteWorkItem(achildworkitem);
 		}
+		
+		// update search index
+		try {
+			LucenePlugin.addWorkitem(workitem);
+		} catch (Exception e) {
+			// no op
+		}
+					
 		entityService.remove(workitem);
 	}
 
