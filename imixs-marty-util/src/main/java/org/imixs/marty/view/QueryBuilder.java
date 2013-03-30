@@ -45,7 +45,29 @@ public class QueryBuilder implements IQueryBuilder {
 				sTypeQuery += " OR ";
 		}
 		sSearchTerm += "(" +sTypeQuery + ") AND";
+		
+		
+		// Workflow Group...
+		List<String> workflowGroups = searchFilter
+				.getItemValue("txtWorkflowGroup");
+		// trim workflowGroups
+		while (workflowGroups.contains(""))
+			workflowGroups.remove("");
 
+		if (!workflowGroups.isEmpty()) {
+			sSearchTerm += "(";
+			iterator = workflowGroups.iterator();
+			while (iterator.hasNext()) {
+				sSearchTerm += "txtworkflowgroup:\"" + iterator.next() + "\"";
+				if (iterator.hasNext())
+					sSearchTerm += " OR ";
+			}
+			sSearchTerm += " )";
+
+		}
+		
+
+		// Search phrase....
 		String searchphrase = searchFilter.getItemValueString("txtSearch");
 
 		if (!"".equals(searchphrase)) {
