@@ -54,31 +54,19 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.jee.faces.util.LoginController;
 
 /**
- * This backing beans handles the Profile of the current user. The user is
- * identified by its remote user name. This name is mapped to the attribute
- * txtname.
+ * This backing beans handles the Profile for the current user and provides a
+ * session based cache for usernames and email addresses.
+ * 
+ * The Users name and email address is stored in the user profile entity. The
+ * user is identified by its principal user name. This name is mapped to the
+ * attribute txtname.
  * 
  * This bean creates automatically a new profile for the current user if no
  * profile yet exists!
  * 
- * The Bean also sets the properties 'skin' and 'locale' to the skinMB which is
- * used in JSF Pages to display pages using the current user settings.
+ * The Bean also provides the user 'locale' which is used in JSF Pages to
+ * display pages using the current user settings.
  * 
- * Additional the Bean provides an ModelVersionHandler. This Class can be used
- * to dertermin model version spcific to the userprofile. therefor the
- * modelversion number is devided into a Domain, a Language and a Style as also
- * an internal Versionnummber.
- * 
- * e.g.: public-de-office-0.0.5
- * 
- * Where 'public' is the domain (associated to the user) 'de' is the user
- * language and 'office' is the name for the model. The ModelVersion handler is
- * used for ShareYourWorks. For example to provide a Model Tree Select Widget.
- * 
- * Imixs Office Workflow makes no use of the ModelVersionHandler
- * 
- * 
- * @see org.imixs.sywapps.web.profile.SkinMB
  * @author rsoika
  * 
  */
@@ -91,20 +79,14 @@ public class UserController implements Serializable {
 	private ItemCollection workitem = null;
 
 	final int MAX_CACHE_SIZE = 20;
-	final int MAX_SEARCH_COUNT=10;
+	final int MAX_SEARCH_COUNT = 10;
 	private Cache cache;
-
-	@EJB
-	private org.imixs.workflow.jee.ejb.ModelService modelService;
 
 	@EJB
 	private EntityService entityService;
 
 	@EJB
 	private WorkflowService workflowService;
-
-	// @EJB
-	// private org.imixs.marty.ejb.WorkitemService workitemService;
 
 	public final static int MAX_PRIMARY_ENTRIES = 5;
 	public final static int START_PROFILE_PROCESS_ID = 200;
@@ -121,7 +103,6 @@ public class UserController implements Serializable {
 	@Inject
 	private LoginController loginController;
 
-	
 	private static Logger logger = Logger.getLogger("org.imixs.workflow");
 
 	public UserController() {
@@ -150,8 +131,8 @@ public class UserController implements Serializable {
 		if (!profileLoaded) {
 
 			// if SystemSetup is not yet completed - start System Setup now
-			if (!setupController.isSetupOk())
-				setupController.doSetup(null);
+//			if (!setupController.isSetupOk())
+//				setupController.doSetup(null);
 
 			// determine user language and set Modelversion depending on
 			// the selected user locale
@@ -209,9 +190,6 @@ public class UserController implements Serializable {
 
 	}
 
-
-	
-
 	public ItemCollection getWorkitem() {
 		if (workitem == null)
 			workitem = new ItemCollection();
@@ -260,7 +238,6 @@ public class UserController implements Serializable {
 					locale = "en";
 			}
 
-			
 		}
 		return locale;
 	}
@@ -282,20 +259,6 @@ public class UserController implements Serializable {
 		cookieLocale.setMaxAge(2592000);
 		response.addCookie(cookieLocale);
 
-	}
-
-	/**
-	 * This Method returns the users Model Domain. e.g. 'public'
-	 * 
-	 * @return
-	 */
-	public String getUserModelDomain() {
-		// select Domain
-		String sDomain = this.getWorkitem()
-				.getItemValueString("txtModelDomain");
-		if ("".equals(sDomain))
-			sDomain = "public";
-		return sDomain;
 	}
 
 	/**
@@ -336,62 +299,49 @@ public class UserController implements Serializable {
 
 	/**
 	 * This method returns a list of profile ItemCollections matching the search
-	 * phrase. 
-	 * The JQPL joins over txtEmail and txtUserName
+	 * phrase. The JQPL joins over txtEmail and txtUserName
 	 * 
 	 * @param aname
 	 * @return
 	 */
 	public List<ItemCollection> searchProfile(String phrase) {
-	
-		
+
 		List<ItemCollection> searchResult = new ArrayList<ItemCollection>();
-	
+
 		if (phrase == null || phrase.isEmpty())
 			return searchResult;
-	
-		phrase="%"+phrase.trim()+"%";
-		
+
+		phrase = "%" + phrase.trim() + "%";
+
 		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
 				+ " JOIN profile.textItems AS t1"
 				+ " JOIN profile.textItems AS t2"
-				+ " WHERE  profile.type= 'profile' "
-				+ " AND "
-				+ " ( (t1.itemName = 'txtusername' " + " AND t1.itemValue LIKE  '"	+ phrase + "') "
-				+ " OR (t2.itemName = 'txtemail' " + " AND t2.itemValue LIKE  '"	+ phrase + "') "
-				+ " )";
-				
-			
+				+ " WHERE  profile.type= 'profile' " + " AND "
+				+ " ( (t1.itemName = 'txtusername' "
+				+ " AND t1.itemValue LIKE  '" + phrase + "') "
+				+ " OR (t2.itemName = 'txtemail' "
+				+ " AND t2.itemValue LIKE  '" + phrase + "') " + " )";
+
 		logger.finest("searchprofile: " + sQuery);
-	
+
 		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
 				0, MAX_SEARCH_COUNT);
-		
-		for (ItemCollection profile:col) {
+
+		for (ItemCollection profile : col) {
 			searchResult.add(cloneWorkitem(profile));
-			
+
 		}
-		
-		//sort by username..
-		Collections.sort(searchResult,
-				new WorkitemComparator("txtWorkflowGroup",
-						true));
-		
-		
+
+		// sort by username..
+		Collections.sort(searchResult, new WorkitemComparator(
+				"txtWorkflowGroup", true));
+
 		return searchResult;
-	
-		
-	
+
 	}
 
 	/**
-	 * This method updates the current skin and location setting through the
-	 * skinMB Therefore the method checks if skin and locale are still set in
-	 * userprofile. If not than the method updates these attributes for the
-	 * userprofile.
-	 * 
-	 * The mehtod always updates the cookies through the methods setLocale and
-	 * setSkin form the Skin MB
+	 * This method updates user locale to the faces context.
 	 * 
 	 */
 	private void updateLocale() throws Exception {
@@ -411,7 +361,6 @@ public class UserController implements Serializable {
 
 	}
 
-	
 	/**
 	 * this class performes a EJB Lookup for the corresponding userprofile. The
 	 * method stores the username and his email into a string array. So either
@@ -476,9 +425,7 @@ public class UserController implements Serializable {
 		return null;
 
 	}
-	
-	
-	
+
 	public ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
 		ItemCollection clone = new ItemCollection();
 
@@ -492,15 +439,14 @@ public class UserController implements Serializable {
 		clone.replaceItemValue("$Modified", aWorkitem.getItemValue("$Modified"));
 		clone.replaceItemValue("$isAuthor", aWorkitem.getItemValue("$isAuthor"));
 
-		
 		clone.replaceItemValue("txtWorkflowStatus",
 				aWorkitem.getItemValue("txtWorkflowStatus"));
 
 		clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
-		clone.replaceItemValue("txtUserName", aWorkitem.getItemValue("txtUserName"));
+		clone.replaceItemValue("txtUserName",
+				aWorkitem.getItemValue("txtUserName"));
 		clone.replaceItemValue("txtEmail", aWorkitem.getItemValue("txtEmail"));
 
-	
 		return clone;
 	}
 

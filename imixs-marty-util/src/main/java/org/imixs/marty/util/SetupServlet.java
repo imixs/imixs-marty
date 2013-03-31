@@ -12,8 +12,8 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.WorkflowSchedulerService;
 
 /**
- * This servlet checks configuration and scheduler on startup. The servlet is
- * configured in the web.xml with the option load-on-startup=1 which means that
+ * This servlet checks userdb configuration and scheduler on startup. The servlet is
+ * configured with the option load-on-startup=1 which means that
  * the servlet init() method is triggered after deployment.
  * 
  * @author rsoika
@@ -40,8 +40,7 @@ public class SetupServlet extends HttpServlet {
 
 		// init userIDs for user db
 		try {
-			if (userGroupService != null) {
-				
+			if (userGroupService != null) {				
 				userGroupService.initUserIDs();
 			}
 
