@@ -27,7 +27,6 @@
 
 package org.imixs.marty.model;
 
-import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,9 +34,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -46,9 +43,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
 
+import org.imixs.marty.ejb.SetupService;
 import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
@@ -56,9 +52,6 @@ import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.ModelService;
 import org.imixs.workflow.jee.faces.fileupload.FileData;
 import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
-import org.imixs.workflow.xml.EntityCollection;
-import org.imixs.workflow.xml.XMLItemCollection;
-import org.imixs.workflow.xml.XMLItemCollectionAdapter;
 
 /**
  * The ModelController provides informations about workflow models.
@@ -98,6 +91,9 @@ public class ModelController implements Serializable {
 
 	@EJB
 	ModelService modelService;
+	
+	@EJB
+	SetupService setupService;
 
 	private static Logger logger = Logger.getLogger(ModelController.class
 			.getName());
@@ -394,11 +390,14 @@ public class ModelController implements Serializable {
 
 			logger.info("ModelController - starting xml model file upload: "
 					+ file.getName());
-			importXmlEntityData(file.getData());
+			setupService.importXmlEntityData(file.getData());
 
 		}
 
 		fileUploadController.doClear(null);
+		
+		// reinitialize models
+		init();
 	}
 
 	/**
@@ -428,87 +427,7 @@ public class ModelController implements Serializable {
 		init();
 	}
 
-	/**
-	 * this method imports an xml entity data stream. This is used to provide
-	 * model uploads during the system setup. The method can also import general
-	 * entity data like configuration data.
-	 * 
-	 * @param event
-	 * @throws Exception
-	 */
-	public void importXmlEntityData(byte[] filestream) {
-		XMLItemCollection entity;
-		ItemCollection itemCollection;
-		String sModelVersion = null;
-
-		if (filestream == null)
-			return;
-		try {
-			EntityCollection ecol = null;
-			logger.info("[ModelController] importXmlEntityData - verifing file content....");
-			JAXBContext context = JAXBContext
-					.newInstance(EntityCollection.class);
-			Unmarshaller m = context.createUnmarshaller();
-
-			ByteArrayInputStream input = new ByteArrayInputStream(filestream);
-			Object jaxbObject = m.unmarshal(input);
-			if (jaxbObject == null) {
-				throw new RuntimeException(
-						"[ModelController] error - wrong xml file format - unable to import file!");
-			}
-
-			ecol = (EntityCollection) jaxbObject;
-
-			// import entities....
-			if (ecol.getEntity().length > 0) {
-
-				Vector<String> vModelVersions = new Vector<String>();
-				// first iterrate over all enttity and find if model entries are
-				// included
-				for (XMLItemCollection aentity : ecol.getEntity()) {
-					itemCollection = XMLItemCollectionAdapter
-							.getItemCollection(aentity);
-					// test if this is a model entry
-					// (type=WorkflowEnvironmentEntity)
-					if ("WorkflowEnvironmentEntity".equals(itemCollection
-							.getItemValueString("type"))
-							&& "environment.profile".equals(itemCollection
-									.getItemValueString("txtName"))) {
-
-						sModelVersion = itemCollection
-								.getItemValueString("$ModelVersion");
-						if (vModelVersions.indexOf(sModelVersion) == -1)
-							vModelVersions.add(sModelVersion);
-					}
-				}
-				// now remove old model entries....
-				for (String aModelVersion : vModelVersions) {
-					logger.info("[ModelController] removing existing configuration for model version '"
-							+ aModelVersion + "'");
-					modelService.removeModelVersion(aModelVersion);
-				}
-				// save new entities into database and update modelversion.....
-				for (int i = 0; i < ecol.getEntity().length; i++) {
-					entity = ecol.getEntity()[i];
-					itemCollection = XMLItemCollectionAdapter
-							.getItemCollection(entity);
-					// save entity
-					entityService.save(itemCollection);
-				}
-
-				logger.info("[ModelController] " + ecol.getEntity().length
-						+ " entries sucessfull imported");
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		// reinitialize models
-		init();
-
-	}
-
+	
 	/**
 	 * This method returns a process entity for a given ModelVersion
 	 * 

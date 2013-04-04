@@ -7,8 +7,10 @@ import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 
+import org.imixs.marty.ejb.SetupService;
 import org.imixs.marty.ejb.security.UserGroupService;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.jee.ejb.WorkflowSchedulerService;
 
 /**
@@ -31,6 +33,10 @@ public class SetupServlet extends HttpServlet {
 
 	@EJB
 	UserGroupService userGroupService;
+	
+	@EJB
+	SetupService setupService;
+
 
 	@Override
 	public void init() throws ServletException {
@@ -47,6 +53,15 @@ public class SetupServlet extends HttpServlet {
 		} catch (Exception e) {
 			logger.warning("SetupServlet - unable to initUserIds "
 					+ e.getMessage());
+		}
+		
+		// try to init system indizies and load default models
+		try {
+			setupService.init();
+		} catch (AccessDeniedException e1) {
+			logger.severe("SetupServlet - unable to init system "
+					+ e1.getMessage());
+			e1.printStackTrace();
 		}
 
 		// try to start the scheduler service

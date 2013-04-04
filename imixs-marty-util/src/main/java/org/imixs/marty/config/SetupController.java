@@ -27,10 +27,6 @@
 
 package org.imixs.marty.config;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.ResourceBundle;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -41,7 +37,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.model.ModelController;
-import org.imixs.workflow.jee.jpa.EntityIndex;
 import org.imixs.workflow.jee.util.PropertyService;
 
 /**
@@ -54,12 +49,6 @@ import org.imixs.workflow.jee.util.PropertyService;
  * and more flexible as the file based imixs.properties provided by the Imixs
  * Workflow Engine.
  * 
- * The SetupController extends the ConfigController and provides additional methods to 
- * setup and initialize a marty application. 
- * The method doSetup() creates and updates index fields. The method loadDefaultModels checks if
- * default (file based) models need to be initialized. 
- * 
- *
  * 
  * @author rsoika
  * 
@@ -85,20 +74,15 @@ public class SetupController extends ConfigController {
 
 	@EJB
 	PropertyService propertyService;
-	
-	private static Logger logger = Logger.getLogger(SetupController.class.getName());
+
+	private static Logger logger = Logger.getLogger(SetupController.class
+			.getName());
 
 	public SetupController() {
 		super();
 		// set name
 		this.setName(CONFIGURATION_NAME);
 	}
-
-	
-	
-	
-
-
 
 	/**
 	 * This method loads the config entity.
@@ -130,49 +114,12 @@ public class SetupController extends ConfigController {
 	}
 
 	/**
-	 * This method starts a ConsistencyCheck without updating values.
-	 * 
-	 * Also the modelController (application scoped) will be reinitialized.
+	 * This method resets the propertyService and modelController
 	 * 
 	 * @param event
 	 * @throws Exception
 	 */
 	public void doSetup(ActionEvent event) throws Exception {
-
-		logger.info("[SetupController starting System Setup...");
-		// model
-		entityService.addIndex("numprocessid", EntityIndex.TYP_INT);
-		entityService.addIndex("numactivityid", EntityIndex.TYP_INT);
-
-		// workflow
-		entityService.addIndex("type", EntityIndex.TYP_TEXT);
-		entityService.addIndex("$uniqueidref", EntityIndex.TYP_TEXT);
-		entityService.addIndex("$workitemid", EntityIndex.TYP_TEXT);
-		entityService.addIndex("$processid", EntityIndex.TYP_INT);
-		entityService.addIndex("txtworkflowgroup", EntityIndex.TYP_TEXT);
-		entityService.addIndex("namcreator", EntityIndex.TYP_TEXT);
-		entityService.addIndex("$modelversion", EntityIndex.TYP_TEXT);
-
-		// app
-		entityService.addIndex("txtworkitemref", EntityIndex.TYP_TEXT);
-		entityService.addIndex("txtname", EntityIndex.TYP_TEXT);
-		entityService.addIndex("txtemail", EntityIndex.TYP_TEXT);
-		entityService.addIndex("namteam", EntityIndex.TYP_TEXT);
-		entityService.addIndex("namowner", EntityIndex.TYP_TEXT);
-		entityService.addIndex("datdate", EntityIndex.TYP_CALENDAR);
-		entityService.addIndex("datfrom", EntityIndex.TYP_CALENDAR);
-		entityService.addIndex("datto", EntityIndex.TYP_CALENDAR);
-		entityService.addIndex("numsequencenumber", EntityIndex.TYP_INT);
-
-		entityService.addIndex("txtProjectName", EntityIndex.TYP_TEXT);
-		entityService.addIndex("txtUsername", EntityIndex.TYP_TEXT);
-
-		logger.info("[SetupController] index configuration - ok");
-
-		// update System configuration.....
-		getWorkitem().replaceItemValue("keySystemSetupCompleted", true);
-		save();
-		
 		// reset propertyService
 		logger.info("[SetupController] reset property service");
 		propertyService.reset();
@@ -180,71 +127,10 @@ public class SetupController extends ConfigController {
 		// initialize modelController
 		modelController.init();
 
-		// load default models
-		loadDefaultModels();
-
-		setupOk = true;
-
-		logger.info("[SetupController] system setup completed");
-
 	}
+	
+	
+	
 
-	/**
-	 * This method loads the default model files defined by the configuration
-	 * file: /configuration/model.properties
-	 * 
-	 * The method returns without any action if a system model still exists.
-	 * 
-	 * 
-	 * @param aSkin
-	 * @return
-	 */
-	public void loadDefaultModels() {
-
-		logger.info("[SetupController] searching system model...");
-		try {
-			if (modelController.hasSystemModel()) {
-				logger.info("[SetupController] system model found - skip loading default models");
-				return;
-			}
-
-			logger.info("[SetupController] loading default model configuration from 'configuration/model.properties'...");
-
-			ResourceBundle r = ResourceBundle.getBundle("configuration.model");
-			if (r == null)
-				logger.warning("[SetupController] configuration/model.properties - file found");
-			Enumeration<String> enkeys = r.getKeys();
-			while (enkeys.hasMoreElements()) {
-				String sKey = enkeys.nextElement();
-				// try to load this model
-				String filePath = r.getString(sKey);
-				logger.info("[SetupController] loading model configuration '"
-						+ sKey + "=" + filePath + "'");
-
-				InputStream inputStream = SetupController.class
-						.getClassLoader().getResourceAsStream(filePath);
-				// byte[] bytes = IOUtils.toByteArray(inputStream);
-
-				ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				int next;
-
-				next = inputStream.read();
-
-				while (next > -1) {
-					bos.write(next);
-					next = inputStream.read();
-				}
-				bos.flush();
-				byte[] result = bos.toByteArray();
-
-				modelController.importXmlEntityData(result);
-			}
-		} catch (Exception e) {
-			logger.severe("[SetupController] unable to load model configuration - please check configuration/model.properties file!");
-			throw new RuntimeException(
-					"[SetupController] unable to load model configuration - please check configuration/model.properties file!");
-		}
-
-	}
 
 }
