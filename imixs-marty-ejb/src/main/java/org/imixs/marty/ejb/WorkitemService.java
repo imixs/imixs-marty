@@ -82,7 +82,6 @@ public class WorkitemService {
 
 	ItemCollection workItem = null;
 
-
 	/**
 	 * This method creates a new workItem. The workItem becomes a response
 	 * object to the provided parent ItemCollection. The workItem will also be
@@ -141,12 +140,10 @@ public class WorkitemService {
 		workItem.replaceItemValue("$modelversion", sModelVersion);
 		workItem.replaceItemValue("txtworkflowgroup", sWorkflowGroup);
 		workItem.replaceItemValue("txtworkfloweditorid", sEditorID);
-		
-		
-		
+
 		// set $WriteAccess with namCreator!
-		workItem.replaceItemValue("$WriteAccess", ctx.getCallerPrincipal().getName());
-		
+		workItem.replaceItemValue("$WriteAccess", ctx.getCallerPrincipal()
+				.getName());
 
 		return workItem;
 
@@ -257,14 +254,14 @@ public class WorkitemService {
 			// recursive method call
 			deleteWorkItem(achildworkitem);
 		}
-		
+
 		// update search index
 		try {
 			LucenePlugin.addWorkitem(workitem);
 		} catch (Exception e) {
 			// no op
 		}
-					
+
 		entityService.remove(workitem);
 	}
 
@@ -282,7 +279,7 @@ public class WorkitemService {
 					workitem.getItemValueString("type") + "archive");
 
 			workitem = entityService.save(workitem);
-			
+
 			// update search index
 			try {
 				LucenePlugin.addWorkitem(workitem);
@@ -313,7 +310,7 @@ public class WorkitemService {
 					.getItemValueString("type")))
 				workitem.replaceItemValue("type", "childworkitem");
 			workitem = entityService.save(workitem);
-			
+
 			// update search index
 			try {
 				LucenePlugin.addWorkitem(workitem);
@@ -330,8 +327,10 @@ public class WorkitemService {
 	 */
 	public ItemCollection moveIntoDeletions(ItemCollection workitem)
 			throws Exception {
-		if ("workitem".equals(workitem.getItemValueString("type"))
-				|| "childworkitem".equals(workitem.getItemValueString("type"))) {
+
+		String sType = workitem.getItemValueString("type");
+
+		if (sType.startsWith("workitem") || sType.startsWith("childworkitem")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
 			Collection<ItemCollection> col = wm.getWorkListByRef(id);
@@ -342,7 +341,7 @@ public class WorkitemService {
 			workitem.replaceItemValue("type",
 					workitem.getItemValueString("type") + "deleted");
 			workitem = entityService.save(workitem);
-			
+
 			// update search index
 			try {
 				LucenePlugin.addWorkitem(workitem);
@@ -357,30 +356,30 @@ public class WorkitemService {
 	public ItemCollection restoreFromDeletions(ItemCollection workitem)
 			throws Exception {
 
-		if ("workitemdeleted".equals(workitem.getItemValueString("type"))
-				|| "childworkitemdeleted".equals(workitem
-						.getItemValueString("type"))) {
+		String sType = workitem.getItemValueString("type");
+
+		if (sType.startsWith("workitem") || sType.startsWith("childworkitem")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
 			Collection<ItemCollection> col = wm.getWorkListByRef(id);
 			for (ItemCollection achildworkitem : col) {
 				// recursive method call
 				restoreFromDeletions(achildworkitem);
-			}
-			if ("workitemdeleted".equals(workitem.getItemValueString("type")))
-				workitem.replaceItemValue("type", "workitem");
-			if ("childworkitemdeleted".equals(workitem
-					.getItemValueString("type")))
-				workitem.replaceItemValue("type", "childworkitem");
-			workitem = entityService.save(workitem);
+			}			
+			// cut the 'deleted' part from the type property
+			if (sType.endsWith("deleted")) {
+				String sTypeNew=sType.substring(0, sType.indexOf("deleted"));
+				workitem.replaceItemValue("type", sTypeNew);
+			}			
 			
+			workitem = entityService.save(workitem);
 
 			// update search index
 			try {
 				LucenePlugin.addWorkitem(workitem);
 			} catch (Exception e) {
 				// no op
-				
+
 			}
 		}
 
@@ -412,7 +411,7 @@ public class WorkitemService {
 	 *            - start position
 	 * @param count
 	 *            - max count of selected worktiems
-	 * @return list of workitems 
+	 * @return list of workitems
 	 */
 	public List<ItemCollection> findWorkitemsByOwner(String ref, String model,
 			String processgroup, int processid, int row, int count, int sortby,
@@ -422,8 +421,8 @@ public class WorkitemService {
 			ref = "";
 		if (processgroup == null)
 			processgroup = "";
-		if (model==null)
-			model="";
+		if (model == null)
+			model = "";
 
 		String name = ctx.getCallerPrincipal().getName();
 
@@ -490,7 +489,7 @@ public class WorkitemService {
 	 *            - start position
 	 * @param count
 	 *            - max count of selected worktiems
-	 * @return list of workitems 
+	 * @return list of workitems
 	 */
 	public List<ItemCollection> findWorkitemsByAuthor(String ref, String model,
 			String processgroup, int processid, int row, int count, int sortby,
@@ -499,10 +498,9 @@ public class WorkitemService {
 		if (ref == null)
 			ref = "";
 		if (processgroup == null)
-			processgroup = "";	
-		if (model==null)
-				model="";
-
+			processgroup = "";
+		if (model == null)
+			model = "";
 
 		String name = ctx.getCallerPrincipal().getName();
 
@@ -567,7 +565,7 @@ public class WorkitemService {
 	 *            - start position
 	 * @param count
 	 *            - max count of selected worktiems
-	 * @return list of workitems 
+	 * @return list of workitems
 	 */
 	public List<ItemCollection> findWorkitemsByCreator(String ref,
 			String model, String processgroup, int processid, int row,
@@ -577,8 +575,8 @@ public class WorkitemService {
 			ref = "";
 		if (processgroup == null)
 			processgroup = "";
-		if (model==null)
-			model="";
+		if (model == null)
+			model = "";
 
 		String name = ctx.getCallerPrincipal().getName();
 
@@ -649,7 +647,7 @@ public class WorkitemService {
 	 *            - start position
 	 * @param count
 	 *            - max count of selected workitems
-	 * @return list of workitems 
+	 * @return list of workitems
 	 */
 	public List<ItemCollection> findAllWorkitems(String ref, String model,
 			String processgroup, int processid, int row, int count, int sortby,
@@ -659,8 +657,8 @@ public class WorkitemService {
 			ref = "";
 		if (processgroup == null)
 			processgroup = "";
-		if (model==null)
-			model="";
+		if (model == null)
+			model = "";
 
 		// construct query
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
@@ -727,7 +725,7 @@ public class WorkitemService {
 	 *            - start position
 	 * @param count
 	 *            - max count of selected worktiems
-	 * @return list of workitems 
+	 * @return list of workitems
 	 */
 	public List<ItemCollection> findArchive(String project, String model,
 			String processgroup, int processid, int row, int count, int sortby,
@@ -737,8 +735,8 @@ public class WorkitemService {
 			project = "";
 		if (processgroup == null)
 			processgroup = "";
-		if (model==null)
-			model="";
+		if (model == null)
+			model = "";
 
 		// construct query
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
@@ -799,7 +797,7 @@ public class WorkitemService {
 	 *            - start position
 	 * @param count
 	 *            - max count of selected worktiems
-	 * @return list of workitems 
+	 * @return list of workitems
 	 */
 	public List<ItemCollection> findDeletions(String ref, String model,
 			String processgroup, int processid, int row, int count, int sortby,
@@ -809,8 +807,8 @@ public class WorkitemService {
 			ref = "";
 		if (processgroup == null)
 			processgroup = "";
-		if (model==null)
-			model="";
+		if (model == null)
+			model = "";
 
 		// construct query
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
