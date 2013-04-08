@@ -122,7 +122,7 @@ public class WorkitemService {
 		workItem = new ItemCollection();
 		workItem.replaceItemValue("type", "workitem");
 		workItem.replaceItemValue("$processID", processID);
-		
+
 		// set default writeAccess
 		workItem.replaceItemValue("$writeAccess", workflowService.getUserName());
 
@@ -167,7 +167,8 @@ public class WorkitemService {
 	 */
 	public ItemCollection moveIntoArchive(ItemCollection workitem)
 			throws Exception {
-		if ("workitem".equals(workitem.getItemValueString("type"))) {
+		String sType = workitem.getItemValueString("type");
+		if (sType.startsWith("workitem") || sType.startsWith("childworkitem")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
 			Collection<ItemCollection> col = workflowService
@@ -203,9 +204,8 @@ public class WorkitemService {
 	public ItemCollection restoreFromArchive(ItemCollection workitem)
 			throws Exception {
 
-		if ("workitemarchive".equals(workitem.getItemValueString("type"))
-				|| "childworkitemarchive".equals(workitem
-						.getItemValueString("type"))) {
+		String sType = workitem.getItemValueString("type");
+		if (sType.startsWith("workitem") || sType.startsWith("childworkitem")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
 			Collection<ItemCollection> col = workflowService
@@ -214,11 +214,12 @@ public class WorkitemService {
 				// recursive method call
 				restoreFromArchive(achildworkitem);
 			}
-			if ("workitemarchive".equals(workitem.getItemValueString("type")))
-				workitem.replaceItemValue("type", "workitem");
-			if ("childworkitemarchive".equals(workitem
-					.getItemValueString("type")))
-				workitem.replaceItemValue("type", "childworkitem");
+			// cut the 'deleted' part from the type property
+			if (sType.endsWith("archive")) {
+				String sTypeNew = sType.substring(0, sType.indexOf("archive"));
+				workitem.replaceItemValue("type", sTypeNew);
+			}
+			
 			workitem = entityService.save(workitem);
 
 			// update search index
@@ -237,8 +238,10 @@ public class WorkitemService {
 	 */
 	public ItemCollection moveIntoDeletions(ItemCollection workitem)
 			throws Exception {
-		if ("workitem".equals(workitem.getItemValueString("type"))
-				|| "childworkitem".equals(workitem.getItemValueString("type"))) {
+
+		String sType = workitem.getItemValueString("type");
+
+		if (sType.startsWith("workitem") || sType.startsWith("childworkitem")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
 			Collection<ItemCollection> col = workflowService
@@ -272,9 +275,9 @@ public class WorkitemService {
 	public ItemCollection restoreFromDeletions(ItemCollection workitem)
 			throws Exception {
 
-		if ("workitemdeleted".equals(workitem.getItemValueString("type"))
-				|| "childworkitemdeleted".equals(workitem
-						.getItemValueString("type"))) {
+		String sType = workitem.getItemValueString("type");
+
+		if (sType.startsWith("workitem") || sType.startsWith("childworkitem")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
 			Collection<ItemCollection> col = workflowService
@@ -283,11 +286,13 @@ public class WorkitemService {
 				// recursive method call
 				restoreFromDeletions(achildworkitem);
 			}
-			if ("workitemdeleted".equals(workitem.getItemValueString("type")))
-				workitem.replaceItemValue("type", "workitem");
-			if ("childworkitemdeleted".equals(workitem
-					.getItemValueString("type")))
-				workitem.replaceItemValue("type", "childworkitem");
+
+			// cut the 'deleted' part from the type property
+			if (sType.endsWith("deleted")) {
+				String sTypeNew = sType.substring(0, sType.indexOf("deleted"));
+				workitem.replaceItemValue("type", sTypeNew);
+			}
+
 			workitem = entityService.save(workitem);
 
 			// update search index
