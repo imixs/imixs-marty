@@ -168,7 +168,8 @@ public class WorkitemService {
 	public ItemCollection moveIntoArchive(ItemCollection workitem)
 			throws Exception {
 		String sType = workitem.getItemValueString("type");
-		if (sType.startsWith("workitem") || sType.startsWith("childworkitem")) {
+		if ((sType.startsWith("workitem") || sType.startsWith("childworkitem"))
+				&& !sType.endsWith("archive")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
 			Collection<ItemCollection> col = workflowService
@@ -205,7 +206,8 @@ public class WorkitemService {
 			throws Exception {
 
 		String sType = workitem.getItemValueString("type");
-		if (sType.startsWith("workitem") || sType.startsWith("childworkitem")) {
+		if ((sType.startsWith("workitem") || sType.startsWith("childworkitem"))
+				&& sType.endsWith("archive")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
 			Collection<ItemCollection> col = workflowService
@@ -219,7 +221,7 @@ public class WorkitemService {
 				String sTypeNew = sType.substring(0, sType.indexOf("archive"));
 				workitem.replaceItemValue("type", sTypeNew);
 			}
-			
+
 			workitem = entityService.save(workitem);
 
 			// update search index
@@ -241,7 +243,8 @@ public class WorkitemService {
 
 		String sType = workitem.getItemValueString("type");
 
-		if (sType.startsWith("workitem") || sType.startsWith("childworkitem")) {
+		if ((sType.startsWith("workitem") || sType.startsWith("childworkitem"))
+				&& !sType.endsWith("deleted")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
 			Collection<ItemCollection> col = workflowService
@@ -277,7 +280,8 @@ public class WorkitemService {
 
 		String sType = workitem.getItemValueString("type");
 
-		if (sType.startsWith("workitem") || sType.startsWith("childworkitem")) {
+		if ((sType.startsWith("workitem") || sType.startsWith("childworkitem"))
+				&& sType.endsWith("deleted")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
 			Collection<ItemCollection> col = workflowService
