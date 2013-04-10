@@ -48,9 +48,9 @@ import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.faces.util.LoginController;
 
 /**
- * The ProcessController provides informations about the core-process and
- * project structure. The controller is session scoped and holds information
- * depending on the current user grants.
+ * The ProcessController provides informations about the process and space
+ * structure. The controller is session scoped and holds information depending
+ * on the current user grants.
  * 
  * The ProcessController interacts with the application scoped ModelController
  * which holds information about the workflow models.
@@ -64,8 +64,8 @@ public class ProcessController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private List<ItemCollection> projectList = null;
-	private List<ItemCollection> coreProcessList = null;
+	private List<ItemCollection> spaces = null;
+	private List<ItemCollection> processList = null;
 
 	@Inject
 	private LoginController loginController = null;
@@ -80,39 +80,12 @@ public class ProcessController implements Serializable {
 			.getName());
 
 	/**
-	 * The init method is used load all model versions and store the latest
-	 * version of a model domain into a list.
-	 * <p>
-	 * The model Version is either expected in the format:
-	 * <p>
-	 * DOMAIN-LANGUAGE-VERSIONNUMBER
-	 * <p>
-	 * e.g. office-de-0.0.1
-	 * <p>
-	 * 
-	 * <p>
-	 * The modelCache uses the first part (without the version) as a key to find
-	 * the latest version of a domain model. So the system can deal with
-	 * multiple versions of the same domain.
-	 * <p>
-	 * The method getStartProcessList reads the cached model versions. This
-	 * method can also compare the modelversion to the userprofile settings. In
-	 * this case the first part (domain) and the second token (language) are
-	 * relevant.
-	 * <p>
-	 * if a Modelversion did not contains at least 3 tokens an warning will be
-	 * thrown.
-	 * 
-	 * 
-	 **/
+	 * Reset the internal cache
+	 */
 	@PostConstruct
-	public void init() {
-
-	}
-
 	public void reset() {
-		projectList = null;
-		coreProcessList = null;
+		spaces = null;
+		processList = null;
 	}
 
 	/**
@@ -125,106 +98,206 @@ public class ProcessController implements Serializable {
 	 * 
 	 * @return
 	 */
-	public List<ItemCollection> getProjectList() {
-		if (projectList == null) {
-			projectList = new ArrayList<ItemCollection>();
+	public List<ItemCollection> getProcessList() {
+		if (processList == null) {
+			processList = new ArrayList<ItemCollection>();
 
-			String sQuery = "SELECT projct FROM Entity AS projct "
-					+ " JOIN projct.textItems AS t2"
-					+ " WHERE projct.type = 'project'"
+			String sQuery = "SELECT process FROM Entity AS process "
+					+ " JOIN process.textItems AS t2"
+					+ " WHERE process.type = 'process'"
 					+ " AND t2.itemName = 'txtname'"
 					+ " ORDER BY t2.itemValue asc";
 			Collection<ItemCollection> col = entityService.findAllEntities(
 					sQuery, 0, -1);
 
 			// create optimized list
-			for (ItemCollection project : col) {
+			for (ItemCollection process : col) {
 
-				ItemCollection clone = WorkitemHelper.clone(project);
+				ItemCollection clone = WorkitemHelper.clone(process);
 				clone.replaceItemValue("isTeam", false);
 				clone.replaceItemValue("isManager", false);
 
 				// check the isTeam status for the current user
 				List<String> userNameList = entityService.getUserNameList();
-				Vector<String> vProjectNameList = (Vector<String>) project
+				Vector<String> vNameList = (Vector<String>) process
 						.getItemValue("namTeam");
 				// check if one entry matches....
 				for (String username : userNameList) {
-					if (vProjectNameList.indexOf(username) > -1) {
+					if (vNameList.indexOf(username) > -1) {
 						clone.replaceItemValue("isTeam", true);
 						break;
 					}
 				}
 				// check the isManager status for the current user
-				vProjectNameList = (Vector<String>) project
-						.getItemValue("namManager");
+				vNameList = (Vector<String>) process.getItemValue("namManager");
 				// check if one entry matches....
 				for (String username : userNameList) {
-					if (vProjectNameList.indexOf(username) > -1) {
+					if (vNameList.indexOf(username) > -1) {
 						clone.replaceItemValue("isManager", true);
 						break;
 					}
 				}
+
+				// check the isAssist status for the current user
+				vNameList = (Vector<String>) process.getItemValue("namAssist");
+				// check if one entry matches....
+				for (String username : userNameList) {
+					if (vNameList.indexOf(username) > -1) {
+						clone.replaceItemValue("isAssist", true);
+						break;
+					}
+				}
+
 				// check if user is member of team or manager list
 				boolean bMember = false;
 				if (clone.getItemValueBoolean("isTeam")
-						|| clone.getItemValueBoolean("isManager"))
+						|| clone.getItemValueBoolean("isManager")
+						|| clone.getItemValueBoolean("isAssist"))
 					bMember = true;
 				clone.replaceItemValue("isMember", bMember);
 
 				// add custom fields into clone...
+				clone.replaceItemValue("txtWorkflowList",
+						process.getItemValue("txtWorkflowList"));
 				clone.replaceItemValue("txtdescription",
-						project.getItemValue("txtdescription"));
+						process.getItemValue("txtdescription"));
 
-				projectList.add(clone);
+				processList.add(clone);
 
 			}
 
 		}
 
-		return projectList;
+		return processList;
 	}
 
 	/**
-	 * this method finds a project by its UniqueID. The projectList is read from
-	 * the project cache
+	 * This method returns all space entities for the current user. This list
+	 * can be used to display space informations inside a form. The returned
+	 * space list is optimized and provides additional the following attributes
+	 * <p>
+	 * isMember, isTeam, isOwner, isManager, isAssist
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getSpaces() {
+		if (spaces == null) {
+			spaces = new ArrayList<ItemCollection>();
+
+			String sQuery = "SELECT space FROM Entity AS space "
+					+ " JOIN space.textItems AS t2"
+					+ " WHERE space.type = 'space'"
+					+ " AND t2.itemName = 'txtname'"
+					+ " ORDER BY t2.itemValue asc";
+			Collection<ItemCollection> col = entityService.findAllEntities(
+					sQuery, 0, -1);
+
+			// create optimized list
+			for (ItemCollection space : col) {
+
+				ItemCollection clone = WorkitemHelper.clone(space);
+				clone.replaceItemValue("isTeam", false);
+				clone.replaceItemValue("isManager", false);
+
+				// check the isTeam status for the current user
+				List<String> userNameList = entityService.getUserNameList();
+				Vector<String> vNameList = (Vector<String>) space
+						.getItemValue("namTeam");
+				// check if one entry matches....
+				for (String username : userNameList) {
+					if (vNameList.indexOf(username) > -1) {
+						clone.replaceItemValue("isTeam", true);
+						break;
+					}
+				}
+				// check the isManager status for the current user
+				vNameList = (Vector<String>) space.getItemValue("namManager");
+				// check if one entry matches....
+				for (String username : userNameList) {
+					if (vNameList.indexOf(username) > -1) {
+						clone.replaceItemValue("isManager", true);
+						break;
+					}
+				}
+
+				// check the isAssist status for the current user
+				vNameList = (Vector<String>) space.getItemValue("namAssist");
+				// check if one entry matches....
+				for (String username : userNameList) {
+					if (vNameList.indexOf(username) > -1) {
+						clone.replaceItemValue("isAssist", true);
+						break;
+					}
+				}
+
+				// check if user is member of team or manager list
+				boolean bMember = false;
+				if (clone.getItemValueBoolean("isTeam")
+						|| clone.getItemValueBoolean("isManager")
+						|| clone.getItemValueBoolean("isAssist"))
+					bMember = true;
+				clone.replaceItemValue("isMember", bMember);
+
+				// add custom fields into clone...
+				clone.replaceItemValue("txtdescription",
+						space.getItemValue("txtdescription"));
+
+				spaces.add(clone);
+
+			}
+
+		}
+
+		return spaces;
+	}
+
+	/**
+	 * this method finds a space or process entity by its UniqueID. The space
+	 * and process entities are read from the internal cache
 	 * 
 	 * @param uniqueid
 	 * @return
 	 */
-	public ItemCollection getProjectByID(String uniqueid) {
+	public ItemCollection getParentByID(String uniqueid) {
 		if (uniqueid == null || uniqueid.isEmpty())
 			return null;
 
-		// get the project list form local cache
-		List<ItemCollection> alist = getProjectList();
-		for (ItemCollection aProject : alist) {
-			if (uniqueid.equals(aProject
+		// get the process list form local cache
+		List<ItemCollection> alist = getProcessList();
+		for (ItemCollection aProcess : alist) {
+			if (uniqueid.equals(aProcess
 					.getItemValueString(EntityService.UNIQUEID)))
-				return aProject;
+				return aProcess;
+		}
+
+		// get the space list form local cache
+		alist = getSpaces();
+		for (ItemCollection aSpace : alist) {
+			if (uniqueid.equals(aSpace
+					.getItemValueString(EntityService.UNIQUEID)))
+				return aSpace;
 		}
 		return null;
 
 	}
 
 	/**
-	 * Returns a list of all projects which are siblings to a given project
-	 * unqiueid.
+	 * Returns a list of all spaces which are siblings to a given space entity.
 	 * 
 	 * @param uniqueIdRef
 	 * @return
 	 */
-	public List<ItemCollection> getProjectsByRef(String uniqueIdRef) {
+	public List<ItemCollection> getSpacesByRef(String uniqueIdRef) {
 
 		List<ItemCollection> result = new ArrayList<ItemCollection>();
 
 		if (uniqueIdRef != null) {
-			// iterate over all projects and compare the $UniqueIDRef
-			List<ItemCollection> list = getProjectList();
-			for (ItemCollection project : list) {
-				if (uniqueIdRef.equals(project
-						.getItemValueString("$UniqueIDRef"))) {
-					result.add(project);
+			// iterate over all spaces and compare the $UniqueIDRef
+			List<ItemCollection> list = getSpaces();
+			for (ItemCollection space : list) {
+				if (uniqueIdRef
+						.equals(space.getItemValueString("$UniqueIDRef"))) {
+					result.add(space);
 				}
 
 			}
@@ -233,16 +306,16 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
-	 * Returns true if current user is manager of a given project. Therefore the
-	 * method checks the cloned field 'isManager'
+	 * Returns true if current user is manager of a given space or process
+	 * entity. Therefore the method checks the cloned field 'isManager'
 	 * 
 	 * @return
 	 */
-	public boolean isProjectManager(String aProjectUniqueID) {
-		// find project
-		ItemCollection project = getProjectByID(aProjectUniqueID);
-		if (project != null)
-			return project.getItemValueBoolean("isManager");
+	public boolean isManagerOf(String aUniqueID) {
+		// find Space entity
+		ItemCollection entity = getParentByID(aUniqueID);
+		if (entity != null)
+			return entity.getItemValueBoolean("isManager");
 		else
 			return false;
 	}
@@ -253,30 +326,31 @@ public class ProcessController implements Serializable {
 	 * 
 	 * @return
 	 */
-	public boolean isProjectTeam(String aProjectUniqueID) {
+	public boolean isTeamMemberOf(String aUniqueID) {
 		// find project
-		ItemCollection project = getProjectByID(aProjectUniqueID);
-		if (project != null)
-			return project.getItemValueBoolean("isTeam");
+		ItemCollection entity = getParentByID(aUniqueID);
+		if (entity != null)
+			return entity.getItemValueBoolean("isTeam");
 		else
 			return false;
 
 	}
 
 	/**
-	 * Returns true if current user is teamMember or manager of a given project
+	 * Returns true if current user is teamMember or manager of a given space or
+	 * process
 	 * 
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public boolean isProjectMember(String aProjectUniqueID) {
+	public boolean isMemberOf(String aUniqueID) {
 
 		// find project
-		ItemCollection project = getProjectByID(aProjectUniqueID);
-		if (project != null) {
+		ItemCollection entity = getParentByID(aUniqueID);
+		if (entity != null) {
 			String remoteUser = loginController.getUserPrincipal();
-			List<String> vTeam = project.getItemValue("namTeam");
-			List<String> vManager = project.getItemValue("namManager");
+			List<String> vTeam = entity.getItemValue("namTeam");
+			List<String> vManager = entity.getItemValue("namManager");
 
 			if (vTeam.indexOf(remoteUser) > -1
 					|| vManager.indexOf(remoteUser) > -1)
@@ -288,103 +362,9 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
-	 * This method returns all project entities for the current user. This list
-	 * can be used to display project informations inside a form. The returned
-	 * project list is optimized and provides additional the following
-	 * attributes
-	 * <p>
-	 * isMember, isTeam, isOwner, isManager, isAssist
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getCoreProcessList() {
-		if (coreProcessList == null) {
-			coreProcessList = new ArrayList<ItemCollection>();
-
-			String sQuery = "SELECT projct FROM Entity AS projct "
-					+ " JOIN projct.textItems AS t2"
-					+ " WHERE projct.type = 'coreprocess'"
-					+ " AND t2.itemName = 'txtname'"
-					+ " ORDER BY t2.itemValue asc";
-			Collection<ItemCollection> col = entityService.findAllEntities(
-					sQuery, 0, -1);
-
-			// create optimized list
-			for (ItemCollection project : col) {
-
-				ItemCollection clone = WorkitemHelper.clone(project);
-				clone.replaceItemValue("isTeam", false);
-				clone.replaceItemValue("isManager", false);
-
-				// check the isTeam status for the current user
-				List<String> userNameList = entityService.getUserNameList();
-				Vector<String> vProjectNameList = (Vector<String>) project
-						.getItemValue("namTeam");
-				// check if one entry matches....
-				for (String username : userNameList) {
-					if (vProjectNameList.indexOf(username) > -1) {
-						clone.replaceItemValue("isTeam", true);
-						break;
-					}
-				}
-				// check the isManager status for the current user
-				vProjectNameList = (Vector<String>) project
-						.getItemValue("namManager");
-				// check if one entry matches....
-				for (String username : userNameList) {
-					if (vProjectNameList.indexOf(username) > -1) {
-						clone.replaceItemValue("isManager", true);
-						break;
-					}
-				}
-				// check if user is member of team or manager list
-				boolean bMember = false;
-				if (clone.getItemValueBoolean("isTeam")
-						|| clone.getItemValueBoolean("isManager"))
-					bMember = true;
-				clone.replaceItemValue("isMember", bMember);
-
-				// add custom fields into clone...
-				clone.replaceItemValue("txtProcessList",
-						project.getItemValue("txtProcessList"));
-				clone.replaceItemValue("txtdescription",
-						project.getItemValue("txtdescription"));
-
-				coreProcessList.add(clone);
-
-			}
-
-		}
-
-		return coreProcessList;
-	}
-
-	/**
-	 * this method finds a project by its UniqueID. The projectList is read from
-	 * the project cache
-	 * 
-	 * @param uniqueid
-	 * @return
-	 */
-	public ItemCollection getCoreProcessByID(String uniqueid) {
-		if (uniqueid == null || uniqueid.isEmpty())
-			return null;
-
-		// get the project list form local cache
-		List<ItemCollection> aList = getCoreProcessList();
-		for (ItemCollection aCoreProcess : aList) {
-			if (uniqueid.equals(aCoreProcess
-					.getItemValueString(EntityService.UNIQUEID)))
-				return aCoreProcess;
-		}
-		return null;
-
-	}
-
-	/**
 	 * Returns a list of ItemCollection representing the first Start Process
-	 * defined for a specific coreProcess entity. Each ItemCollection provides at
-	 * least the properties
+	 * defined for a specific coreProcess entity. Each ItemCollection provides
+	 * at least the properties
 	 * <ul>
 	 * <li>txtmodelVersion (model version)
 	 * <li>numprocessID (first process of a group)
@@ -399,33 +379,34 @@ public class ProcessController implements Serializable {
 	 * @return - a collection of ProcessEntities or an empty arrayList if not
 	 *         processes are defined
 	 */
-//	public List<ItemCollection> getProcessEntitiesByCoreProcess(String uniqueid) {
-//
-//		List<ItemCollection> result = new ArrayList<ItemCollection>();
-//		ItemCollection coreProcess = getCoreProcessByID(uniqueid);
-//
-//		if (coreProcess == null)
-//			return result;
-//
-//		List<String> aprocessList = null;
-//		aprocessList = coreProcess.getItemValue("txtprocesslist");
-//
-//		// if no processList was defined return an empty array
-//		if (aprocessList == null || aprocessList.isEmpty())
-//			return result;
-//
-//		// now add all matching Process Entities
-//		List<ItemCollection> processEntityList = modelController
-//				.getInitialProcessEntities();
-//		for (ItemCollection aProcessEntity : processEntityList) {
-//			// test if the $modelVersion matches....
-//			if (isProcessEntityInList(aProcessEntity, aprocessList))
-//				result.add(aProcessEntity);
-//		}
-//
-//		return result;
-//
-//	}
+	// public List<ItemCollection> getProcessEntitiesByCoreProcess(String
+	// uniqueid) {
+	//
+	// List<ItemCollection> result = new ArrayList<ItemCollection>();
+	// ItemCollection coreProcess = getCoreProcessByID(uniqueid);
+	//
+	// if (coreProcess == null)
+	// return result;
+	//
+	// List<String> aprocessList = null;
+	// aprocessList = coreProcess.getItemValue("txtprocesslist");
+	//
+	// // if no processList was defined return an empty array
+	// if (aprocessList == null || aprocessList.isEmpty())
+	// return result;
+	//
+	// // now add all matching Process Entities
+	// List<ItemCollection> processEntityList = modelController
+	// .getInitialProcessEntities();
+	// for (ItemCollection aProcessEntity : processEntityList) {
+	// // test if the $modelVersion matches....
+	// if (isProcessEntityInList(aProcessEntity, aprocessList))
+	// result.add(aProcessEntity);
+	// }
+	//
+	// return result;
+	//
+	// }
 
 	/**
 	 * WorkflowEvent listener
@@ -440,10 +421,10 @@ public class ProcessController implements Serializable {
 
 		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
 				.getEventType()) {
-			// test if a project or coreprocess was processed
-			String sType=workflowEvent.getWorkitem()
-					.getItemValueString("type");
-			if ("project".equals(sType) || "coreprocess".equals(sType)) {
+			// test if a space or process entity was processed
+			String sType = workflowEvent.getWorkitem().getItemValueString(
+					"type");
+			if ("space".equals(sType) || "process".equals(sType)) {
 
 				reset();
 				logger.fine("ModelController:WorkflowEvent="

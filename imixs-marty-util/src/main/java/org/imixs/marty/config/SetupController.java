@@ -37,6 +37,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.model.ModelController;
+import org.imixs.marty.model.ProcessController;
 import org.imixs.workflow.jee.util.PropertyService;
 
 /**
@@ -65,6 +66,9 @@ public class SetupController extends ConfigController {
 
 	@Inject
 	private ModelController modelController;
+	
+	@Inject
+	private ProcessController processController;
 
 	@EJB
 	org.imixs.workflow.jee.ejb.EntityService entityService;
@@ -124,8 +128,11 @@ public class SetupController extends ConfigController {
 		logger.info("[SetupController] reset property service");
 		propertyService.reset();
 
-		// initialize modelController
-		modelController.init();
+		// reset modelController
+		modelController.reset();
+		
+		// reset processController
+		processController.reset();
 
 	}
 	

@@ -57,7 +57,7 @@ import org.imixs.workflow.ItemCollection;
  * the comment details.
  * 
  * The CommentController can be used for all types of WorkItems (e.g. workitem,
- * project, ...)
+ * process, ...)
  * 
  * 
  * @author rsoika

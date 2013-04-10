@@ -114,7 +114,7 @@ public class ModelController implements Serializable {
 	 * 
 	 **/
 	@PostConstruct
-	public void init() {
+	public void reset() {
 		systemModelVersion = null;
 		workflowGroups = null;
 		modelVersionCache = new ArrayList<String>();
@@ -397,7 +397,7 @@ public class ModelController implements Serializable {
 		fileUploadController.doClear(null);
 		
 		// reinitialize models
-		init();
+		reset();
 	}
 
 	/**
@@ -424,7 +424,7 @@ public class ModelController implements Serializable {
 		}
 
 		// reset model info
-		init();
+		reset();
 	}
 
 	

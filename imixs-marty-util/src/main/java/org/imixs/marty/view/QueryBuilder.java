@@ -86,8 +86,8 @@ public class QueryBuilder implements IQueryBuilder {
 	public String getJPQLStatement(ItemCollection searchFilter) {
 		int processID = searchFilter.getItemValueInteger("$ProcessID");
 
-		List<String> aRefList = searchFilter.getItemValue("txtCoreProcessRef");
-		aRefList.addAll(searchFilter.getItemValue("txtProjectRef"));
+		List<String> aRefList = searchFilter.getItemValue("txtProcessRef");
+		aRefList.addAll(searchFilter.getItemValue("txtSpaceRef"));
 		// create a Set!...
 		Set<String> uniqueIdRefList = new HashSet<String>(aRefList);
 

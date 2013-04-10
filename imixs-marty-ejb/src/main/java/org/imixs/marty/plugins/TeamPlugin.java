@@ -95,26 +95,26 @@ public class TeamPlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * The method updates information from the CoreProcess and Project
+	 * The method updates information from the Process and Space entiy
 	 * (optional) stored in the attribute '$uniqueIdref':
 	 * <ul>
-	 * <li>namProjectTeam
-	 * <li>namProjectManager
-	 * <li>namProjectName
-	 * <li>namCoreProcessManager
-	 * <li>txtProjectname
+	 * <li>namTeam
+	 * <li>namManager
+	 * <li>namProcessTeam
+	 * <li>namProcessManager
+	 * <li>txtSpaceName
 	 * <li>txtCoreProcessName
 	 * 
 	 * If the workitem is a child to another workitem (ChildWorkitem) the
 	 * information is fetched from the parent workitem.
 	 * 
-	 * If the workflowresultmessage contains a project reference the plugin will
-	 * update the reference in the property $uniqueIdRef.
+	 * If the workflowresultmessage contains a space entity reference the plugin
+	 * will update the reference in the property $uniqueIdRef.
 	 * 
 	 * Example:
 	 * 
 	 * <code>
-			<item name="project">...</item>
+			<item name="space">...</item>
 	   </code>
 	 * 
 	 **/
@@ -130,20 +130,22 @@ public class TeamPlugin extends AbstractPlugin {
 		 * 
 		 * '<item name="project">...</item>'
 		 */
-		String sResult="";
+		String sResult = "";
 		try {
 			// Read workflow result directly from the activity definition
 			sResult = documentActivity.getItemValueString("txtActivityResult");
 
 			ItemCollection evalItemCollection = new ItemCollection();
 			ResultPlugin.evaluate(sResult, evalItemCollection);
-			String aProjectName = evalItemCollection.getItemValueString("project");
+			String aSpaceName = evalItemCollection.getItemValueString("space");
+			String aProcessName = evalItemCollection
+					.getItemValueString("process");
 
-			if (!"".equals(aProjectName)) {
-				logger.fine("[TeamPlugin] Updating Project reference: "
-						+ aProjectName);
+			if (!"".equals(aSpaceName)) {
+				logger.fine("[TeamPlugin] Updating Space reference: "
+						+ aSpaceName);
 				// load project reference
-				ItemCollection parent = findProjectByName(aProjectName);
+				ItemCollection parent = findRefByName(aSpaceName, "space");
 				if (parent != null) {
 					// first remove all older project references
 					List<String> refList = workItem
@@ -152,7 +154,7 @@ public class TeamPlugin extends AbstractPlugin {
 						// test ref to type 'project'
 						ItemCollection entity = entityService.load(aUniqueID);
 						if (entity != null
-								&& "project".equals(entity
+								&& "space".equals(entity
 										.getItemValueString("type"))) {
 							refList.remove(aUniqueID);
 						}
@@ -162,7 +164,7 @@ public class TeamPlugin extends AbstractPlugin {
 
 					// assign project name and reference
 					workItem.replaceItemValue("$uniqueidRef", refList);
-					workItem.replaceItemValue("txtProjectName",
+					workItem.replaceItemValue("txtSpaceName",
 							parent.getItemValueString("txtname"));
 
 					logger.fine("[TeamPlugin] new $uniqueidRef= " + refList);
@@ -178,50 +180,69 @@ public class TeamPlugin extends AbstractPlugin {
 		 * Now the team lists will be updated depending of the current
 		 * $uniqueidref
 		 */
-		List vProjectTeam = new Vector();
-		List vProjectManager = new Vector();
-		List vCoreProcessTeam = new Vector();
-		List vCoreProcessManager = new Vector();
+		List vSpaceTeam = new Vector();
+		List vSpaceManager = new Vector();
+		List vSpaceAssist = new Vector();
+		List vProcessTeam = new Vector();
+		List vProcessManager = new Vector();
+		List vProcessAssist = new Vector();
 		List<String> parentRefs = workItem.getItemValue("$uniqueidref");
-		String sProjectName = "";
-		String sCoreProcessName="";
-		for (String sParentID: parentRefs) {
-	
-		// the fetched information depends on the type of the reference!
-		ItemCollection itemColProject = entityService.load(sParentID);
-		if (itemColProject != null) {
-			
-			String parentType = itemColProject.getItemValueString("type");
+		String sSpaceName = "";
+		String sProcessName = "";
+		for (String sParentID : parentRefs) {
 
-			// Test type property....
-			
-			if ("coreprocess".equals(parentType)) {
-				vCoreProcessTeam.addAll(itemColProject.getItemValue("namTeam"));
-				vCoreProcessManager.addAll(itemColProject.getItemValue("namManager"));
-				sCoreProcessName = itemColProject.getItemValueString("txtname");
+			// the fetched information depends on the type of the reference!
+			ItemCollection itemColProject = entityService.load(sParentID);
+			if (itemColProject != null) {
+
+				String parentType = itemColProject.getItemValueString("type");
+
+				// Test type property....
+
+				if ("process".equals(parentType)) {
+					vProcessTeam.addAll(itemColProject.getItemValue("namTeam"));
+					vProcessManager.addAll(itemColProject
+							.getItemValue("namManager"));
+					vProcessAssist.addAll(itemColProject
+							.getItemValue("namAssist"));
+					sProcessName = itemColProject.getItemValueString("txtname");
+				}
+				if ("space".equals(parentType)) {
+					vSpaceTeam.addAll(itemColProject.getItemValue("namTeam"));
+					vSpaceManager.addAll(itemColProject
+							.getItemValue("namManager"));
+					vSpaceAssist.addAll(itemColProject
+							.getItemValue("namAssist"));
+					sSpaceName = itemColProject.getItemValueString("txtname");
+				}
+				if ("workitem".equals(parentType)) {
+					vSpaceTeam = itemColProject.getItemValue("namSpaceTeam");
+					vSpaceManager = itemColProject
+							.getItemValue("namSpaceManager");
+					vSpaceAssist = itemColProject
+							.getItemValue("namSpaceAssist");
+					vProcessTeam = itemColProject
+							.getItemValue("namProcessTeam");
+					vProcessManager = itemColProject
+							.getItemValue("namProcessManager");
+					vProcessAssist = itemColProject
+							.getItemValue("namAssist");
+					sSpaceName = itemColProject
+							.getItemValueString("txtSpaceName");
+					sProcessName = itemColProject
+							.getItemValueString("txtProcessname");
+				}
 			}
-			if ("project".equals(parentType)) {
-				vProjectTeam.addAll(itemColProject.getItemValue("namTeam"));
-				vProjectManager.addAll(itemColProject.getItemValue("namManager"));				
-				sProjectName = itemColProject.getItemValueString("txtname");
-			}
-			if ("workitem".equals(parentType)) {
-				vProjectTeam = itemColProject.getItemValue("namProjectTeam");
-				vProjectManager = itemColProject.getItemValue("namProjectManager");
-				vCoreProcessTeam = itemColProject.getItemValue("namCoreProcessTeam");
-				vCoreProcessManager = itemColProject.getItemValue("namCoreProcessManager");
-				sProjectName = itemColProject.getItemValueString("txtProjectName");
-				sCoreProcessName = itemColProject.getItemValueString("txtname");
-			}
-		}
 
 			// update properties
-			workItem.replaceItemValue("namProjectTeam", vProjectTeam);
-			workItem.replaceItemValue("namProjectManager", vProjectManager);
-			workItem.replaceItemValue("namCoreProcessTeam", vCoreProcessTeam);
-			workItem.replaceItemValue("namCoreProcessManager", vCoreProcessManager);
-			workItem.replaceItemValue("txtProjectName", sProjectName);
-			workItem.replaceItemValue("txtCoreProcessName", sCoreProcessName);
+			workItem.replaceItemValue("namSpaceTeam", vSpaceTeam);
+			workItem.replaceItemValue("namSpaceManager", vSpaceManager);
+			workItem.replaceItemValue("namSpaceAssist", vSpaceManager);
+			workItem.replaceItemValue("namProcessTeam", vProcessTeam);
+			workItem.replaceItemValue("namProcessManager", vProcessManager);
+			workItem.replaceItemValue("namProcessAssist", vProcessManager);
+			workItem.replaceItemValue("txtSpaceName", sSpaceName);
+			workItem.replaceItemValue("txtProcessName", sProcessName);
 
 		}
 		return Plugin.PLUGIN_OK;
@@ -233,19 +254,16 @@ public class TeamPlugin extends AbstractPlugin {
 
 	}
 
-	
-
 	/**
 	 * This method returns a project ItemCollection for a specified name.
 	 * Returns null if no project with the provided name was found
 	 * 
 	 */
-	public ItemCollection findProjectByName(String aName) {
+	public ItemCollection findRefByName(String aName, String type) {
 		String sQuery = "SELECT project FROM Entity AS project "
-				+ " JOIN project.textItems AS t2"
-				+ " WHERE  project.type = 'project' "
-				+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
-				+ aName + "'";
+				+ " JOIN project.textItems AS t2" + " WHERE  project.type = '"
+				+ type + "' " + " AND t2.itemName = 'txtname' "
+				+ " AND t2.itemValue = '" + aName + "'";
 
 		List<ItemCollection> col = entityService.findAllEntities(sQuery, 0, 1);
 		if (col.size() > 0)

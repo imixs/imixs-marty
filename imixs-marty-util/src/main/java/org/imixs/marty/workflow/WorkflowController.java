@@ -277,13 +277,13 @@ public class WorkflowController extends
 
 							if ("manager".equalsIgnoreCase(aPermission)
 									&& processController
-											.isProjectManager(sProjectUniqueID)) {
+											.isManagerOf(sProjectUniqueID)) {
 								bPermissionGranted = true;
 								break;
 							}
 							if ("team".equalsIgnoreCase(aPermission)
 									&& this.processController
-											.isProjectTeam(sProjectUniqueID)) {
+											.isTeamMemberOf(sProjectUniqueID)) {
 								bPermissionGranted = true;
 								break;
 							}
