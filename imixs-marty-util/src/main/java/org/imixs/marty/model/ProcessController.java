@@ -49,8 +49,9 @@ import org.imixs.workflow.jee.faces.util.LoginController;
 
 /**
  * The ProcessController provides informations about the process and space
- * structure. The controller is session scoped and holds information depending
- * on the current user grants.
+ * entities. A Workitem can be assigned to a process and one or more spaces. The
+ * controller is session scoped and holds information depending on the current
+ * user grants.
  * 
  * The ProcessController interacts with the application scoped ModelController
  * which holds information about the workflow models.
@@ -252,13 +253,13 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
-	 * this method finds a space or process entity by its UniqueID. The space
-	 * and process entities are read from the internal cache
+	 * This method returns a space or process entity by its UniqueID. The space
+	 * and process entities are read from the internal cache.
 	 * 
 	 * @param uniqueid
 	 * @return
 	 */
-	public ItemCollection getParentByID(String uniqueid) {
+	public ItemCollection getEntityByID(String uniqueid) {
 		if (uniqueid == null || uniqueid.isEmpty())
 			return null;
 
@@ -313,7 +314,7 @@ public class ProcessController implements Serializable {
 	 */
 	public boolean isManagerOf(String aUniqueID) {
 		// find Space entity
-		ItemCollection entity = getParentByID(aUniqueID);
+		ItemCollection entity = getEntityByID(aUniqueID);
 		if (entity != null)
 			return entity.getItemValueBoolean("isManager");
 		else
@@ -328,7 +329,7 @@ public class ProcessController implements Serializable {
 	 */
 	public boolean isTeamMemberOf(String aUniqueID) {
 		// find project
-		ItemCollection entity = getParentByID(aUniqueID);
+		ItemCollection entity = getEntityByID(aUniqueID);
 		if (entity != null)
 			return entity.getItemValueBoolean("isTeam");
 		else
@@ -346,7 +347,7 @@ public class ProcessController implements Serializable {
 	public boolean isMemberOf(String aUniqueID) {
 
 		// find project
-		ItemCollection entity = getParentByID(aUniqueID);
+		ItemCollection entity = getEntityByID(aUniqueID);
 		if (entity != null) {
 			String remoteUser = loginController.getUserPrincipal();
 			List<String> vTeam = entity.getItemValue("namTeam");
