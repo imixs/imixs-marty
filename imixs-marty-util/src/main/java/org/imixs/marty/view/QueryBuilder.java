@@ -47,6 +47,29 @@ public class QueryBuilder implements IQueryBuilder {
 		sSearchTerm += "(" +sTypeQuery + ") AND";
 		
 		
+		List<String> aRefList = searchFilter.getItemValue("txtProcessRef");
+		aRefList.addAll(searchFilter.getItemValue("txtSpaceRef"));
+		// create a Set!...
+		Set<String> uniqueIdRefList = new HashSet<String>(aRefList);
+
+		// trim projectlist
+		while (uniqueIdRefList.contains(""))
+			uniqueIdRefList.remove("");
+
+		if (!uniqueIdRefList.isEmpty()) {
+			sSearchTerm += " (";
+			iterator = uniqueIdRefList.iterator();
+			while (iterator.hasNext()) {
+				sSearchTerm += "$uniqueidref:\"" + iterator.next() + "\"";
+				if (iterator.hasNext())
+					sSearchTerm += " OR ";
+			}
+			sSearchTerm += " ) AND";
+
+		}
+		
+		
+		
 		// Workflow Group...
 		List<String> workflowGroups = searchFilter
 				.getItemValue("txtWorkflowGroup");
@@ -55,17 +78,21 @@ public class QueryBuilder implements IQueryBuilder {
 			workflowGroups.remove("");
 
 		if (!workflowGroups.isEmpty()) {
-			sSearchTerm += "(";
+			sSearchTerm += " (";
 			iterator = workflowGroups.iterator();
 			while (iterator.hasNext()) {
 				sSearchTerm += "txtworkflowgroup:\"" + iterator.next() + "\"";
 				if (iterator.hasNext())
 					sSearchTerm += " OR ";
 			}
-			sSearchTerm += " )";
+			sSearchTerm += " ) AND";
 
 		}
 		
+		
+		int processID = searchFilter.getItemValueInteger("$ProcessID");
+		if (processID > 0)
+			sSearchTerm += " ($processid:"+processID+") AND";
 
 		// Search phrase....
 		String searchphrase = searchFilter.getItemValueString("txtSearch");
