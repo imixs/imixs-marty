@@ -259,7 +259,7 @@ public class ProcessController implements Serializable {
 	 * @param uniqueid
 	 * @return
 	 */
-	public ItemCollection getEntityByID(String uniqueid) {
+	public ItemCollection getEntityById(String uniqueid) {
 		if (uniqueid == null || uniqueid.isEmpty())
 			return null;
 
@@ -283,24 +283,91 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
-	 * Returns a list of all spaces which are siblings to a given space entity.
+	 * Returns the process for a given uniqueID.
 	 * 
-	 * @param uniqueIdRef
+	 * @param uniqueId
+	 * @return itemCollection of process or null if not process with the
+	 *         specified id exists
+	 */
+	public ItemCollection getProcessById(String uniqueId) {
+
+		if (uniqueId != null && !uniqueId.isEmpty()) {
+			// iterate over all spaces and compare the $UniqueIDRef
+			List<ItemCollection> list = getProcessList();
+			for (ItemCollection process : list) {
+				if (uniqueId.equals(process
+						.getItemValueString(EntityService.UNIQUEID))) {
+					return process;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Returns a list of all spaces which are assigned to a given process
+	 * entity.
+	 * 
+	 * @param uniqueId
+	 *            of a processEntity
 	 * @return
 	 */
-	public List<ItemCollection> getSpacesByRef(String uniqueIdRef) {
+	public List<ItemCollection> getSpacesByProcessId(String uniqueId) {
+		List<ItemCollection> result = new ArrayList<ItemCollection>();
+		if (uniqueId != null && !uniqueId.isEmpty()) {
+			// find project
+			ItemCollection process = getProcessById(uniqueId);
+			result = getSpacesByProcess(process);
+		}
+		return result;
+	}
+
+	/**
+	 * Returns a list of all spaces which are assigned to a given process
+	 * entity.
+	 * 
+	 * @param uniqueId
+	 *            of a processEntity
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public List<ItemCollection> getSpacesByProcess(ItemCollection process) {
+		List<ItemCollection> result = new ArrayList<ItemCollection>();
+		if (process != null) {
+			Vector<String> refs = (Vector<String>) process
+					.getItemValue("$UniqueIDRef");
+			if (refs != null && !refs.isEmpty()) {
+				// iterate over all spaces and compare the $UniqueIDRef
+				List<ItemCollection> list = getSpaces();
+				for (ItemCollection space : list) {
+
+					if (refs.contains(space
+							.getItemValueString(EntityService.UNIQUEID))) {
+						result.add(space);
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Returns a list of all spaces which are siblings to a given UniqueID.
+	 * 
+	 * @param uniqueId
+	 * @return
+	 */
+	public List<ItemCollection> getSpacesByRef(String uniqueId) {
 
 		List<ItemCollection> result = new ArrayList<ItemCollection>();
 
-		if (uniqueIdRef != null) {
+		if (uniqueId != null && !uniqueId.isEmpty()) {
 			// iterate over all spaces and compare the $UniqueIDRef
 			List<ItemCollection> list = getSpaces();
 			for (ItemCollection space : list) {
-				if (uniqueIdRef
-						.equals(space.getItemValueString("$UniqueIDRef"))) {
+				if (uniqueId.equals(space.getItemValueString("$UnqiueIDRef"))) {
 					result.add(space);
 				}
-
 			}
 		}
 		return result;
@@ -314,7 +381,7 @@ public class ProcessController implements Serializable {
 	 */
 	public boolean isManagerOf(String aUniqueID) {
 		// find Space entity
-		ItemCollection entity = getEntityByID(aUniqueID);
+		ItemCollection entity = getEntityById(aUniqueID);
 		if (entity != null)
 			return entity.getItemValueBoolean("isManager");
 		else
@@ -329,7 +396,7 @@ public class ProcessController implements Serializable {
 	 */
 	public boolean isTeamMemberOf(String aUniqueID) {
 		// find project
-		ItemCollection entity = getEntityByID(aUniqueID);
+		ItemCollection entity = getEntityById(aUniqueID);
 		if (entity != null)
 			return entity.getItemValueBoolean("isTeam");
 		else
@@ -347,7 +414,7 @@ public class ProcessController implements Serializable {
 	public boolean isMemberOf(String aUniqueID) {
 
 		// find project
-		ItemCollection entity = getEntityByID(aUniqueID);
+		ItemCollection entity = getEntityById(aUniqueID);
 		if (entity != null) {
 			String remoteUser = loginController.getUserPrincipal();
 			List<String> vTeam = entity.getItemValue("namTeam");
@@ -364,8 +431,8 @@ public class ProcessController implements Serializable {
 
 	/**
 	 * Returns a list of ItemCollection representing the first Start Process
-	 * defined for a specific space entity. Each ItemCollection provides
-	 * at least the properties
+	 * defined for a specific space entity. Each ItemCollection provides at
+	 * least the properties
 	 * <ul>
 	 * <li>txtmodelVersion (model version)
 	 * <li>numprocessID (first process of a group)

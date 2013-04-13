@@ -44,32 +44,42 @@ public class QueryBuilder implements IQueryBuilder {
 			if (iterator.hasNext())
 				sTypeQuery += " OR ";
 		}
-		sSearchTerm += "(" +sTypeQuery + ") AND";
-		
-		
-		List<String> aRefList = searchFilter.getItemValue("txtProcessRef");
-		aRefList.addAll(searchFilter.getItemValue("txtSpaceRef"));
-		// create a Set!...
-		Set<String> uniqueIdRefList = new HashSet<String>(aRefList);
+		sSearchTerm += "(" + sTypeQuery + ") AND";
+
+		List<String> processRefList = searchFilter
+				.getItemValue("txtProcessRef");
+		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
 
 		// trim projectlist
-		while (uniqueIdRefList.contains(""))
-			uniqueIdRefList.remove("");
+		while (processRefList.contains(""))
+			processRefList.remove("");
+		while (spacesRefList.contains(""))
+			spacesRefList.remove("");
 
-		if (!uniqueIdRefList.isEmpty()) {
+		// process ref
+		if (!processRefList.isEmpty()) {
 			sSearchTerm += " (";
-			iterator = uniqueIdRefList.iterator();
+			iterator = processRefList.iterator();
 			while (iterator.hasNext()) {
 				sSearchTerm += "$uniqueidref:\"" + iterator.next() + "\"";
 				if (iterator.hasNext())
 					sSearchTerm += " OR ";
 			}
 			sSearchTerm += " ) AND";
-
 		}
-		
-		
-		
+
+		// Space ref
+		if (!spacesRefList.isEmpty()) {
+			sSearchTerm += " (";
+			iterator = spacesRefList.iterator();
+			while (iterator.hasNext()) {
+				sSearchTerm += "$uniqueidref:\"" + iterator.next() + "\"";
+				if (iterator.hasNext())
+					sSearchTerm += " OR ";
+			}
+			sSearchTerm += " ) AND";
+		}
+
 		// Workflow Group...
 		List<String> workflowGroups = searchFilter
 				.getItemValue("txtWorkflowGroup");
@@ -88,11 +98,10 @@ public class QueryBuilder implements IQueryBuilder {
 			sSearchTerm += " ) AND";
 
 		}
-		
-		
+
 		int processID = searchFilter.getItemValueInteger("$ProcessID");
 		if (processID > 0)
-			sSearchTerm += " ($processid:"+processID+") AND";
+			sSearchTerm += " ($processid:" + processID + ") AND";
 
 		// Search phrase....
 		String searchphrase = searchFilter.getItemValueString("txtSearch");
@@ -113,14 +122,15 @@ public class QueryBuilder implements IQueryBuilder {
 	public String getJPQLStatement(ItemCollection searchFilter) {
 		int processID = searchFilter.getItemValueInteger("$ProcessID");
 
-		List<String> aRefList = searchFilter.getItemValue("txtProcessRef");
-		aRefList.addAll(searchFilter.getItemValue("txtSpaceRef"));
-		// create a Set!...
-		Set<String> uniqueIdRefList = new HashSet<String>(aRefList);
+		List<String> processRefList = searchFilter
+				.getItemValue("txtProcessRef");
+		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
 
 		// trim projectlist
-		while (uniqueIdRefList.contains(""))
-			uniqueIdRefList.remove("");
+		while (processRefList.contains(""))
+			processRefList.remove("");
+		while (spacesRefList.contains(""))
+			spacesRefList.remove("");
 
 		List<String> workflowGroups = searchFilter
 				.getItemValue("txtWorkflowGroup");
@@ -137,8 +147,10 @@ public class QueryBuilder implements IQueryBuilder {
 		// construct query
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
 
-		if (!uniqueIdRefList.isEmpty())
+		if (!processRefList.isEmpty())
 			sQuery += " JOIN wi.textItems as pref ";
+		if (!spacesRefList.isEmpty())
+			sQuery += " JOIN wi.textItems as sref ";
 		if (!workflowGroups.isEmpty())
 			sQuery += " JOIN wi.textItems as groups ";
 		if (processID > 0)
@@ -153,9 +165,22 @@ public class QueryBuilder implements IQueryBuilder {
 
 		sQuery += " WHERE wi.type IN(" + sType + ")";
 
-		if (!uniqueIdRefList.isEmpty()) {
-			sQuery += " AND pref.itemName = '$uniqueidref' and pref.itemValue IN (";
-			for (String aref : uniqueIdRefList) {
+		// process Ref...
+		if (!processRefList.isEmpty()) {
+			sQuery += " AND pref.itemName = '$uniqueidref'";
+			sQuery += " AND pref.itemValue IN (";
+			for (String aref : processRefList) {
+				sQuery += "'" + aref + "',";
+			}
+			sQuery = sQuery.substring(0, sQuery.length() - 1);
+			sQuery += " )";
+		}
+
+		// Spaces Ref...
+		if (!spacesRefList.isEmpty()) {
+			sQuery += " AND sref.itemName = '$uniqueidref'";
+			sQuery += " AND sref.itemValue IN (";
+			for (String aref : spacesRefList) {
 				sQuery += "'" + aref + "',";
 			}
 			sQuery = sQuery.substring(0, sQuery.length() - 1);
