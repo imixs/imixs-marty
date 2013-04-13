@@ -70,9 +70,9 @@ import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
  * 
  * <ul>
  * <li>
- * txtCoreProcessRef = holds a reference to a core process entity</li>
+ * txtProcessRef = holds a reference to a core process entity</li>
  * <li>
- * txtProjectRef = holds a list of project references</li>
+ * txtSpaceRef = holds a list of project references</li>
  * </ul>
  * 
  * @See QueryBuilder, IQueryBuilder

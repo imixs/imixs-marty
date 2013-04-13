@@ -7,9 +7,9 @@
         <value>http://localhost:8080/office-rest/report</value>
       </item>
       <item name="txtquery">
-        <value> SELECT
+        <value>SELECT
  wi FROM Entity AS wi
- WHERE wi.type IN ('ProcessEntity','ActivityEntity','WorkflowEnvironmentEntity','coreprocess','project')</value>
+ WHERE wi.type IN ('ProcessEntity','ActivityEntity','WorkflowEnvironmentEntity','process','space')</value>
       </item>
       <item name="txtname">
         <value>setup_data.ixr</value>

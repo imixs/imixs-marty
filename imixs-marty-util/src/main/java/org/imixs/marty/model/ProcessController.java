@@ -364,7 +364,7 @@ public class ProcessController implements Serializable {
 
 	/**
 	 * Returns a list of ItemCollection representing the first Start Process
-	 * defined for a specific coreProcess entity. Each ItemCollection provides
+	 * defined for a specific space entity. Each ItemCollection provides
 	 * at least the properties
 	 * <ul>
 	 * <li>txtmodelVersion (model version)
@@ -373,7 +373,7 @@ public class ProcessController implements Serializable {
 	 * 
 	 * 
 	 * The worflowGroup list is used to display the start process list for a
-	 * coreProcess selection
+	 * space selection
 	 * 
 	 * @param uniqueid
 	 *            - $UniqueId of a project

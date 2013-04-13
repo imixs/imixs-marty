@@ -27,7 +27,10 @@
 
 package org.imixs.marty.plugins;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Logger;
 
@@ -47,30 +50,43 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * process and a project are stored in the attribute '$uniqueIdref'.
  * 
  * <p>
- * The plugin updates the corresponding CoreProcess and Project informations:
+ * The plugin updates the corresponding Process and Space informations:
  * <ul>
- * <li>namProjectTeam
- * <li>namProjectManager
- * <li>namProjectName
- * <li>namCoreProcessManager
- * <li>txtProjectname
- * <li>txtCoreProcessName
+ * <li>namSpaceTeam
+ * <li>namSpaceManager
+ * <li>namSpaceAssist
+ * <li>namSpaceName
+ * <li>txtSpaceRef
+ * <li>namProcessTeam
+ * <li>namProcessManager
+ * <li>namProcessAssist
+ * <li>txtProcessName
+ * <li>txtProcessRef
  * 
  * The name properties are used in security and mail plugins.
  * 
- * If the workitem is a child to another workitem (ChildWorkitem) the
- * information is fetched from the parent workitem.
+ * The properties 'txtProcessRef' and 'txtSpaceRef' are optional and can provide
+ * the current $uniqueIDs for referenced space or process entities. The Plugin
+ * updates the $UniqueIDRef property if these properties are filled.
  * 
- * If the workflowresultmessage of the ActivityEntity contains a project
- * reference the plugin will update the reference in the property $uniqueIdRef.
+ * If the workItem is a child to another workItem (ChildWorkitem) the
+ * information is fetched from the parent workItem.
+ * 
+ * If the workflowresultmessage of the ActivityEntity contains a scope or
+ * process reference the plugin will update the reference in the property
+ * $uniqueIdRef.
  * 
  * Example:
  * 
  * <code>
-			<item name="project">...</item>
+			<item name="space">...</item>
+			<item name="process">...</item>
    </code>
  * 
  * The Plugin should run before Access-, Application- and Mail-Plguin.
+ * 
+ * 
+ * Model: default
  * 
  * @author rsoika
  * @version 2.0
@@ -123,6 +139,8 @@ public class TeamPlugin extends AbstractPlugin {
 	public int run(ItemCollection workItem, ItemCollection documentActivity)
 			throws PluginException {
 
+		Map<String, ItemCollection> cacheRef = new HashMap<String, ItemCollection>();
+
 		/*
 		 * Check the txtActivityResult for a new Project reference.
 		 * 
@@ -131,50 +149,122 @@ public class TeamPlugin extends AbstractPlugin {
 		 * '<item name="project">...</item>'
 		 */
 		String sResult = "";
-		try {
-			// Read workflow result directly from the activity definition
-			sResult = documentActivity.getItemValueString("txtActivityResult");
+		// try {
+		// Read workflow result directly from the activity definition
+		sResult = documentActivity.getItemValueString("txtActivityResult");
 
-			ItemCollection evalItemCollection = new ItemCollection();
-			ResultPlugin.evaluate(sResult, evalItemCollection);
-			String aSpaceName = evalItemCollection.getItemValueString("space");
-			String aProcessName = evalItemCollection
-					.getItemValueString("process");
+		ItemCollection evalItemCollection = new ItemCollection();
+		ResultPlugin.evaluate(sResult, evalItemCollection);
+		String aActivitySpaceName = evalItemCollection
+				.getItemValueString("space");
+		String aActivityProcessName = evalItemCollection
+				.getItemValueString("process");
 
-			if (!"".equals(aSpaceName)) {
-				logger.fine("[TeamPlugin] Updating Space reference: "
-						+ aSpaceName);
-				// load project reference
-				ItemCollection parent = findRefByName(aSpaceName, "space");
-				if (parent != null) {
-					// first remove all older project references
-					List<String> refList = workItem
-							.getItemValue("$uniqueidRef");
-					for (String aUniqueID : refList) {
-						// test ref to type 'project'
-						ItemCollection entity = entityService.load(aUniqueID);
-						if (entity != null
-								&& "space".equals(entity
-										.getItemValueString("type"))) {
-							refList.remove(aUniqueID);
-						}
-					}
-					// add new ref
-					refList.add(parent.getItemValueString("$uniqueid"));
+		// check if a new space reference is defined in the current
+		// activity....
+		if (!"".equals(aActivitySpaceName)) {
+			logger.fine("[TeamPlugin] Updating Space reference: "
+					+ aActivitySpaceName);
+			// load space entity
+			ItemCollection parent = findRefByName(aActivitySpaceName, "space");
+			workItem.replaceItemValue("txtSpaceRef",
+					parent.getItemValueString("$uniqueid"));
+		}
+		// check if a new process reference is defined in the current
+		// activity....
+		if (!"".equals(aActivityProcessName)) {
+			logger.fine("[TeamPlugin] Updating Process reference: "
+					+ aActivityProcessName);
+			// load space entity
+			ItemCollection parent = findRefByName(aActivityProcessName,
+					"process");
+			workItem.replaceItemValue("txtProcessRef",
+					parent.getItemValueString("$uniqueid"));
+		}
 
-					// assign project name and reference
-					workItem.replaceItemValue("$uniqueidRef", refList);
-					workItem.replaceItemValue("txtSpaceName",
-							parent.getItemValueString("txtname"));
+		// Now update the $UniqueIDRef property based on the optional
+		// properties 'txtSpaceRef' and 'txtProcessRef'
 
-					logger.fine("[TeamPlugin] new $uniqueidRef= " + refList);
+		List<String> spaceRefList = workItem.getItemValue("txtSpaceRef");
+		List<String> processRefList = workItem.getItemValue("txtProcessRef");
+		List<String> currentRefList = workItem.getItemValue("$uniqueidRef");
+		for (String aUniqueID : currentRefList) {
+			ItemCollection entity = entityService.load(aUniqueID);
+			if (entity != null) {
+				cacheRef.put(entity.getItemValueString(EntityService.UNIQUEID),
+						entity);
+			}
+		}
+
+		// update processRefs....
+		if (!processRefList.isEmpty()) {
+			Collection<ItemCollection> parents = cacheRef.values();
+			for (ItemCollection entity : parents) {
+				String sID = entity.getItemValueString(EntityService.UNIQUEID);
+				String sType = entity.getItemValueString("type");
+				if ("process".equals(sType) && !processRefList.contains(sID)) {
+					parents.remove(entity);
 				}
 			}
+			// now add all new refs...
+			for (String aRef : processRefList) {
+				if (cacheRef.get(aRef) == null) {
+					ItemCollection entity = entityService.load(aRef);
+					if (entity != null)
+						cacheRef.put(aRef, entity);
+				}
 
-		} catch (Exception upr) {
-			logger.warning("[TeamPlugin] WARNING - Unable to update Project ("
-					+ sResult + ") reference: " + upr);
+			}
 		}
+
+		// update spaceRefs....
+		if (!spaceRefList.isEmpty()) {
+			Collection<ItemCollection> parents = cacheRef.values();
+			for (ItemCollection entity : parents) {
+				String sID = entity.getItemValueString(EntityService.UNIQUEID);
+				String sType = entity.getItemValueString("type");
+				if ("space".equals(sType) && !spaceRefList.contains(sID)) {
+					parents.remove(entity);
+				}
+			}
+			// now add all new refs...
+			for (String aRef : spaceRefList) {
+				if (cacheRef.get(aRef) == null) {
+					ItemCollection entity = entityService.load(aRef);
+					if (entity != null)
+						cacheRef.put(aRef, entity);
+				}
+
+			}
+		}
+
+		// update $UniqueIDRef Property....
+		Vector v = new Vector();
+		for (String s : cacheRef.keySet())
+			v.add(s);
+		workItem.replaceItemValue("$uniqueidRef", v);
+		logger.fine("[TeamPlugin] new $uniqueIdRef= " + v);
+
+		// update txtSpaceName and txtProcesName
+		String sNewSpaceName = null;
+		String sNewProcessName = null;
+		Collection<ItemCollection> parents = cacheRef.values();
+		for (ItemCollection entity : parents) {
+			if (sNewSpaceName == null
+					&& "space".equals(entity.getItemValueString("type")))
+				sNewSpaceName = entity.getItemValueString("txtName");
+			if (sNewProcessName == null
+					&& "process".equals(entity.getItemValueString("type")))
+				sNewProcessName = entity.getItemValueString("txtName");
+
+			if (sNewSpaceName != null && sNewProcessName != null)
+				break;
+
+		}
+		workItem.replaceItemValue("txtSpaceName", sNewSpaceName);
+		workItem.replaceItemValue("txtProcessName", sNewProcessName);
+		logger.fine("[TeamPlugin] new ProcessName= " + sNewProcessName);
+		logger.fine("[TeamPlugin] new SpaceName= " + sNewSpaceName);
 
 		/*
 		 * Now the team lists will be updated depending of the current
@@ -186,65 +276,54 @@ public class TeamPlugin extends AbstractPlugin {
 		List vProcessTeam = new Vector();
 		List vProcessManager = new Vector();
 		List vProcessAssist = new Vector();
-		List<String> parentRefs = workItem.getItemValue("$uniqueidref");
 		String sSpaceName = "";
 		String sProcessName = "";
-		for (String sParentID : parentRefs) {
 
+		parents = cacheRef.values();
+		for (ItemCollection itemColProject : parents) {
 			// the fetched information depends on the type of the reference!
-			ItemCollection itemColProject = entityService.load(sParentID);
-			if (itemColProject != null) {
 
-				String parentType = itemColProject.getItemValueString("type");
+			String parentType = itemColProject.getItemValueString("type");
 
-				// Test type property....
+			// Test type property....
 
-				if ("process".equals(parentType)) {
-					vProcessTeam.addAll(itemColProject.getItemValue("namTeam"));
-					vProcessManager.addAll(itemColProject
-							.getItemValue("namManager"));
-					vProcessAssist.addAll(itemColProject
-							.getItemValue("namAssist"));
-					sProcessName = itemColProject.getItemValueString("txtname");
-				}
-				if ("space".equals(parentType)) {
-					vSpaceTeam.addAll(itemColProject.getItemValue("namTeam"));
-					vSpaceManager.addAll(itemColProject
-							.getItemValue("namManager"));
-					vSpaceAssist.addAll(itemColProject
-							.getItemValue("namAssist"));
-					sSpaceName = itemColProject.getItemValueString("txtname");
-				}
-				if ("workitem".equals(parentType)) {
-					vSpaceTeam = itemColProject.getItemValue("namSpaceTeam");
-					vSpaceManager = itemColProject
-							.getItemValue("namSpaceManager");
-					vSpaceAssist = itemColProject
-							.getItemValue("namSpaceAssist");
-					vProcessTeam = itemColProject
-							.getItemValue("namProcessTeam");
-					vProcessManager = itemColProject
-							.getItemValue("namProcessManager");
-					vProcessAssist = itemColProject
-							.getItemValue("namAssist");
-					sSpaceName = itemColProject
-							.getItemValueString("txtSpaceName");
-					sProcessName = itemColProject
-							.getItemValueString("txtProcessname");
-				}
+			if ("process".equals(parentType)) {
+				vProcessTeam.addAll(itemColProject.getItemValue("namTeam"));
+				vProcessManager.addAll(itemColProject
+						.getItemValue("namManager"));
+				vProcessAssist.addAll(itemColProject.getItemValue("namAssist"));
+				sProcessName = itemColProject.getItemValueString("txtname");
 			}
-
-			// update properties
-			workItem.replaceItemValue("namSpaceTeam", vSpaceTeam);
-			workItem.replaceItemValue("namSpaceManager", vSpaceManager);
-			workItem.replaceItemValue("namSpaceAssist", vSpaceManager);
-			workItem.replaceItemValue("namProcessTeam", vProcessTeam);
-			workItem.replaceItemValue("namProcessManager", vProcessManager);
-			workItem.replaceItemValue("namProcessAssist", vProcessManager);
-			workItem.replaceItemValue("txtSpaceName", sSpaceName);
-			workItem.replaceItemValue("txtProcessName", sProcessName);
-
+			if ("space".equals(parentType)) {
+				vSpaceTeam.addAll(itemColProject.getItemValue("namTeam"));
+				vSpaceManager.addAll(itemColProject.getItemValue("namManager"));
+				vSpaceAssist.addAll(itemColProject.getItemValue("namAssist"));
+				sSpaceName = itemColProject.getItemValueString("txtname");
+			}
+			if ("workitem".equals(parentType)) {
+				vSpaceTeam = itemColProject.getItemValue("namSpaceTeam");
+				vSpaceManager = itemColProject.getItemValue("namSpaceManager");
+				vSpaceAssist = itemColProject.getItemValue("namSpaceAssist");
+				vProcessTeam = itemColProject.getItemValue("namProcessTeam");
+				vProcessManager = itemColProject
+						.getItemValue("namProcessManager");
+				vProcessAssist = itemColProject.getItemValue("namAssist");
+				sSpaceName = itemColProject.getItemValueString("txtSpaceName");
+				sProcessName = itemColProject
+						.getItemValueString("txtProcessname");
+			}
 		}
+
+		// update properties
+		workItem.replaceItemValue("namSpaceTeam", vSpaceTeam);
+		workItem.replaceItemValue("namSpaceManager", vSpaceManager);
+		workItem.replaceItemValue("namSpaceAssist", vSpaceManager);
+		workItem.replaceItemValue("namProcessTeam", vProcessTeam);
+		workItem.replaceItemValue("namProcessManager", vProcessManager);
+		workItem.replaceItemValue("namProcessAssist", vProcessManager);
+		workItem.replaceItemValue("txtSpaceName", sSpaceName);
+		workItem.replaceItemValue("txtProcessName", sProcessName);
+
 		return Plugin.PLUGIN_OK;
 	}
 
