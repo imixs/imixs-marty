@@ -28,10 +28,7 @@
 package org.imixs.marty.profile;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
 import java.util.logging.Logger;
 
@@ -46,8 +43,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.config.SetupController;
-import org.imixs.marty.util.Cache;
-import org.imixs.marty.util.WorkitemComparator;
+import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
@@ -78,10 +74,11 @@ public class UserController implements Serializable {
 	private final String COOKIE_LOCALE = "imixs.workflow.locale";
 	private ItemCollection workitem = null;
 
-	final int MAX_CACHE_SIZE = 20;
-	final int MAX_SEARCH_COUNT = 10;
-	private Cache cache;
 
+
+	@EJB
+	private ProfileService profileService;
+ 
 	@EJB
 	private EntityService entityService;
 
@@ -103,11 +100,11 @@ public class UserController implements Serializable {
 	@Inject
 	private LoginController loginController;
 
-	private static Logger logger = Logger.getLogger("org.imixs.workflow");
+	private static Logger logger = Logger.getLogger(UserController.class.getName());
 
 	public UserController() {
 		super();
-		cache = new Cache(MAX_CACHE_SIZE);
+	
 
 	}
 
@@ -129,18 +126,13 @@ public class UserController implements Serializable {
 		// Automatically create profile if no profile exists yet
 
 		if (!profileLoaded) {
-
-			// if SystemSetup is not yet completed - start System Setup now
-//			if (!setupController.isSetupOk())
-//				setupController.doSetup(null);
-
 			// determine user language and set Modelversion depending on
 			// the selected user locale
 			String sModelVersion = "system-" + getLocale();
 
 			try {
 				// try to load the profile for the current user
-				ItemCollection profile = findProfileByName(null);
+				ItemCollection profile = profileService.findProfileById(null);
 				if (profile == null) {
 
 					// create new Profile for current user
@@ -268,13 +260,12 @@ public class UserController implements Serializable {
 	 * @return
 	 */
 	public String getUserName(String aAccount) {
-		String[] userArray;
-		// try to get name out from cache
-		userArray = (String[]) cache.get(aAccount);
-		if (userArray == null)
-			userArray = lookupUser(aAccount);
-
-		return userArray[0];
+		
+		ItemCollection userProfile=profileService.findProfileById(aAccount);
+		if (userProfile!=null)
+			return userProfile.getItemValueString("txtuserName");
+		else
+			return null;
 	}
 
 	/**
@@ -284,62 +275,18 @@ public class UserController implements Serializable {
 	 * @return
 	 */
 	public String getEmail(String aAccount) {
-		String[] userArray;
-		// try to get name out from cache
-		userArray = (String[]) cache.get(aAccount);
-		if (userArray == null)
-			userArray = lookupUser(aAccount);
-
-		return userArray[1];
+		ItemCollection userProfile=profileService.findProfileById(aAccount);
+		if (userProfile!=null)
+			return userProfile.getItemValueString("txtemail");
+		else
+			return null;
 	}
 
 	/*
 	 * HELPER METHODS
 	 */
 
-	/**
-	 * This method returns a list of profile ItemCollections matching the search
-	 * phrase. The JQPL joins over txtEmail and txtUserName
-	 * 
-	 * @param aname
-	 * @return
-	 */
-	public List<ItemCollection> searchProfile(String phrase) {
-
-		List<ItemCollection> searchResult = new ArrayList<ItemCollection>();
-
-		if (phrase == null || phrase.isEmpty())
-			return searchResult;
-
-		phrase = "%" + phrase.trim() + "%";
-
-		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-				+ " JOIN profile.textItems AS t1"
-				+ " JOIN profile.textItems AS t2"
-				+ " WHERE  profile.type= 'profile' " + " AND "
-				+ " ( (t1.itemName = 'txtusername' "
-				+ " AND t1.itemValue LIKE  '" + phrase + "') "
-				+ " OR (t2.itemName = 'txtemail' "
-				+ " AND t2.itemValue LIKE  '" + phrase + "') " + " )";
-
-		logger.finest("searchprofile: " + sQuery);
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, MAX_SEARCH_COUNT);
-
-		for (ItemCollection profile : col) {
-			searchResult.add(cloneWorkitem(profile));
-
-		}
-
-		// sort by username..
-		Collections.sort(searchResult, new WorkitemComparator(
-				"txtWorkflowGroup", true));
-
-		return searchResult;
-
-	}
-
+	
 	/**
 	 * This method updates user locale to the faces context.
 	 * 
@@ -361,93 +308,8 @@ public class UserController implements Serializable {
 
 	}
 
-	/**
-	 * this class performes a EJB Lookup for the corresponding userprofile. The
-	 * method stores the username and his email into a string array. So either
-	 * the username or the email address will be cached in a single object.
-	 * 
-	 * @param aName
-	 * @return array of username and string
-	 */
-	@SuppressWarnings("unchecked")
-	private String[] lookupUser(String aName) {
-		String[] array = new String[2];
 
-		// String sUserName = null;
-		ItemCollection profile = findProfileByName(aName);
-		// if profile null cache current name object
-		if (profile == null) {
-			array[0] = aName;
-			array[1] = aName;
-		} else {
-			array[0] = profile.getItemValueString("txtuserName");
-			array[1] = profile.getItemValueString("txtemail");
-		}
+	
 
-		if ("".equals(array[0]))
-			array[0] = aName;
-
-		if ("".equals(array[1]))
-			array[1] = array[0];
-
-		// put name into cache
-		cache.put(aName, array);
-
-		return array;
-	}
-
-	/**
-	 * This method returns a profile ItemCollection for a specified account
-	 * name. if no name is supported the remote user name will by used to find
-	 * the profile The method returns null if no Profile for this name was found
-	 * 
-	 * @param aname
-	 * @return
-	 */
-	private ItemCollection findProfileByName(String aname) {
-
-		if (aname == null)
-			aname = loginController.getUserPrincipal();
-
-		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-				+ " JOIN profile.textItems AS t2"
-				+ " WHERE  profile.type= 'profile' "
-				+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
-				+ aname + "' ";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, 1);
-
-		if (col.size() > 0) {
-			ItemCollection aworkitem = col.iterator().next();
-			return aworkitem;
-		}
-		return null;
-
-	}
-
-	public ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
-		ItemCollection clone = new ItemCollection();
-
-		// clone the standard WorkItem properties
-		clone.replaceItemValue("$UniqueID", aWorkitem.getItemValue("$UniqueID"));
-		clone.replaceItemValue("$ModelVersion",
-				aWorkitem.getItemValue("$ModelVersion"));
-		clone.replaceItemValue("$ProcessID",
-				aWorkitem.getItemValue("$ProcessID"));
-		clone.replaceItemValue("$Created", aWorkitem.getItemValue("$Created"));
-		clone.replaceItemValue("$Modified", aWorkitem.getItemValue("$Modified"));
-		clone.replaceItemValue("$isAuthor", aWorkitem.getItemValue("$isAuthor"));
-
-		clone.replaceItemValue("txtWorkflowStatus",
-				aWorkitem.getItemValue("txtWorkflowStatus"));
-
-		clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
-		clone.replaceItemValue("txtUserName",
-				aWorkitem.getItemValue("txtUserName"));
-		clone.replaceItemValue("txtEmail", aWorkitem.getItemValue("txtEmail"));
-
-		return clone;
-	}
 
 }

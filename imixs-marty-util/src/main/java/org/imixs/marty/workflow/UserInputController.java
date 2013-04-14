@@ -25,6 +25,8 @@ package org.imixs.marty.workflow;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -34,7 +36,9 @@ import javax.faces.event.AjaxBehaviorEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.profile.UserController;
+import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 
@@ -59,7 +63,7 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 public class UserInputController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-
+	private int maxSearchCount=30;
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	@Inject
@@ -88,6 +92,14 @@ public class UserInputController implements Serializable {
 		this.input = input;
 	}
 
+	public int getMaxSearchCount() {
+		return maxSearchCount;
+	}
+
+	public void setMaxSearchCount(int maxSearchCount) {
+		this.maxSearchCount = maxSearchCount;
+	}
+
 	public void reset(AjaxBehaviorEvent event) {
 		searchResult = new ArrayList<ItemCollection>();
 		input = "";
@@ -102,7 +114,50 @@ public class UserInputController implements Serializable {
 		if (input == null || input.length() < 2)
 			return;
 		logger.fine("userInputController search for=" + input);
-		searchResult = userController.searchProfile(input);
+		searchResult = searchProfile(input);
+
+	}
+	
+	/**
+	 * This method returns a list of profile ItemCollections matching the search
+	 * phrase. The JQPL joins over txtEmail and txtUserName
+	 * 
+	 * @param aname
+	 * @return
+	 */
+	public List<ItemCollection> searchProfile(String phrase) {
+
+		List<ItemCollection> searchResult = new ArrayList<ItemCollection>();
+
+		if (phrase == null || phrase.isEmpty())
+			return searchResult;
+
+		phrase = "%" + phrase.trim() + "%";
+
+		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+				+ " JOIN profile.textItems AS t1"
+				+ " JOIN profile.textItems AS t2"
+				+ " WHERE  profile.type= 'profile' " + " AND "
+				+ " ( (t1.itemName = 'txtusername' "
+				+ " AND t1.itemValue LIKE  '" + phrase + "') "
+				+ " OR (t2.itemName = 'txtemail' "
+				+ " AND t2.itemValue LIKE  '" + phrase + "') " + " )";
+
+		logger.finest("searchprofile: " + sQuery);
+
+		Collection<ItemCollection> col = workflowService.getEntityService().findAllEntities(sQuery,
+				0, maxSearchCount);
+
+		for (ItemCollection profile : col) {
+			searchResult.add(ProfileService.cloneWorkitem(profile));
+
+		}
+
+		// sort by username..
+		Collections.sort(searchResult, new WorkitemComparator(
+				"txtWorkflowGroup", true));
+
+		return searchResult;
 
 	}
 

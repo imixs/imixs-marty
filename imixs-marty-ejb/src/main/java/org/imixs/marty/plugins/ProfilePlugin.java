@@ -28,8 +28,15 @@
 package org.imixs.marty.plugins;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Vector;
 import java.util.logging.Logger;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
+import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
@@ -43,6 +50,9 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * Plugins is used by the System Workflow when a userProfile is processed
  * (typically when a User logged in).
  * 
+ * In additon the Plugin provides a mechanism to translate elements of an
+ * activityEntity to replace placeholders for a user id with the corresponding
+ * user name. There for the plugin uses the profileService EJB
  * 
  * @author rsoika
  * 
@@ -50,12 +60,15 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
 public class ProfilePlugin extends AbstractPlugin {
 
 	private EntityService entityService = null;
-	private static Logger logger = Logger.getLogger("org.imixs.marty");
-	private ItemCollection profile = null;
+	private ProfileService profileService = null;
+
+	private static Logger logger = Logger.getLogger(ProfilePlugin.class
+			.getName());
 
 	// error codes
 	public static String USERNAME_ALREADY_TAKEN = "USERNAME_ALREADY_TAKEN";
 	public static String EMAIL_ALREADY_TAKEN = "EMAIL_ALREADY_TAKEN";
+	public static String NO_PROFILE_SERVICE_FOUND = "NO_SEQUENCE_SERVICE_FOUND";
 
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
@@ -68,6 +81,20 @@ public class ProfilePlugin extends AbstractPlugin {
 			entityService = ws.getEntityService();
 		}
 
+		// lookup profile service EJB
+		String jndiName = "ejb/ProfileService";
+		InitialContext ictx;
+		try {
+			ictx = new InitialContext();
+
+			Context ctx = (Context) ictx.lookup("java:comp/env");
+			profileService = (ProfileService) ctx.lookup(jndiName);
+		} catch (NamingException e) {
+			throw new PluginException(ProfilePlugin.class.getSimpleName(),
+					NO_PROFILE_SERVICE_FOUND,
+					"[ProfilePlugin] unable to lookup profileService: ", e);
+		}
+
 	}
 
 	/**
@@ -75,15 +102,48 @@ public class ProfilePlugin extends AbstractPlugin {
 	 * plug-in tests if the usernam or email is unique
 	 **/
 	@Override
-	public int run(ItemCollection aworkItem, ItemCollection documentActivity)
+	public int run(ItemCollection workItem, ItemCollection documentActivity)
 			throws PluginException {
 
-		// verify workitem type
-		if (!"profile".equals(aworkItem.getItemValueString("type")))
-			return Plugin.PLUGIN_OK;
+		// validate profile..
+		if ("profile".equals(workItem.getItemValueString("type")))
+			validateUserProfile(workItem);
 
-		profile = aworkItem;
+		// translate dynamic activity values
+		if ("workitem".equals(workItem.getItemValueString("type")))
+			updateActivityEntity(workItem, documentActivity);
 
+		return Plugin.PLUGIN_OK;
+	}
+
+	@Override
+	public void close(int arg0) throws PluginException {
+
+	}
+
+	/**
+	 * replace the text phrases in the activity
+	 * 
+	 * @param workItem
+	 * @param documentActivity
+	 */
+	void updateActivityEntity(ItemCollection workItem,
+			ItemCollection documentActivity) {
+		String sText;
+
+		String[] fields = { "rtfresultlog", "txtworkflowabstract",
+				"txtworkflowsummary","txtMailSubject","rtfMailBody" };
+
+		for (String aField : fields) {
+			sText = documentActivity.getItemValueString(aField);
+			sText = replaceUsernames(sText, workItem);
+			documentActivity.replaceItemValue(aField, sText);
+
+		}
+
+	}
+
+	void validateUserProfile(ItemCollection profile) throws PluginException {
 		String sUsername = profile.getItemValueString("txtName");
 
 		// update the txtname if not already set
@@ -92,24 +152,18 @@ public class ProfilePlugin extends AbstractPlugin {
 					+ this.getUserName());
 			profile.replaceItemValue("txtName", this.getUserName());
 		}
-		if (!isValidUserName())
+		if (!isValidUserName(profile))
 			throw new PluginException(
 					ProfilePlugin.class.getSimpleName(),
 					USERNAME_ALREADY_TAKEN,
 					"Username is already taken - verifiy txtname and txtusername",
 					new Object[] { profile.getItemValueString("txtName") });
 
-		if (!isValidEmail())
+		if (!isValidEmail(profile))
 			throw new PluginException(ProfilePlugin.class.getSimpleName(),
 					EMAIL_ALREADY_TAKEN,
 					"Email is already taken - verifiy txtemail",
 					new Object[] { profile.getItemValueString("txtEmail") });
-
-		return Plugin.PLUGIN_OK;
-	}
-
-	@Override
-	public void close(int arg0) throws PluginException {
 
 	}
 
@@ -122,23 +176,21 @@ public class ProfilePlugin extends AbstractPlugin {
 	 * @param aprofile
 	 * @return
 	 */
-	private boolean isValidUserName() {
+	boolean isValidUserName(ItemCollection profile) {
 
 		String sName = profile.getItemValueString("txtName");
 		String sUserName = profile.getItemValueString("txtUserName");
 		String sID = profile.getItemValueString("$uniqueid");
-		
-		
+
 		// Trim names....
 		if (!sName.equals(sName.trim())) {
-			sName=sName.trim();
+			sName = sName.trim();
 			profile.replaceItemValue("txtName", sName);
 		}
 		if (!sUserName.equals(sUserName.trim())) {
-			sUserName=sUserName.trim();
+			sUserName = sUserName.trim();
 			profile.replaceItemValue("txtUserName", sUserName);
 		}
-			
 
 		String sQuery;
 
@@ -174,18 +226,17 @@ public class ProfilePlugin extends AbstractPlugin {
 	 * @param aprofile
 	 * @return
 	 */
-	private boolean isValidEmail() {
+	boolean isValidEmail(ItemCollection profile) {
 
 		String sEmail = profile.getItemValueString("txtEmail");
 		String sID = profile.getItemValueString("$uniqueid");
 
-		
 		// Trim email....
 		if (!sEmail.equals(sEmail.trim())) {
-			sEmail=sEmail.trim();
+			sEmail = sEmail.trim();
 			profile.replaceItemValue("txtEmail", sEmail);
 		}
-		
+
 		String sQuery;
 
 		// username provided?
@@ -202,6 +253,120 @@ public class ProfilePlugin extends AbstractPlugin {
 				0, 1);
 
 		return (col.size() == 0);
+
+	}
+
+	/**
+	 * this method parses a string for xml tag <username>. Those tags will be
+	 * replaced with the corresponding userProfile property 'txtUserName' <code>
+	 *   
+	 *   hello <username>namCreator</username>
+	 *   
+	 *   
+	 * </code>
+	 * 
+	 * 
+	 * If the itemValue is a multiValue object the single values can be
+	 * spearated by a separator
+	 * 
+	 * <code>
+	 *  
+	 *  Team List: <username separator="<br />">txtTeam</username>
+	 * 
+	 * </code>
+	 * 
+	 * 
+	 * 
+	 */
+	public String replaceUsernames(String aString,
+			ItemCollection documentContext) {
+		int iTagStartPos;
+		int iTagEndPos;
+
+		int iContentStartPos;
+		int iContentEndPos;
+
+		int iSeparatorStartPos;
+		int iSeparatorEndPos;
+
+		String sSeparator = " ";
+		String sItemValue;
+
+		if (aString == null)
+			return "";
+
+		// test if a <value> tag exists...
+		while ((iTagStartPos = aString.toLowerCase().indexOf("<username")) != -1) {
+
+			iTagEndPos = aString.toLowerCase().indexOf("</username>",
+					iTagStartPos);
+
+			// if no end tag found return string unchanged...
+			if (iTagEndPos == -1)
+				return aString;
+
+			// reset pos vars
+			iContentStartPos = 0;
+			iContentEndPos = 0;
+
+			iSeparatorStartPos = 0;
+			iSeparatorEndPos = 0;
+			sSeparator = " ";
+			sItemValue = "";
+
+			// so we now search the beginning of the tag content
+			iContentEndPos = iTagEndPos;
+			// start pos is the last > before the iContentEndPos
+			String sTestString = aString.substring(0, iContentEndPos);
+			iContentStartPos = sTestString.lastIndexOf('>') + 1;
+
+			// if no end tag found return string unchanged...
+			if (iContentStartPos >= iContentEndPos)
+				return aString;
+
+			iTagEndPos = iTagEndPos + "</username>".length();
+
+			// now we have the start and end position of a tag and also the
+			// start and end pos of the value
+
+			// next we check if the start tag contains a 'separator'
+			// attribute
+			iSeparatorStartPos = aString.toLowerCase().indexOf("separator=",
+					iTagStartPos);
+			// extract format string if available
+			if (iSeparatorStartPos > -1
+					&& iSeparatorStartPos < iContentStartPos) {
+				iSeparatorStartPos = aString.indexOf("\"", iSeparatorStartPos) + 1;
+				iSeparatorEndPos = aString
+						.indexOf("\"", iSeparatorStartPos + 1);
+				sSeparator = aString.substring(iSeparatorStartPos,
+						iSeparatorEndPos);
+			}
+
+			// extract Item Value
+			sItemValue = aString.substring(iContentStartPos, iContentEndPos);
+
+			List<String> tempList = documentContext.getItemValue(sItemValue);
+			// clone List
+			List<String> vUserIDs=new Vector(tempList);
+			// get usernames ....
+			for (int i = 0; i < vUserIDs.size(); i++) {
+				ItemCollection profile = profileService
+						.findProfileById(vUserIDs.get(i));
+				if (profile != null) {
+					vUserIDs.set(i, profile.getItemValueString("txtUserName"));
+				}
+			}
+
+			// format field value
+			String sResult = formatItemValues(vUserIDs, sSeparator, "");
+
+			// now replace the tag with the result string
+			aString = aString.substring(0, iTagStartPos) + sResult
+					+ aString.substring(iTagEndPos);
+		}
+
+		return aString;
 
 	}
 

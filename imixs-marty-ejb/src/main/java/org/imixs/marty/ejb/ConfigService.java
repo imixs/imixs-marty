@@ -44,7 +44,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 
 /**
- * The Manik Config Service can be used to store and access configuration values
+ * The Marty Config Service can be used to store and access configuration values
  * stored in a configuration entity (type='CONFIGURATION).
  * 
  * The ConfigService EJB provides access to named Config Entities stored in the

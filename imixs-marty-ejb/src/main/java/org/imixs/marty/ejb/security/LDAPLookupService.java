@@ -1,6 +1,5 @@
 package org.imixs.marty.ejb.security;
 
-import java.io.FileInputStream;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
