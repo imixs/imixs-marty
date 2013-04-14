@@ -49,6 +49,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
@@ -57,66 +58,121 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.jee.util.PropertyService;
 
 /**
- * This Plugin extends the functionality of the Imixs JEE Mail Plugin. The
- * Plugin translates user names into the mail addresses configured in the user
- * profile.
+ * This Plugin extends the Imixs Workflow Plguin.
  * 
- * In addition the Plugin checks if the property 'mail.defaultSender' was
- * defined. In this case the plugin overwrites the 'From' attribute of every
- * mail with the DefaultSender address.
+ * The Plugin translates recipient addresses with the mail address stored in the
+ * users profile
+ * 
+ * In addition this plugin adds the attachments from the blob workItem into the
+ * mail body if the tag <attachment/> was found.
+ * 
  * 
  * @author rsoika
- * 
+ * @version 2.0
  */
 public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
-	public static String PROPERTY_SERVICE_NOT_BOUND = "PROPERTY_SERVICE_NOT_BOUND";
-
+	private ProfileService profileService = null;
 	private PropertyService propertyService = null;
 	private WorkflowService workflowService = null;
-	private boolean hasMailSession = false;
+
+	public static String PROFILESERVICE_NOT_BOUND = "PROFILESERVICE_NOT_BOUND";
+	public static String PROPERTYSERVICE_NOT_BOUND = "PROPERTYSERVICE_NOT_BOUND";
+
 	private static Logger logger = Logger.getLogger(MailPlugin.class.getName());
 
+	
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
-		super.init(actx);
-		hasMailSession = true;
 
+		super.init(actx);
+		
 		// get workflow service instance
 		if (actx instanceof WorkflowService) {
 			// yes we are running in a WorkflowService EJB
 			workflowService = (WorkflowService) actx;
 		}
 
-		// lookup PropertyService
-		String jndiName = "ejb/PropertyService";
+		// lookup profile service EJB
+		String jndiName = "ejb/ProfileService";
 		InitialContext ictx;
+		try {
+			ictx = new InitialContext();
+
+			Context ctx = (Context) ictx.lookup("java:comp/env");
+			profileService = (ProfileService) ctx.lookup(jndiName);
+		} catch (NamingException e) {
+
+			throw new PluginException(MailPlugin.class.getSimpleName(),
+					PROFILESERVICE_NOT_BOUND, "ProfileService not bound", e);
+		}
+
+		// lookup PropertyService
+		jndiName = "ejb/PropertyService";
 		try {
 
 			ictx = new InitialContext();
 			Context ctx = (Context) ictx.lookup("java:comp/env");
 			propertyService = (PropertyService) ctx.lookup(jndiName);
 		} catch (NamingException e) {
-			propertyService=null;
-			logger.warning("[MartyMailPlugin] unable to lookup propertyService - could not read defaultSender address! Please verify ejb-jar.xml!");			
+			throw new PluginException(MailPlugin.class.getSimpleName(),
+					PROPERTYSERVICE_NOT_BOUND, "PropertyService not bound", e);
 		}
 	}
 
 	/**
-	 * The method checks if a defaultSenderAddress was configured in the
-	 * imixs.properties file. Only in this case the plugin changes the 'from'
+	 * This method adds the attachments of the blob workitem to the MimeMessage
+	 */
+	@Override
+	public int run(ItemCollection documentContext,
+			ItemCollection documentActivity) throws PluginException {
+
+		if (this.getMailSession()!=null) {
+
+			// run default functionality
+			int result = super.run(documentContext, documentActivity);
+
+			// terminate if the result was an error
+			if (result == Plugin.PLUGIN_ERROR)
+				return Plugin.PLUGIN_ERROR;
+
+			// now get the Mail Session object
+			MimeMessage mailMessage = (MimeMessage) super.getMailMessage();
+			if (mailMessage == null) {
+				// no Mail message - so we can return
+				return Plugin.PLUGIN_OK;
+			}
+
+			// test for blob workitem to add attachemtns
+			ItemCollection blobWorkitem = loadBlob(documentContext);
+			if (blobWorkitem != null) {
+				try {
+					attachFiles(blobWorkitem);
+				} catch (MessagingException e) {
+					logger.warning("unable to attach files!");
+					e.printStackTrace();
+				}
+			}
+
+		}
+		return Plugin.PLUGIN_OK;
+	}
+
+	/**
+	 * The method checks if a defaultSenderAddress was configured in the BASIC
+	 * configuration entity. Only in this case the plugin changes the 'from'
 	 * property of the current Message object.
 	 */
 	@Override
 	public void close(int arg0) throws PluginException {
-
-		if (hasMailSession) {
+		if (this.getMailSession()!=null) {
 			// Test if a default From address was configured - if then change
 			// from property now!
 			if (propertyService != null) {
 				String sFrom = (String) propertyService.getProperties().get(
 						"mail.defaultSender");
 				if (sFrom != null && !"".equals(sFrom)) {
+
 					MimeMessage mailMessage = (MimeMessage) super
 							.getMailMessage();
 					if (mailMessage != null) {
@@ -143,40 +199,6 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		}
 	}
 
-	@Override
-	public int run(ItemCollection documentContext,
-			ItemCollection documentActivity) throws PluginException {
-
-		if (hasMailSession) {
-
-			// run default functionallity
-			int result = super.run(documentContext, documentActivity);
-
-			// terminate if the result was an error
-			if (result == Plugin.PLUGIN_ERROR)
-				return Plugin.PLUGIN_ERROR;
-
-			// now get the Mail Session object
-			MimeMessage mailMessage = (MimeMessage) super.getMailMessage();
-			if (mailMessage == null) {
-				// no Mail message - so we can return
-				return Plugin.PLUGIN_OK;
-			}
-
-			// test for blob workitem
-			ItemCollection blobWorkitem = loadBlob(documentContext);
-			if (blobWorkitem != null)
-				try {
-					attachFiles(blobWorkitem);
-				} catch (MessagingException e) {
-					logger.warning("unable to attach files!");
-					e.printStackTrace();
-				}
-
-		}
-		return Plugin.PLUGIN_OK;
-	}
-
 	/**
 	 * this helper method creates an internet address from a string if the
 	 * string has illegal characters like whitespace the string will be
@@ -195,91 +217,61 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		if (aAddr.indexOf('@') > -1)
 			return super.getInternetAddress(aAddr);
 
-		// try to get email from syw profile
+		// try to get email from the users profile
 		try {
 			aAddr = fetchEmail(aAddr);
 			if (aAddr.indexOf('@') == -1) {
-				logger.warning("[MartyMailPlugin] smtp mail address for '"
+				System.out.println("[MartyMailPlugin] smtp mail address for '"
 						+ aAddr + "' could not be resolved!");
 				return null;
 			}
 		} catch (NamingException e) {
 			// no valid email was found!
-			logger.warning("[MartyMailPlugin] mail for '" + aAddr
+			logger.severe("[MartyMailPlugin] mail for '" + aAddr
 					+ "' could not be resolved!");
+			// e.printStackTrace();
+			// avoid sending mail to this address!
 			return null;
 		}
 		return super.getInternetAddress(aAddr);
 	}
 
+	
 	/**
-	 * This method lookups the emailadress for a given openid account through
-	 * the ProfileService. If no profile is found or email is not valid the
-	 * method throws a NamingException. This will lead into a situation where
-	 * the super class tries to surround account with "" (hopefully)
+	 * This method lookups the emailadress for a given user account through the
+	 * ProfileService. If no profile is found or email is not valid the method
+	 * throws a NamingException.
 	 * 
-	 * 
-	 * @param aOpenID
+	 * @param aUserID
 	 * @return
 	 * @throws NamingException
 	 */
-	private String fetchEmail(String aOpenID) throws NamingException {
+	private String fetchEmail(String aUserID) throws NamingException {
 
-		ItemCollection itemColProfile = findProfileByName(aOpenID);
+		ItemCollection itemColProfile = profileService.findProfileById(aUserID);
 
 		if (itemColProfile == null)
 			throw new NamingException(
-					"[MartyMailPlugin] No Profile found for: " + aOpenID);
+					"[MartyMailPlugin] No Profile found for: " + aUserID);
 
 		String sEmail = itemColProfile.getItemValueString("txtEmail");
 
-		// System.out.println("***** DEBUG ***** ProfileService - EmailLookup ="
-		// + sEmail);
+		logger.fine("ProfileService - EmailLookup =" + sEmail);
 
 		if (sEmail != null && !"".equals(sEmail)) {
 			if (sEmail.indexOf("http") > -1 || sEmail.indexOf("//") > -1)
 				throw new NamingException(
-						"[MartyMailPlugin] Invalid Email: ID=" + aOpenID
+						"[MartyMailPlugin] Invalid Email: ID=" + aUserID
 								+ " Email=" + sEmail);
 			return sEmail;
 		}
 
 		// test if account contains protokoll information - this
-		if (aOpenID.indexOf("http") > -1 || aOpenID.indexOf("//") > -1)
+		if (aUserID.indexOf("http") > -1 || aUserID.indexOf("//") > -1)
 			throw new NamingException("[MartyMailPlugin] Invalid Email: ID="
-					+ aOpenID);
+					+ aUserID);
 
-		return aOpenID;
-	}
-
-	/**
-	 * This method returns a profile ItemCollection for a specified account
-	 * name. if no name is supported the remote user name will by used to find
-	 * the profile The method returns null if no Profile for this name was found
-	 * 
-	 * @param aname
-	 * @return
-	 */
-	private ItemCollection findProfileByName(String aname) {
-
-		if (aname == null)
-			return null;
-
-		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-				+ " JOIN profile.textItems AS t2"
-				+ " WHERE  profile.type= 'profile' "
-				+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
-				+ aname + "' ";
-
-		Collection<ItemCollection> col = workflowService.getEntityService()
-				.findAllEntities(sQuery, 0, 1);
-
-		if (col.size() > 0) {
-			ItemCollection aworkitem = col.iterator().next();
-			return aworkitem;
-		}
-		return null;
-
+		return aUserID;
 	}
 
 	/**
@@ -353,11 +345,8 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		Multipart multipart = super.getMultipart();
 
 		try {
-
 			messagePart = (MimeBodyPart) multipart.getBodyPart(0);
-			if (messagePart != null)
-				content = (String) messagePart.getContent();
-
+			content = (String) messagePart.getContent();
 		} catch (MessagingException e) {
 			logger.warning("Unable to parse tag 'attachments' !");
 			e.printStackTrace();
@@ -412,7 +401,10 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
 			// update mail body
 			try {
-				messagePart.setText(content);
+				if (this.isHTMLMail())
+					messagePart.setContent(content, this.getCharSet());
+				else
+					messagePart.setText(content);
 			} catch (MessagingException e) {
 				logger.warning("Unable to parse tag 'attachments' !");
 				e.printStackTrace();
@@ -421,39 +413,6 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 			return sFilename;
 		}
 
-		return null;
-
-	}
-
-	/**
-	 * This method returns a FileInfo object for a specific FilenName. The
-	 * FileInfo contains the Content (byte[]) and the ContentType
-	 * 
-	 * @param uniqueid
-	 * @param fileName
-	 * @return
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private FileInfo getFileFromWorkItem(String fileName,
-			ItemCollection blobWorkitem) {
-
-		// fetch $file from hashmap....
-
-		HashMap mapFiles = null;
-		Vector vFiles = (Vector) blobWorkitem.getItemValue("$file");
-		if (vFiles != null && vFiles.size() > 0) {
-			mapFiles = (HashMap) vFiles.elementAt(0);
-
-			Vector<Object> vectorFileInfo = new Vector<Object>();
-			vectorFileInfo = (Vector) mapFiles.get(fileName);
-			if (vectorFileInfo != null) {
-				String sContentType = vectorFileInfo.elementAt(0).toString();
-				byte[] fileContent = (byte[]) vectorFileInfo.elementAt(1);
-
-				FileInfo fileInfo = new FileInfo(fileContent, sContentType);
-				return fileInfo;
-			}
-		}
 		return null;
 
 	}
@@ -491,6 +450,39 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 	}
 
 	/**
+	 * This method returns a FileInfo object for a specific FilenName. The
+	 * FileInfo contains the Content (byte[]) and the ContentType
+	 * 
+	 * @param uniqueid
+	 * @param fileName
+	 * @return
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private FileInfo getFileFromWorkItem(String fileName,
+			ItemCollection blobWorkitem) {
+
+		// fetch $file from hashmap....
+
+		HashMap mapFiles = null;
+		Vector vFiles = (Vector) blobWorkitem.getItemValue("$file");
+		if (vFiles != null && vFiles.size() > 0) {
+			mapFiles = (HashMap) vFiles.elementAt(0);
+
+			Vector<Object> vectorFileInfo = new Vector<Object>();
+			vectorFileInfo = (Vector) mapFiles.get(fileName);
+			if (vectorFileInfo != null) {
+				String sContentType = vectorFileInfo.elementAt(0).toString();
+				byte[] fileContent = (byte[]) vectorFileInfo.elementAt(1);
+
+				FileInfo fileInfo = new FileInfo(fileContent, sContentType);
+				return fileInfo;
+			}
+		}
+		return null;
+
+	}
+
+	/**
 	 * Cache implementation to hold userData objects
 	 * 
 	 * @author rsoika
@@ -507,4 +499,5 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		}
 
 	}
+
 }
