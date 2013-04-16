@@ -94,7 +94,7 @@ public class UserController implements Serializable {
 
 	private String locale;
 
-	@Inject
+	@Inject 
 	private SetupController setupController;
 
 	@Inject

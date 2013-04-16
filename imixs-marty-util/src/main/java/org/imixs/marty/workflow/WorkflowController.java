@@ -76,7 +76,8 @@ public class WorkflowController extends
 
 	private static final long serialVersionUID = 1L;
 	private static final String DEFAULT_EDITOR_ID = "form_panel_simple#basic";
-	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	private static Logger logger = Logger.getLogger(WorkflowController.class
+			.getName());
 
 	/* Services */
 	@EJB
@@ -328,37 +329,25 @@ public class WorkflowController extends
 	}
 
 	/**
-	 * moves a workitem into the archive by changing the attribute type to
-	 * 'workitemdeleted'. The Lucene search index will be automatically updated
-	 * by the workitemService.
+	 * This method moves a workitem into the archive by appending the sufix
+	 * 'archive' to the attribute type. The Lucene search index will be
+	 * automatically updated by the workitemService.
 	 * 
-	 * @param event
-	 * @return
-	 * @throws Exception
-	 */
-	public void doSoftDelete(ActionEvent event) throws Exception {
-
-		workitemService.moveIntoDeletions(getWorkitem());
-
-	}
-
-	/**
-	 * moves a workitem into the archive by changing the attribute type to
-	 * 'workitemarchive'. The Lucene search index will be automatically updated
-	 * by the workitemService.
+	 * The param 'recursive' indicates if also references of the current
+	 * workitem should be updated.
 	 * 
-	 * @param event
-	 * @return
-	 * @throws Exception
+	 * @param recursive
+	 *            - if true also refrences will be updated
+	 * @throws AccessDeniedException
 	 */
-	public void doMoveIntoArchive(ActionEvent event) throws Exception {
+	public void archiveWorkitem(boolean recursive) throws AccessDeniedException {
 
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_BEFORE_ARCHIVE));
 
-		ItemCollection workitem = workitemService
-				.moveIntoArchive(getWorkitem());
+		ItemCollection workitem = workitemService.archiveWorkitem(
+				getWorkitem(), recursive);
 
 		setWorkitem(workitem);
 		// fire event
@@ -368,21 +357,26 @@ public class WorkflowController extends
 	}
 
 	/**
-	 * Thid method moves a workitem into the archive by changing the attribute
-	 * type to 'workitemdeleted'. The Lucene search index will be automatically
-	 * updated by the workitemService.
+	 * The method soft deletes a workitem by appending the sufix 'deleted' to
+	 * the attribute type. The Lucene search index will be automatically updated
+	 * by the workitemService.
 	 * 
-	 * @param event
-	 * @throws Exception
+	 * The param 'recursive' indicates if also references of the current
+	 * workitem should be updated.
+	 * 
+	 * @param recursive
+	 *            - if true also refrences will be updated
+	 * @throws AccessDeniedException
 	 */
-	public void doMoveIntoDeletions(ActionEvent event) throws Exception {
+	public void softDeleteWorkitem(boolean recursive)
+			throws AccessDeniedException {
 
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_BEFORE_SOFTDELETE));
 
-		ItemCollection workitem = workitemService
-				.moveIntoDeletions(getWorkitem());
+		ItemCollection workitem = workitemService.softDeleteWorkitem(
+				getWorkitem(), recursive);
 
 		setWorkitem(workitem);
 
@@ -393,14 +387,49 @@ public class WorkflowController extends
 	}
 
 	/**
+	 * This actionListener method moves a workitem into the archive by appending the sufix
+	 * 'archive' to the attribute type. References to this workitem will be
+	 * updated.
+	 * 
+	 * The Lucene search index will be automatically updated by the
+	 * workitemService.
+	 * 
+	 * @param event
+	 * @throws AccessDeniedException
+	 */
+	public void doArchiveWorkitem(ActionEvent event)
+			throws AccessDeniedException {
+		// call default behavior
+		archiveWorkitem(true);
+	}
+
+	/**
+	 * This actionListener method soft deletes a workitem by appending the sufix
+	 * 'deleted' to the attribute type. References to this workitem will be
+	 * updated.
+	 * 
+	 * The Lucene search index will be automatically updated by the
+	 * workitemService.
+	 * 
+	 * @param event
+	 * @throws AccessDeniedException
+	 */
+	public void doSoftDeleteWorkitem(ActionEvent event)
+			throws AccessDeniedException {
+		// call default behavior
+		softDeleteWorkitem(true);
+	}
+
+	/**
 	 * This method restores a workitem from the archive by changing the
 	 * attribute type to 'workitemarchive'. The Lucene search index will be
 	 * automatically updated by the workitemService.
 	 * 
 	 * @param event
-	 * @throws Exception
+	 * @throws AccessDeniedException
 	 */
-	public void doRestoreFromArchive(ActionEvent event) throws Exception {
+	public void doRestoreFromArchive(ActionEvent event)
+			throws AccessDeniedException {
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_BEFORE_RESTOREFROMARCHIVE));
@@ -421,9 +450,10 @@ public class WorkflowController extends
 	 * automatically updated by the workitemService.
 	 * 
 	 * @param event
-	 * @throws Exception
+	 * @throws AccessDeniedException
 	 */
-	public void doRestoreFromDeletions(ActionEvent event) throws Exception {
+	public void doRestoreFromDeletions(ActionEvent event)
+			throws AccessDeniedException {
 
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),

@@ -28,6 +28,7 @@
 package org.imixs.marty.ejb;
 
 import java.util.Collection;
+import java.util.logging.Logger;
 
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
@@ -38,13 +39,15 @@ import javax.ejb.Stateless;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
 
 /**
- * The WorkitemService provides methods to create, process and update a workItem
+ * The WorkitemService provides methods to create, process, update and remove a
+ * workItem. The service can be used to all types of workitems (e.g. workitem,
+ * process, space)
  * 
  * @author rsoika
- * 
  */
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
 		"org.imixs.ACCESSLEVEL.READERACCESS",
@@ -70,6 +73,9 @@ public class WorkitemService {
 	org.imixs.workflow.jee.ejb.ModelService modelService;
 
 	ItemCollection workItem = null;
+
+	private static Logger logger = Logger.getLogger(WorkitemService.class
+			.getName());
 
 	/**
 	 * This method creates a new workItem. The workItem becomes a response
@@ -158,31 +164,107 @@ public class WorkitemService {
 	}
 
 	/**
-	 * This method moves a workitem into the archive by changing the type
-	 * property
+	 * This method performs a soft delete by changing the type property. The
+	 * method appends the sufix 'deleted' to the current type value.
+	 * 
+	 * The method can be called on all types of workitems. Also process or space
+	 * entities can be deleted. The param 'recursive' indicates if also
+	 * references to this workitem should be deleted recursively.
+	 * 
+	 * The method did not change a workitem if the type property still ends with
+	 * the sufix 'deleted'
 	 * 
 	 * @param workitem
-	 * @return
-	 * @throws Exception
+	 *            - the workitem to be soft deleted
+	 * @param recursive
+	 *            - if true also references to the current workitem will be soft
+	 *            deleted
+	 * @return deleted workitem
+	 * @throws AccessDeniedException
+	 *             - if user is not allowed to update the workitem
 	 */
-	public ItemCollection moveIntoArchive(ItemCollection workitem)
-			throws Exception {
-		String sType = workitem.getItemValueString("type");
-		if ((sType.startsWith("workitem") || sType.startsWith("childworkitem"))
-				&& !sType.endsWith("archive")) {
+	public ItemCollection softDeleteWorkitem(ItemCollection workitem,
+			boolean recursive) throws AccessDeniedException {
+		if (workitem == null)
+			return null;
+		logger.fine("[WorkitemService] softDeleteWorkitem: '"
+				+ workitem.getItemValueString(EntityService.UNIQUEID) + "' recursive="+recursive);
 
-			String id = workitem.getItemValueString("$uniqueid");
-			Collection<ItemCollection> col = workflowService
-					.getWorkListByRef(id);
-			for (ItemCollection achildworkitem : col) {
-				// recursive method call
-				moveIntoArchive(achildworkitem);
+		
+		String sType = workitem.getItemValueString("type");
+
+		if (!sType.endsWith("deleted")) {
+			// recursive soft delete?
+			if (recursive) {
+				String id = workitem.getItemValueString("$uniqueid");
+				Collection<ItemCollection> col = workflowService
+						.getWorkListByRef(id);
+				for (ItemCollection achildworkitem : col) {
+					// recursive method call
+					softDeleteWorkitem(achildworkitem, recursive);
+				}
+			}
+			workitem.replaceItemValue("type",
+					workitem.getItemValueString("type") + "deleted");
+			workitem = entityService.save(workitem);
+			
+			// update search index
+			try {
+				LucenePlugin.updateWorkitem(workitem);
+			} catch (Exception e) {
+				// no op
+				logger.finest("[WorkitemService] moveIntoDeletesions: unable to update lucene index");
+			}
+		}
+
+		return workitem;
+	}
+
+	/**
+	 * This method archives a workitem by changing the property 'type'. The
+	 * method appends the sufix 'archive' to the current type value.
+	 * 
+	 * The method can be called on all types of workitems. Also process or space
+	 * entities can be deleted. The param 'recursive' indicates if also
+	 * references to this workitem should be deleted recursively.
+	 * 
+	 * The method did not change a workitem if the type property still ends with
+	 * the sufix 'archive'
+	 * 
+	 * @param workitem
+	 *            - the workitem to be archived
+	 * @param recursive
+	 *            - if true also references to the current workitem will be
+	 *            archived
+	 * @return archived workitem
+	 * @throws AccessDeniedException
+	 *             - if user is not allowed to update the workite
+	 */
+	public ItemCollection archiveWorkitem(ItemCollection workitem,
+			boolean recursive) throws AccessDeniedException {
+		if (workitem == null)
+			return null;
+		
+		logger.fine("[WorkitemService] archiveWorkitem: '"
+				+ workitem.getItemValueString(EntityService.UNIQUEID) + "' recursive="+recursive);
+
+		
+		String sType = workitem.getItemValueString("type");
+		if (!sType.endsWith("archive")) {
+			if (recursive) {
+				String id = workitem.getItemValueString("$uniqueid");
+				Collection<ItemCollection> col = workflowService
+						.getWorkListByRef(id);
+				for (ItemCollection achildworkitem : col) {
+					// recursive method call
+					archiveWorkitem(achildworkitem, recursive);
+				}
 			}
 			workitem.replaceItemValue("type",
 					workitem.getItemValueString("type") + "archive");
 
 			workitem = entityService.save(workitem);
-
+			
 			// update search index
 			try {
 				LucenePlugin.updateWorkitem(workitem);
@@ -196,14 +278,20 @@ public class WorkitemService {
 
 	/**
 	 * THie method restores a workitem from the archive by changing the type
-	 * property
+	 * property. Also references to this workitem will be updated recursively.
 	 * 
 	 * @param workitem
-	 * @return
-	 * @throws Exception
+	 *            - to be restored from the archive
+	 * @return - restored workitem
+	 * @throws AccessDeniedException
+	 *             - if user is not allowed to update the workitem
 	 */
 	public ItemCollection restoreFromArchive(ItemCollection workitem)
-			throws Exception {
+			throws AccessDeniedException {
+		if (workitem == null)
+			return null;
+		logger.fine("[WorkitemService] restoreFromDeletions: '"
+				+ workitem.getItemValueString(EntityService.UNIQUEID) + "'");
 
 		String sType = workitem.getItemValueString("type");
 		if ((sType.startsWith("workitem") || sType.startsWith("childworkitem"))
@@ -235,53 +323,25 @@ public class WorkitemService {
 	}
 
 	/**
-	 * performs a soft delete by changing the type property
-	 * 
-	 */
-	public ItemCollection moveIntoDeletions(ItemCollection workitem)
-			throws Exception {
-
-		String sType = workitem.getItemValueString("type");
-
-		if ((sType.startsWith("workitem") || sType.startsWith("childworkitem"))
-				&& !sType.endsWith("deleted")) {
-
-			String id = workitem.getItemValueString("$uniqueid");
-			Collection<ItemCollection> col = workflowService
-					.getWorkListByRef(id);
-			for (ItemCollection achildworkitem : col) {
-				// recursive method call
-				moveIntoDeletions(achildworkitem);
-			}
-			workitem.replaceItemValue("type",
-					workitem.getItemValueString("type") + "deleted");
-			workitem = entityService.save(workitem);
-
-			// update search index
-			try {
-				LucenePlugin.updateWorkitem(workitem);
-			} catch (Exception e) {
-				// no op
-			}
-		}
-
-		return workitem;
-	}
-
-	/**
-	 * This method restores a delted workitem by changing the type property
+	 * This method restores a soft deleted workitem by changing the type
+	 * property. Also references to this workitem will be updated recursively.
 	 * 
 	 * @param workitem
-	 * @return
-	 * @throws Exception
+	 *            to be deleted
+	 * @return restored workitem
+	 * @throws AccessDeniedException
 	 */
 	public ItemCollection restoreFromDeletions(ItemCollection workitem)
-			throws Exception {
-
+			throws AccessDeniedException {
+		if (workitem == null)
+			return null;
 		String sType = workitem.getItemValueString("type");
 
-		if ((sType.startsWith("workitem") || sType.startsWith("childworkitem"))
-				&& sType.endsWith("deleted")) {
+		logger.fine("[WorkitemService] restoreFromDeletions: '"
+				+ workitem.getItemValueString(EntityService.UNIQUEID) + "'");
+
+		
+		if (sType.endsWith("deleted")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
 			Collection<ItemCollection> col = workflowService
@@ -312,17 +372,38 @@ public class WorkitemService {
 	}
 
 	/**
-	 * This method delete a workitem. The method checks for child processes and
-	 * runs a recursive deletion ...
+	 * This method delete a workitem. The method can be called on all types of
+	 * workitems. Also process or space entities can be deleted. The param
+	 * 'recursive' indicates if also references to this workitem should be
+	 * deleted recursively.
+	 * 
+	 * @param workitem
+	 *            - the workitem to be soft deleted
+	 * @param recursive
+	 *            - if true also references to the current workitem will be soft
+	 *            deleted
+	 * @throws AccessDeniedException
+	 *             - if user is not allowed to delete the workitem
 	 */
-	public void deleteWorkItem(ItemCollection workitem) throws Exception {
-		String id = workitem.getItemValueString("$uniqueid");
-		Collection<ItemCollection> col = workflowService.getWorkListByRef(id);
-		for (ItemCollection achildworkitem : col) {
-			// recursive method call
-			deleteWorkItem(achildworkitem);
+	public void deleteWorkItem(ItemCollection workitem, boolean recursive)
+			throws AccessDeniedException {
+		if (workitem == null)
+			return;
+
+		logger.fine("[WorkitemService] deleteWorkItem: '"
+				+ workitem.getItemValueString(EntityService.UNIQUEID) + "' recursive="+recursive);
+
+		if (recursive) {
+			String id = workitem.getItemValueString("$uniqueid");
+			Collection<ItemCollection> col = workflowService
+					.getWorkListByRef(id);
+			for (ItemCollection achildworkitem : col) {
+				// recursive method call
+				deleteWorkItem(achildworkitem, recursive);
+			}
 		}
 		entityService.remove(workitem);
+
 	}
 
 }

@@ -50,7 +50,7 @@ import org.imixs.workflow.jee.util.PropertyService;
  * and more flexible as the file based imixs.properties provided by the Imixs
  * Workflow Engine.
  * 
- * 
+ *  
  * @author rsoika
  * 
  */
