@@ -1,0 +1,19 @@
+<f:subview xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jstl/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:rich="http://richfaces.org/rich" id="error_messages_id">
+
+	<!-- Display only if error messages available -->
+	<rich:panel rendered="#{! empty facesContext.maximumSeverity}">
+		<h3 style="border-color: red;">
+			<h:outputText style="color: red;" 
+				value="#{global.error_title}" />
+		</h3>
+		<p><h:outputText style="color: red"
+			value="#{global.error_message}" /></p>
+		
+	</rich:panel>
+	
+</f:subview>

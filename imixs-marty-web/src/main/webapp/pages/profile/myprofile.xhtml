@@ -1,0 +1,277 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jstl/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:a4j="http://richfaces.org/a4j"
+	xmlns:rich="http://richfaces.org/rich"
+	template="/layout/template.xhtml">
+
+	<ui:define name="content">
+		<f:view>
+			<f:loadBundle basename="bundle.profile" var="messages" />
+
+			<h:form id="myprofile_form_id">
+
+				<h2>
+					<h:outputText value="#{messages.title_my_profile}" />
+				</h2>
+
+				<!-- ########## Error ########## -->
+				<ui:include src="/pages/error_message.xhtml" />
+
+				<div class="sywapp-form">
+					<div class="sywapp-form-body">
+						<!-- **** General info ***** -->
+						<rich:panel>
+							<f:facet name="header">
+								<h:outputText value="#{messages.sub_title_general}" />
+							</f:facet>
+
+
+
+							<dl class="columns-2">
+
+								<dt>
+									<h:outputLabel value="#{messages.language}">
+									</h:outputLabel>
+								</dt>
+
+
+								<dd>
+									<h:selectOneMenu id="locale_id" layout="pageDirection"
+										value="#{myProfileMB.workitem.item['txtLocale']}">
+										<f:selectItems value="#{loginMB.localeSelection}" />
+									</h:selectOneMenu>
+								</dd>
+
+								<dt></dt>
+								<dd></dd>
+
+								<dt style="clear: left;">
+									<h:outputLabel for="firstname_id" value="#{messages.firstname}">
+										<h:message style="color: red" for="firstname_id"
+											showSummary="true" showDetail="false" />
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputText required="true"
+										value="#{myProfileMB.workitem.item['txtFirstName']}"
+										id="firstname_id">
+									</h:inputText>
+								</dd>
+
+
+								<dt>
+									<h:outputLabel for="lastname_id" value="#{messages.lastname}">
+										<h:message style="color: red" for="lastname_id"
+											showSummary="true" showDetail="false" />
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputText required="true"
+										value="#{myProfileMB.workitem.item['txtLastName']}"
+										id="lastname_id">
+									</h:inputText>
+								</dd>
+
+
+
+								<dt>
+									<h:outputLabel for="displayname_id"
+										value="#{messages.displayname}">
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputText required="true"
+										value="#{myProfileMB.workitem.item['txtUserName']}"
+										id="displayname_id">
+									</h:inputText>
+									<rich:spacer width="8" />
+									<h:outputText value="#{messages.displayname_help}" />
+									<br />
+
+
+									<h:message for="displayname_id" style="color: red"
+										showSummary="true" showDetail="true">
+
+									</h:message>
+								</dd>
+
+
+								<dt>
+									<h:outputLabel for="email_id" value="#{messages.email}">
+										<h:message style="color: red" for="email_id"
+											showSummary="true" showDetail="false" />
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputText required="true"
+										value="#{myProfileMB.workitem.item['txtEmail']}" id="email_id">
+									</h:inputText>
+								</dd>
+
+
+								<dt style="clear: left;">
+									<h:outputLabel for="phone1_id" value="#{messages.phone1}">
+										<h:message style="color: red" for="phone1_id"
+											showSummary="true" showDetail="false" />
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputText required="false"
+										value="#{myProfileMB.workitem.item['txtPhone1']}"
+										id="phone1_id">
+									</h:inputText>
+								</dd>
+
+
+								<dt>
+									<h:outputLabel for="phone2_id" value="#{messages.phone2}">
+										<h:message style="color: red" for="phone2_id"
+											showSummary="true" showDetail="false" />
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputText required="false"
+										value="#{myProfileMB.workitem.item['txtPhone2']}"
+										id="phone2_id">
+									</h:inputText>
+								</dd>
+
+
+
+
+								<dt>
+									<h:outputLabel for="company_id" value="#{messages.company}">
+										<h:message style="color: red" for="company_id"
+											showSummary="true" showDetail="false" />
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputText required="false"
+										value="#{myProfileMB.workitem.item['txtCompany']}"
+										id="company_id">
+									</h:inputText>
+								</dd>
+
+
+								<dt>
+									<h:outputLabel for="address_id" value="#{messages.address}">
+										<h:message style="color: red" for="address_id"
+											showSummary="true" showDetail="false" />
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputText required="false"
+										value="#{myProfileMB.workitem.item['txtaddress']}"
+										id="address_id">
+									</h:inputText>
+								</dd>
+
+
+
+								<dt>
+									<h:outputLabel for="zip_id"
+										value="#{messages.zip}/#{messages.city}">
+										<h:message style="color: red" for="zip_id" showSummary="true"
+											showDetail="false" />
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputText style="width:40px;" required="false"
+										value="#{myProfileMB.workitem.item['txtzip']}" id="zip_id">
+									</h:inputText>
+									<rich:spacer width="8" />
+									<h:inputText style="width:150px;" required="false"
+										value="#{myProfileMB.workitem.item['txtcity']}">
+									</h:inputText>
+								</dd>
+
+
+
+								<dt>
+									<h:outputLabel for="country_id" value="#{messages.country}">
+										<h:message style="color: red" for="country_id"
+											showSummary="true" showDetail="false" />
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputText required="false"
+										value="#{myProfileMB.workitem.item['txtcountry']}"
+										id="country_id">
+									</h:inputText>
+								</dd>
+
+
+
+								<dt>
+									<h:outputLabel for="state_id" value="#{messages.state}">
+										<h:message style="color: red" for="state_id"
+											showSummary="true" showDetail="false" />
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputText required="false"
+										value="#{myProfileMB.workitem.item['txtstate']}" id="state_id">
+									</h:inputText>
+								</dd>
+
+
+
+
+
+
+							</dl>
+
+							<div style="clear: left;" />
+						</rich:panel>
+
+						<!-- **** About me ***** -->
+						<rich:panel>
+							<f:facet name="header">
+								<h:outputText value="#{messages.aboutme}" />
+							</f:facet>
+							<ui:include src="/pages/_util/simple_editor.xhtml" />
+							<h:inputTextarea required="false"
+								value="#{myProfileMB.workitem.item['txtAboutMe']}" id="about_id"
+								style="height: 10em; width:100%">
+							</h:inputTextarea>
+
+
+							<dl>
+								<dt>
+									<h:outputLabel for="website_id" value="#{messages.website}">
+									</h:outputLabel>
+								</dt>
+								<dd>
+									<h:inputText style="width:100%;" required="false"
+										value="#{myProfileMB.workitem.item['txtWebSite']}"
+										id="website_id">
+									</h:inputText>
+								</dd>
+							</dl>
+						</rich:panel>
+					</div>
+					<div class="sywapp-form-footer">
+						<rich:panel>
+							<ui:repeat value="#{myProfileMB.activities}" var="activity">
+								<h:commandButton action="home"
+									actionListener="#{myProfileMB.doProcess}"
+									value="#{activity.item['txtname']}">
+									<f:param name="id" value="#{activity.item['numactivityid']}" />
+								</h:commandButton>
+							</ui:repeat>
+							<h:commandButton immediate="true" value="#{global.close}" action="notes" />
+
+						</rich:panel>
+					</div>
+				</div>
+			</h:form>
+		</f:view>
+	</ui:define>
+
+
+
+</ui:composition>
+

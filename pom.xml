@@ -1,0 +1,84 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.imixs.marty</groupId>
+	<artifactId>imixs-marty</artifactId>
+	<packaging>pom</packaging>
+	<name>Imixs Workflow - Marty</name>
+	<version>1.1.1-FINAL</version>
+	<organization>
+		<name>Imixs Software Solutions GmbH</name>
+		<url>http://www.imixs.com</url>
+	</organization>
+	<modules>
+		<module>imixs-marty-web</module>
+		<module>imixs-marty-ejb</module>
+		<module>imixs-marty-util</module>
+	</modules>
+	
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- WORKFLOW -->
+			<dependency>
+				<groupId>org.imixs.workflow</groupId>
+				<artifactId>imixs-workflow-core</artifactId>
+				<version>3.0.2</version>
+				<scope>provided</scope>
+				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
+			</dependency>
+			
+			<dependency>
+				<groupId>org.imixs.workflow</groupId>
+				<artifactId>imixs-workflow-engine</artifactId>
+				<version>3.0.2</version>
+				<scope>provided</scope>
+				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
+			</dependency>
+
+			<dependency>
+				<groupId>org.imixs.workflow</groupId>
+				<artifactId>imixs-workflow-faces</artifactId>
+				<version>3.0.2</version>
+			</dependency>
+
+			<!-- RichFaces -->
+			<dependency>
+				<groupId>org.richfaces.ui</groupId>
+				<artifactId>richfaces-ui</artifactId>
+				 <version>3.3.3.Final</version>
+		      	<scope>provided</scope>
+			</dependency>
+			<dependency>
+		      <groupId>org.richfaces.framework</groupId>
+		      <artifactId>richfaces-impl</artifactId>
+		      <version>3.3.3.Final</version>
+		      <scope>provided</scope>
+		    </dependency>
+		</dependencies>
+	</dependencyManagement>
+	<dependencies>
+		<!-- JEE Dependencies -->
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-api</artifactId>
+			<version>6.0</version>
+			<scope>provided</scope>
+		</dependency>	
+	</dependencies>
+</project>

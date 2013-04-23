@@ -1,0 +1,154 @@
+/* Hauptfarbe 93DBF1 */
+
+#sywapp-footer {
+	border-top: 1px solid #93DBF1;
+}
+
+#sywapp-branding {
+ background-image: url("logo.gif");
+ background-repeat:no-repeat;
+ background-position:10px 5px;	
+ height: 70px;	
+ background-color: #93DBF1;
+}
+ 
+#sywapp-servicenav {	
+	color: #666666;
+}
+
+
+
+
+
+.sywapp-menubar {
+ background: #93DBF1;
+ border: 0px;
+ border-bottom: 1px solid #FFFFFF;
+ border-top: 1px solid #FFFFFF;
+}
+
+
+/* DropDown Menu Label */
+.sywapp-menubar .rich-ddmenu-label-select {
+	background: #D8EBF1;
+	border-color: #D8EBF1;
+	color: #000000;
+}
+.sywapp-menubar .rich-ddmenu-label-unselect {
+	 background: #93DBF1;
+	 border-color: #93DBF1;	
+	 color: #FFFFFF
+}
+
+/* DropDown Menu Item */
+.sywapp-menubar .rich-menu-item {
+	 background: #D8EBF1;
+	 border-color: #D8EBF1;	
+}
+.sywapp-menubar .rich-menu-item-label {
+	 color: #000000;
+	 font-weight: normal;
+}
+.sywapp-menubar .rich-menu-item-hover {
+	background: #93DBF1;
+	border-color: #FFF;
+	color: #000000;
+	font-weight: normal;	
+}
+.sywapp-menubar .rich-menu-list-border {
+	 border-color: #D8EBF1;
+}
+
+
+/* 
+ * Die Klasse viewentry wird für die Darstellung von Views verwendet.
+ * die Klasse wird als RowClass im element rich:dataList  verwendet
+ * font-size: 0.8em
+ */
+.sywapp-viewentry {
+	border-top: 1px solid #FFF;
+	border-bottom: 1px solid #000;
+}
+.sywapp-viewentry:HOVER {
+	background: #EEE;
+	border-top: 1px solid #000;
+}
+
+.sywapp-viewentry-nav li:HOVER,  .sywapp-viewentry-nav a:HOVER {
+	background: #EEE;
+	color: #FFF;
+}
+
+.sywapp-viewentry-details {
+	border-top: 1px solid silver;
+}
+
+
+/*
+ * RichPanel für Masken Abschnitte 
+ */
+.rich-panel {
+	margin: 0em 0em 0em 1em;
+	padding: 0em;
+	border: 0px;
+}
+
+.rich-panel-header {
+	font-size: 14px;
+	/* 1.2em */
+	background: #FFF;
+	font-weight: bold;
+	color: #111;
+	padding: 0.5em 0em 0.5em 0em;
+	margin: 0em;
+	border: 0px;
+	border-bottom: 1px solid #93DBF1;
+}
+/* 111 */
+
+.rich-panel-body {
+	color: #333;
+	margin: 0.5em 0em 0em 0em;
+	padding: 0.5em 0em 1.5em 0em;
+	border: 0px solid #93DBF1;
+	background: #FFF;
+}
+
+
+
+
+
+/* Tab Panels */
+/* Customize RichtTabs */
+.rich-tab-inactive {
+	cursor: pointer;
+}
+
+.rich-tabpanel-content {
+	padding: 10px;
+	border-width: 1px 1px 1px 1px;
+	background-color: transparent;
+}
+.rich-tab-active {
+	background-image: none;
+	background: #93DBF1;
+	color: #FFFFFF;
+	border: 1px;
+}
+
+.rich-tab-inactive {
+	background-image: none;
+	background: #ECECEC;
+	color: #000000;
+	border: 1px;
+}
+
+.rich-tabhdr-side-border {
+	border: 1px;
+	background-image: none;
+}
+
+.rich-tabhdr-side-cell {
+	border: 1px;
+	background-image: none;
+}

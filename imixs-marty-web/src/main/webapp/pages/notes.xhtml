@@ -1,0 +1,59 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jstl/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:a4j="http://richfaces.org/a4j"
+	xmlns:rich="http://richfaces.org/rich"
+	template="/layout/template.xhtml">
+
+
+
+	<!-- This is the main homepage from Marty
+ 	
+ 	 -->
+
+	<ui:define name="content">
+		<f:view>
+			<h:form id="news_form">
+				<div>
+					<ui:include src="/pages/sub_welcome.xhtml" />
+					<div style="clear: left;" />
+					<div class="sywapp-view">
+
+
+						<div>
+							<!--  Box 1 -->
+							<div
+								style="margin: 0; padding: 0; border: 0; float: left; width: 50%">
+								<div style="margin-right: 5px;">
+
+									<ui:include src="/pages/sub_worklist.xhtml" />
+
+								</div>
+							</div>
+
+							<!--  Box 2 -->
+							<div
+								style="margin: 0; padding: 0; border: 0; float: left; width: 49.9%;">
+								<div style="margin-left: 5px;">
+									<!--  
+									<ui:include src="/pages/sub_worklist.xhtml" />
+								-->
+									<ui:include src="/pages/sub_updatelist.xhtml" />
+
+								</div>
+							</div>
+							<div style="clear: left;" />
+						</div>
+
+					</div>
+
+				</div>
+			</h:form>
+		</f:view>
+	</ui:define>
+
+
+</ui:composition>
+

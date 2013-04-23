@@ -1,0 +1,13 @@
+
+Custom Faces-config.xml
+~~~~~~~~~~~~~~
+ Die sywapps Web modul deklariert insgesamt zwei faces-config dateien über die web.xml
+ die "faces-config.xml"  enthält die eigentliche Konfiguration und Navigationsregeln
+ die "faces-config-custom.xml" ist leer und dafür vorgesehen von konkreten applikationen die 
+ sywapps nutzen überschrieben zu werden um individuelle Backing Beans und Navigationsregeln zu 
+ defnieren.
+ So überschreibt shareworwork die faces-config-custom.xml um eine zusätzliche Navigationsregel für 
+ die Sprachumschaltung im Public_Header bereizustellen. Diese Regel wird dann nur von einer xhtml 
+ Datei genutz die in shareworwork hinzugefügt wurde und nicht Bestandteil der sywapps ist.
+  faces-config-custom.xml wird also dazu verwendet um erweiterungen innerhalb einer von sywapps 
+  abgeleiteten Webanwendung zu konfigurieren.
