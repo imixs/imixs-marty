@@ -5,17 +5,15 @@
 	<artifactId>imixs-marty</artifactId>
 	<packaging>pom</packaging>
 	<name>Imixs Workflow - Marty</name>
-	<version>1.1.1-FINAL</version>
+	<version>1.2.0</version>
 	<organization>
 		<name>Imixs Software Solutions GmbH</name>
 		<url>http://www.imixs.com</url>
 	</organization>
 	<modules>
-		<module>imixs-marty-web</module>
 		<module>imixs-marty-ejb</module>
 		<module>imixs-marty-util</module>
 	</modules>
-	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -38,7 +36,7 @@
 			<dependency>
 				<groupId>org.imixs.workflow</groupId>
 				<artifactId>imixs-workflow-core</artifactId>
-				<version>3.0.2</version>
+				<version>3.1.1-SNAPSHOT</version>
 				<scope>provided</scope>
 				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
 			</dependency>
@@ -46,7 +44,7 @@
 			<dependency>
 				<groupId>org.imixs.workflow</groupId>
 				<artifactId>imixs-workflow-engine</artifactId>
-				<version>3.0.2</version>
+				<version>3.1.1-SNAPSHOT</version>
 				<scope>provided</scope>
 				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
 			</dependency>
@@ -54,22 +52,10 @@
 			<dependency>
 				<groupId>org.imixs.workflow</groupId>
 				<artifactId>imixs-workflow-faces</artifactId>
-				<version>3.0.2</version>
+				<version>3.1.2-SNAPSHOT</version>
 			</dependency>
 
-			<!-- RichFaces -->
-			<dependency>
-				<groupId>org.richfaces.ui</groupId>
-				<artifactId>richfaces-ui</artifactId>
-				 <version>3.3.3.Final</version>
-		      	<scope>provided</scope>
-			</dependency>
-			<dependency>
-		      <groupId>org.richfaces.framework</groupId>
-		      <artifactId>richfaces-impl</artifactId>
-		      <version>3.3.3.Final</version>
-		      <scope>provided</scope>
-		    </dependency>
+			
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
