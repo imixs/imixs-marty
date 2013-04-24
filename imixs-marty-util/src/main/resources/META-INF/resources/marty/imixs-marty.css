@@ -1,0 +1,48 @@
+/* Marty components and basic layout definitions  */
+
+/* Workitemlink component */
+.marty-workitemlink {
+	position: relative;
+}
+
+.marty-workitemlink-referencebox {
+	
+}
+.marty-workitemlink-referencebox-entry {
+	border-bottom: 1px solid silver;
+	margin-bottom: 5px;
+	padding-bottom: 5px;
+}
+
+.marty-workitemlink-entry-link {
+	
+}
+
+.marty-workitemlink-entry-remove {
+
+}
+
+.marty-workitemlink-entry-abstract {
+	
+}
+
+.marty-workitemlink-inputbox {
+	position: relative;
+	height: 24px;
+}
+
+.marty-workitemlink-resultlist {
+	display: block;
+	position: absolute;
+	z-index: 1;
+	left: 2px;
+	top: 22px;
+	border: 1px solid #CCC;
+	background: #FFF;
+}
+
+.marty-workitemlink-resultlist-entry {
+	margin: 5px 5px 0 5px;
+	border-bottom: 1px solid #eee;
+}
+
