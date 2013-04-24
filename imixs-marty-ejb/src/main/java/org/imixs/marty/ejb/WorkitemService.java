@@ -27,21 +27,28 @@
 
 package org.imixs.marty.ejb;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.logging.Logger;
 
-import javax.annotation.Resource;
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
-import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
 
+/**
+ * The WorkitemService provides methods to create, process, update and remove a
+ * workItem. The service can be used to all types of workitems (e.g. workitem,
+ * process, space)
+ * 
+ * @author rsoika
+ */
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
 		"org.imixs.ACCESSLEVEL.READERACCESS",
 		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
@@ -56,31 +63,19 @@ import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
 @LocalBean
 public class WorkitemService {
 
-	public final static int SORT_BY_CREATED = 0;
-	public final static int SORT_BY_MODIFIED = 1;
-	public final static int SORT_ORDER_DESC = 0;
-	public final static int SORT_ORDER_ASC = 1;
-
-	// Persistence Manager
 	@EJB
 	org.imixs.workflow.jee.ejb.EntityService entityService;
 
-	// Workflow Manager
 	@EJB
-	org.imixs.workflow.jee.ejb.WorkflowService wm;
+	org.imixs.workflow.jee.ejb.WorkflowService workflowService;
 
-	// ModelServcie
 	@EJB
 	org.imixs.workflow.jee.ejb.ModelService modelService;
 
-	// ProjectService
-	@EJB
-	ProjectService projectService;
-
-	@Resource
-	SessionContext ctx;
-
 	ItemCollection workItem = null;
+
+	private static Logger logger = Logger.getLogger(WorkitemService.class
+			.getName());
 
 	/**
 	 * This method creates a new workItem. The workItem becomes a response
@@ -89,8 +84,11 @@ public class WorkitemService {
 	 * ProcessID. The method throws an exception if the ProcessEntity did not
 	 * exist in the model.
 	 * 
+	 * The Method set the property '$WriteAccess' to the default value of the
+	 * current Principal name. This allows initial updates of BlobWorkitems
+	 * 
 	 * The Method creates an new property 'txtProjectName' which holds the
-	 * property 'txtName' from the parent WOrkitem. This is normally the project
+	 * property 'txtName' from the parent Workitem. This is normally the project
 	 * name where the workItem is assigned to. But in cases where the WorkItem
 	 * is created as a subprocess to another workItem the property can be mapped
 	 * to an individual value provided by the Parent workItem.
@@ -128,7 +126,11 @@ public class WorkitemService {
 
 		// create empty workitem
 		workItem = new ItemCollection();
+		workItem.replaceItemValue("type", "workitem");
 		workItem.replaceItemValue("$processID", processID);
+
+		// set default writeAccess
+		workItem.replaceItemValue("$writeAccess", workflowService.getUserName());
 
 		// assign project name and reference
 		workItem.replaceItemValue("$uniqueidRef",
@@ -141,148 +143,131 @@ public class WorkitemService {
 		workItem.replaceItemValue("txtworkflowgroup", sWorkflowGroup);
 		workItem.replaceItemValue("txtworkfloweditorid", sEditorID);
 
-		// set $WriteAccess with namCreator!
-		workItem.replaceItemValue("$WriteAccess", ctx.getCallerPrincipal()
-				.getName());
-
 		return workItem;
 
 	}
 
 	/**
-	 * This method changes the ProeccEntity assigned to the Workitem.
+	 * Processes a WorkItem.
 	 * 
-	 * The Attributes txtEditor, numProcessID, $modelVersion and
-	 * txtWrofklwoGroup will be set to the corresponding values of processEntity
-	 * 
-	 * 
-	 * @param processEntity
-	 *            ItemCollection representing the ProcessEntity where the
-	 *            workitem is assigned to
-	 */
-	public ItemCollection changeProcess(ItemCollection aworkitem,
-			ItemCollection processEntity) throws Exception {
-
-		workItem = aworkitem;
-		String sEditorID = processEntity.getItemValueString("txteditorid");
-		if ("".equals(sEditorID))
-			sEditorID = "default";
-		int processID = processEntity.getItemValueInteger("numProcessID");
-		String sModelVersion = processEntity
-				.getItemValueString("$modelversion");
-		String sWorkflowGroup = processEntity
-				.getItemValueString("txtworkflowgroup");
-
-		// assigen ModelVersion, group and editor
-		workItem.replaceItemValue("$ProcessID", processID);
-		workItem.replaceItemValue("$modelversion", sModelVersion);
-		workItem.replaceItemValue("txtworkflowgroup", sWorkflowGroup);
-		workItem.replaceItemValue("txtworkfloweditorid", sEditorID);
-
-		return workItem;
-	}
-
-	/**
-	 * Processes a Workitem. The method updates the type attribute. If the
-	 * Workitem is attached to a project then the type will be set to
-	 * 'workitem'. If the woritem is a child process form another workitem then
-	 * teh type will be set to 'childworkitem'
-	 * 
-	 * 
-	 * Also the Method test the workflow property txtWorkflowResultMessage for
-	 * the String "parent=". If such a string element is found the method tries
-	 * to update the project reference for the workitem to the new project with
-	 * the name provided in the txtWorkflowResultMessage (e.g.
-	 * ...parent=purchase). The project reference will be only updated if a
-	 * project with the name provided by the model is provided
-	 * 
-	 * Optional SywApp Plugins are managing the team lists and project name
-	 * properties.
-	 * 
-	 * @see SywappApplicationPlugin, SywappTeamPlugin
-	 * 
+	 * @throws ProcessingErrorException
+	 * @throws AccessDeniedException
 	 * 
 	 */
 	public ItemCollection processWorkItem(ItemCollection aworkitem)
-			throws Exception {
-		String sResult = null;
-		String sDefaultType = "workitem";
-
-		if (validateIssue(aworkitem) == false)
-			throw new Exception(
-					"WorkitemServiceBean - invalid object! no $uniqueidref or $process property found");
-
-		workItem = aworkitem;
-		// test the if the workitem is a child process
-		// typcially a workitem is a child to a project
-		String sUniqueidRef = workItem.getItemValueString("$uniqueidref");
-		if (!"".equals(sUniqueidRef)) {
-			// test parent type
-			try {
-				ItemCollection aParentWorkitem = entityService
-						.load(sUniqueidRef);
-				if (aParentWorkitem != null) {
-					String parenttype = aParentWorkitem
-							.getItemValueString("type");
-					if ("workitem".equals(parenttype))
-						// type becomes a child
-						sDefaultType = "childworkitem";
-				}
-			} catch (Exception esearch) {
-				sDefaultType = "workitem";
-			}
-		}
-
-		// replace type only if no type was still set!
-		if ("".equals(workItem.getItemValueString("type")))
-			workItem.replaceItemValue("type", sDefaultType);
+			throws AccessDeniedException, ProcessingErrorException {
 
 		// Process workitem...
-		workItem = wm.processWorkItem(workItem);
+		workItem = workflowService.processWorkItem(aworkitem);
 
 		return workItem;
 	}
 
 	/**
-	 * This method delete a workitem. The method checks for child processes and
-	 * runs a recursive deletion ...
+	 * This method performs a soft delete by changing the type property. The
+	 * method appends the sufix 'deleted' to the current type value.
+	 * 
+	 * The method can be called on all types of workitems. Also process or space
+	 * entities can be deleted. The param 'recursive' indicates if also
+	 * references to this workitem should be deleted recursively.
+	 * 
+	 * The method did not change a workitem if the type property still ends with
+	 * the sufix 'deleted'
+	 * 
+	 * @param workitem
+	 *            - the workitem to be soft deleted
+	 * @param recursive
+	 *            - if true also references to the current workitem will be soft
+	 *            deleted
+	 * @return deleted workitem
+	 * @throws AccessDeniedException
+	 *             - if user is not allowed to update the workitem
 	 */
-	public void deleteWorkItem(ItemCollection workitem) throws Exception {
-		String id = workitem.getItemValueString("$uniqueid");
-		Collection<ItemCollection> col = wm.getWorkListByRef(id);
-		for (ItemCollection achildworkitem : col) {
-			// recursive method call
-			deleteWorkItem(achildworkitem);
+	public ItemCollection softDeleteWorkitem(ItemCollection workitem,
+			boolean recursive) throws AccessDeniedException {
+		if (workitem == null)
+			return null;
+		logger.fine("[WorkitemService] softDeleteWorkitem: '"
+				+ workitem.getItemValueString(EntityService.UNIQUEID) + "' recursive="+recursive);
+
+		
+		String sType = workitem.getItemValueString("type");
+
+		if (!sType.endsWith("deleted")) {
+			// recursive soft delete?
+			if (recursive) {
+				String id = workitem.getItemValueString("$uniqueid");
+				Collection<ItemCollection> col = workflowService
+						.getWorkListByRef(id);
+				for (ItemCollection achildworkitem : col) {
+					// recursive method call
+					softDeleteWorkitem(achildworkitem, recursive);
+				}
+			}
+			workitem.replaceItemValue("type",
+					workitem.getItemValueString("type") + "deleted");
+			workitem = entityService.save(workitem);
+			
+			// update search index
+			try {
+				LucenePlugin.updateWorkitem(workitem);
+			} catch (Exception e) {
+				// no op
+				logger.finest("[WorkitemService] moveIntoDeletesions: unable to update lucene index");
+			}
 		}
 
-		// update search index
-		try {
-			LucenePlugin.addWorkitem(workitem);
-		} catch (Exception e) {
-			// no op
-		}
-
-		entityService.remove(workitem);
+		return workitem;
 	}
 
-	public ItemCollection moveIntoArchive(ItemCollection workitem)
-			throws Exception {
-		if ("workitem".equals(workitem.getItemValueString("type"))) {
+	/**
+	 * This method archives a workitem by changing the property 'type'. The
+	 * method appends the sufix 'archive' to the current type value.
+	 * 
+	 * The method can be called on all types of workitems. Also process or space
+	 * entities can be deleted. The param 'recursive' indicates if also
+	 * references to this workitem should be deleted recursively.
+	 * 
+	 * The method did not change a workitem if the type property still ends with
+	 * the sufix 'archive'
+	 * 
+	 * @param workitem
+	 *            - the workitem to be archived
+	 * @param recursive
+	 *            - if true also references to the current workitem will be
+	 *            archived
+	 * @return archived workitem
+	 * @throws AccessDeniedException
+	 *             - if user is not allowed to update the workite
+	 */
+	public ItemCollection archiveWorkitem(ItemCollection workitem,
+			boolean recursive) throws AccessDeniedException {
+		if (workitem == null)
+			return null;
+		
+		logger.fine("[WorkitemService] archiveWorkitem: '"
+				+ workitem.getItemValueString(EntityService.UNIQUEID) + "' recursive="+recursive);
 
-			String id = workitem.getItemValueString("$uniqueid");
-			Collection<ItemCollection> col = wm.getWorkListByRef(id);
-			for (ItemCollection achildworkitem : col) {
-				// recursive method call
-				moveIntoArchive(achildworkitem);
+		
+		String sType = workitem.getItemValueString("type");
+		if (!sType.endsWith("archive")) {
+			if (recursive) {
+				String id = workitem.getItemValueString("$uniqueid");
+				Collection<ItemCollection> col = workflowService
+						.getWorkListByRef(id);
+				for (ItemCollection achildworkitem : col) {
+					// recursive method call
+					archiveWorkitem(achildworkitem, recursive);
+				}
 			}
 			workitem.replaceItemValue("type",
 					workitem.getItemValueString("type") + "archive");
 
 			workitem = entityService.save(workitem);
-
+			
 			// update search index
 			try {
-				LucenePlugin.addWorkitem(workitem);
+				LucenePlugin.updateWorkitem(workitem);
 			} catch (Exception e) {
 				// no op
 			}
@@ -291,29 +276,45 @@ public class WorkitemService {
 		return workitem;
 	}
 
+	/**
+	 * THie method restores a workitem from the archive by changing the type
+	 * property. Also references to this workitem will be updated recursively.
+	 * 
+	 * @param workitem
+	 *            - to be restored from the archive
+	 * @return - restored workitem
+	 * @throws AccessDeniedException
+	 *             - if user is not allowed to update the workitem
+	 */
 	public ItemCollection restoreFromArchive(ItemCollection workitem)
-			throws Exception {
+			throws AccessDeniedException {
+		if (workitem == null)
+			return null;
+		logger.fine("[WorkitemService] restoreFromDeletions: '"
+				+ workitem.getItemValueString(EntityService.UNIQUEID) + "'");
 
-		if ("workitemarchive".equals(workitem.getItemValueString("type"))
-				|| "childworkitemarchive".equals(workitem
-						.getItemValueString("type"))) {
+		String sType = workitem.getItemValueString("type");
+		if ((sType.startsWith("workitem") || sType.startsWith("childworkitem"))
+				&& sType.endsWith("archive")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
-			Collection<ItemCollection> col = wm.getWorkListByRef(id);
+			Collection<ItemCollection> col = workflowService
+					.getWorkListByRef(id);
 			for (ItemCollection achildworkitem : col) {
 				// recursive method call
 				restoreFromArchive(achildworkitem);
 			}
-			if ("workitemarchive".equals(workitem.getItemValueString("type")))
-				workitem.replaceItemValue("type", "workitem");
-			if ("childworkitemarchive".equals(workitem
-					.getItemValueString("type")))
-				workitem.replaceItemValue("type", "childworkitem");
+			// cut the 'deleted' part from the type property
+			if (sType.endsWith("archive")) {
+				String sTypeNew = sType.substring(0, sType.indexOf("archive"));
+				workitem.replaceItemValue("type", sTypeNew);
+			}
+
 			workitem = entityService.save(workitem);
 
 			// update search index
 			try {
-				LucenePlugin.addWorkitem(workitem);
+				LucenePlugin.updateWorkitem(workitem);
 			} catch (Exception e) {
 				// no op
 			}
@@ -322,61 +323,45 @@ public class WorkitemService {
 	}
 
 	/**
-	 * performs a soft delete
+	 * This method restores a soft deleted workitem by changing the type
+	 * property. Also references to this workitem will be updated recursively.
 	 * 
+	 * @param workitem
+	 *            to be deleted
+	 * @return restored workitem
+	 * @throws AccessDeniedException
 	 */
-	public ItemCollection moveIntoDeletions(ItemCollection workitem)
-			throws Exception {
-
-		String sType = workitem.getItemValueString("type");
-
-		if (sType.startsWith("workitem") || sType.startsWith("childworkitem")) {
-
-			String id = workitem.getItemValueString("$uniqueid");
-			Collection<ItemCollection> col = wm.getWorkListByRef(id);
-			for (ItemCollection achildworkitem : col) {
-				// recursive method call
-				moveIntoDeletions(achildworkitem);
-			}
-			workitem.replaceItemValue("type",
-					workitem.getItemValueString("type") + "deleted");
-			workitem = entityService.save(workitem);
-
-			// update search index
-			try {
-				LucenePlugin.addWorkitem(workitem);
-			} catch (Exception e) {
-				// no op
-			}
-		}
-
-		return workitem;
-	}
-
 	public ItemCollection restoreFromDeletions(ItemCollection workitem)
-			throws Exception {
-
+			throws AccessDeniedException {
+		if (workitem == null)
+			return null;
 		String sType = workitem.getItemValueString("type");
 
-		if (sType.startsWith("workitem") || sType.startsWith("childworkitem")) {
+		logger.fine("[WorkitemService] restoreFromDeletions: '"
+				+ workitem.getItemValueString(EntityService.UNIQUEID) + "'");
+
+		
+		if (sType.endsWith("deleted")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
-			Collection<ItemCollection> col = wm.getWorkListByRef(id);
+			Collection<ItemCollection> col = workflowService
+					.getWorkListByRef(id);
 			for (ItemCollection achildworkitem : col) {
 				// recursive method call
 				restoreFromDeletions(achildworkitem);
-			}			
+			}
+
 			// cut the 'deleted' part from the type property
 			if (sType.endsWith("deleted")) {
-				String sTypeNew=sType.substring(0, sType.indexOf("deleted"));
+				String sTypeNew = sType.substring(0, sType.indexOf("deleted"));
 				workitem.replaceItemValue("type", sTypeNew);
-			}			
-			
+			}
+
 			workitem = entityService.save(workitem);
 
 			// update search index
 			try {
-				LucenePlugin.addWorkitem(workitem);
+				LucenePlugin.updateWorkitem(workitem);
 			} catch (Exception e) {
 				// no op
 
@@ -386,497 +371,39 @@ public class WorkitemService {
 		return workitem;
 	}
 
-	public List<ItemCollection> findWorkitemsByQuery(String query, int row,
-			int count) {
-		ArrayList<ItemCollection> workitemList = new ArrayList<ItemCollection>();
-
-		if (query == null || "".equals(query))
-			return workitemList;
-		Collection<ItemCollection> col = entityService.findAllEntities(query,
-				row, count);
-		workitemList.addAll(col);
-		return workitemList;
-	}
-
 	/**
-	 * Returns a collection of workitems where current user is owner (namOwner)
+	 * This method delete a workitem. The method can be called on all types of
+	 * workitems. Also process or space entities can be deleted. The param
+	 * 'recursive' indicates if also references to this workitem should be
+	 * deleted recursively.
 	 * 
-	 * @param model
-	 *            - an optional model version to filter workitems
-	 * @param processgroup
-	 *            - an optional processgroup to filter workitems
-	 * @param processid
-	 *            - an optional processID to filter workitems
-	 * @param row
-	 *            - start position
-	 * @param count
-	 *            - max count of selected worktiems
-	 * @return list of workitems
+	 * @param workitem
+	 *            - the workitem to be soft deleted
+	 * @param recursive
+	 *            - if true also references to the current workitem will be soft
+	 *            deleted
+	 * @throws AccessDeniedException
+	 *             - if user is not allowed to delete the workitem
 	 */
-	public List<ItemCollection> findWorkitemsByOwner(String ref, String model,
-			String processgroup, int processid, int row, int count, int sortby,
-			int sortorder) {
-		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
-		if (ref == null)
-			ref = "";
-		if (processgroup == null)
-			processgroup = "";
-		if (model == null)
-			model = "";
+	public void deleteWorkItem(ItemCollection workitem, boolean recursive)
+			throws AccessDeniedException {
+		if (workitem == null)
+			return;
 
-		String name = ctx.getCallerPrincipal().getName();
+		logger.fine("[WorkitemService] deleteWorkItem: '"
+				+ workitem.getItemValueString(EntityService.UNIQUEID) + "' recursive="+recursive);
 
-		// construct query
-		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-		sQuery += " JOIN wi.textItems as a1";
-		if (!"".equals(ref))
-			sQuery += " JOIN wi.textItems as t2 ";
-		if (!"".equals(processgroup))
-			sQuery += " JOIN wi.textItems as t3 ";
-		if (processid > 0)
-			sQuery += " JOIN wi.integerItems as t4 ";
-		if (!"".equals(model))
-			sQuery += " JOIN wi.textItems AS model ";
-		sQuery += " WHERE wi.type = 'workitem'";
-		sQuery += " AND a1.itemName = 'namowner' and a1.itemValue = '" + name
-				+ "'";
-		if (!"".equals(ref))
-			sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
-					+ ref + "' ";
-
-		if (!"".equals(model))
-			sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
-					+ model + "'";
-
-		if (!"".equals(processgroup))
-			sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
-					+ processgroup + "' ";
-		// Process ID
-		if (processid > 0)
-			sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
-					+ processid + "'";
-
-		// creade ORDER BY phrase
-		sQuery += " ORDER BY wi.";
-		if (sortby == WorkitemService.SORT_BY_CREATED)
-			sQuery += "created ";
-		else
-			sQuery += "modified ";
-		if (sortorder == WorkitemService.SORT_ORDER_DESC)
-			sQuery += "desc";
-		else
-			sQuery += "asc";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				row, count);
-
-		teamList.addAll(col);
-
-		return teamList;
-
-	}
-
-	/**
-	 * Returns a collection representing the worklist for the current user
-	 * 
-	 * @param model
-	 *            - an optional model version to filter workitems
-	 * @param processgroup
-	 *            - an optional processgroup to filter workitems
-	 * @param processid
-	 *            - an optional processID to filter workitems
-	 * @param row
-	 *            - start position
-	 * @param count
-	 *            - max count of selected worktiems
-	 * @return list of workitems
-	 */
-	public List<ItemCollection> findWorkitemsByAuthor(String ref, String model,
-			String processgroup, int processid, int row, int count, int sortby,
-			int sortorder) {
-		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
-		if (ref == null)
-			ref = "";
-		if (processgroup == null)
-			processgroup = "";
-		if (model == null)
-			model = "";
-
-		String name = ctx.getCallerPrincipal().getName();
-
-		// construct query
-		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-		sQuery += " JOIN wi.writeAccessList as a1";
-		if (!"".equals(ref))
-			sQuery += " JOIN wi.textItems as t2 ";
-		if (!"".equals(processgroup))
-			sQuery += " JOIN wi.textItems as t3 ";
-		if (processid > 0)
-			sQuery += " JOIN wi.integerItems as t4 ";
-		if (!"".equals(model))
-			sQuery += " JOIN wi.textItems AS model ";
-		sQuery += " WHERE wi.type = 'workitem'";
-		sQuery += " AND a1.value = '" + name + "'";
-		if (!"".equals(ref))
-			sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
-					+ ref + "' ";
-		if (!"".equals(model))
-			sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
-					+ model + "'";
-
-		if (!"".equals(processgroup))
-			sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
-					+ processgroup + "' ";
-		// Process ID
-		if (processid > 0)
-			sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
-					+ processid + "'";
-
-		// creade ORDER BY phrase
-		sQuery += " ORDER BY wi.";
-		if (sortby == WorkitemService.SORT_BY_CREATED)
-			sQuery += "created ";
-		else
-			sQuery += "modified ";
-		if (sortorder == WorkitemService.SORT_ORDER_DESC)
-			sQuery += "desc";
-		else
-			sQuery += "asc";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				row, count);
-
-		teamList.addAll(col);
-
-		return teamList;
-
-	}
-
-	/**
-	 * Returns a collection representing the worklist for the current user
-	 * 
-	 * @param model
-	 *            - an optional model version to filter workitems
-	 * @param processgroup
-	 *            - an optional processgroup to filter workitems
-	 * @param processid
-	 *            - an optional processID to filter workitems
-	 * @param row
-	 *            - start position
-	 * @param count
-	 *            - max count of selected worktiems
-	 * @return list of workitems
-	 */
-	public List<ItemCollection> findWorkitemsByCreator(String ref,
-			String model, String processgroup, int processid, int row,
-			int count, int sortby, int sortorder) {
-		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
-		if (ref == null)
-			ref = "";
-		if (processgroup == null)
-			processgroup = "";
-		if (model == null)
-			model = "";
-
-		String name = ctx.getCallerPrincipal().getName();
-
-		// construct query
-		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-		sQuery += " JOIN wi.textItems as a1";
-		if (!"".equals(ref))
-			sQuery += " JOIN wi.textItems as t2 ";
-		if (!"".equals(processgroup))
-			sQuery += " JOIN wi.textItems as t3 ";
-		if (processid > 0)
-			sQuery += " JOIN wi.integerItems as t4 ";
-		if (!"".equals(model))
-			sQuery += " JOIN wi.textItems AS model ";
-		sQuery += " WHERE wi.type = 'workitem'";
-		sQuery += " AND a1.itemName = 'namcreator' and a1.itemValue = '" + name
-				+ "'";
-		if (!"".equals(ref))
-			sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
-					+ ref + "' ";
-		if (!"".equals(model))
-			sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
-					+ model + "'";
-
-		if (!"".equals(processgroup))
-			sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
-					+ processgroup + "' ";
-		// Process ID
-		if (processid > 0)
-			sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
-					+ processid + "'";
-
-		// creade ORDER BY phrase
-		sQuery += " ORDER BY wi.";
-		if (sortby == WorkitemService.SORT_BY_CREATED)
-			sQuery += "created ";
-		else
-			sQuery += "modified ";
-		if (sortorder == WorkitemService.SORT_ORDER_DESC)
-			sQuery += "desc";
-		else
-			sQuery += "asc";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				row, count);
-
-		teamList.addAll(col);
-
-		return teamList;
-
-	}
-
-	/**
-	 * Returns a collection of all Workitems independent of the current user
-	 * name! The ref defines an optional project or parentworkitem reference
-	 * where the workitems belongs to. If not Ref is defined the method returns
-	 * only workitems from type='workitem'. In other cases the method also
-	 * returns workitems from type='childworkitem'. So the method can be used to
-	 * select childprocesses inside a form.
-	 * 
-	 * @param model
-	 *            - an optional model version to filter workitems
-	 * @param processgroup
-	 *            - an optional processgroup to filter workitems
-	 * @param processid
-	 *            - an optional processID to filter workitems
-	 * @param row
-	 *            - start position
-	 * @param count
-	 *            - max count of selected workitems
-	 * @return list of workitems
-	 */
-	public List<ItemCollection> findAllWorkitems(String ref, String model,
-			String processgroup, int processid, int row, int count, int sortby,
-			int sortorder) {
-		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
-		if (ref == null)
-			ref = "";
-		if (processgroup == null)
-			processgroup = "";
-		if (model == null)
-			model = "";
-
-		// construct query
-		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-		if (!"".equals(ref))
-			sQuery += " JOIN wi.textItems as t2 ";
-		if (!"".equals(processgroup))
-			sQuery += " JOIN wi.textItems as t3 ";
-		if (processid > 0)
-			sQuery += " JOIN wi.integerItems as t4 ";
-		if (!"".equals(model))
-			sQuery += " JOIN wi.textItems AS model ";
-
-		// restrict type depending of a supporte ref id
-		if (!"".equals(ref))
-			sQuery += " WHERE wi.type IN ('workitem','childworkitem') ";
-		else
-			sQuery += " WHERE wi.type IN ('workitem') ";
-
-		if (!"".equals(ref))
-			sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
-					+ ref + "' ";
-		if (!"".equals(model))
-			sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
-					+ model + "'";
-
-		if (!"".equals(processgroup))
-			sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
-					+ processgroup + "' ";
-		// Process ID
-		if (processid > 0)
-			sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
-					+ processid + "'";
-
-		// creade ORDER BY phrase
-		sQuery += " ORDER BY wi.";
-		if (sortby == WorkitemService.SORT_BY_CREATED)
-			sQuery += "created ";
-		else
-			sQuery += "modified ";
-		if (sortorder == WorkitemService.SORT_ORDER_DESC)
-			sQuery += "desc";
-		else
-			sQuery += "asc";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				row, count);
-
-		teamList.addAll(col);
-
-		return teamList;
-	}
-
-	/**
-	 * Returns a collection of all Woritems independent of the current user
-	 * name!
-	 * 
-	 * @param model
-	 *            - an optional model version to filter workitems
-	 * @param processgroup
-	 *            - an optional processgroup to filter workitems
-	 * @param processid
-	 *            - an optional processID to filter workitems
-	 * @param row
-	 *            - start position
-	 * @param count
-	 *            - max count of selected worktiems
-	 * @return list of workitems
-	 */
-	public List<ItemCollection> findArchive(String project, String model,
-			String processgroup, int processid, int row, int count, int sortby,
-			int sortorder) {
-		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
-		if (project == null)
-			project = "";
-		if (processgroup == null)
-			processgroup = "";
-		if (model == null)
-			model = "";
-
-		// construct query
-		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-		if (!"".equals(project))
-			sQuery += " JOIN wi.textItems as t2 ";
-		if (!"".equals(processgroup))
-			sQuery += " JOIN wi.textItems as t3 ";
-		if (processid > 0)
-			sQuery += " JOIN wi.integerItems as t4 ";
-		if (!"".equals(model))
-			sQuery += " JOIN wi.textItems AS model ";
-		sQuery += " WHERE wi.type = 'workitemarchive'";
-		if (!"".equals(project))
-			sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
-					+ project + "' ";
-		if (!"".equals(model))
-			sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
-					+ model + "'";
-
-		if (!"".equals(processgroup))
-			sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
-					+ processgroup + "' ";
-		// Process ID
-		if (processid > 0)
-			sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
-					+ processid + "'";
-
-		// creade ORDER BY phrase
-		sQuery += " ORDER BY wi.";
-		if (sortby == WorkitemService.SORT_BY_CREATED)
-			sQuery += "created ";
-		else
-			sQuery += "modified ";
-		if (sortorder == WorkitemService.SORT_ORDER_DESC)
-			sQuery += "desc";
-		else
-			sQuery += "asc";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				row, count);
-
-		teamList.addAll(col);
-
-		return teamList;
-	}
-
-	/**
-	 * Returns a collection of all Woritems independent of the current user
-	 * name!
-	 * 
-	 * @param model
-	 *            - an optional model version to filter workitems
-	 * @param processgroup
-	 *            - an optional processgroup to filter workitems
-	 * @param processid
-	 *            - an optional processID to filter workitems
-	 * @param row
-	 *            - start position
-	 * @param count
-	 *            - max count of selected worktiems
-	 * @return list of workitems
-	 */
-	public List<ItemCollection> findDeletions(String ref, String model,
-			String processgroup, int processid, int row, int count, int sortby,
-			int sortorder) {
-		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
-		if (ref == null)
-			ref = "";
-		if (processgroup == null)
-			processgroup = "";
-		if (model == null)
-			model = "";
-
-		// construct query
-		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-		if (!"".equals(ref))
-			sQuery += " JOIN wi.textItems as t2 ";
-		if (!"".equals(processgroup))
-			sQuery += " JOIN wi.textItems as t3 ";
-		if (processid > 0)
-			sQuery += " JOIN wi.integerItems as t4 ";
-		if (!"".equals(model))
-			sQuery += " JOIN wi.textItems AS model ";
-		sQuery += " WHERE wi.type = 'workitemdeleted'";
-		if (!"".equals(ref))
-			sQuery += " AND t2.itemName = '$uniqueidref' and t2.itemValue = '"
-					+ ref + "' ";
-		if (!"".equals(model))
-			sQuery += " AND model.itemName = '$modelversion' AND model.itemValue ='"
-					+ model + "'";
-
-		if (!"".equals(processgroup))
-			sQuery += " AND t3.itemName = 'txtworkflowgroup' and t3.itemValue = '"
-					+ processgroup + "' ";
-		// Process ID
-		if (processid > 0)
-			sQuery += " AND t4.itemName = '$processid' AND t4.itemValue ='"
-					+ processid + "'";
-
-		// creade ORDER BY phrase
-		sQuery += " ORDER BY wi.";
-		if (sortby == WorkitemService.SORT_BY_CREATED)
-			sQuery += "created ";
-		else
-			sQuery += "modified ";
-		if (sortorder == WorkitemService.SORT_ORDER_DESC)
-			sQuery += "desc";
-		else
-			sQuery += "asc";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				row, count);
-
-		teamList.addAll(col);
-
-		return teamList;
-	}
-
-	public ItemCollection findWorkItem(String id) {
-		return entityService.load(id);
-	}
-
-	/**
-	 * This method validates if the attributes supported to a map are
-	 * corresponding to the team structure
-	 */
-	private boolean validateIssue(ItemCollection aWorkitem) {
-
-		try {
-			if (!aWorkitem.hasItem("$processid"))
-				return false;
-			// test Project reference
-			if (!aWorkitem.hasItem("$uniqueIDref"))
-				return false;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
+		if (recursive) {
+			String id = workitem.getItemValueString("$uniqueid");
+			Collection<ItemCollection> col = workflowService
+					.getWorkListByRef(id);
+			for (ItemCollection achildworkitem : col) {
+				// recursive method call
+				deleteWorkItem(achildworkitem, recursive);
+			}
 		}
-		return true;
+		entityService.remove(workitem);
+
 	}
 
 }

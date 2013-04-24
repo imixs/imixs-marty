@@ -27,61 +27,36 @@
 
 package org.imixs.marty.ejb;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
-import javax.ejb.LocalBean;
-import javax.ejb.SessionContext;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.jpa.EntityIndex;
+import org.imixs.workflow.exceptions.AccessDeniedException;
 
 /**
- * Manik is a subproject of the IX JEE Workflow Server Project. This Project
- * supports different general business objects which are useful building a
- * workflow application. So using the manik components there is no need to
- * implement typical business service object which are used in many simmilar
- * projects. So manik is a kind of DRY 'dont repeat yourself' pattern.
+ * The Marty Config Service can be used to store and access configuration values
+ * stored in a configuration entity (type='CONFIGURATION).
  * 
- * Maven: Each manik component is implemented using the maven artifact concept.
- * So in a maven project it is realy easy to add functionallity to a workflow
- * project using the mani components!
+ * The ConfigService EJB provides access to named Config Entities stored in the
+ * database. A configuration Entity is identified by its name (property
+ * txtName). So different configuration Entities can be managed in one
+ * application.
  * 
- * Each manik component consits of a service Interface for the business object
- * and a stateless session ejb as a serviceBean implementation. manik uses the
- * ejb 3.0 model
+ * The ConfigService ejb is implemented as a sigelton and uses an internal cache
+ * to cache config entities.
  * 
- * Individual business objects (WorkItem) should not be implementet by a manik
- * componet. This is because only the applicaiton itself knows how the indidual
- * business object (typical the workitem) makes use of standard business
- * objects. For example you can use manik to implement an Project Workflow
- * Object to manage projects and projectteams. But your workitem from your
- * individual workflow application have to decide which team should bes stored
- * to a worktiem during processing. So this job can not be done by a manik
- * component.
- * 
- * 
- * Config Service<br>
- * This Service Facade encapsulates a configuration service business object A
- * config object is represented by a ItemCollection with the following
- * Attributes:
- * 
- * 
- * txtName - Name of the configuration (required)
- * 
- * 
- * all other value objects can be defined by the individual requirements of a
- * project.
  * 
  * @author rsoika
- * 
  */
 
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
@@ -94,24 +69,26 @@ import org.imixs.workflow.jee.jpa.EntityIndex;
 		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
 		"org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
-@Stateless
-@LocalBean
-public class ConfigService  {
+@Singleton
+public class ConfigService {
 
-	@Resource
-	SessionContext ctx;
+	int DEFAULT_CACHE_SIZE = 30;
 
 	@EJB
-	org.imixs.workflow.jee.ejb.EntityService entityService;
+	private org.imixs.workflow.jee.ejb.EntityService entityService;
 
-	// Workflow Manager
-	@EJB
-	org.imixs.workflow.jee.ejb.WorkflowService wm;
-	ItemCollection workItem = null;
+	private Cache cache = null;
 
 	final String TYPE = "configuration";
 
-	
+	/**
+	 * PostContruct event - loads the imixs.properties.
+	 */
+	@PostConstruct
+	void init() {
+		// initialize cache
+		cache = new Cache(DEFAULT_CACHE_SIZE);
+	}
 
 	/**
 	 * creates a new configuration object for a specified name
@@ -119,18 +96,27 @@ public class ConfigService  {
 	 * @return
 	 */
 	public ItemCollection createConfiguration(String name) throws Exception {
-		ItemCollection aworkitem = new ItemCollection();
-		aworkitem.replaceItemValue("type", TYPE);
-		aworkitem.replaceItemValue("txtname", name);
-		return aworkitem;
+		ItemCollection configItemCollection = new ItemCollection();
+		configItemCollection.replaceItemValue("type", TYPE);
+		configItemCollection.replaceItemValue("txtname", name);
+		configItemCollection.replaceItemValue("$writeAccess",
+				"org.imixs.ACCESSLEVEL.MANAGERACCESS");
+		configItemCollection.replaceItemValue("$readAccess", "");
+
+		cache.put(name, configItemCollection);
+
+		return configItemCollection;
 	}
 
 	/**
 	 * This method deletes an existing Configuration.
 	 * 
 	 * @param aconfig
+	 * @throws AccessDeniedException
 	 */
-	public void deleteConfiguration(ItemCollection aconfig) throws Exception {
+	public void deleteConfiguration(ItemCollection aconfig)
+			throws AccessDeniedException {
+		cache.remove(aconfig.getItemValueString("txtName"));
 		entityService.remove(aconfig);
 	}
 
@@ -143,63 +129,68 @@ public class ConfigService  {
 	 *            in attribute txtname
 	 */
 	public ItemCollection loadConfiguration(String name) {
-		String sQuery = "SELECT config FROM Entity AS config "
-				+ " JOIN config.textItems AS t2" + " WHERE config.type = '"
-				+ TYPE + "'" + " AND t2.itemName = 'txtname'"
-				+ " AND t2.itemValue = '" + name + "'"
-				+ " ORDER BY t2.itemValue asc";
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, 1);
+		ItemCollection configItemCollection = null;
 
-		if (col.size() > 0) {
-			ItemCollection aworkitem = col.iterator().next();
-			return aworkitem;
+		// check cache...
+		configItemCollection = cache.get(name);
+		if (configItemCollection == null) {
+			// load / create config entity....
+			String sQuery = "SELECT config FROM Entity AS config "
+					+ " JOIN config.textItems AS t2" + " WHERE config.type = '"
+					+ TYPE + "'" + " AND t2.itemName = 'txtname'"
+					+ " AND t2.itemValue = '" + name + "'"
+					+ " ORDER BY t2.itemValue asc";
+			Collection<ItemCollection> col = entityService.findAllEntities(
+					sQuery, 0, 1);
+
+			if (col.size() > 0) {
+				configItemCollection = col.iterator().next();
+			} else {
+				// create default values
+				configItemCollection = new ItemCollection();
+				configItemCollection.replaceItemValue("type", TYPE);
+				configItemCollection.replaceItemValue("txtname", name);
+			}
+			cache.put(name, configItemCollection);
 		}
-		return null;
+
+		return configItemCollection;
 
 	}
 
 	/**
-	 * This method process a config object using the Imixs WorkflowManager
+	 * save the configuration entity
 	 * 
-	 * @param aconfig
-	 *            ItemCollection representing the issue
-	 * @param activityID
-	 *            activity ID the issue should be processed
+	 * @return
+	 * @throws AccessDeniedException
 	 */
-	public ItemCollection processConfiguration(ItemCollection aorgunit,
-			int activityid) throws Exception {
+	public ItemCollection save(ItemCollection configItemCollection)
+			throws AccessDeniedException {
+		// update write and read access
+		configItemCollection.replaceItemValue("type", TYPE);
 
-		validateConfiguration(aorgunit);
-		int iProcessID = aorgunit.getItemValueInteger("$processID");
-		String sUniversalID = aorgunit.getItemValueString("$uniqueid");
+		// save entity
+		configItemCollection = entityService.save(configItemCollection);
 
-		String sCreator = aorgunit.getItemValueString("namcreator");
+		cache.put(configItemCollection.getItemValueString("txtName"),
+				configItemCollection);
 
-		workItem = aorgunit;
-		workItem.replaceItemValue("$ActivityID", activityid);
-
-		// Process workitem...
-		ItemCollection result = wm.processWorkItem(workItem);
-		return result;
-
+		return configItemCollection;
 	}
 
 	/**
-	 * Returns a list of all configuration objects
+	 * Returns a list of all configuration entities.
 	 * 
-	 * @param row
-	 * @param count
 	 * @return
 	 */
-	public List<ItemCollection> findAllConfigurations(int row, int count) {
+	public List<ItemCollection> findAllConfigurations() {
 		ArrayList<ItemCollection> configList = new ArrayList<ItemCollection>();
 		String sQuery = "SELECT orgunit FROM Entity AS orgunit "
 				+ " JOIN orgunit.textItems AS t2" + " WHERE orgunit.type = '"
 				+ TYPE + "'" + " AND t2.itemName = 'txtname'"
 				+ " ORDER BY t2.itemValue asc";
 		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				row, count);
+				0, -1);
 
 		for (ItemCollection aworkitem : col) {
 			configList.add(aworkitem);
@@ -208,19 +199,24 @@ public class ConfigService  {
 	}
 
 	/**
-	 * This method validates if the attributes supported to a map are
-	 * corresponding to the team structure
+	 * Cache implementation to hold config entities
+	 * 
+	 * @author rsoika
+	 * 
 	 */
-	private void validateConfiguration(ItemCollection aproject)
-			throws Exception {
-		boolean bvalid = true;
+	class Cache extends LinkedHashMap<String, ItemCollection> implements
+			Serializable {
+		private static final long serialVersionUID = 1L;
+		private final int capacity;
 
-		if (!aproject.hasItem("txtname"))
-			bvalid = false;
-		if (!bvalid)
-			throw new Exception(
-					"ConfigServiceBean - invalid project object! Attribute 'txtname' not found");
+		public Cache(int capacity) {
+			super(capacity + 1, 1.1f, true);
+			this.capacity = capacity;
+		}
 
+		protected boolean removeEldestEntry(Entry<String, ItemCollection> eldest) {
+			return size() > capacity;
+		}
 	}
 
 }

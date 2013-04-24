@@ -27,364 +27,155 @@
 
 package org.imixs.marty.ejb;
 
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.Collection;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
+import java.util.logging.Logger;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
-import javax.ejb.LocalBean;
 import javax.ejb.SessionContext;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
 
 import org.imixs.workflow.ItemCollection;
- 
+
 /**
+ * The Marty ProfileService is a sigelton EJB providing user attributes like the
+ * username and user email. The service is used to cache names application wide.
  * 
- * This Service Facade encapsulates the management of a User Profile. The
- * service manages User profiles with unique name and username.
  * 
- * A Profile is represented by a ItemCollection with the following Attributes:
- * 
- * txtName - Name of the user - CallerPrincipal - a technical username
- * txtUserName - (optinal) a unique username used to display a non technical
- * name
- * 
- * The Services provides a process method to process a userprofile with a
- * workflow step. This method checks the uniqueness of username and name.
- * 
- * @version 0.0.2
  * @author rsoika
- * 
- * 
  */
 
-@DeclareRoles( { "org.imixs.ACCESSLEVEL.NOACCESS",
+@DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
 		"org.imixs.ACCESSLEVEL.READERACCESS",
 		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
 		"org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
-@RolesAllowed( { "org.imixs.ACCESSLEVEL.NOACCESS",
+@RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS",
 		"org.imixs.ACCESSLEVEL.READERACCESS",
 		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
 		"org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
-@Stateless
-@LocalBean
-public class ProfileService  {
+@Singleton
+public class ProfileService {
+
+	int DEFAULT_CACHE_SIZE = 30;
+
+	final int MAX_SEARCH_COUNT = 1;
+	private Cache cache;
+
+	private static Logger logger = Logger.getLogger(ProfileService.class
+			.getName());
+
+	@EJB
+	private org.imixs.workflow.jee.ejb.EntityService entityService;
 
 	@Resource
-	SessionContext ctx;
-
-	@EJB
-	org.imixs.workflow.jee.ejb.EntityService entityService;
-
-	// Workflow Manager
-	@EJB
-	org.imixs.workflow.jee.ejb.WorkflowService wm;
-	ItemCollection workItem = null;
-
+	private SessionContext ctx;
 
 	/**
-	 * This method create an empty profile object The current username will be
-	 * Automatically assigned to the field txtname
+	 * PostContruct event - loads the imixs.properties.
+	 */
+	@PostConstruct
+	void init() {
+		// initialize cache
+		cache = new Cache(DEFAULT_CACHE_SIZE);
+	}
+
+	/**
+	 * This method returns a profile by its userid. The method uses an internal
+	 * cache. If no name is provided the remote user name will by used to find
+	 * the profile. The method returns null if no Profile for this name was
+	 * found
 	 * 
+	 * @param userid
+	 *            - the profile id
+	 * @return cloned workitem
 	 */
-	public ItemCollection createProfile() throws Exception {
-		workItem = new ItemCollection();
-		workItem.replaceItemValue("type", "profile");
+	public ItemCollection findProfileById(String userid) {
 
-		String aname = ctx.getCallerPrincipal().getName();
-		workItem.replaceItemValue("txtName", aname);
-		return workItem;
-	}
+		if (userid == null || userid.isEmpty())
+			userid = ctx.getCallerPrincipal().getName();
 
-	/**
-	 * This method create an empty Profile object with the defined initial
-	 * $processID The current username will be automatically assigned to the
-	 * field txtname
-	 */
-	public ItemCollection createProfile(int initialProcessID) throws Exception {
-		workItem = createProfile();
-		workItem.replaceItemValue("$processID", new Integer(initialProcessID));
-		return workItem;
-	}
+		// try to get name out from cache
+		ItemCollection userProfile = (ItemCollection) cache.get(userid);
+		if (userProfile == null) {
+			logger.fine("[ProfileService] lookup profile '" + userid + "'");
+			// lookup user profile....
+			String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+					+ " JOIN profile.textItems AS t2"
+					+ " WHERE  profile.type= 'profile' "
+					+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
+					+ userid + "' ";
 
-	/**
-	 * This method create an empty profile object for a specific user name with
-	 * the defined initial $processID The username will be automatically
-	 * assigned to the field txtname
-	 */
-	public ItemCollection createProfile(int initialProcessID, String aName)
-			throws Exception {
-		workItem = createProfile(initialProcessID);
-		workItem.replaceItemValue("txtName", aName);
-		return workItem;
-	}
+			logger.finest("searchprofile: " + sQuery);
 
-	/**
-	 * Deletes a team from the Team list
-	 */
-	public void deleteProfile(ItemCollection aproject) throws Exception {
-		entityService.remove(aproject);
-	}
+			Collection<ItemCollection> col = entityService.findAllEntities(
+					sQuery, 0, MAX_SEARCH_COUNT);
 
-	/**
-	 * This method returns a profile ItemCollection for a specified id The
-	 * method returns null if no Profile for this name was found
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public ItemCollection findProfile(String id) {
-		return entityService.load(id);
-	}
+			if (col.size() > 0) {
+				userProfile = col.iterator().next();
+				// clone workitem
+				userProfile = cloneWorkitem(userProfile);
 
-	/**
-	 * This method returns a profile ItemCollection for a specified account name.
-	 * if no name is supported the remote user name will by used to find the
-	 * profile The method returns null if no Profile for this name was found
-	 * 
-	 * @param aname
-	 * @return
-	 */
-	public ItemCollection findProfileByName(String aname) {
-
-		if (aname == null)
-			aname = ctx.getCallerPrincipal().getName();
-
-		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-				+ " JOIN profile.textItems AS t2"
-				+ " WHERE  profile.type= 'profile' "
-				+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
-				+ aname + "' ";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, 1);
-
-		if (col.size() > 0) {
-			ItemCollection aworkitem = col.iterator().next();
-			return aworkitem;
+				// cache profile
+				cache.put(userid, userProfile);
+			} else{
+				logger.fine("[ProfileService] profile '" + userid + "' not found");
+			}
 		}
-		return null;
+		return userProfile;
 
 	}
 
+	public static ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
+		ItemCollection clone = new ItemCollection();
+
+		// clone the standard WorkItem properties
+		clone.replaceItemValue("$UniqueID", aWorkitem.getItemValue("$UniqueID"));
+		clone.replaceItemValue("$ModelVersion",
+				aWorkitem.getItemValue("$ModelVersion"));
+		clone.replaceItemValue("$ProcessID",
+				aWorkitem.getItemValue("$ProcessID"));
+		clone.replaceItemValue("$Created", aWorkitem.getItemValue("$Created"));
+		clone.replaceItemValue("$Modified", aWorkitem.getItemValue("$Modified"));
+		clone.replaceItemValue("$isAuthor", aWorkitem.getItemValue("$isAuthor"));
+
+		clone.replaceItemValue("txtWorkflowStatus",
+				aWorkitem.getItemValue("txtWorkflowStatus"));
+
+		clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
+		clone.replaceItemValue("txtUserName",
+				aWorkitem.getItemValue("txtUserName"));
+		clone.replaceItemValue("txtEmail", aWorkitem.getItemValue("txtEmail"));
+
+		return clone;
+	}
+
 	/**
-	 * This method returns a profile ItemCollection for a specified username.
-	 * The username is mapped to a technical name inside a profile. The method
-	 * returns null if no Profile for this name was found
+	 * Cache implementation to hold config entities
 	 * 
-	 * @param aname
-	 * @return
+	 * @author rsoika
+	 * 
 	 */
-	public ItemCollection findProfileByUserName(String aname) {
-		if (aname == null)
-			aname = ctx.getCallerPrincipal().getName();
+	class Cache extends LinkedHashMap<String, ItemCollection> implements
+			Serializable {
+		private static final long serialVersionUID = 1L;
+		private final int capacity;
 
-		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-				+ " JOIN profile.textItems AS t2"
-				+ " WHERE  profile.type= 'profile' "
-				+ " AND t2.itemName = 'txtusername' " + " AND t2.itemValue = '"
-				+ aname.trim() + "' ";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, 1);
-
-		if (col.size() > 0) {
-			ItemCollection aworkitem = col.iterator().next();
-			return aworkitem;
+		public Cache(int capacity) {
+			super(capacity + 1, 1.1f, true);
+			this.capacity = capacity;
 		}
-		return null;
 
-	}
-	
-	/**
-	 * This method returns a profile ItemCollection for a specified email address.
-	 * The email address is mapped to a technical name inside a profile. The method
-	 * returns null if no Profile for this email address was found
-	 * 
-	 * @param email
-	 * @return
-	 */
-	public ItemCollection findProfileByEmail(String email) {
-		if (email == null || "".equals(email))
-			return null;
-		
-		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-				+ " JOIN profile.textItems AS t2"
-				+ " WHERE  profile.type= 'profile' "
-				+ " AND t2.itemName = 'txtemail' " + " AND t2.itemValue = '"
-				+ email.toLowerCase().trim() + "' ";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, 1);
-
-		if (col.size() > 0) {
-			ItemCollection aworkitem = col.iterator().next();
-			return aworkitem;
+		protected boolean removeEldestEntry(Entry<String, ItemCollection> eldest) {
+			return size() > capacity;
 		}
-		return null;
-
-	}
-
-
-	/**
-	 * Updates a Profile Entity
-	 */
-	public ItemCollection saveProfile(ItemCollection aeditProfile) throws Exception {
-		if (!isValidProfile(aeditProfile))
-			throw new Exception(
-					"ProfileServiceBean - invalid profile object! Attribute 'txtname' not found");
-		aeditProfile.replaceItemValue("type", "profile");
-		return entityService.save(aeditProfile);
-
-	}
-
-	/**
-	 * This method process a profile object using the IX WorkflowManager. The
-	 * method also verifies if the attributes txtname and txtusername are
-	 * unique. The method throws an exception if username or name already
-	 * exists.
-	 * 
-	 * @param aProfile
-	 *            ItemCollection representing the user profile
-	 * @param activityID
-	 *            activity ID the issue should be processed
-	 */
-	public ItemCollection processProfile(ItemCollection aeditProfile) throws Exception {
-
-		if (!isValidUserName(aeditProfile))
-			throw new Exception(
-					"Username is already taken - verifiy txtname and txtusername");
-
-		if (!isValidEmail(aeditProfile))
-			throw new Exception(
-					"Email is already taken - verifiy txtemail");
-
-		
-		if (!isValidProfile(aeditProfile))
-			throw new Exception(
-					"ProfileServiceBean - invalid profile object! Attribute 'txtname' not found");
-
-		workItem = aeditProfile;
-
-		workItem.replaceItemValue("type", "profile");
-
-		// Process workitem...
-		workItem = wm.processWorkItem(workItem);
-	
-		return workItem;
-
-	}
-
-	public List<ItemCollection> findAllProfiles(int row, int count) {
-		ArrayList<ItemCollection> teamList = new ArrayList<ItemCollection>();
-		String sQuery = "SELECT DISTINCT profile FROM Entity AS profile "
-				+ " JOIN profile.textItems AS t2"
-				+ " WHERE profile.type= 'profile' "
-				+ " AND t2.itemName = 'txtname' "
-				+ " ORDER BY t2.itemValue ASC";
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				row, count);
-
-		for (ItemCollection aworkitem : col) {
-			teamList.add(aworkitem);
-		}
-		return teamList;
-	}
-
-	/**
-	 * This method validates if the attributes supported to a map are
-	 * corresponding to the team structure
-	 */
-	private boolean isValidProfile(ItemCollection aproject) throws Exception {
-		boolean bvalid = true;
-		if (!aproject.hasItem("txtname"))
-			bvalid = false;
-
-		return bvalid;
-	}
-
-	
-
-	/**
-	 * verifies if the txtName and txtUsername is available. Attribute
-	 * txtUsername is optional and will be only verified if provided.
-	 * 
-	 * returns true if name isn't still taken by another object.
-	 * 
-	 * @param aprofile
-	 * @return
-	 */
-	private boolean isValidUserName(ItemCollection aprofile) {
-
-		String sName = aprofile.getItemValueString("txtName");
-		String sUserName = aprofile.getItemValueString("txtUserName");
-		String sID = aprofile.getItemValueString("$uniqueid");
-
-		String sQuery;
-
-		// username provided?
-		if (sUserName != null && !"".equals(sUserName))
-			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-					+ " JOIN profile.textItems AS n"
-					+ " JOIN profile.textItems AS u" 
-					+ " WHERE  profile.type = 'profile' "
-					+ " AND ((n.itemName = 'txtname' " + " AND n.itemValue = '"
-					+ sName + "') OR  (u.itemName = 'txtusername' "
-					+ " AND u.itemValue = '" + sUserName + "'))"
-					+ " AND profile.id<>'"+ sID + "' ";
-		else
-			// query only txtName
-			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-					+ " JOIN profile.textItems AS n" + " WHERE profile.id<>'"
-					+ sID + "' AND  profile.type = 'profile' "
-					+ " AND n.itemName = 'txtname' " + " AND n.itemValue = '"
-					+ sName + "'";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, 1);
-
-		return (col.size() == 0);
-
-	}
-	
-	
-	
-	
-	/**
-	 * verifies if the txtemail is available.
-	 * returns true if address isn't still taken by another object.
-	 * 
-	 * @param aprofile
-	 * @return
-	 */
-	private boolean isValidEmail(ItemCollection aprofile) {
-
-		String sEmail = aprofile.getItemValueString("txtEmail");
-		String sID = aprofile.getItemValueString("$uniqueid");
-
-		String sQuery;
-
-		// username provided?
-		if (!"".equals(sEmail)) 
-			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-					+ " JOIN profile.textItems AS n"
-					+ " WHERE  profile.type = 'profile' "
-					+ " AND (n.itemName = 'txtemail' " + " AND n.itemValue = '"
-					+ sEmail + "') "
-					+ " AND profile.id<>'"+ sID + "' ";
-		else
-			return true;
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, 1);
-
-		return (col.size() == 0);
-
 	}
 
 }

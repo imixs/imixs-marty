@@ -86,7 +86,9 @@ import org.imixs.workflow.exceptions.PluginException;
 @RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
 public class SequenceService {
 
-	private final static String SEQUENCE_NAME = "numLastSequenceNummer";
+	public final static String SEQUENCE_NAME = "numLastSequenceNummer";
+	
+	public final static String SEQUENCE_ERROR = "MISSING_UNIQUEIDREF";
 
 	// Persistence Manager
 	@EJB
@@ -98,12 +100,13 @@ public class SequenceService {
 	 * 'sequencenumbers' with the current number range for each workflowGroup.
 	 * If a Workitem have a WorkflowGroup with no corresponding entry the method
 	 * will not compute a new number.
-	 * @throws InvalidWorkitemException 
-	 * @throws AccessDeniedException 
+	 * 
+	 * @throws InvalidWorkitemException
+	 * @throws AccessDeniedException
 	 * 
 	 */
-	public int getNextSequenceNumberByGroup(ItemCollection aworkitem) throws AccessDeniedException
-			 {
+	public int getNextSequenceNumberByGroup(ItemCollection aworkitem)
+			throws AccessDeniedException {
 
 		ItemCollection configItemCollection = null;
 
@@ -154,21 +157,21 @@ public class SequenceService {
 	/**
 	 * this method computes the next sequence number and updates the parent
 	 * workitem where the last sequence number will be stored.
-	 * @throws InvalidWorkitemException 
-	 * @throws AccessDeniedException 
-	 * @throws Exception 
+	 * 
+	 * @throws AccessDeniedException
+	 * @throws PluginException 
 	 */
-	public int getNextSequenceNumberByParent(ItemCollection aworkitem) throws  AccessDeniedException 
-			 {
+	public int getNextSequenceNumberByParent(ItemCollection aworkitem)
+			throws AccessDeniedException, PluginException {
 		// load current Number
 		ItemCollection sequenceNumberObject = loadParentWorkitem(aworkitem);
 		int currentSequenceNumber = sequenceNumberObject
 				.getItemValueInteger(SEQUENCE_NAME);
-		
+
 		// skip number 0
-		if (currentSequenceNumber==0)
-			currentSequenceNumber=1;
-		
+		if (currentSequenceNumber == 0)
+			currentSequenceNumber = 1;
+
 		int sequenceNumber = currentSequenceNumber;
 		sequenceNumber++;
 		// Save new Number
@@ -211,15 +214,13 @@ public class SequenceService {
 	 * this method loads the parent Workitem of the given workitem
 	 * 
 	 * @return
-	 * @throws InvalidWorkitemException 
-	 * @throws Exception
+	 * @throws PluginException 
 	 */
-	private ItemCollection loadParentWorkitem(ItemCollection aworkitem)  
-			{
+	private ItemCollection loadParentWorkitem(ItemCollection aworkitem) throws PluginException {
 		String sParentID = aworkitem.getItemValueString("$UniqueIDRef");
 
 		if ("".equals(sParentID))
-			throw new PluginException(
+			throw new PluginException(SequenceService.class.getSimpleName(),SEQUENCE_ERROR,
 					"WARNING: SequenceService : No $UniqueIDRef defined");
 
 		ItemCollection parent = entityService.load(sParentID);
