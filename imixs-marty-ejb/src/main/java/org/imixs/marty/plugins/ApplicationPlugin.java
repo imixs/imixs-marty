@@ -34,7 +34,7 @@ import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.PluginException;
 
 /**
- * This plugin overwrites the Application Plugin and updates sywapp informations
+ * This plugin overwrites the Application Plugin and updates marty informations
  * like the subject and the workflowgroup name.
  * 
  * @author rsoika
@@ -43,7 +43,7 @@ import org.imixs.workflow.exceptions.PluginException;
 public class ApplicationPlugin extends
 		org.imixs.workflow.plugins.ApplicationPlugin {
 	ItemCollection documentContext;
-	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	private static Logger logger = Logger.getLogger(ApplicationPlugin.class.getName());
 
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
@@ -75,7 +75,7 @@ public class ApplicationPlugin extends
 				.getItemValueString("txtWorkflowGroup");
 		if (sGroupName.indexOf('~') > -1) {
 			sGroupName = sGroupName.substring(sGroupName.indexOf('~') + 1);
-
+			logger.fine("[ApplicationPlugin] set workflowGroup=" + sGroupName);
 			documentContext.replaceItemValue("txtWorkflowGroup", sGroupName);
 		}
 
