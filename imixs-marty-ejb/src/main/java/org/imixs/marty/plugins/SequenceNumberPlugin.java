@@ -134,14 +134,15 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 		 * || "childworkitem".equals(sType)
 		 */
 		String sType = workitem.getItemValueString("Type");
-		if (!("workitem".equals(sType)))
+		// also give a squence number for archived workitems
+		if (!sType.startsWith("workitem") || sType.endsWith("deleted"))
 			return Plugin.PLUGIN_OK;
 
 		/* check if worktitem still have a sequence number? */
 		if (workitem.getItemValueInteger("numsequencenumber") == 0) {
 			try {
 				// load next Number based on the type of workitem
-				if ("workitem".equals(sType))
+				if (sType.startsWith("workitem"))
 					sequenceNumber = sequenceService
 							.getNextSequenceNumberByGroup(documentContext);
 				else
