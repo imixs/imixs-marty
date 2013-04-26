@@ -9,7 +9,7 @@
       <item name="txtquery">
         <value>SELECT
  wi FROM Entity AS wi
- WHERE wi.type IN ('ProcessEntity','ActivityEntity','WorkflowEnvironmentEntity','process','space')</value>
+ WHERE wi.type IN ('ProcessEntity','ActivityEntity','WorkflowEnvironmentEntity','process','space','configuration')</value>
       </item>
       <item name="txtname">
         <value>setup_data.ixr</value>
