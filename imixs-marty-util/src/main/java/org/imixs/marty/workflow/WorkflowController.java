@@ -183,13 +183,15 @@ public class WorkflowController extends
 	 * @return
 	 */
 	public String getEditor() {
-		// if (isAvailable()) {
 
-		String sEditor = getWorkitem()
-				.getItemValueString("txtWorkflowEditorid");
+		String sEditor = DEFAULT_EDITOR_ID;
 
-		if ("".equals(sEditor))
-			sEditor = DEFAULT_EDITOR_ID;
+		if (getWorkitem() != null) {
+			String currentEditor = getWorkitem().getItemValueString(
+					"txtWorkflowEditorid");
+			if (!currentEditor.isEmpty())
+				sEditor = currentEditor;
+		}
 
 		// test if # is provides to indicate optional section
 		// informations
@@ -237,10 +239,14 @@ public class WorkflowController extends
 		UIViewRoot viewRoot = FacesContext.getCurrentInstance().getViewRoot();
 		Locale locale = viewRoot.getLocale();
 
-		String sEditor = getWorkitem()
-				.getItemValueString("txtWorkflowEditorid");
-		if ("".equals(sEditor))
-			sEditor = DEFAULT_EDITOR_ID;
+		String sEditor = DEFAULT_EDITOR_ID;
+
+		if (getWorkitem() != null) {
+			String currentEditor = getWorkitem().getItemValueString(
+					"txtWorkflowEditorid");
+			if (!currentEditor.isEmpty())
+				sEditor = currentEditor;
+		}
 
 		if (sEditor.indexOf('#') > -1) {
 			String liste = sEditor.substring(sEditor.indexOf('#') + 1);
@@ -387,9 +393,9 @@ public class WorkflowController extends
 	}
 
 	/**
-	 * This actionListener method moves a workitem into the archive by appending the sufix
-	 * 'archive' to the attribute type. References to this workitem will be
-	 * updated.
+	 * This actionListener method moves a workitem into the archive by appending
+	 * the sufix 'archive' to the attribute type. References to this workitem
+	 * will be updated.
 	 * 
 	 * The Lucene search index will be automatically updated by the
 	 * workitemService.
