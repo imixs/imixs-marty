@@ -43,9 +43,11 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
- * This Plugin handles the update of the user group objects based on the current
- * user profile. The Plugin runs only if the BASIC configuration property
- * 'keyEnableUserDB' is true
+ * This Plugin updates the userId and password for a user profile. The Update
+ * requires the UserGroupService EJB.
+ * 
+ * The Plugin runs only if the UserGroupService EJB is deployed and the BASIC
+ * configuration property 'keyEnableUserDB' is 'true'.
  * 
  * @see UserGroupService
  * @author rsoika
@@ -53,7 +55,7 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * 
  */
 public class UserGroupPlugin extends AbstractPlugin {
-	public  static final String INVALID_CONTEXT = "INVALID_CONTEXT";
+	public static final String INVALID_CONTEXT = "INVALID_CONTEXT";
 	EntityService entityService = null;
 	UserGroupService userGroupService = null;;
 
@@ -61,6 +63,10 @@ public class UserGroupPlugin extends AbstractPlugin {
 	ItemCollection workitem = null;
 	private static Logger logger = Logger.getLogger("org.imixs.office");
 
+	/**
+	 * Try to lookup the UserGroupService. If not availalbe the plugin will not
+	 * run.
+	 */
 	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
 
@@ -80,8 +86,8 @@ public class UserGroupPlugin extends AbstractPlugin {
 			Context ctx = (Context) ictx.lookup("java:comp/env");
 			userGroupService = (UserGroupService) ctx.lookup(jndiName);
 		} catch (NamingException e) {
-			throw new PluginException(UserGroupPlugin.class.getSimpleName(),INVALID_CONTEXT,
-					"[UserGroupPlugin] unable to lookup UserGroupService: ", e);
+			logger.warning("[UserGroupPlugin] unable to lookup UserGroupService - check deployment or system model configuration!");
+			userGroupService = null;
 		}
 	}
 
@@ -95,16 +101,20 @@ public class UserGroupPlugin extends AbstractPlugin {
 	public int run(ItemCollection documentContext,
 			ItemCollection documentActivity) throws PluginException {
 
+		// skip if no userGroupService found
+		if (userGroupService == null)
+			return Plugin.PLUGIN_OK;
+
 		workitem = documentContext;
 
-		// check type
+		// check entity type....
 		String sType = workitem.getItemValueString("Type");
 		if (!("profile".equals(sType)))
 			return Plugin.PLUGIN_OK;
-		
-		if (userGroupService==null || !isUserDBEnabled() )
+
+		// skip if userDB support is not enabled
+		if (!isUserDBEnabled())
 			return Plugin.PLUGIN_OK;
-		
 
 		logger.fine("[UserGroupPlugin] update profile....");
 		userGroupService.updateUser(workitem);

@@ -28,7 +28,6 @@
 package org.imixs.marty.profile;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Locale;
 import java.util.logging.Logger;
 
@@ -42,23 +41,24 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.imixs.marty.config.SetupController;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.jee.faces.util.LoginController;
 
 /**
  * This backing beans handles the Profile for the current user and provides a
- * session based cache for usernames and email addresses.
+ * application scoped access to usernames and email addresses through the
+ * ProfileService EJB.
  * 
- * The Users name and email address is stored in the user profile entity. The
- * user is identified by its principal user name. This name is mapped to the
- * attribute txtname.
+ * The current Users name and email address is stored in the user profile
+ * entity. The user is identified by its principal user name. This name is
+ * mapped to the attribute txtname.
  * 
- * This bean creates automatically a new profile for the current user if no
- * profile yet exists!
+ * A new user profile will be created automatically if no profile yet exists!
  * 
  * The Bean also provides the user 'locale' which is used in JSF Pages to
  * display pages using the current user settings.
@@ -74,11 +74,9 @@ public class UserController implements Serializable {
 	private final String COOKIE_LOCALE = "imixs.workflow.locale";
 	private ItemCollection workitem = null;
 
-
-
 	@EJB
 	private ProfileService profileService;
- 
+
 	@EJB
 	private EntityService entityService;
 
@@ -89,23 +87,19 @@ public class UserController implements Serializable {
 	public final static int START_PROFILE_PROCESS_ID = 200;
 	public final static int CREATE_PROFILE_ACTIVITY_ID = 5;
 	public final static int UPDATE_PROJECT_ACTIVITY_ID = 10;
+	public final static String DEFAULT_LOCALE = "de_DE";
 
 	private boolean profileLoaded = false;
-
-	private String locale;
-
-	@Inject 
-	private SetupController setupController;
+	private Locale locale;
 
 	@Inject
 	private LoginController loginController;
 
-	private static Logger logger = Logger.getLogger(UserController.class.getName());
+	private static Logger logger = Logger.getLogger(UserController.class
+			.getName());
 
 	public UserController() {
 		super();
-	
-
 	}
 
 	/**
@@ -113,76 +107,72 @@ public class UserController implements Serializable {
 	 * new one if no profile for the user is available. A new Profile will be
 	 * filled with default values.
 	 * 
-	 * 
-	 * The method also tests if the System Setup is completed. This if for
-	 * situations where the method is called the very first time after the
-	 * system was deployed. The SystemSetup can load a default model if a
-	 * configuration in model.properties was defined.
-	 * 
-	 * @throws Exception
+	 * @throws ProcessingErrorException
+	 * @throws AccessDeniedException
 	 */
 	@PostConstruct
-	public void init() throws Exception {
-		// Automatically create profile if no profile exists yet
+	public void init() throws AccessDeniedException, ProcessingErrorException {
 
-		if (!profileLoaded) {
+		// test user is logged-in and automatically create profile if no profile
+		// exists yet
+		if (this.loginController.isAuthenticated() && !profileLoaded) {
+
 			// determine user language and set Modelversion depending on
 			// the selected user locale
-			String sModelVersion = "system-" + getLocale();
+			String sModelVersion = "system-" + getLocale().getLanguage();
 
-			try {
-				// try to load the profile for the current user
-				ItemCollection profile = profileService.findProfileById(null);
-				if (profile == null) {
+			// try to load the profile for the current user
+			ItemCollection profile = profileService.findProfileById(null);
+			if (profile == null) {
 
-					// create new Profile for current user
-					profile = new ItemCollection();
-					profile.replaceItemValue("type", "profile");
-					profile.replaceItemValue("$processID",
-							START_PROFILE_PROCESS_ID);
+				// create new Profile for current user
+				profile = new ItemCollection();
+				profile.replaceItemValue("type", "profile");
+				profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
 
-					profile.replaceItemValue("$modelversion", sModelVersion);
+				profile.replaceItemValue("$modelversion", sModelVersion);
 
-					// now set default values for locale
-					profile.replaceItemValue("txtLocale", getLocale());
+				// now set default values for locale
+				profile.replaceItemValue("txtLocale", getLocale());
 
-					// process new profile...
-					profile.replaceItemValue("$ActivityID",
-							CREATE_PROFILE_ACTIVITY_ID);
-					profile = workflowService.processWorkItem(profile);
-					logger.info("New Profile created ");
+				// process new profile...
+				profile.replaceItemValue("$ActivityID",
+						CREATE_PROFILE_ACTIVITY_ID);
+				profile = workflowService.processWorkItem(profile);
+				logger.info("New Profile created ");
 
-				} else {
-					// no op
-					// in earlier versions teh datlastLogin and numLoginCoutn
-					// property was set
+			} else {
+				// no op
+				// in earlier versions the datlastLogin and numLoginCoutn
+				// property was set
 
-				}
-				// set max History & log length
-				profile.replaceItemValue(
-						"numworkflowHistoryLength",
-						setupController.getWorkitem().getItemValueInteger(
-								"MaxProfileHistoryLength"));
-				profile.replaceItemValue(
-						"numworkflowLogLength",
-						setupController.getWorkitem().getItemValueInteger(
-								"MaxProfileHistoryLength"));
-
-				this.setWorkitem(profile);
-
-				profileLoaded = true;
-
-				// Now reset current lokale
-				updateLocale();
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
+
+			this.setWorkitem(profile);
+
+			profileLoaded = true;
+
+			// Now reset current locale
+			updateLocale();
 
 		}
 
 	}
 
-	public ItemCollection getWorkitem() {
+	/**
+	 * This method returns the current users userprofile entity. The method
+	 * verifies if the profile was yet loaded. if not the method tries to
+	 * initiate the profile - see method init();
+	 * 
+	 * @return
+	 * @throws ProcessingErrorException
+	 * @throws AccessDeniedException
+	 */
+	public ItemCollection getWorkitem() throws AccessDeniedException,
+			ProcessingErrorException {
+		// test if current users profile was loaded
+		if (!profileLoaded)
+			init();
 		if (workitem == null)
 			workitem = new ItemCollection();
 		return workitem;
@@ -199,7 +189,7 @@ public class UserController implements Serializable {
 	 * 
 	 * @return - ISO Locale format
 	 */
-	public String getLocale() {
+	public Locale getLocale() {
 		// if no locale is set try to get it from cookie or set default
 		if (locale == null) {
 			FacesContext facesContext = FacesContext.getCurrentInstance();
@@ -214,7 +204,7 @@ public class UserController implements Serializable {
 				for (int i = 0; i < cookie.length; i++) {
 					cookieName = cookie[i].getName();
 					if (cookieName.equals(COOKIE_LOCALE)) {
-						locale = cookie[i].getValue();
+						locale = new Locale(cookie[i].getValue());
 						break;
 					}
 
@@ -224,33 +214,44 @@ public class UserController implements Serializable {
 			// still no value found? - default to "en"
 			if (locale == null || "".equals(locale) || "null".equals(locale)) {
 				Locale ldefault = request.getLocale();
-				if (ldefault != null)
-					locale = ldefault.toString();
-				else
-					locale = "en";
+				if (ldefault != null) {
+					locale = ldefault;
+				} else {
+					locale = new Locale(DEFAULT_LOCALE);
+					;
+				}
 			}
 
 		}
 		return locale;
 	}
 
-	public void setLocale(String locale) {
-		if (locale == null)
-			locale = "en";
-		this.locale = locale;
+	public void setLocale(Locale alocale) {
+		if (alocale == null)
+			locale = new Locale(DEFAULT_LOCALE);
+		else
+			this.locale = alocale;
 
 		// update cookie
 		HttpServletResponse response = (HttpServletResponse) FacesContext
 				.getCurrentInstance().getExternalContext().getResponse();
 		HttpServletRequest request = (HttpServletRequest) FacesContext
 				.getCurrentInstance().getExternalContext().getRequest();
-		Cookie cookieLocale = new Cookie(COOKIE_LOCALE, locale);
+		Cookie cookieLocale = new Cookie(COOKIE_LOCALE, locale.toString());
 		cookieLocale.setPath(request.getContextPath());
 
 		// 30 days
 		cookieLocale.setMaxAge(2592000);
 		response.addCookie(cookieLocale);
 
+	}
+	
+	/**
+	 * returns the user language
+	 * @return
+	 */
+	public String getLanguage() {
+		return getLocale().getLanguage();
 	}
 
 	/**
@@ -260,9 +261,9 @@ public class UserController implements Serializable {
 	 * @return
 	 */
 	public String getUserName(String aAccount) {
-		
-		ItemCollection userProfile=profileService.findProfileById(aAccount);
-		if (userProfile!=null)
+
+		ItemCollection userProfile = profileService.findProfileById(aAccount);
+		if (userProfile != null)
 			return userProfile.getItemValueString("txtuserName");
 		else
 			return null;
@@ -275,41 +276,70 @@ public class UserController implements Serializable {
 	 * @return
 	 */
 	public String getEmail(String aAccount) {
-		ItemCollection userProfile=profileService.findProfileById(aAccount);
-		if (userProfile!=null)
+		ItemCollection userProfile = profileService.findProfileById(aAccount);
+		if (userProfile != null)
 			return userProfile.getItemValueString("txtemail");
 		else
 			return null;
+	}
+
+	/**
+	 * This method processes the current userprofile and returns an action
+	 * result. The method expects that the current workItem provides a valid
+	 * $ActiviytID.
+	 * 
+	 * The method returns the value of the property 'action' if provided by the
+	 * workflow model or a plug-in. The 'action' property is typically evaluated
+	 * from the ResultPlugin. Alternatively the property can be provided by an
+	 * application. If no 'action' property is provided the method evaluates the
+	 * default property 'txtworkflowResultmessage' from the model as an action
+	 * result.
+	 * 
+	 * @return action result
+	 * @throws AccessDeniedException
+	 */
+	public String process() throws AccessDeniedException,
+			ProcessingErrorException {
+		// clear last action
+		workitem.removeItem("action");
+
+		// process workItem now...
+		workitem = this.workflowService.processWorkItem(workitem);
+
+		// test if the property 'action' is provided
+		String action = workitem.getItemValueString("action");
+		if ("".equals(action))
+			// get default workflowResult message
+			action = workitem.getItemValueString("txtworkflowresultmessage");
+		return ("".equals(action) ? null : action);
 	}
 
 	/*
 	 * HELPER METHODS
 	 */
 
-	
 	/**
 	 * This method updates user locale to the faces context.
 	 * 
+	 * @throws ProcessingErrorException
+	 * @throws AccessDeniedException
+	 * 
 	 */
-	private void updateLocale() throws Exception {
+	private void updateLocale() throws AccessDeniedException,
+			ProcessingErrorException {
 
 		// Verify if Locale is available in profile
 		String sLocale = getWorkitem().getItemValueString("txtLocale");
 		if ("".equals(sLocale)) {
-			sLocale = getLocale();
-			getWorkitem().replaceItemValue("txtLocale", sLocale);
-
+			getWorkitem().replaceItemValue("txtLocale", getLocale().toString());
 		}
+
 		// reset locale to update cookie
-		setLocale(sLocale);
+		setLocale(new Locale(sLocale));
 		// set locale for context
 		FacesContext.getCurrentInstance().getViewRoot()
 				.setLocale(new Locale(sLocale));
 
 	}
-
-
-	
-
 
 }

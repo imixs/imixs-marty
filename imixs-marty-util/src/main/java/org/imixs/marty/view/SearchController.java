@@ -239,7 +239,7 @@ public class SearchController extends
 		// compute view title
 		String viewName = getView();
 		try {
-			Locale locale = new Locale(userController.getLocale());
+			Locale locale = userController.getLocale();
 			ResourceBundle rb = null;
 			rb = ResourceBundle.getBundle("bundle.workitem", locale);
 			viewTitle = rb.getString(viewName);
