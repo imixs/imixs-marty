@@ -35,6 +35,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.Cookie;
@@ -310,20 +311,10 @@ public class UserController implements Serializable {
 	 * @return action result
 	 * @throws AccessDeniedException
 	 */
-	public String process() throws AccessDeniedException,
+	public void doProcess(ActionEvent event) throws AccessDeniedException,
 			ProcessingErrorException {
-		// clear last action
-		workitem.removeItem("action");
-
 		// process workItem now...
 		workitem = this.workflowService.processWorkItem(workitem);
-
-		// test if the property 'action' is provided
-		String action = workitem.getItemValueString("action");
-		if ("".equals(action))
-			// get default workflowResult message
-			action = workitem.getItemValueString("txtworkflowresultmessage");
-		return ("".equals(action) ? null : action);
 	}
 
 	/*
