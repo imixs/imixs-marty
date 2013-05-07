@@ -88,55 +88,123 @@ public class ProfileService {
 	}
 
 	/**
-	 * This method returns a profile by its userid. The method uses an internal
+	 * This method returns a profile by its id. The method uses an internal
 	 * cache. If no name is provided the remote user name will by used to find
 	 * the profile. The method returns null if no Profile for this name was
 	 * found
+	 * 
+	 * The returned workitem is a cloned version of the profile entity and can
+	 * not be processed or updated. Use lookupProfile to get the full entity of
+	 * a profile.
 	 * 
 	 * @param userid
 	 *            - the profile id
 	 * @return cloned workitem
 	 */
 	public ItemCollection findProfileById(String userid) {
+		return findProfileById(userid, false);
+
+	}
+
+	/**
+	 * This method returns a profile by its id. The method uses an internal
+	 * cache. If no name is provided the remote user name will by used to find
+	 * the profile. The method returns null if no Profile for this name was
+	 * found.
+	 * 
+	 * The returned workitem is a cloned version of the profile entity and can
+	 * not be processed or updated. Use lookupProfile to get the full entity of
+	 * a profile.
+	 * 
+	 * If the boolean 'refresh' is true the method lookup the user in any case
+	 * with a JQPL statement and updates the cache.
+	 * 
+	 * @param userid
+	 *            - the profile id
+	 * @param refresh
+	 *            - boolean indicates if the internal cache should be used
+	 * @return cloned workitem
+	 */
+	public ItemCollection findProfileById(String userid, boolean refresh) {
 
 		if (userid == null || userid.isEmpty())
 			userid = ctx.getCallerPrincipal().getName();
 
 		// try to get name out from cache
-		ItemCollection userProfile = (ItemCollection) cache.get(userid);
+		ItemCollection userProfile = null;
+
+		// use cache?
+		if (!refresh)
+			userProfile = (ItemCollection) cache.get(userid);
+		// not found?
 		if (userProfile == null) {
-			logger.fine("[ProfileService] lookup profile '" + userid + "'");
-			// lookup user profile....
-			String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-					+ " JOIN profile.textItems AS t2"
-					+ " WHERE  profile.type= 'profile' "
-					+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
-					+ userid + "' ";
-
-			logger.finest("searchprofile: " + sQuery);
-
-			Collection<ItemCollection> col = entityService.findAllEntities(
-					sQuery, 0, MAX_SEARCH_COUNT);
-
-			if (col.size() > 0) {
-				userProfile = col.iterator().next();
-				// clone workitem
+			userProfile = lookupProfile(userid);
+			if (userProfile != null) {
+				// put a clone workitem into the cahe
 				userProfile = cloneWorkitem(userProfile);
-
 				// cache profile
 				cache.put(userid, userProfile);
-			} else{
-				logger.fine("[ProfileService] profile '" + userid + "' not found");
+				logger.fine("[ProfileService] profile '" + userid + "' cached");
+			} else {
+				logger.fine("[ProfileService] profile '" + userid
+						+ "' not found");
 			}
+		} else {
+			logger.fine("[ProfileService] get profile '" + userid
+					+ "' from cache");
 		}
 		return userProfile;
 
+	}
+
+	/**
+	 * This method returns a profile by its id. In different to the
+	 * findProfileById method this method lookups the profile and returns the
+	 * full entity. The returned workItem can be processed.
+	 * 
+	 * Use findProfileById to work with the internal cache if there is no need
+	 * to update the profile.
+	 * 
+	 * @param userid
+	 *            - the profile id
+	 * @return profile workitem
+	 */
+	public ItemCollection lookupProfile(String userid) {
+
+		if (userid == null || userid.isEmpty()) {
+			logger.warning("[ProfileService] lookupProfile - no id provided!");
+			return null;
+		}
+		// try to get name out from cache
+		ItemCollection userProfile = null;
+
+		logger.fine("[ProfileService] lookup profile '" + userid + "'");
+		// lookup user profile....
+		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+				+ " JOIN profile.textItems AS t2"
+				+ " WHERE  profile.type= 'profile' "
+				+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
+				+ userid + "' ";
+
+		logger.finest("searchprofile: " + sQuery);
+
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, MAX_SEARCH_COUNT);
+
+		if (col.size() > 0) {
+			userProfile = col.iterator().next();
+		} else {
+			logger.warning("[ProfileService] lookup profile '" + userid
+					+ "' failed");
+		}
+		return userProfile;
 	}
 
 	public static ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
 		ItemCollection clone = new ItemCollection();
 
 		// clone the standard WorkItem properties
+		clone.replaceItemValue("Type", aWorkitem.getItemValue("Type"));
 		clone.replaceItemValue("$UniqueID", aWorkitem.getItemValue("$UniqueID"));
 		clone.replaceItemValue("$ModelVersion",
 				aWorkitem.getItemValue("$ModelVersion"));

@@ -25,6 +25,7 @@ public class WorkitemHelper {
 		ItemCollection clone = new ItemCollection();
 
 		// clone the standard WorkItem properties
+		clone.replaceItemValue("Type", aWorkitem.getItemValue("Type"));
 		clone.replaceItemValue("$UniqueID", aWorkitem.getItemValue("$UniqueID"));
 		clone.replaceItemValue("$UniqueIDRef",
 				aWorkitem.getItemValue("$UniqueIDRef"));

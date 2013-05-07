@@ -50,18 +50,17 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.jee.faces.util.LoginController;
 
 /**
- * This backing beans handles the Profile for the current user and provides a
- * application scoped access to usernames and email addresses through the
+ * This backing beans handles the Profile entity for the current user and
+ * provides a application scoped access to all other profiles through the
  * ProfileService EJB.
  * 
- * The current Users name and email address is stored in the user profile
- * entity. The user is identified by its principal user name. This name is
- * mapped to the attribute txtname.
- * 
  * A new user profile will be created automatically if no profile yet exists!
+ * The user is identified by its principal user name. This name is mapped to the
+ * attribute txtname.
  * 
- * The Bean also provides the user 'locale' which is used in JSF Pages to
- * display pages using the current user settings.
+ * 
+ * The Bean also provides the user 'locale' and 'language' which is used in JSF
+ * Pages to display pages using the current user settings.
  * 
  * @author rsoika
  * 
@@ -107,6 +106,10 @@ public class UserController implements Serializable {
 	 * new one if no profile for the user is available. A new Profile will be
 	 * filled with default values.
 	 * 
+	 * This method did not use the internal cache of the ProfileService to
+	 * lookup the user profile, to make sure that the entity is uptodate when a
+	 * user logs in.
+	 * 
 	 * @throws ProcessingErrorException
 	 * @throws AccessDeniedException
 	 */
@@ -122,19 +125,14 @@ public class UserController implements Serializable {
 			String sModelVersion = "system-" + getLocale().getLanguage();
 
 			// try to load the profile for the current user
-			ItemCollection profile = profileService.findProfileById(null);
+			ItemCollection profile = profileService.lookupProfile(loginController.getUserPrincipal());
 			if (profile == null) {
-
 				// create new Profile for current user
 				profile = new ItemCollection();
 				profile.replaceItemValue("type", "profile");
 				profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
-
 				profile.replaceItemValue("$modelversion", sModelVersion);
-
-				// now set default values for locale
 				profile.replaceItemValue("txtLocale", getLocale());
-
 				// process new profile...
 				profile.replaceItemValue("$ActivityID",
 						CREATE_PROFILE_ACTIVITY_ID);
@@ -245,15 +243,29 @@ public class UserController implements Serializable {
 		response.addCookie(cookieLocale);
 
 	}
-	
+
 	/**
 	 * returns the user language
+	 * 
 	 * @return
 	 */
 	public String getLanguage() {
 		return getLocale().getLanguage();
 	}
 
+
+	
+	/**
+	 * This method returns a cached cloned version of a user profile for a given useraccount
+	 * 
+	 * @param aName
+	 * @return
+	 */
+	public ItemCollection getProfile(String aAccount) {
+		return profileService.findProfileById(aAccount);
+	}
+
+	
 	/**
 	 * This method returns the username (displayname) for a useraccount
 	 * 
