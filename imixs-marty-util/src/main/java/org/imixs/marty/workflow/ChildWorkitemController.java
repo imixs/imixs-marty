@@ -36,15 +36,22 @@ import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
 import javax.faces.event.ActionEvent;
+import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.imixs.marty.model.ModelController;
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
- ** This Bean acts a a front controller for child workitems.
+ * This Bean acts as a front controller for child workitems. A child workitem
+ * references another workitem. Each workitem can have a list of child
+ * workitems.
+ * 
+ * The default type of a new child worktiem is 'workitemchild'. The type can be
+ * changed and controlled by the workflow model
  * 
  * @author rsoika
  * 
@@ -63,6 +70,9 @@ public class ChildWorkitemController extends
 
 	@EJB
 	org.imixs.workflow.jee.ejb.WorkflowService workflowService;
+
+	@Inject
+	ModelController modelController;
 
 	public static Logger logger = Logger.getLogger("org.imixs.marty");
 
@@ -122,6 +132,29 @@ public class ChildWorkitemController extends
 		}
 
 	}
+
+	/**
+	 * this method returns a list of all sub process entities for the workflow
+	 * group assigend to the current parent workitem.
+	 * 
+	 * @return - list process entities
+	 */
+//	public List<ItemCollection> getWxxorkitems() {
+//		List<ItemCollection> subInitialProcessList = new ArrayList<ItemCollection>();
+//
+//		String workflowGroup = parentWorkitem
+//				.getItemValueString("txtWorkflowGroup");
+//
+//		List<String> allGroups = modelController
+//				.getSubWorkflowGroups(workflowGroup);
+//		for (String aGroupName : allGroups) {
+//			subInitialProcessList.add(modelController
+//					.getInitialProcessEntityByGroup(aGroupName));
+//
+//		}
+//
+//		return subInitialProcessList;
+//	}
 
 	/**
 	 * this method returns a list of all child workitems for the current

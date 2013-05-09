@@ -74,8 +74,8 @@ public class ModelController implements Serializable {
 
 	private String systemModelVersion = null;
 
-	// private List<ItemCollection> initialProcessEntityList = null;
 	private Map<String, String> workflowGroups = null;
+	private Map<String, String> subWorkflowGroups = null;
 
 	private String workflowGroup = null;
 	private String modelVersion = null;
@@ -91,7 +91,7 @@ public class ModelController implements Serializable {
 
 	@EJB
 	ModelService modelService;
-	
+
 	@EJB
 	SetupService setupService;
 
@@ -117,6 +117,7 @@ public class ModelController implements Serializable {
 	public void reset() {
 		systemModelVersion = null;
 		workflowGroups = null;
+		subWorkflowGroups = null;
 		modelVersionCache = new ArrayList<String>();
 		processEntityCache = new HashMap<String, List<ItemCollection>>();
 
@@ -180,13 +181,16 @@ public class ModelController implements Serializable {
 
 		// now compute all workflow groups..
 		workflowGroups = new HashMap<String, String>();
+		subWorkflowGroups = new HashMap<String, String>();
+
 		for (String aModelVersion : modelVersionCache) {
 			List<String> groupList = modelService
 					.getAllWorkflowGroupsByVersion(aModelVersion);
 			for (String sGroupName : groupList) {
 				if (sGroupName.contains("~"))
-					continue; // childProcess is skipped
-				workflowGroups.put(sGroupName, aModelVersion);
+					subWorkflowGroups.put(sGroupName, aModelVersion);
+				else
+					workflowGroups.put(sGroupName, aModelVersion);
 			}
 		}
 
@@ -251,6 +255,38 @@ public class ModelController implements Serializable {
 	}
 
 	/**
+	 * Returns a String list of all Sub-WorkflowGroup names for a specified
+	 * WorkflowGroup.
+	 * 
+	 * 
+	 * A SubWorkflowGroup contains a '~' in its name.
+	 * 
+	 * The SubWorflowGroup list is used to assign sub workflow Group to a
+	 * workitem
+	 * 
+	 * @see getWorkflowGroups()
+	 * 
+	 * @param parentWorkflowGroup
+	 *            - the parent workflow group name
+	 * @return list of all sub workflow groups for the given parent group name
+	 */
+	public List<String> getSubWorkflowGroups(String parentWorkflowGroup) {
+
+		List<String> aList = new ArrayList<String>();
+		if (parentWorkflowGroup == null || parentWorkflowGroup.isEmpty())
+			return aList;
+
+		for (String aGroupName : subWorkflowGroups.keySet()) {
+			if (aGroupName.startsWith(workflowGroup + "~")) {
+				aList.add(aGroupName);
+			}
+		}
+
+		Collections.sort(aList);
+		return aList;
+	}
+
+	/**
 	 * This method returns all process entities for a specific workflowGroup and
 	 * modelVersion. This list can be used to display state/flow informations
 	 * inside a form depending on the current workflow process information
@@ -310,6 +346,9 @@ public class ModelController implements Serializable {
 	public List<ItemCollection> getAllProcessEntitiesByGroup(String groupName) {
 		// find the matching latest ModelVersion for this group
 		String sModelVersion = workflowGroups.get(groupName);
+		if (sModelVersion == null)
+			// check sub workflow groups
+			sModelVersion = subWorkflowGroups.get(groupName);
 		if (sModelVersion == null)
 			logger.warning("[ModelController] WorkflowGroup '" + groupName
 					+ "' not defined in latest model version!");
@@ -395,7 +434,7 @@ public class ModelController implements Serializable {
 		}
 
 		fileUploadController.doClear(null);
-		
+
 		// reinitialize models
 		reset();
 	}
@@ -427,7 +466,6 @@ public class ModelController implements Serializable {
 		reset();
 	}
 
-	
 	/**
 	 * This method returns a process entity for a given ModelVersion
 	 * 
