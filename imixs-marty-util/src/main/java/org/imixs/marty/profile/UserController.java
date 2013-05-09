@@ -43,6 +43,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.ejb.ProfileService;
+import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
@@ -126,7 +127,8 @@ public class UserController implements Serializable {
 			String sModelVersion = "system-" + getLocale().getLanguage();
 
 			// try to load the profile for the current user
-			ItemCollection profile = profileService.lookupProfile(loginController.getUserPrincipal());
+			ItemCollection profile = profileService
+					.lookupProfile(loginController.getUserPrincipal());
 			if (profile == null) {
 				// create new Profile for current user
 				profile = new ItemCollection();
@@ -254,10 +256,9 @@ public class UserController implements Serializable {
 		return getLocale().getLanguage();
 	}
 
-
-	
 	/**
-	 * This method returns a cached cloned version of a user profile for a given useraccount
+	 * This method returns a cached cloned version of a user profile for a given
+	 * useraccount
 	 * 
 	 * @param aName
 	 * @return
@@ -266,7 +267,6 @@ public class UserController implements Serializable {
 		return profileService.findProfileById(aAccount);
 	}
 
-	
 	/**
 	 * This method returns the username (displayname) for a useraccount
 	 * 
@@ -301,20 +301,26 @@ public class UserController implements Serializable {
 	 * result. The method expects that the current workItem provides a valid
 	 * $ActiviytID.
 	 * 
-	 * The method returns the value of the property 'action' if provided by the
-	 * workflow model or a plug-in. The 'action' property is typically evaluated
-	 * from the ResultPlugin. Alternatively the property can be provided by an
-	 * application. If no 'action' property is provided the method evaluates the
-	 * default property 'txtworkflowResultmessage' from the model as an action
-	 * result.
+	 * The method evaluates the default property 'txtworkflowResultmessage' from
+	 * the model as an action result.
 	 * 
 	 * @return action result
 	 * @throws AccessDeniedException
 	 */
-	public void doProcess(ActionEvent event) throws AccessDeniedException,
+	public String process() throws AccessDeniedException,
 			ProcessingErrorException {
+
 		// process workItem now...
 		workitem = this.workflowService.processWorkItem(workitem);
+
+		// recache current user data...
+		profileService.findProfileById(workitem.getItemValueString("txtName"),
+				true);
+
+		// get default workflowResult message
+		String action = workitem.getItemValueString("txtworkflowresultmessage");
+		return ("".equals(action) ? null : action);
+
 	}
 
 	/*
