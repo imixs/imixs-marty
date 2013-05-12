@@ -67,6 +67,8 @@ public class ChildWorkitemController extends
 	private List<ItemCollection> childList = null;
 	private String uniqueIdRef = null;
 	private ItemCollection parentWorkitem = null;
+	private String childType="childworkitem";
+	private int sortOrder=1;
 
 	@EJB
 	org.imixs.workflow.jee.ejb.WorkflowService workflowService;
@@ -75,6 +77,34 @@ public class ChildWorkitemController extends
 	ModelController modelController;
 
 	public static Logger logger = Logger.getLogger("org.imixs.marty");
+
+	
+	
+	
+	
+	/**
+	 * Default type for new created child workitems
+	 * @return
+	 */
+	public String getChildType() {
+		return childType;
+	}
+
+	public void setChildType(String childType) {
+		this.childType = childType;
+	}
+
+	/**
+	 * Sort order for child workitem list
+	 * @return
+	 */
+	public int getSortOrder() {
+		return sortOrder;
+	}
+
+	public void setSortOrder(int sortOrder) {
+		this.sortOrder = sortOrder;
+	}
 
 	/**
 	 * Returns the $UniqueID of the parentWorkitem
@@ -93,6 +123,9 @@ public class ChildWorkitemController extends
 	public ItemCollection getParentWorkitem() {
 		return parentWorkitem;
 	}
+	
+	
+	
 
 	/**
 	 * WorkflowEvent listener to update the child list of the current parent
@@ -171,7 +204,7 @@ public class ChildWorkitemController extends
 
 		if (uniqueIdRef != null) {
 			List<ItemCollection> result = workflowService
-					.getWorkListByRef(uniqueIdRef);
+					.getWorkListByRef(uniqueIdRef,0,-1,null, getSortOrder());
 			for (ItemCollection aWorkitem : result) {
 				childList.add(cloneWorkitem(aWorkitem));
 			}
@@ -197,7 +230,7 @@ public class ChildWorkitemController extends
 	public void create(ActionEvent event) {
 		super.create(event);
 		// update type property
-		this.getWorkitem().replaceItemValue("type", "childworkitem");
+		this.getWorkitem().replaceItemValue("type", getChildType());
 	}
 
 	public ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
