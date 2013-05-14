@@ -29,6 +29,8 @@ package org.imixs.marty.workflow;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
@@ -78,6 +80,8 @@ public class WorkflowController extends
 	private static final String DEFAULT_EDITOR_ID = "form_panel_simple#basic";
 	private static Logger logger = Logger.getLogger(WorkflowController.class
 			.getName());
+
+	private List<ItemCollection> versions = null;
 
 	/* Services */
 	@EJB
@@ -155,12 +159,19 @@ public class WorkflowController extends
 		return actionResult;
 	}
 
+	@Override
+	public void reset(ActionEvent event) {
+		super.reset(event);
+		versions = null;
+	}
+
 	/**
 	 * Fires a WORKITEM_CHANGED event if the $uniqueID of the current WorkItem
 	 * has changed
 	 */
 	@Override
 	public void setWorkitem(ItemCollection aworkitem) {
+		versions = null;
 		super.setWorkitem(aworkitem);
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
@@ -331,6 +342,42 @@ public class WorkflowController extends
 		}
 
 		return sections;
+
+	}
+
+	/**
+	 * returns a List with all Versions of the current Workitem
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getVersions() {
+		if (versions == null)
+			loadVersionWorkItemList();
+		return versions;
+	}
+
+	/**
+	 * this method loads all versions to the current workitem. Idependent from
+	 * the type property!
+	 * 
+	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
+	 */
+	private void loadVersionWorkItemList() {
+		versions = new ArrayList<ItemCollection>();
+		if (this.isNewWorkitem() || null == getWorkitem())
+			return;
+		Collection<ItemCollection> col = null;
+		String sRefID = getWorkitem().getItemValueString("$workitemId");
+		String refQuery = "SELECT entity FROM Entity entity "
+				+ " JOIN entity.textItems AS t"
+				+ "  WHERE t.itemName = '$workitemid'"
+				+ "  AND t.itemValue = '" + sRefID + "' "
+				+ " ORDER BY entity.created ASC";
+
+		col = this.getEntityService().findAllEntities(refQuery, 0, -1);
+		for (ItemCollection aworkitem : col) {
+			versions.add(aworkitem);
+		}
 
 	}
 
