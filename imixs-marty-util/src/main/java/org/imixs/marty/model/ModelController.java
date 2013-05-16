@@ -277,7 +277,7 @@ public class ModelController implements Serializable {
 			return aList;
 
 		for (String aGroupName : subWorkflowGroups.keySet()) {
-			if (aGroupName.startsWith(workflowGroup + "~")) {
+			if (aGroupName.startsWith(parentWorkflowGroup + "~")) {
 				aList.add(aGroupName);
 			}
 		}
