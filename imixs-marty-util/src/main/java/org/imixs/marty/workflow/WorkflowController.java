@@ -82,6 +82,7 @@ public class WorkflowController extends
 			.getName());
 
 	private List<ItemCollection> versions = null;
+	private List<EditorSection> editorSections = null;
 
 	/* Services */
 	@EJB
@@ -139,40 +140,14 @@ public class WorkflowController extends
 	}
 
 	/**
-	 * The action method processes the current workItem and fires a
-	 * WorkflowEvent.
-	 */
-	@Override
-	public String process() throws AccessDeniedException,
-			ProcessingErrorException {
-
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.WORKITEM_BEFORE_PROCESS));
-
-		String actionResult = super.process();
-
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.WORKITEM_AFTER_PROCESS));
-
-		return actionResult;
-	}
-
-	@Override
-	public void reset(ActionEvent event) {
-		super.reset(event);
-		versions = null;
-	}
-
-	/**
-	 * Fires a WORKITEM_CHANGED event if the $uniqueID of the current WorkItem
-	 * has changed
+	 * Updates the current workItem and resets the editoSection list and version
+	 * list. Finally the Method fires a WORKITEM_CHANGED event.
 	 */
 	@Override
 	public void setWorkitem(ItemCollection aworkitem) {
-		versions = null;
 		super.setWorkitem(aworkitem);
+		versions = null;
+		editorSections = null;
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_CHANGED));
@@ -244,104 +219,111 @@ public class WorkflowController extends
 	 * 
 	 * @return
 	 */
-	public ArrayList<EditorSection> getEditorSections() {
-		ArrayList<EditorSection> sections = new ArrayList<EditorSection>();
+	public List<EditorSection> getEditorSections() {
+		
+		if (editorSections == null) {
+			// compute editorSections
+			editorSections = new ArrayList<EditorSection>();
 
-		UIViewRoot viewRoot = FacesContext.getCurrentInstance().getViewRoot();
-		Locale locale = viewRoot.getLocale();
+			UIViewRoot viewRoot = FacesContext.getCurrentInstance()
+					.getViewRoot();
+			Locale locale = viewRoot.getLocale();
 
-		String sEditor = DEFAULT_EDITOR_ID;
+			String sEditor = DEFAULT_EDITOR_ID;
 
-		if (getWorkitem() != null) {
-			String currentEditor = getWorkitem().getItemValueString(
-					"txtWorkflowEditorid");
-			if (!currentEditor.isEmpty())
-				sEditor = currentEditor;
-		}
+			if (getWorkitem() != null) {
+				String currentEditor = getWorkitem().getItemValueString(
+						"txtWorkflowEditorid");
+				if (!currentEditor.isEmpty())
+					sEditor = currentEditor;
+			}
 
-		if (sEditor.indexOf('#') > -1) {
-			String liste = sEditor.substring(sEditor.indexOf('#') + 1);
+			if (sEditor.indexOf('#') > -1) {
+				String liste = sEditor.substring(sEditor.indexOf('#') + 1);
 
-			StringTokenizer st = new StringTokenizer(liste, "|");
-			while (st.hasMoreTokens()) {
-				try {
-					String sURL = st.nextToken();
+				StringTokenizer st = new StringTokenizer(liste, "|");
+				while (st.hasMoreTokens()) {
+					try {
+						String sURL = st.nextToken();
 
-					// if the URL contains a [] section test the defined
-					// user
-					// permissions
-					if (sURL.indexOf('[') > -1 || sURL.indexOf(']') > -1) {
-						boolean bPermissionGranted = false;
-						// yes - cut the permissions
-						String sPermissions = sURL.substring(
-								sURL.indexOf('[') + 1, sURL.indexOf(']'));
+						// if the URL contains a [] section test the defined
+						// user
+						// permissions
+						if (sURL.indexOf('[') > -1 || sURL.indexOf(']') > -1) {
+							boolean bPermissionGranted = false;
+							// yes - cut the permissions
+							String sPermissions = sURL.substring(
+									sURL.indexOf('[') + 1, sURL.indexOf(']'));
 
-						// cut the permissions from the URL
-						sURL = sURL.substring(0, sURL.indexOf('['));
-						StringTokenizer stPermission = new StringTokenizer(
-								sPermissions, ",");
-						while (stPermission.hasMoreTokens()) {
-							String aPermission = stPermission.nextToken();
-							// test for user role
-							ExternalContext ectx = FacesContext
-									.getCurrentInstance().getExternalContext();
-							if (ectx.isUserInRole(aPermission)) {
-								bPermissionGranted = true;
-								break;
+							// cut the permissions from the URL
+							sURL = sURL.substring(0, sURL.indexOf('['));
+							StringTokenizer stPermission = new StringTokenizer(
+									sPermissions, ",");
+							while (stPermission.hasMoreTokens()) {
+								String aPermission = stPermission.nextToken();
+								// test for user role
+								ExternalContext ectx = FacesContext
+										.getCurrentInstance()
+										.getExternalContext();
+								if (ectx.isUserInRole(aPermission)) {
+									bPermissionGranted = true;
+									break;
+								}
+								// test if user is project member
+								String sProjectUniqueID = this.getWorkitem()
+										.getItemValueString("$UniqueIDRef");
+
+								if ("manager".equalsIgnoreCase(aPermission)
+										&& processController
+												.isManagerOf(sProjectUniqueID)) {
+									bPermissionGranted = true;
+									break;
+								}
+								if ("team".equalsIgnoreCase(aPermission)
+										&& this.processController
+												.isTeamMemberOf(sProjectUniqueID)) {
+									bPermissionGranted = true;
+									break;
+								}
+
 							}
-							// test if user is project member
-							String sProjectUniqueID = this.getWorkitem()
-									.getItemValueString("$UniqueIDRef");
 
-							if ("manager".equalsIgnoreCase(aPermission)
-									&& processController
-											.isManagerOf(sProjectUniqueID)) {
-								bPermissionGranted = true;
-								break;
-							}
-							if ("team".equalsIgnoreCase(aPermission)
-									&& this.processController
-											.isTeamMemberOf(sProjectUniqueID)) {
-								bPermissionGranted = true;
-								break;
-							}
+							// if not permission is granted - skip this section
+							if (!bPermissionGranted)
+								continue;
 
 						}
 
-						// if not permission is granted - skip this section
-						if (!bPermissionGranted)
-							continue;
+						String sName = null;
+						// compute name from ressource Bundle....
+						try {
+							ResourceBundle rb = null;
+							if (locale != null)
+								rb = ResourceBundle.getBundle("bundle.app",
+										locale);
+							else
+								rb = ResourceBundle.getBundle("bundle.app");
 
+							String sResouceURL = sURL.replace('/', '_');
+							sName = rb.getString(sResouceURL);
+						} catch (java.util.MissingResourceException eb) {
+							sName = "";
+							logger.warning(eb.getMessage());
+						}
+
+						EditorSection aSection = new EditorSection(sURL, sName);
+						editorSections.add(aSection);
+
+					} catch (Exception est) {
+						logger.severe("[WorkitemController] can not parse EditorSections : '"
+								+ sEditor + "'");
+						logger.severe(est.getMessage());
 					}
-
-					String sName = null;
-					// compute name from ressource Bundle....
-					try {
-						ResourceBundle rb = null;
-						if (locale != null)
-							rb = ResourceBundle.getBundle("bundle.app", locale);
-						else
-							rb = ResourceBundle.getBundle("bundle.app");
-
-						String sResouceURL = sURL.replace('/', '_');
-						sName = rb.getString(sResouceURL);
-					} catch (java.util.MissingResourceException eb) {
-						sName = "";
-						logger.warning(eb.getMessage());
-					}
-
-					EditorSection aSection = new EditorSection(sURL, sName);
-					sections.add(aSection);
-
-				} catch (Exception est) {
-					logger.severe("[WorkitemController] can not parse EditorSections : '"
-							+ sEditor + "'");
-					logger.severe(est.getMessage());
 				}
 			}
 		}
 
-		return sections;
+		return editorSections;
 
 	}
 
@@ -357,28 +339,24 @@ public class WorkflowController extends
 	}
 
 	/**
-	 * this method loads all versions to the current workitem. Idependent from
-	 * the type property!
-	 * 
-	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
+	 * The action method processes the current workItem and fires the
+	 * WorkflowEvents WORKITEM_BEFORE_PROCESS and WORKITEM_AFTER_PROCESS.
 	 */
-	private void loadVersionWorkItemList() {
-		versions = new ArrayList<ItemCollection>();
-		if (this.isNewWorkitem() || null == getWorkitem())
-			return;
-		Collection<ItemCollection> col = null;
-		String sRefID = getWorkitem().getItemValueString("$workitemId");
-		String refQuery = "SELECT entity FROM Entity entity "
-				+ " JOIN entity.textItems AS t"
-				+ "  WHERE t.itemName = '$workitemid'"
-				+ "  AND t.itemValue = '" + sRefID + "' "
-				+ " ORDER BY entity.created ASC";
-
-		col = this.getEntityService().findAllEntities(refQuery, 0, -1);
-		for (ItemCollection aworkitem : col) {
-			versions.add(aworkitem);
-		}
-
+	@Override
+	public String process() throws AccessDeniedException,
+			ProcessingErrorException {
+	
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_BEFORE_PROCESS));
+	
+		String actionResult = super.process();
+	
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_AFTER_PROCESS));
+	
+		return actionResult;
 	}
 
 	/**
@@ -507,20 +485,45 @@ public class WorkflowController extends
 	 */
 	public void doRestoreFromDeletions(ActionEvent event)
 			throws AccessDeniedException {
-
+	
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_BEFORE_RESTOREFROMSOFTDELETE));
-
+	
 		ItemCollection workitem = workitemService
 				.restoreFromDeletions(getWorkitem());
-
+	
 		setWorkitem(workitem);
-
+	
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_AFTER_RESTOREFROMSOFTDELETE));
+	
+	}
 
+	/**
+	 * this method loads all versions to the current workitem. Idependent from
+	 * the type property!
+	 * 
+	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
+	 */
+	private void loadVersionWorkItemList() {
+		versions = new ArrayList<ItemCollection>();
+		if (this.isNewWorkitem() || null == getWorkitem())
+			return;
+		Collection<ItemCollection> col = null;
+		String sRefID = getWorkitem().getItemValueString("$workitemId");
+		String refQuery = "SELECT entity FROM Entity entity "
+				+ " JOIN entity.textItems AS t"
+				+ "  WHERE t.itemName = '$workitemid'"
+				+ "  AND t.itemValue = '" + sRefID + "' "
+				+ " ORDER BY entity.created ASC";
+	
+		col = this.getEntityService().findAllEntities(refQuery, 0, -1);
+		for (ItemCollection aworkitem : col) {
+			versions.add(aworkitem);
+		}
+	
 	}
 
 }
