@@ -35,7 +35,6 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.faces.context.FacesContext;
-import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.Cookie;
@@ -43,13 +42,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.ejb.ProfileService;
-import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.jee.faces.util.LoginController;
+import org.imixs.workflow.jee.util.PropertyService;
 
 /**
  * This backing beans handles the Profile entity for the current user and
@@ -77,6 +76,9 @@ public class UserController implements Serializable {
 
 	@EJB
 	private ProfileService profileService;
+
+	@EJB
+	private PropertyService propertyService;
 
 	@EJB
 	private EntityService entityService;
@@ -143,9 +145,22 @@ public class UserController implements Serializable {
 				logger.info("New Profile created ");
 
 			} else {
-				// no op
-				// in earlier versions the datlastLogin and numLoginCoutn
-				// property was set
+				// check if profile.autoProcessOnLogin is defined
+				String sAutoProcessID = propertyService.getProperties()
+						.getProperty("profile.autoProcessOnLogin");
+				try {
+					if (sAutoProcessID != null) {
+						int iActiviyID = Integer.valueOf(sAutoProcessID);
+						profile.replaceItemValue("$ActivityID", iActiviyID);
+						logger.fine("[UserController] autoprocess profile with autoProcessOnLogin="
+								+ iActiviyID);
+						profile = workflowService.processWorkItem(profile);
+
+					}
+				} catch (NumberFormatException nfe) {
+					logger.warning("[UserController] unable to autoprocess profile with autoProcessOnLogin="
+							+ sAutoProcessID);
+				}
 
 			}
 
