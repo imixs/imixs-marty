@@ -128,7 +128,7 @@ public class UserController implements Serializable {
 
 			// try to load the profile for the current user
 			ItemCollection profile = profileService
-					.lookupProfile(loginController.getUserPrincipal());
+					.lookupProfileById(loginController.getUserPrincipal());
 			if (profile == null) {
 				// create new Profile for current user
 				profile = new ItemCollection();

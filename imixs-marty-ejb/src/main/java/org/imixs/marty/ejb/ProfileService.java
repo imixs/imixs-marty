@@ -138,7 +138,7 @@ public class ProfileService {
 			userProfile = (ItemCollection) cache.get(userid);
 		// not found?
 		if (userProfile == null) {
-			userProfile = lookupProfile(userid);
+			userProfile = lookupProfileById(userid);
 			if (userProfile != null) {
 				// put a clone workitem into the cahe
 				userProfile = cloneWorkitem(userProfile);
@@ -169,16 +169,16 @@ public class ProfileService {
 	 *            - the profile id
 	 * @return profile workitem
 	 */
-	public ItemCollection lookupProfile(String userid) {
+	public ItemCollection lookupProfileById(String userid) {
 
 		if (userid == null || userid.isEmpty()) {
-			logger.warning("[ProfileService] lookupProfile - no id provided!");
+			logger.warning("[ProfileService] lookupProfileById - no id provided!");
 			return null;
 		}
 		// try to get name out from cache
 		ItemCollection userProfile = null;
 
-		logger.fine("[ProfileService] lookup profile '" + userid + "'");
+		logger.fine("[ProfileService] lookupProfileById '" + userid + "'");
 		// lookup user profile....
 		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
 				+ " JOIN profile.textItems AS t2"
@@ -195,6 +195,49 @@ public class ProfileService {
 			userProfile = col.iterator().next();
 		} else {
 			logger.warning("[ProfileService] lookup profile '" + userid
+					+ "' failed");
+		}
+		return userProfile;
+	}
+
+	/**
+	 * This method lookups a profile by its username or email address. This
+	 * method returns the full entity. The returned workItem can be processed.
+	 * 
+	 * Use lookupProfileByID to search for a userid or use findProfileById to
+	 * work with the internal cache if there is no need to update the profile.
+	 * 
+	 * @param search
+	 *            - the full username or email address
+	 * @return profile workitem
+	 */
+	public ItemCollection lookupProfile(String search) {
+
+		if (search == null || search.isEmpty()) {
+			logger.warning("[ProfileService] lookupProfile - no search phrase provided!");
+			return null;
+		}
+		// try to get name out from cache
+		ItemCollection userProfile = null;
+
+		logger.fine("[ProfileService] lookup profile '" + search + "'");
+		// lookup user profile....
+		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+				+ " JOIN profile.textItems AS t1"
+				+ " JOIN profile.textItems AS t2"
+				+ " WHERE  profile.type= 'profile' "
+				+ " AND (  (t1.itemName = 'txtusername' AND t1.itemValue = '"+ search + "') "
+				+ "      OR(t2.itemName = 'txtemail' AND t2.itemValue = '"+ search + "')) ";
+
+		logger.finest("searchprofile: " + sQuery);
+
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				0, MAX_SEARCH_COUNT);
+
+		if (col.size() > 0) {
+			userProfile = col.iterator().next();
+		} else {
+			logger.warning("[ProfileService] lookup profile '" + search
 					+ "' failed");
 		}
 		return userProfile;
