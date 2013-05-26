@@ -50,6 +50,7 @@ import org.imixs.marty.model.ProcessController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
  * The marty WorkflowController extends the
@@ -139,18 +140,28 @@ public class WorkflowController extends
 		return actionResult;
 	}
 
+
 	/**
-	 * Updates the current workItem and resets the editoSection list and version
-	 * list. Finally the Method fires a WORKITEM_CHANGED event.
+	 * The method fires a WORKITEM_CHANGED event if the uniqueId of the workitem
+	 * has changed. Additional the method resets the editoSection list and
+	 * version list.
 	 */
 	@Override
-	public void setWorkitem(ItemCollection aworkitem) {
-		super.setWorkitem(aworkitem);
+	public void setWorkitem(ItemCollection newWorkitem) {
+		// fire WORKITEM_CHANGED event if the uniqueId has changed
+		if ((newWorkitem == null && getWorkitem() != null)
+				|| (newWorkitem != null && getWorkitem() == null)
+				|| (!newWorkitem.getItemValueString(EntityService.UNIQUEID)
+						.equals(getWorkitem().getItemValueString(
+								EntityService.UNIQUEID))))
+			events.fire(new WorkflowEvent(newWorkitem,
+					WorkflowEvent.WORKITEM_CHANGED));
+
+		super.setWorkitem(newWorkitem);
+
 		versions = null;
 		editorSections = null;
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.WORKITEM_CHANGED));
+
 	}
 
 	/**

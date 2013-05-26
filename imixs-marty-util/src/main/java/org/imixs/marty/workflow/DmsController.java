@@ -72,6 +72,7 @@ public class DmsController implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private List<ItemCollection> dmsList = null;
+	private ItemCollection blobWorkitem = null;
 
 	@Inject
 	private LoginController loginController = null;
@@ -132,33 +133,37 @@ public class DmsController implements Serializable {
 				fileUploadController.setAttachedFiles(workflowEvent
 						.getWorkitem().getFileNames());
 			}
+			// reset blobWorkitem
+			blobWorkitem = null;
+			// load dms list
 			readDmsList(workflowEvent.getWorkitem());
 		}
 
 		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == workflowEvent
 				.getEventType()) {
-			if (fileUploadController.isDirty()) {
-				// test if workItem has the property '$BlobWorkitem'
-				if (!workflowEvent.getWorkitem().hasItem("$BlobWorkitem")) {
-					// create a blob workItem
-					ItemCollection blobWorkitem = workflowController
-							.loadBlobWorkitem(workflowEvent.getWorkitem());
-					// store the $BlobWorkitem
-					workflowEvent
-							.getWorkitem()
-							.replaceItemValue(
-									"$BlobWorkitem",
-									blobWorkitem
-											.getItemValueString(EntityService.UNIQUEID));
-					// save the blob workItem (which is still empty)
-					workflowController.saveBlobWorkitem(blobWorkitem,
-							workflowEvent.getWorkitem());
-				}
-				// update the file info for the current workitem
-				fileUploadController.updateWorkitem(
-						workflowEvent.getWorkitem(), true);
 
+			// load/create the blobWorkitem.....
+			blobWorkitem = workflowController.loadBlobWorkitem(workflowEvent
+					.getWorkitem());
+
+			// test if blobworkItem is yet connected (property
+			// '$BlobWorkitem')
+			if (!workflowEvent.getWorkitem().hasItem("$BlobWorkitem")) {
+				// store the $BlobWorkitem
+				workflowEvent
+						.getWorkitem()
+						.replaceItemValue(
+								"$BlobWorkitem",
+								blobWorkitem
+										.getItemValueString(EntityService.UNIQUEID));
+				// save the blob workItem (which is still empty)
+				blobWorkitem = workflowController.saveBlobWorkitem(
+						blobWorkitem, workflowEvent.getWorkitem());
 			}
+			// update the file info for the current workitem
+			fileUploadController.updateWorkitem(workflowEvent.getWorkitem(),
+					true);
+
 			// store the dms list
 			storeDmsList(workflowEvent.getWorkitem());
 
@@ -166,15 +171,15 @@ public class DmsController implements Serializable {
 
 		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
 				.getEventType()) {
-			if (fileUploadController.isDirty()) {
-				// ...save the blobWorkitem after processing the parent!!
-				ItemCollection blobWorkitem = workflowController
-						.loadBlobWorkitem(workflowEvent.getWorkitem());
-				if (blobWorkitem != null) {
-					fileUploadController.updateWorkitem(blobWorkitem, false);
-					workflowController.saveBlobWorkitem(blobWorkitem,
-							workflowEvent.getWorkitem());
-				}
+			// update the blobWorkitem in any case (update $writeaccess!)
+			// ...reload the blobWorkitem after processing the parent
+			// because a plugin can have changed it
+			blobWorkitem = workflowController.loadBlobWorkitem(workflowEvent
+					.getWorkitem());
+			if (blobWorkitem != null) {
+				fileUploadController.updateWorkitem(blobWorkitem, false);
+				blobWorkitem=workflowController.saveBlobWorkitem(blobWorkitem,
+						workflowEvent.getWorkitem());
 			}
 
 			// update the fileuploadController
@@ -200,7 +205,8 @@ public class DmsController implements Serializable {
 	}
 
 	/**
-	 * This method removes a file form the current dms list and also from the workitem
+	 * This method removes a file form the current dms list and also from the
+	 * workitem
 	 * 
 	 * @param aFile
 	 */
@@ -217,7 +223,7 @@ public class DmsController implements Serializable {
 		// now remove the entry also from the $file property
 		fileUploadController.removeAttachmentAction(aFile);
 		workflowController.getWorkitem().removeFile(aFile);
-		
+
 	}
 
 	/**

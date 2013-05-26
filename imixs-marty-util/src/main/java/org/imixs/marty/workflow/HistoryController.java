@@ -113,11 +113,18 @@ public class HistoryController implements Serializable {
 				if (iPos >= workitems.size())
 					iPos--;
 				if (iPos >= 0) {
+					// select the next
 					ItemCollection current = workitems.get(iPos);
 					if (current != null) {
 						currentId = current.getItemValueString("$UniqueID");
 						workflowController.load(currentId, null);
+					} else {
+						// set workflowController to null
+						workflowController.setWorkitem(null);
 					}
+				} else {
+					// set workflowController to null
+					workflowController.setWorkitem(null);
 				}
 			}
 		}
@@ -127,6 +134,7 @@ public class HistoryController implements Serializable {
 
 	/**
 	 * This action listener removes the current WorkItem from the history nav
+	 * and set the workitem form the workflowcontroller to null
 	 * 
 	 * @param aWorkitem
 	 */
@@ -136,6 +144,7 @@ public class HistoryController implements Serializable {
 			workitems.remove(iPos);
 		}
 		currentId = null;
+		workflowController.setWorkitem(null);
 	}
 
 	/**
