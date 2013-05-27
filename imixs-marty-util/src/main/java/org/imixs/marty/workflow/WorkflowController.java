@@ -140,7 +140,6 @@ public class WorkflowController extends
 		return actionResult;
 	}
 
-
 	/**
 	 * The method fires a WORKITEM_CHANGED event if the uniqueId of the workitem
 	 * has changed. Additional the method resets the editoSection list and
@@ -148,15 +147,17 @@ public class WorkflowController extends
 	 */
 	@Override
 	public void setWorkitem(ItemCollection newWorkitem) {
-		// fire WORKITEM_CHANGED event if the uniqueId has changed
-		if ((newWorkitem == null && getWorkitem() != null)
-				|| (newWorkitem != null && getWorkitem() == null)
-				|| (!newWorkitem.getItemValueString(EntityService.UNIQUEID)
-						.equals(getWorkitem().getItemValueString(
-								EntityService.UNIQUEID))))
-			events.fire(new WorkflowEvent(newWorkitem,
-					WorkflowEvent.WORKITEM_CHANGED));
 
+		if (!(newWorkitem == null && getWorkitem() == null)) {
+			// fire WORKITEM_CHANGED event if the uniqueId has changed
+			if ((newWorkitem == null && getWorkitem() != null)
+					|| (newWorkitem != null && getWorkitem() == null)
+					|| (!newWorkitem.getItemValueString(EntityService.UNIQUEID)
+							.equals(getWorkitem().getItemValueString(
+									EntityService.UNIQUEID))))
+				events.fire(new WorkflowEvent(newWorkitem,
+						WorkflowEvent.WORKITEM_CHANGED));
+		}
 		super.setWorkitem(newWorkitem);
 
 		versions = null;
@@ -231,7 +232,7 @@ public class WorkflowController extends
 	 * @return
 	 */
 	public List<EditorSection> getEditorSections() {
-		
+
 		if (editorSections == null) {
 			// compute editorSections
 			editorSections = new ArrayList<EditorSection>();
@@ -356,17 +357,17 @@ public class WorkflowController extends
 	@Override
 	public String process() throws AccessDeniedException,
 			ProcessingErrorException {
-	
+
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_BEFORE_PROCESS));
-	
+
 		String actionResult = super.process();
-	
+
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_AFTER_PROCESS));
-	
+
 		return actionResult;
 	}
 
@@ -496,20 +497,20 @@ public class WorkflowController extends
 	 */
 	public void doRestoreFromDeletions(ActionEvent event)
 			throws AccessDeniedException {
-	
+
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_BEFORE_RESTOREFROMSOFTDELETE));
-	
+
 		ItemCollection workitem = workitemService
 				.restoreFromDeletions(getWorkitem());
-	
+
 		setWorkitem(workitem);
-	
+
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_AFTER_RESTOREFROMSOFTDELETE));
-	
+
 	}
 
 	/**
@@ -529,12 +530,12 @@ public class WorkflowController extends
 				+ "  WHERE t.itemName = '$workitemid'"
 				+ "  AND t.itemValue = '" + sRefID + "' "
 				+ " ORDER BY entity.created ASC";
-	
+
 		col = this.getEntityService().findAllEntities(refQuery, 0, -1);
 		for (ItemCollection aworkitem : col) {
 			versions.add(aworkitem);
 		}
-	
+
 	}
 
 }
