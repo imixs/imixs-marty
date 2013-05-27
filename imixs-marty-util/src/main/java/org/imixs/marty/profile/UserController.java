@@ -329,8 +329,9 @@ public class UserController implements Serializable {
 		workitem = this.workflowService.processWorkItem(workitem);
 
 		// recache current user data...
-		profileService.findProfileById(workitem.getItemValueString("txtName"),
-				true);
+		// done by the profilePlugin
+//		profileService.findProfileById(workitem.getItemValueString("txtName"),
+//				true);
 
 		// get default workflowResult message
 		String action = workitem.getItemValueString("txtworkflowresultmessage");

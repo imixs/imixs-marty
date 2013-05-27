@@ -106,8 +106,11 @@ public class ProfilePlugin extends AbstractPlugin {
 			throws PluginException {
 
 		// validate profile..
-		if ("profile".equals(workItem.getItemValueString("type")))
+		if ("profile".equals(workItem.getItemValueString("type"))) {
 			validateUserProfile(workItem);
+			// discared cache for this name
+			profileService.discardCache(workItem.getItemValueString("txtName"));
+		}
 
 		// translate dynamic activity values
 		if ("workitem".equals(workItem.getItemValueString("type")))

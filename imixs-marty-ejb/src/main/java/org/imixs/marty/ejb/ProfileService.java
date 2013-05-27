@@ -243,6 +243,16 @@ public class ProfileService {
 		return userProfile;
 	}
 
+	/**
+	 * This method removes a profile from the cache.
+	 * @param userid
+	 */
+	public void discardCache(String userid) {
+		cache.remove(userid);
+	}
+	
+	
+	
 	public static ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
 		ItemCollection clone = new ItemCollection();
 
