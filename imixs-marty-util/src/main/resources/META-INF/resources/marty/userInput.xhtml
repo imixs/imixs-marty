@@ -43,12 +43,12 @@ $(document).ready(function() {
 			</h:inputText>
 		
 			
-			<h:panelGroup id="suggest_box">
-				<h:panelGroup id="suggest_resultlist"
+			<h:panelGroup id="suggest_box" >
+				<h:panelGroup id="suggest_resultlist" layout="block"  style="width:100%;margin-top:15px;"
 					class="marty-workitemlink-resultlist"
 					rendered="#{! empty userInputController.searchResult}">
 					<c:forEach var="suggest" items="#{userInputController.searchResult}">
-						<div class="marty-workitemlink-resultlist-entry">
+						<div class="marty-workitemlink-resultlist-entry"  style="width:100%;">
 							<h:commandLink
 								actionListener="#{userInputController.add(suggest.item['txtName'],cc.attrs.value)}">
 								<h:outputText style="font-weight: bold;"
@@ -70,7 +70,10 @@ $(document).ready(function() {
 
 			<h:dataTable columns="2" value="#{cc.attrs.value}" var="record">
 				<h:column>
-					<h:outputText value="#{userController.getUserName(record)}" />
+					<h:outputText value="#{userController.getUserName(record)}"
+					rendered="#{! empty userController.getUserName(record)}" />
+					<h:outputText value="#{record}"
+					rendered="#{empty userController.getUserName(record)}" />
 				</h:column>
 				<h:column>
 					<h:outputText value="#{userController.getEmail(record)}" />
