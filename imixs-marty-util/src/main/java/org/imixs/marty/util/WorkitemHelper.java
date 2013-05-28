@@ -60,10 +60,12 @@ public class WorkitemHelper {
 		if (aWorkitem.hasItem("txtName"))
 			clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
 
-		if (aWorkitem.hasItem("txtProjectName"))
-			clone.replaceItemValue("txtProjectName",
-					aWorkitem.getItemValue("txtProjectName"));
-
+		if (aWorkitem.hasItem("txtProcessName"))
+			clone.replaceItemValue("txtProcessName",
+					aWorkitem.getItemValue("txtProcessName"));
+		if (aWorkitem.hasItem("txtSpaceName"))
+			clone.replaceItemValue("txtSpaceName",
+					aWorkitem.getItemValue("txtSpaceName"));
 		if (aWorkitem.hasItem("datdate"))
 			clone.replaceItemValue("datdate", aWorkitem.getItemValue("datdate"));
 
