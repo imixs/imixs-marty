@@ -148,16 +148,18 @@ public class WorkflowController extends
 	@Override
 	public void setWorkitem(ItemCollection newWorkitem) {
 
-		if (!(newWorkitem == null && getWorkitem() == null)) {
-			// fire WORKITEM_CHANGED event if the uniqueId has changed
-			if ((newWorkitem == null && getWorkitem() != null)
-					|| (newWorkitem != null && getWorkitem() == null)
-					|| (!newWorkitem.getItemValueString(EntityService.UNIQUEID)
-							.equals(getWorkitem().getItemValueString(
-									EntityService.UNIQUEID))))
-				events.fire(new WorkflowEvent(newWorkitem,
-						WorkflowEvent.WORKITEM_CHANGED));
-		}
+//		if (!(newWorkitem == null && getWorkitem() == null)) {
+//			// fire WORKITEM_CHANGED event if the uniqueId has changed
+//			if ((newWorkitem == null && getWorkitem() != null)
+//					|| (newWorkitem != null && getWorkitem() == null)
+//					|| (!newWorkitem.getItemValueString(EntityService.UNIQUEID)
+//							.equals(getWorkitem().getItemValueString(
+//									EntityService.UNIQUEID))))
+//				
+//		}
+		events.fire(new WorkflowEvent(newWorkitem,
+				WorkflowEvent.WORKITEM_CHANGED));
+		
 		super.setWorkitem(newWorkitem);
 
 		versions = null;
