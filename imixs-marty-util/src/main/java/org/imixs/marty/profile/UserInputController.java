@@ -63,7 +63,7 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 public class UserInputController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private int maxSearchCount=30;
+	private int maxSearchCount = 30;
 	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	@Inject
@@ -117,12 +117,13 @@ public class UserInputController implements Serializable {
 		searchResult = searchProfile(input);
 
 	}
-	
+
 	/**
 	 * This method returns a list of profile ItemCollections matching the search
 	 * phrase. The JQPL joins over txtName, txtEmail and txtUserName
 	 * 
-	 * @param phrase - search phrase
+	 * @param phrase
+	 *            - search phrase
 	 * @return - list of matching profiles
 	 */
 	public List<ItemCollection> searchProfile(String phrase) {
@@ -143,14 +144,13 @@ public class UserInputController implements Serializable {
 				+ " AND t1.itemValue LIKE  '" + phrase + "') "
 				+ " OR (t2.itemName = 'txtemail' "
 				+ " AND t2.itemValue LIKE  '" + phrase + "') "
-				+ " OR (t0.itemName = 'txtname' "
-				+ " AND t0.itemValue LIKE  '" + phrase + "') "
-				+ " )";
+				+ " OR (t0.itemName = 'txtname' " + " AND t0.itemValue LIKE  '"
+				+ phrase + "') " + " )";
 
 		logger.finest("searchprofile: " + sQuery);
 
-		Collection<ItemCollection> col = workflowService.getEntityService().findAllEntities(sQuery,
-				0, maxSearchCount);
+		Collection<ItemCollection> col = workflowService.getEntityService()
+				.findAllEntities(sQuery, 0, maxSearchCount);
 
 		for (ItemCollection profile : col) {
 			searchResult.add(ProfileService.cloneWorkitem(profile));
@@ -159,7 +159,7 @@ public class UserInputController implements Serializable {
 
 		// sort by username..
 		Collections.sort(searchResult, new WorkitemComparator(
-				"txtWorkflowGroup", true));
+				"txtUserName", true));
 
 		return searchResult;
 
@@ -173,16 +173,54 @@ public class UserInputController implements Serializable {
 	 * This methods adds a new workItem reference
 	 */
 	public void add(String aName, List<Object> aList) {
-		logger.fine("userInputController add: " + aName);
-		aList.add(aName);
+		if (aList == null)
+			return;
+
+		if (!aList.contains(aName)) {
+			logger.fine("userInputController add: " + aName);
+			aList.add(aName);
+		}
 	}
 
 	/**
 	 * This methods removes a workItem reference
 	 */
 	public void remove(String aName, List<Object> aList) {
+		if (aList==null)
+			return;
 		logger.fine("userInputController remove: " + aName);
 		aList.remove(aName);
+	}
+	
+	/**
+	 * This method returns a sorted list of profiles for a given userid list
+	 * @return
+	 */
+	public List<ItemCollection> getSortedProfilelist( List<Object> aList) {
+		List<ItemCollection> profiles=new ArrayList<ItemCollection>();
+		
+		if (aList==null)
+			return profiles;
+		
+		// add all profile objects....
+		for (Object aentry: aList) {
+			ItemCollection profile=userController.getProfile(aentry.toString());
+			if (profile!=null) {
+				profiles.add(profile);
+			} else {
+				// create a dummy entry
+				profile=new ItemCollection();
+				profile.replaceItemValue("txtName", aentry.toString());
+				profile.replaceItemValue("txtUserName", aentry.toString());
+				profiles.add(profile);
+			}
+		}
+		
+		// sort by username..
+		Collections.sort(profiles, new WorkitemComparator(
+						"txtUserName", true));
+				
+		return profiles;
 	}
 
 }
