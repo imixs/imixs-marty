@@ -21,7 +21,7 @@
  *  	Ralph Soika
  *  
  *******************************************************************************/
-package org.imixs.marty.workflow;
+package org.imixs.marty.profile;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -37,8 +37,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProfileService;
-import org.imixs.marty.profile.UserController;
 import org.imixs.marty.util.WorkitemComparator;
+import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 
@@ -120,10 +120,10 @@ public class UserInputController implements Serializable {
 	
 	/**
 	 * This method returns a list of profile ItemCollections matching the search
-	 * phrase. The JQPL joins over txtEmail and txtUserName
+	 * phrase. The JQPL joins over txtName, txtEmail and txtUserName
 	 * 
-	 * @param aname
-	 * @return
+	 * @param phrase - search phrase
+	 * @return - list of matching profiles
 	 */
 	public List<ItemCollection> searchProfile(String phrase) {
 
@@ -135,13 +135,17 @@ public class UserInputController implements Serializable {
 		phrase = "%" + phrase.trim() + "%";
 
 		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+				+ " JOIN profile.textItems AS t0"
 				+ " JOIN profile.textItems AS t1"
 				+ " JOIN profile.textItems AS t2"
 				+ " WHERE  profile.type= 'profile' " + " AND "
 				+ " ( (t1.itemName = 'txtusername' "
 				+ " AND t1.itemValue LIKE  '" + phrase + "') "
 				+ " OR (t2.itemName = 'txtemail' "
-				+ " AND t2.itemValue LIKE  '" + phrase + "') " + " )";
+				+ " AND t2.itemValue LIKE  '" + phrase + "') "
+				+ " OR (t0.itemName = 'txtname' "
+				+ " AND t0.itemValue LIKE  '" + phrase + "') "
+				+ " )";
 
 		logger.finest("searchprofile: " + sQuery);
 
