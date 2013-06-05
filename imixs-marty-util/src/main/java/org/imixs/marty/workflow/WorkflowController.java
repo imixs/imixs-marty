@@ -148,15 +148,6 @@ public class WorkflowController extends
 	@Override
 	public void setWorkitem(ItemCollection newWorkitem) {
 
-//		if (!(newWorkitem == null && getWorkitem() == null)) {
-//			// fire WORKITEM_CHANGED event if the uniqueId has changed
-//			if ((newWorkitem == null && getWorkitem() != null)
-//					|| (newWorkitem != null && getWorkitem() == null)
-//					|| (!newWorkitem.getItemValueString(EntityService.UNIQUEID)
-//							.equals(getWorkitem().getItemValueString(
-//									EntityService.UNIQUEID))))
-//				
-//		}
 		events.fire(new WorkflowEvent(newWorkitem,
 				WorkflowEvent.WORKITEM_CHANGED));
 		
@@ -365,6 +356,11 @@ public class WorkflowController extends
 				WorkflowEvent.WORKITEM_BEFORE_PROCESS));
 
 		String actionResult = super.process();
+		
+		// reset versions and editor sections
+		versions = null;
+		editorSections = null;
+		// ! Do not call setWorkitem here because this fires a WORKITEM_CHANGED event !
 
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
