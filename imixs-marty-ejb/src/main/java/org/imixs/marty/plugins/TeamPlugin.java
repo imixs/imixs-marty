@@ -220,13 +220,20 @@ public class TeamPlugin extends AbstractPlugin {
 		// update spaceRefs....
 		if (!spaceRefList.isEmpty()) {
 			Collection<ItemCollection> parents = cacheRef.values();
+			Vector<String> removeList = new Vector<String>();
 			for (ItemCollection entity : parents) {
 				String sID = entity.getItemValueString(EntityService.UNIQUEID);
 				String sType = entity.getItemValueString("type");
 				if ("space".equals(sType) && !spaceRefList.contains(sID)) {
-					parents.remove(entity);
+					// parents.remove(entity);
+					removeList.add(sID);
 				}
 			}
+			// now remove all found old refs from cacheRef....
+			for (String aID : removeList) {
+				cacheRef.remove(aID);
+			}
+
 			// now add all new refs...
 			for (String aRef : spaceRefList) {
 				if (cacheRef.get(aRef) == null) {
