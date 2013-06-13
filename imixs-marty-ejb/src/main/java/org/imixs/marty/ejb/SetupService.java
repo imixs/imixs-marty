@@ -25,9 +25,7 @@ package org.imixs.marty.ejb;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Logger;
@@ -37,6 +35,8 @@ import javax.annotation.security.RunAs;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
@@ -80,7 +80,23 @@ public class SetupService {
 	 * default data
 	 * @throws AccessDeniedException 
 	 */
-	public void init() throws AccessDeniedException {
+	public void init() throws AccessDeniedException  {
+		
+		logger.info("[SetupService] starting System Setup...");
+		updateIndexList();
+		loadDefaultModels();
+		
+		logger.info("[SetupService] system setup completed");
+
+	}
+	
+	
+	/**
+	 * update indexies by adding or removing current setup of indexies.
+	 * can be overwritten by subclasses
+	 */
+	//@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public void updateIndexList() throws AccessDeniedException  {
 		logger.info("[SetupService] starting System Setup...");
 		// model
 		entityService.addIndex("numprocessid", EntityIndex.TYP_INT);
@@ -99,24 +115,25 @@ public class SetupService {
 		entityService.addIndex("txtworkitemref", EntityIndex.TYP_TEXT);
 		entityService.addIndex("txtname", EntityIndex.TYP_TEXT);
 		entityService.addIndex("txtemail", EntityIndex.TYP_TEXT);
-		entityService.addIndex("namteam", EntityIndex.TYP_TEXT);
 		entityService.addIndex("namowner", EntityIndex.TYP_TEXT);
 		entityService.addIndex("datdate", EntityIndex.TYP_CALENDAR);
 		entityService.addIndex("datfrom", EntityIndex.TYP_CALENDAR);
 		entityService.addIndex("datto", EntityIndex.TYP_CALENDAR);
 		entityService.addIndex("numsequencenumber", EntityIndex.TYP_INT);
-
-		entityService.addIndex("txtProjectName", EntityIndex.TYP_TEXT);
 		entityService.addIndex("txtUsername", EntityIndex.TYP_TEXT);
 
+		
+		/* !!Remove deprecated indexies!! */
+		/* for some reason it is not possible to remove index during deployment.... */
+//		entityService.removeIndex("txtProjectName");
+//		entityService.removeIndex("namteam");
+		
+		
+		
+		
 		logger.info("[SetupService] index configuration - ok");
 
-		loadDefaultModels();
-		
-		logger.info("[SetupService] system setup completed");
-
 	}
-	
 	
 	/**
 	 * This method loads the default model files defined by the configuration

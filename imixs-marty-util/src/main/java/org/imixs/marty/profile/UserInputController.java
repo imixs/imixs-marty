@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.enterprise.event.Observes;
 import javax.faces.event.AjaxBehaviorEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -39,7 +40,10 @@ import javax.inject.Named;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.marty.workflow.WorkflowController;
+import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 
 /**
@@ -60,6 +64,8 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 
 @Named("userInputController")
 @SessionScoped
+// @RequestScoped
+// @ViewScoped
 public class UserInputController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -158,8 +164,8 @@ public class UserInputController implements Serializable {
 		}
 
 		// sort by username..
-		Collections.sort(searchResult, new WorkitemComparator(
-				"txtUserName", true));
+		Collections.sort(searchResult, new WorkitemComparator("txtUserName",
+				true));
 
 		return searchResult;
 
@@ -182,45 +188,68 @@ public class UserInputController implements Serializable {
 		}
 	}
 
+	public String actionTest() {
+		int i = 1;
+
+		return "";
+
+	}
+
 	/**
 	 * This methods removes a workItem reference
 	 */
 	public void remove(String aName, List<Object> aList) {
-		if (aList==null)
+		if (aList == null)
 			return;
 		logger.fine("userInputController remove: " + aName);
 		aList.remove(aName);
 	}
-	
+
 	/**
 	 * This method returns a sorted list of profiles for a given userid list
+	 * 
 	 * @return
 	 */
-	public List<ItemCollection> getSortedProfilelist( List<Object> aList) {
-		List<ItemCollection> profiles=new ArrayList<ItemCollection>();
-		
-		if (aList==null)
+	public List<ItemCollection> getSortedProfilelist(List<Object> aList) {
+		List<ItemCollection> profiles = new ArrayList<ItemCollection>();
+
+		if (aList == null)
 			return profiles;
-		
+
 		// add all profile objects....
-		for (Object aentry: aList) {
-			ItemCollection profile=userController.getProfile(aentry.toString());
-			if (profile!=null) {
-				profiles.add(profile);
-			} else {
-				// create a dummy entry
-				profile=new ItemCollection();
-				profile.replaceItemValue("txtName", aentry.toString());
-				profile.replaceItemValue("txtUserName", aentry.toString());
-				profiles.add(profile);
+		for (Object aentry : aList) {
+			if (aentry != null && !aentry.toString().isEmpty()) {
+				ItemCollection profile = userController.getProfile(aentry
+						.toString());
+				if (profile != null) {
+					profiles.add(profile);
+				} else {
+					// create a dummy entry
+					profile = new ItemCollection();
+					profile.replaceItemValue("txtName", aentry.toString());
+					profile.replaceItemValue("txtUserName", aentry.toString());
+					profiles.add(profile);
+				}
 			}
 		}
-		
+
 		// sort by username..
-		Collections.sort(profiles, new WorkitemComparator(
-						"txtUserName", true));
-				
+		Collections.sort(profiles, new WorkitemComparator("txtUserName", true));
+
 		return profiles;
+	}
+
+	/**
+	 * WorkflowEvent listener to reset state
+	 * 
+	 * @param workflowEvent
+	 * @throws AccessDeniedException
+	 */
+	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent)
+			throws AccessDeniedException {
+		searchResult = null;
+		input = null;
+
 	}
 
 }
