@@ -64,8 +64,6 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 
 @Named("userInputController")
 @SessionScoped
-// @RequestScoped
-// @ViewScoped
 public class UserInputController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -102,18 +100,36 @@ public class UserInputController implements Serializable {
 		return maxSearchCount;
 	}
 
+	/**
+	 * Set the maximum length of a search result 
+	 * @param maxSearchCount
+	 */
 	public void setMaxSearchCount(int maxSearchCount) {
 		this.maxSearchCount = maxSearchCount;
 	}
 
-	public void reset(AjaxBehaviorEvent event) {
+	/**
+	 * This method reset the search and input state.
+	 */
+	public void reset() {
 		searchResult = new ArrayList<ItemCollection>();
 		input = "";
 		logger.fine("userInputController reset");
 	}
+	
+	/**
+	 * This ajax event method reset the search and input state.
+	 * 
+	 * @param event
+	 */
+	public void reset(AjaxBehaviorEvent event) {
+		reset();
+	}
 
 	/**
-	 * JPQL search . minimum search input 2 chars!
+	 * This method initializes a JPQL search. The method is triggered by ajax
+	 * events from the userInput.xhtml page. The minimum length of a given input
+	 * search phrase have to be at least 2 characters
 	 * 
 	 */
 	public void search() {
@@ -126,7 +142,8 @@ public class UserInputController implements Serializable {
 
 	/**
 	 * This method returns a list of profile ItemCollections matching the search
-	 * phrase. The JQPL joins over txtName, txtEmail and txtUserName
+	 * phrase. The JQPL joins over txtName, txtEmail and txtUserName. The result
+	 * list is sorted by txtUserName
 	 * 
 	 * @param phrase
 	 *            - search phrase
@@ -176,48 +193,54 @@ public class UserInputController implements Serializable {
 	}
 
 	/**
-	 * This methods adds a new workItem reference
+	 * This methods adds a new name to a userid list
+	 * 
 	 */
 	public void add(String aName, List<Object> aList) {
 		if (aList == null)
 			return;
 
 		if (!aList.contains(aName)) {
-			logger.fine("userInputController add: " + aName);
+			logger.fine("userInputController add '" + aName + "' from list.");
 			aList.add(aName);
 		}
 	}
-
-	public String actionTest() {
-		int i = 1;
-
-		return "";
-
-	}
+	
+//	public void add(String aName, String aValue) {
+//		if (aList == null)
+//			return;
+//
+//		if (!aList.contains(aName)) {
+//			logger.fine("userInputController add '" + aName + "' from list.");
+//			aList.add(aName);
+//		}
+//	}
 
 	/**
-	 * This methods removes a workItem reference
+	 * This methods removes a name from the userid list
 	 */
 	public void remove(String aName, List<Object> aList) {
 		if (aList == null)
 			return;
-		logger.fine("userInputController remove: " + aName);
+		logger.fine("userInputController remove '" + aName + "' from list.");
 		aList.remove(aName);
 	}
 
 	/**
-	 * This method returns a sorted list of profiles for a given userid list
+	 * This method returns a sorted list of profiles for a given userId list
 	 * 
-	 * @return
+	 * @param aNameList
+	 *            - string list with user ids
+	 * @return - list of profiles
 	 */
-	public List<ItemCollection> getSortedProfilelist(List<Object> aList) {
+	public List<ItemCollection> getSortedProfilelist(List<Object> aNameList) {
 		List<ItemCollection> profiles = new ArrayList<ItemCollection>();
 
-		if (aList == null)
+		if (aNameList == null)
 			return profiles;
 
 		// add all profile objects....
-		for (Object aentry : aList) {
+		for (Object aentry : aNameList) {
 			if (aentry != null && !aentry.toString().isEmpty()) {
 				ItemCollection profile = userController.getProfile(aentry
 						.toString());
@@ -247,9 +270,10 @@ public class UserInputController implements Serializable {
 	 */
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent)
 			throws AccessDeniedException {
-		searchResult = null;
-		input = null;
-
+		
+		// reset state
+		reset();
+		
 	}
 
 }

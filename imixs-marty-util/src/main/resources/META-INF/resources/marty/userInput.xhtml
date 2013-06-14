@@ -36,7 +36,7 @@
 		<h:panelGroup id="input_box" layout="block"
 			rendered="#{cc.attrs.editmode}">
 			<h:inputText value="#{userInputController.input}"
-				class="suggestinput">
+				class="suggestinput userlistinput">
 				<f:ajax event="keyup" render="suggest_box"
 					listener="#{userInputController.search}" />
 				<f:ajax event="blur" render="suggest_box"
