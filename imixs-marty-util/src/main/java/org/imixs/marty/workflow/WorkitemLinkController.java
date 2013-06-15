@@ -94,10 +94,27 @@ public class WorkitemLinkController implements Serializable {
 		this.input = input;
 	}
 
-	public void reset(AjaxBehaviorEvent event) {
+	
+	
+	/**
+	 * This method reset the search and input state.
+	 */
+	public void reset() {
 		searchResult = new ArrayList<ItemCollection>();
 		input="";
+		logger.fine("workitemLinkController reset");
 	}
+	
+	/**
+	 * This ajax event method reset the search and input state.
+	 * 
+	 * @param event
+	 */
+	public void reset(AjaxBehaviorEvent event) {
+		reset();
+	}
+
+	
 
 	/*
 	 * Starts a lucene search to provide searchResult for suggest list
@@ -320,6 +337,10 @@ public class WorkitemLinkController implements Serializable {
 	 */
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent)
 			throws AccessDeniedException {
+		
+		// reset suggest list state
+		reset();
+				
 		if (workflowEvent == null)
 			return;
 

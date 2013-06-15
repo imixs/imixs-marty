@@ -9,7 +9,21 @@
  * The method also clears the input value on blur event.
  */
 $(document).ready(function() {
-	$(".suggestinput").each(function(index, input) {
+	$(".marty-workitemlink-inputbox input").each(function(index, input) {
+	    var onblur = input.onblur;
+	    input.onblur = null;	
+	    $(input).on("blur", function(event) {
+	    	// clear the input on blur
+	    	$(this).val(''); 
+	        delayEvent(function() { onblur.call(input, event); }, 300);
+	    });
+	    
+	    // turn autocomplete of
+	    $(this).attr('autocomplete','off');
+	});
+
+	
+	$(".marty-userlistinput-inputbox input").each(function(index, input) {
 	    var onblur = input.onblur;
 	    input.onblur = null;	
 	    $(input).on("blur", function(event) {
@@ -24,7 +38,7 @@ $(document).ready(function() {
 
 
 	// this is the support for the marty userinput widget
-	$("[id$=\\:username_input]").each(function(index, input) {
+	$(".marty-userinput-inputbox [id$=\\:username_input]").each(function(index, input) {
 
 		// id 
     	var inputfield_id=$(this).next('input');

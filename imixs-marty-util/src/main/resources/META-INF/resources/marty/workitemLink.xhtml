@@ -70,7 +70,7 @@ $(document).ready(function() {
 		<!-- Input Field -->
 		<h:panelGroup id="input_box"
 			class="marty-workitemlink-inputbox" layout="block">
-			<h:inputText value="#{workitemLinkController.input}" class="suggestinput">
+			<h:inputText value="#{workitemLinkController.input}">
 				<f:ajax event="keyup" render="suggest_box"
 					listener="#{workitemLinkController.search(cc.attrs.filter)}" />
 				<f:ajax event="blur" render="suggest_box"
@@ -80,10 +80,10 @@ $(document).ready(function() {
 
 			<h:panelGroup id="suggest_box">
 				<h:panelGroup id="suggest_resultlist"
-					class="marty-workitemlink-resultlist"
+					class="marty-workitemlink-suggestresultlist"
 					rendered="#{! empty workitemLinkController.searchResult}">
 					<c:forEach var="suggest" items="#{workitemLinkController.searchResult}">
-						<div class="marty-workitemlink-resultlist-entry">
+						<div class="marty-workitemlink-suggestresultlist-entry">
 							<h:commandLink
 								actionListener="#{workitemLinkController.add(suggest.item['$uniqueid'],cc.attrs.workitem)}">
 								<h:outputText style="font-weight: bold;"

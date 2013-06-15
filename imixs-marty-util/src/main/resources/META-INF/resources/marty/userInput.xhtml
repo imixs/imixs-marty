@@ -29,31 +29,30 @@
 	</script>
 
 
-	<div class="marty-workitemlink">
+	<div class="marty-userinput">
 
 		<!-- Input Field -->
-		<h:panelGroup id="input_box" layout="block" rendered="#{cc.attrs.editmode}">
-			<h:inputText value="#{userInputController.input}" id="username_input"
-				class="userinput">
+		<h:panelGroup id="input_box" layout="block" rendered="#{cc.attrs.editmode}"
+			class="marty-userinput-inputbox">
+			<h:inputText value="#{userInputController.input}" id="username_input">
 				<f:ajax event="keyup" render="suggest_box"
 					listener="#{userInputController.search}" />
 				<f:ajax event="blur" render="suggest_box"
 					listener="#{userInputController.reset}" />
 			</h:inputText>
-			<h:inputText class="useridinput" id="userid_input" value="#{cc.attrs.value}"></h:inputText>
-			<input type="text" class="userdisplaynameinput"
-				id="userdisplayname_input"
+			<h:inputText  id="userid_input" value="#{cc.attrs.value}"></h:inputText>
+			<input type="text" id="userdisplayname_input"
 				value="#{userController.getUserName(cc.attrs.value)}" />
 
 			<h:panelGroup id="suggest_box">
 				<h:panelGroup id="suggest_resultlist" layout="block"
 					style="width:100%;margin-top:15px;"
-					class="marty-workitemlink-resultlist"
+					class="marty-userinput-suggestresultlist"
 					rendered="#{! empty userInputController.searchResult}">
 
 					<c:forEach var="suggest"
 						items="#{userInputController.searchResult}">
-						<div class="marty-workitemlink-resultlist-entry"
+						<div class="marty-userinput-suggestresultlist-entry"
 							style="width: 100%;">
 							<h:commandLink 
 								onclick="updateUserID($(this).parents('[id$=input_box]')[0],'#{suggest.item['txtName']}','#{suggest.item['txtUserName']}')">
