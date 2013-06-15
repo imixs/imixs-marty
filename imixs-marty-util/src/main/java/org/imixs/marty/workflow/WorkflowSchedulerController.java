@@ -81,6 +81,11 @@ public class WorkflowSchedulerController  implements Serializable {
 		
 		configItemCollection = workflowSchedulerService.findConfiguration();
 	}
+	
+	public void refresh() {
+		configItemCollection = workflowSchedulerService.findConfiguration();
+	
+	}
 
 	/**
 	 * returns the configuration workitem.
