@@ -14,61 +14,93 @@
 
 <cc:implementation>
 
-
 	<script type="text/javascript">
 		/*<![CDATA[*/
 		$(document)
 				.ready(
-						function() {		
+						function() {
 							// test if delayEvent is defined
 							if (typeof (window.delayEvent) != 'function') {
 								alert('function delayEvent() not defined! Please check if script library marty/imixs-marty.js is loaded!');
 							}
 						});
+
 		/*]]>*/
 	</script>
 
 
 	<div class="marty-workitemlink">
-
 		<!-- Input Field -->
-		<h:panelGroup id="input_box" layout="block" rendered="#{cc.attrs.editmode}">
-			<h:inputText value="#{userInputController.input}" id="username_input"
-				class="userinput">
+		<h:panelGroup id="input_box" layout="block"
+			rendered="#{cc.attrs.editmode}">
+			<h:inputText value="#{userInputController.input}"
+				class="suggestinput userlistinput">
 				<f:ajax event="keyup" render="suggest_box"
 					listener="#{userInputController.search}" />
 				<f:ajax event="blur" render="suggest_box"
 					listener="#{userInputController.reset}" />
 			</h:inputText>
-			<h:inputText class="useridinput" id="userid_input" value="#{cc.attrs.value}"></h:inputText>
-			<input type="text" class="userdisplaynameinput"
-				id="userdisplayname_input"
-				value="#{userController.getUserName(cc.attrs.value)}" />
+
+			<h:commandButton
+				actionListener="#{userInputController.add(userInputController.input,cc.attrs.value)}"
+				value="#{message.add}">
+				<f:ajax render="suggest_box datalist" />
+			</h:commandButton>
 
 			<h:panelGroup id="suggest_box">
 				<h:panelGroup id="suggest_resultlist" layout="block"
 					style="width:100%;margin-top:15px;"
 					class="marty-workitemlink-resultlist"
 					rendered="#{! empty userInputController.searchResult}">
-
+					
+					
 					<c:forEach var="suggest"
 						items="#{userInputController.searchResult}">
 						<div class="marty-workitemlink-resultlist-entry"
 							style="width: 100%;">
-							<h:commandLink 
-								onclick="updateUserID($(this).parents('[id$=input_box]')[0],'#{suggest.item['txtName']}','#{suggest.item['txtUserName']}')">
+							<h:commandLink
+								actionListener="#{userInputController.add(suggest.item['txtName'],cc.attrs.value)}">
 								<h:outputText style="font-weight: bold;"
 									value="#{suggest.item['txtUserName']}" escape="false" />
 								<h:outputText style="font-weight: bold;margin-left:16px;"
 									value="#{suggest.item['txtEmail']}" escape="false" />
-
-								<f:ajax render="suggest_box" />
+								<f:ajax render="suggest_box datalist" />
 							</h:commandLink>
 
 						</div>
 					</c:forEach>
+
 				</h:panelGroup>
 			</h:panelGroup>
+
+
+		</h:panelGroup>
+
+		<!-- User name data table -->
+		<h:panelGroup id="datalist" layout="block">
+
+			<h:dataTable columns="2" value="#{userInputController.getSortedProfilelist(cc.attrs.value)}" var="record">
+				<h:column>
+					<h:outputText value="#{record.item['txtUserName']}"
+						rendered="#{! empty record.item['txtUserName']}" />
+					<h:outputText value="#{record.item['txtName']}"
+						rendered="#{empty record.item['txtUserName']}" />
+				</h:column>
+				<h:column>
+					<h:outputText value="#{record.item['txtEmail']}" />
+				</h:column>
+				<!-- Delete member -->
+				<h:column>
+					<h:commandLink value="#{message.remove}" id="remove_owner_link_id"
+						actionListener="#{userInputController.remove(record.item['txtName'],cc.attrs.value)}">
+						<f:ajax render=":#{component.parent.parent.parent.clientId}" />
+					</h:commandLink>
+				</h:column>
+			</h:dataTable>
+
+
+
+
 		</h:panelGroup>
 	</div>
 
