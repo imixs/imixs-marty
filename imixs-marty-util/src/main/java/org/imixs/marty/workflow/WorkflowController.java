@@ -32,13 +32,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Event;
+import javax.faces.application.FacesMessage;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -49,8 +52,8 @@ import javax.inject.Named;
 import org.imixs.marty.model.ProcessController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
-import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
  * The marty WorkflowController extends the
@@ -150,7 +153,7 @@ public class WorkflowController extends
 
 		events.fire(new WorkflowEvent(newWorkitem,
 				WorkflowEvent.WORKITEM_CHANGED));
-		
+
 		super.setWorkitem(newWorkitem);
 
 		versions = null;
@@ -350,17 +353,34 @@ public class WorkflowController extends
 	@Override
 	public String process() throws AccessDeniedException,
 			ProcessingErrorException {
-
+		String actionResult = null;
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_BEFORE_PROCESS));
 
-		String actionResult = super.process();
-		
+		// process workItem and catch exceptions
+		try {
+			actionResult = super.process();
+		} catch (PluginException pe) {
+
+			addErrorMessage(pe);
+			if (logger.isLoggable(Level.FINE)) {
+				logger.warning("PLUGIN PluginException - error code="
+						+ pe.getErrorCode());
+				pe.printStackTrace(); // Or use a logger.
+			}
+		} catch (ProcessingErrorException pe) {
+			addErrorMessage(pe);
+			// print error message into log!
+			logger.warning("PLUGIN ProcessingErrorException - error code="
+					+ pe.getErrorCode());
+			pe.printStackTrace(); // Or use a logger.
+		}
 		// reset versions and editor sections
 		versions = null;
 		editorSections = null;
-		// ! Do not call setWorkitem here because this fires a WORKITEM_CHANGED event !
+		// ! Do not call setWorkitem here because this fires a WORKITEM_CHANGED
+		// event !
 
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
@@ -508,6 +528,53 @@ public class WorkflowController extends
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_AFTER_RESTOREFROMSOFTDELETE));
+
+	}
+
+	/**
+	 * This helper method adds a error message to the faces context, based on
+	 * the data in a PluginException. This kind of error message can be
+	 * displayed in a page using:
+	 * 
+	 * <code>
+	 *          	<h:messages globalOnly="true" />
+	 * </code>
+	 * 
+	 * As the ProcessingErrorException contains an optional object array the
+	 * message is parsed for params to be replaced
+	 * 
+	 * Example:
+	 * 
+	 * <code>
+	 * ERROR_MESSAGE=Value should not be greater than {0} or lower as {1}.
+	 * </code>
+	 * 
+	 * @param pe
+	 */
+	private void addErrorMessage(ProcessingErrorException pe) {
+
+		String message = pe.getErrorCode();
+		// try to find the message text in resource bundle...
+		try {
+			ResourceBundle rb = ResourceBundle.getBundle("bundle.app");
+			message = rb.getString(pe.getErrorCode());
+		} catch (MissingResourceException mre) {
+			logger.warning("WorkflowController: " + mre.getMessage());
+		}
+
+		// parse message for params
+		if (pe instanceof PluginException) {
+			PluginException p = (PluginException) pe;
+			if (p.getErrorParameters() != null
+					&& p.getErrorParameters().length > 0) {
+				for (int i = 0; i < p.getErrorParameters().length; i++) {
+					message = message.replace("{" + i + "}",
+							p.getErrorParameters()[i].toString());
+				}
+			}
+		}
+		FacesContext.getCurrentInstance().addMessage(null,
+				new FacesMessage(FacesMessage.SEVERITY_INFO, message, null));
 
 	}
 
