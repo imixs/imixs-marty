@@ -109,7 +109,7 @@ public class RulePlugin extends AbstractPlugin {
 
 			if (isValidActivity != null && !isValidActivity) {
 				// test if a error code is provided!
-				String sErrorCode = "VALIDATION_ERROR";
+				String sErrorCode = VALIDATION_ERROR;
 				Object[] params = null;
 				Object o = engine.get("errorCode");
 				if (o != null) {

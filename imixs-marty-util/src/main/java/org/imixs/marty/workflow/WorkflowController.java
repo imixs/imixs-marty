@@ -50,6 +50,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.model.ProcessController;
+import org.imixs.marty.plugins.RulePlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
@@ -349,6 +350,11 @@ public class WorkflowController extends
 	/**
 	 * The action method processes the current workItem and fires the
 	 * WorkflowEvents WORKITEM_BEFORE_PROCESS and WORKITEM_AFTER_PROCESS.
+	 * 
+	 * The Method also catches a PluginException and adds the corresponding
+	 * Faces Error Message into the FacesContext. If the PluginException was
+	 * thrown from the RulePLugin then the method test this exception for
+	 * ErrorParams with will generate separate Faces Error Messages.
 	 */
 	@Override
 	public String process() throws AccessDeniedException,
@@ -362,19 +368,11 @@ public class WorkflowController extends
 		try {
 			actionResult = super.process();
 		} catch (PluginException pe) {
-
-			addErrorMessage(pe);
-			if (logger.isLoggable(Level.FINE)) {
-				logger.warning("PLUGIN PluginException - error code="
-						+ pe.getErrorCode());
-				pe.printStackTrace(); // Or use a logger.
-			}
+			// add a new FacesMessage into the FacesContext
+			handlePluginException(pe);
 		} catch (ProcessingErrorException pe) {
-			addErrorMessage(pe);
-			// print error message into log!
-			logger.warning("PLUGIN ProcessingErrorException - error code="
-					+ pe.getErrorCode());
-			pe.printStackTrace(); // Or use a logger.
+			// add a new FacesMessage into the FacesContext
+			handleProcessingErrorExcpetion(pe);
 		}
 		// reset versions and editor sections
 		versions = null;
@@ -529,6 +527,58 @@ public class WorkflowController extends
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_AFTER_RESTOREFROMSOFTDELETE));
 
+	}
+
+	/**
+	 * The Method expects a PluginException and adds the corresponding Faces
+	 * Error Message into the FacesContext.
+	 * 
+	 * If the PluginException was thrown from the RulePLugin then the method
+	 * test this exception for ErrorParams and generate separate Faces Error
+	 * Messages for each param.
+	 * */
+	private void handlePluginException(PluginException pe) {
+		// if the PluginException was throws from the RulePlugin then test
+		// for VALIDATION_ERROR and ErrorParams
+		if (RulePlugin.class.getSimpleName().equals(pe.getErrorContext())
+				&& (RulePlugin.VALIDATION_ERROR.equals(pe.getErrorCode()))
+				&& pe.getErrorParameters() != null
+				&& pe.getErrorParameters().length > 0) {
+
+			// create a faces messae for each param
+			Object[] messages = pe.getErrorParameters();
+			for (Object aMessage : messages) {
+
+				FacesContext.getCurrentInstance().addMessage(
+						null,
+						new FacesMessage(FacesMessage.SEVERITY_INFO, aMessage
+								.toString(), null));
+			}
+		} else {
+			// default behaivor
+			addErrorMessage(pe);
+		}
+
+		logger.warning("WorkflowController cauth PluginException - error code="
+				+ pe.getErrorCode() + " - " + pe.getMessage());
+		if (logger.isLoggable(Level.FINE)) {
+			
+			pe.printStackTrace(); // Or use a logger.
+		}
+	}
+
+	/**
+	 * This Method expects a ProcessingErrorExpeption and add a FacesMessage
+	 * into the FacesContext.
+	 * 
+	 * @param pe
+	 */
+	private void handleProcessingErrorExcpetion(ProcessingErrorException pe) {
+		addErrorMessage(pe);
+		// print error message into log!
+		logger.warning("WorkflowController cauth ProcessingErrorException - error code="
+				+ pe.getErrorCode() + " - "+pe.getMessage());
+		pe.printStackTrace(); // Or use a logger.
 	}
 
 	/**
