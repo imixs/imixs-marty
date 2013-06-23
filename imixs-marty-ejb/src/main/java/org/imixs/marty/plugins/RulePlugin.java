@@ -52,7 +52,7 @@ import org.imixs.workflow.plugins.AbstractPlugin;
  * 
  * This Plugin evalueats business rules.
  * 
- * A script can provide the vars 'isvalid' , 'followup' and 'type' which are
+ * A script can provide the vars 'isvalid' and 'followup' which are
  * evaluated by the plugin after the script was processed.
  * 
  * 
@@ -141,13 +141,7 @@ public class RulePlugin extends AbstractPlugin {
 
 				}
 			}
-
-			// now test the type property
-
-			o = engine.get("type");
-			if (o != null) {
-				adocumentActivity.replaceItemValue("type", o.toString());
-			}
+		
 
 			return Plugin.PLUGIN_OK;
 

@@ -217,35 +217,6 @@ public class TestRulePlugin {
 	}
 
 	/**
-	 * This Test verifies the evaluation of the type variable.
-	 * 
-	 * @throws ScriptException
-	 * @throws PluginException
-	 */
-	@Test
-	public void testType() throws ScriptException, PluginException {
-
-		ItemCollection adocumentContext = new ItemCollection();
-		adocumentContext.replaceItemValue("type", "workitem");
-		ItemCollection adocumentActivity = new ItemCollection();
-
-		// set a business rule
-		String script = "type='workitemdeleted';";
-
-		System.out.println("Script=" + script);
-		adocumentActivity.replaceItemValue("txtBusinessRUle", script);
-
-		int result = rulePlugin.run(adocumentContext, adocumentActivity);
-
-		String type = adocumentActivity.getItemValueString("type");
-
-		Assert.assertTrue(result == Plugin.PLUGIN_OK);
-
-		Assert.assertEquals("workitemdeleted", type);
-
-	}
-
-	/**
 	 * This Test tests if we can evaluate any value provided in the script
 	 * 
 	 * @throws ScriptException
