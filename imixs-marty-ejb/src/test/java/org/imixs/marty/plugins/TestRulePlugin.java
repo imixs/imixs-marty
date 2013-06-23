@@ -1,5 +1,6 @@
 package org.imixs.marty.plugins;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -177,6 +178,7 @@ public class TestRulePlugin {
 			Object[] params = e.getErrorParameters();
 			Assert.assertEquals(2, params.length);
 			Assert.assertEquals("Somehing go wrong!", params[0].toString());
+			Assert.assertEquals("Somehingelse go wrong!", params[1].toString());
 		}
 
 	}
@@ -338,6 +340,55 @@ public class TestRulePlugin {
 
 	}
 
+	
+	
+	
+	/**
+	 * This test verifies the BigDecimal support of the RulePlugin
+	 * 
+	 * @throws ScriptException
+	 * @throws PluginException
+	 */
+	@Test
+	public void bigDecimalTest() throws ScriptException, PluginException {
+
+		// set a business rule
+		String script = " var followUp=null;" + " if (_amount_brutto[0]>5000.50)"
+				+ "    followUp=90;";
+		System.out.println("Script=" + script);
+
+		ItemCollection adocumentContext = new ItemCollection();
+		adocumentContext.replaceItemValue("_amount_brutto", new BigDecimal(5000.51));
+		ItemCollection adocumentActivity = new ItemCollection();
+
+		adocumentActivity.replaceItemValue("txtBusinessRUle", script);
+
+		int result = rulePlugin.run(adocumentContext, adocumentActivity);
+
+		String sFllowUp = adocumentActivity.getItemValueString("keyFollowUp");
+		int followUp = adocumentActivity
+				.getItemValueInteger("numNextActivityID");
+
+		Assert.assertTrue(result == Plugin.PLUGIN_OK);
+
+		Assert.assertEquals("1", sFllowUp);
+
+		Assert.assertEquals(90, followUp);
+
+		
+	}
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	/**
 	 * See: http://www.rgagnon.com/javadetails/java-0640.html
 	 */

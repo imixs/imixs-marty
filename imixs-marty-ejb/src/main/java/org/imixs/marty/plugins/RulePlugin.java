@@ -27,6 +27,8 @@
 
 package org.imixs.marty.plugins;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -322,6 +324,9 @@ public class RulePlugin extends AbstractPlugin {
 		ret.add(Float.class);
 		ret.add(Double.class);
 		ret.add(Void.class);
+		
+		ret.add(BigDecimal.class);
+		ret.add(BigInteger.class);
 
 		ret.add(String.class);
 		ret.add(Object.class);
