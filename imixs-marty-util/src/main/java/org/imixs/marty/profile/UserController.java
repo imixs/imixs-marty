@@ -127,7 +127,6 @@ public class UserController implements Serializable {
 			// determine user language and set Modelversion depending on
 			// the selected user locale
 			String sModelVersion = "system-" + getLocale().getLanguage();
-
 			// try to load the profile for the current user
 			ItemCollection profile = profileService
 					.lookupProfileById(loginController.getUserPrincipal());
@@ -138,6 +137,8 @@ public class UserController implements Serializable {
 				profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
 				profile.replaceItemValue("$modelversion", sModelVersion);
 				profile.replaceItemValue("txtLocale", getLocale());
+				// set default group
+				profile.replaceItemValue("txtgroups", "IMIXS-WORKFLOW-Author");
 				// process new profile...
 				profile.replaceItemValue("$ActivityID",
 						CREATE_PROFILE_ACTIVITY_ID);
@@ -168,8 +169,8 @@ public class UserController implements Serializable {
 
 			profileLoaded = true;
 
-			// Now reset current locale
-			updateLocale();
+			// Now reset current locale based on the profile information
+			updateLocaleFromProfile();
 
 		}
 
@@ -220,7 +221,10 @@ public class UserController implements Serializable {
 				for (int i = 0; i < cookie.length; i++) {
 					cookieName = cookie[i].getName();
 					if (cookieName.equals(COOKIE_LOCALE)) {
-						locale = new Locale(cookie[i].getValue());
+						if (cookie[i].getValue() != null
+								&& !"".equals(cookie[i].getValue())) {
+							locale = new Locale(cookie[i].getValue());
+						}
 						break;
 					}
 
@@ -228,13 +232,12 @@ public class UserController implements Serializable {
 			}
 
 			// still no value found? - default to "en"
-			if (locale == null || "".equals(locale) || "null".equals(locale)) {
+			if (locale == null || "".equals(locale.getLanguage())) {
 				Locale ldefault = request.getLocale();
 				if (ldefault != null) {
 					locale = ldefault;
 				} else {
 					locale = new Locale(DEFAULT_LOCALE);
-					;
 				}
 			}
 
@@ -243,7 +246,7 @@ public class UserController implements Serializable {
 	}
 
 	public void setLocale(Locale alocale) {
-		if (alocale == null)
+		if (alocale == null || "".equals(alocale))
 			locale = new Locale(DEFAULT_LOCALE);
 		else
 			this.locale = alocale;
@@ -330,8 +333,8 @@ public class UserController implements Serializable {
 
 		// recache current user data...
 		// done by the profilePlugin
-//		profileService.findProfileById(workitem.getItemValueString("txtName"),
-//				true);
+		// profileService.findProfileById(workitem.getItemValueString("txtName"),
+		// true);
 
 		// get default workflowResult message
 		String action = workitem.getItemValueString("txtworkflowresultmessage");
@@ -344,26 +347,41 @@ public class UserController implements Serializable {
 	 */
 
 	/**
-	 * This method updates user locale to the faces context.
+	 * This method updates user locale stored in the user profile entity to the
+	 * faces context.
 	 * 
 	 * @throws ProcessingErrorException
 	 * @throws AccessDeniedException
 	 * 
 	 */
-	private void updateLocale() throws AccessDeniedException,
+	private void updateLocaleFromProfile() throws AccessDeniedException,
 			ProcessingErrorException {
+
+		Locale profileLocale = null;
 
 		// Verify if Locale is available in profile
 		String sLocale = getWorkitem().getItemValueString("txtLocale");
 		if ("".equals(sLocale)) {
-			getWorkitem().replaceItemValue("txtLocale", getLocale().toString());
+			// get default value
+			profileLocale = getLocale();
+			getWorkitem().replaceItemValue("txtLocale",
+					profileLocale.toString());
+		} else {
+
+			if (sLocale.indexOf('_') > -1) {
+				String language = sLocale.substring(0, sLocale.indexOf('_'));
+				String country = sLocale.substring(sLocale.indexOf('_')+1);
+				profileLocale = new Locale(language, country);
+			} else {
+				profileLocale = new Locale(sLocale);
+			}
 		}
 
 		// reset locale to update cookie
-		setLocale(new Locale(sLocale));
+		setLocale(profileLocale);
 		// set locale for context
 		FacesContext.getCurrentInstance().getViewRoot()
-				.setLocale(new Locale(sLocale));
+				.setLocale(profileLocale);
 
 	}
 
