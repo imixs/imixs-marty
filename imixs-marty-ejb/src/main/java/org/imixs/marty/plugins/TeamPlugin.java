@@ -44,13 +44,21 @@ import org.imixs.workflow.plugins.ResultPlugin;
 import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
- * This plugin supports additional workflow properties for further processing.
- * The method computes the team members and additional information of the
- * assigned core process and project from a workItem. The references to a core
- * process and a project are stored in the attribute '$uniqueIdref'.
+ * The Marty TeamPlugin organizes the hierarchical order of a workitem between
+ * processes, spaces and worktiems. A WorkItem is typically assigend to a
+ * process and a optional to one ore more space entities. These references are
+ * stored in the $UniqueIDRef property of the WorkItem. In addition to the
+ * $UniqueIDRef poroperty the TeamPlugin manages the properties txtProcessRef
+ * and txtSpaceRef which containing only uniqueIDs of the corresponding entity
+ * type. The properties txtProcessRef and txtSpaceRef can be modiefied by an
+ * application to reassign the workitem.
+ * 
+ * This plugin supports also additional workflow properties for further
+ * processing. The method computes the team members and the name of the assigned
+ * process and space.
  * 
  * <p>
- * The plugin updates the corresponding Process and Space informations:
+ * The TeamPlugin updates the follwoing properties:
  * <ul>
  * <li>namSpaceTeam
  * <li>namSpaceManager
@@ -72,7 +80,7 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * If the workItem is a child to another workItem (ChildWorkitem) the
  * information is fetched from the parent workItem.
  * 
- * If the workflowresultmessage of the ActivityEntity contains a scope or
+ * If the workflowresultmessage of the ActivityEntity contains a space or
  * process reference the plugin will update the reference in the property
  * $uniqueIdRef.
  * 
@@ -93,6 +101,9 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  */
 public class TeamPlugin extends AbstractPlugin {
 
+	public static final String INVALID_SPACE_ASSIGNED_BY_MODEL = "INVALID_SPACE_ASSIGNED_BY_MODEL";
+	public static final String INVALID_PROCESS_ASSIGNED_BY_MODEL = "INVALID_PROCESS_ASSIGNED_BY_MODEL";
+
 	private WorkflowService workflowService = null;
 	private EntityService entityService = null;
 	private static Logger logger = Logger.getLogger(TeamPlugin.class.getName());
@@ -112,8 +123,10 @@ public class TeamPlugin extends AbstractPlugin {
 
 	/**
 	 * The method updates information from the Process and Space entiy
-	 * (optional) stored in the attribute '$uniqueIdref':
+	 * (optional) stored in the attribute '$uniqueIdref'
 	 * <ul>
+	 * <li>txtProcessRef
+	 * <li>txtSpaceRef
 	 * <li>namTeam
 	 * <li>namManager
 	 * <li>namProcessTeam
@@ -141,6 +154,8 @@ public class TeamPlugin extends AbstractPlugin {
 
 		Map<String, ItemCollection> cacheRef = new HashMap<String, ItemCollection>();
 
+		List<String> newUnqiueIDRefList = new Vector<String>();
+
 		/*
 		 * Check the txtActivityResult for a new Project reference.
 		 * 
@@ -160,99 +175,154 @@ public class TeamPlugin extends AbstractPlugin {
 		String aActivityProcessName = evalItemCollection
 				.getItemValueString("process");
 
-		// check if a new space reference is defined in the current
-		// activity....
+		// 1.) check if a new space reference is defined in the current
+		// activity. This will overwrite the current value!!
 		if (!"".equals(aActivitySpaceName)) {
-			logger.fine("[TeamPlugin] Updating Space reference: "
+			logger.fine("[TeamPlugin] Updating Space reference based on model information: "
 					+ aActivitySpaceName);
 			// load space entity
 			ItemCollection parent = findRefByName(aActivitySpaceName, "space");
-			workItem.replaceItemValue("txtSpaceRef",
-					parent.getItemValueString("$uniqueid"));
+			if (parent != null) {
+				workItem.replaceItemValue("txtSpaceRef",
+						parent.getItemValueString(EntityService.UNIQUEID));
+				newUnqiueIDRefList.add(parent
+						.getItemValueString(EntityService.UNIQUEID));
+
+				cacheRef.put(parent.getItemValueString(EntityService.UNIQUEID),
+						parent);
+			} else {
+				// throw a PLuginException
+				throw new PluginException(
+						TeamPlugin.class.getSimpleName(),
+						INVALID_SPACE_ASSIGNED_BY_MODEL,
+						"Space '"
+								+ aActivitySpaceName
+								+ "' defined by the current model can not be found!");
+			}
+		} else {
+			// 1.1.) verify if the current space assignment is still valid!
+			List<String> oldSpaceRefList = workItem.getItemValue("txtSpaceRef");
+			List<String> newSpaceRefList = new Vector<String>();
+			for (String aUniqueID : oldSpaceRefList) {
+				if (!aUniqueID.isEmpty()) {
+					ItemCollection entity = entityService.load(aUniqueID);
+					if (entity != null) {
+						newSpaceRefList.add(aUniqueID);
+						newUnqiueIDRefList.add(aUniqueID);
+						cacheRef.put(entity
+								.getItemValueString(EntityService.UNIQUEID),
+								entity);
+					} else {
+						logger.warning("[TeamPlugin] space ref '" + aUniqueID
+								+ "' is no longer valid and will be removed!");
+					}
+				}
+			}
+			// update spaceRef
+			workItem.replaceItemValue("txtSpaceRef", newSpaceRefList);
+
 		}
-		// check if a new process reference is defined in the current
-		// activity....
+
+		// 2.) check if a new process reference is defined in the current
+		// activity. This will overwrite the current value!!
 		if (!"".equals(aActivityProcessName)) {
-			logger.fine("[TeamPlugin] Updating Process reference: "
+			logger.fine("[TeamPlugin] Updating Process reference based on model information: "
 					+ aActivityProcessName);
 			// load space entity
 			ItemCollection parent = findRefByName(aActivityProcessName,
 					"process");
-			workItem.replaceItemValue("txtProcessRef",
-					parent.getItemValueString("$uniqueid"));
-		}
+			if (parent != null) {
+				workItem.replaceItemValue("txtProcessRef",
+						parent.getItemValueString(EntityService.UNIQUEID));
+				newUnqiueIDRefList.add(parent
+						.getItemValueString(EntityService.UNIQUEID));
+				cacheRef.put(parent.getItemValueString(EntityService.UNIQUEID),
+						parent);
+			} else {
+				throw new PluginException(
+						TeamPlugin.class.getSimpleName(),
+						INVALID_PROCESS_ASSIGNED_BY_MODEL,
+						"Process '"
+								+ aActivitySpaceName
+								+ "' defined by the current model can not be found!");
 
-		// Now update the $UniqueIDRef property based on the optional
-		// properties 'txtSpaceRef' and 'txtProcessRef'
-
-		List<String> spaceRefList = workItem.getItemValue("txtSpaceRef");
-		List<String> processRefList = workItem.getItemValue("txtProcessRef");
-		List<String> currentRefList = workItem.getItemValue("$uniqueidRef");
-		for (String aUniqueID : currentRefList) {
-			ItemCollection entity = entityService.load(aUniqueID);
-			if (entity != null) {
-				cacheRef.put(entity.getItemValueString(EntityService.UNIQUEID),
-						entity);
 			}
-		}
-
-		// update processRefs....
-		if (!processRefList.isEmpty()) {
-			Collection<ItemCollection> parents = cacheRef.values();
-			for (ItemCollection entity : parents) {
-				String sID = entity.getItemValueString(EntityService.UNIQUEID);
-				String sType = entity.getItemValueString("type");
-				if ("process".equals(sType) && !processRefList.contains(sID)) {
-					parents.remove(entity);
+		} else {
+			// 2.1.) verify if the current process assignement is still valid!
+			List<String> oldProcessRefList = workItem
+					.getItemValue("txtProcessRef");
+			List<String> newProcessRefList = new Vector<String>();
+			for (String aUniqueID : oldProcessRefList) {
+				if (!aUniqueID.isEmpty()) {
+					ItemCollection entity = entityService.load(aUniqueID);
+					if (entity != null) {
+						newProcessRefList.add(aUniqueID);
+						newUnqiueIDRefList.add(aUniqueID);
+						cacheRef.put(entity
+								.getItemValueString(EntityService.UNIQUEID),
+								entity);
+					} else {
+						logger.warning("[TeamPlugin] process ref '" + aUniqueID
+								+ "' is no longer valid and will be removed!");
+					}
 				}
 			}
-			// now add all new refs...
-			for (String aRef : processRefList) {
-				if (cacheRef.get(aRef) == null) {
-					ItemCollection entity = entityService.load(aRef);
-					if (entity != null)
-						cacheRef.put(aRef, entity);
-				}
+			// update spaceRef
+			workItem.replaceItemValue("txtProcessRef", newProcessRefList);
 
-			}
 		}
 
-		// update spaceRefs....
-		if (!spaceRefList.isEmpty()) {
-			Collection<ItemCollection> parents = cacheRef.values();
-			Vector<String> removeList = new Vector<String>();
-			for (ItemCollection entity : parents) {
-				String sID = entity.getItemValueString(EntityService.UNIQUEID);
-				String sType = entity.getItemValueString("type");
-				if ("space".equals(sType) && !spaceRefList.contains(sID)) {
-					// parents.remove(entity);
-					removeList.add(sID);
+		// 3.) Now if both lists (txtSpaceRef and txtProcessRef) were empty!
+		// then we will check the content of $UniqueIDRef and verify if the IDs
+		// are still valid! Also the txtSpaceRef and txtProcessRef will be
+		// updated
+		if (newUnqiueIDRefList.isEmpty()) {
+			List<String> oldUnqiueIdRefList = workItem
+					.getItemValue("$UniqueIdRef");
+			for (String aUniqueID : oldUnqiueIdRefList) {
+				if (!aUniqueID.isEmpty()) {
+					ItemCollection entity = entityService.load(aUniqueID);
+					if (entity != null) {
+						// valid reference!
+						newUnqiueIDRefList.add(aUniqueID);
+						// check type
+						String sType = entity.getItemValueString("type");
+						// update txtProcessRef
+						if ("process".equals(sType)) {
+							List<String> old = workItem
+									.getItemValue("txtProcessRef");
+							old.add(aUniqueID);
+							workItem.replaceItemValue("txtProcessRef", old);
+						}
+						// update txtSpaceRef
+						if ("space".equals(sType)) {
+							List<String> old = workItem
+									.getItemValue("txtSpaceRef");
+							old.add(aUniqueID);
+							workItem.replaceItemValue("txtSpaceRef", old);
+						}
+
+						cacheRef.put(entity
+								.getItemValueString(EntityService.UNIQUEID),
+								entity);
+
+					} else {
+						logger.warning("[TeamPlugin] UniqueIdRef '" + aUniqueID
+								+ "' is no longer valid and will be removed!");
+					}
 				}
 			}
-			// now remove all found old refs from cacheRef....
-			for (String aID : removeList) {
-				cacheRef.remove(aID);
-			}
 
-			// now add all new refs...
-			for (String aRef : spaceRefList) {
-				if (cacheRef.get(aRef) == null) {
-					ItemCollection entity = entityService.load(aRef);
-					if (entity != null)
-						cacheRef.put(aRef, entity);
-				}
-
-			}
 		}
 
-		// update $UniqueIDRef Property....
-		Vector v = new Vector();
-		for (String s : cacheRef.keySet())
-			v.add(s);
-		workItem.replaceItemValue("$uniqueidRef", v);
-		logger.fine("[TeamPlugin] new $uniqueIdRef= " + v);
+		// 4.) finally we can now update the $UniqueIDRef property
+		workItem.replaceItemValue("$UniqueIdRef", newUnqiueIDRefList);
+		logger.fine("[TeamPlugin] Updated $UniqueIdRef: " + newUnqiueIDRefList);
 
-		// update txtSpaceName and txtProcesName
+		// and now $UnqiueIDref, txtProcessRef and txtSpaceRef are synchronized
+		// and verified!
+
+		// 5.) update txtSpaceName and txtProcesName
 		String sNewSpaceName = null;
 		String sNewProcessName = null;
 		Collection<ItemCollection> parents = cacheRef.values();
@@ -273,10 +343,9 @@ public class TeamPlugin extends AbstractPlugin {
 		logger.fine("[TeamPlugin] new ProcessName= " + sNewProcessName);
 		logger.fine("[TeamPlugin] new SpaceName= " + sNewSpaceName);
 
-		/*
-		 * Now the team lists will be updated depending of the current
-		 * $uniqueidref
-		 */
+		
+		// 6.) Now the team lists will be updated depending of the current
+		// $uniqueidref
 		List vSpaceTeam = new Vector();
 		List vSpaceManager = new Vector();
 		List vSpaceAssist = new Vector();
