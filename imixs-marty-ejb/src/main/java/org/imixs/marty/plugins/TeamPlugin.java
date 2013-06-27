@@ -243,7 +243,7 @@ public class TeamPlugin extends AbstractPlugin {
 						TeamPlugin.class.getSimpleName(),
 						INVALID_PROCESS_ASSIGNED_BY_MODEL,
 						"Process '"
-								+ aActivitySpaceName
+								+ aActivityProcessName
 								+ "' defined by the current model can not be found!");
 
 			}
