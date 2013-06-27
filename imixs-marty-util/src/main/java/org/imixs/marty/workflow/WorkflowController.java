@@ -105,12 +105,46 @@ public class WorkflowController extends
 	}
 
 	/**
-	 * create method fires a WorkfowEvent
+	 * ActionListener create a new empty workitem and fires a WorkfowEvent
 	 */
 	@Override
 	public void create(ActionEvent event) {
 		super.create(event);
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_CREATED));
 
+	}
+
+	/**
+	 * Method to create a new workitem with inital values. The method fires a
+	 * WorkfowEvent
+	 * 
+	 * @param modelVersion
+	 *            - model version
+	 * @param processID
+	 *            - processID
+	 * @param processRef
+	 *            - uniqueid ref
+	 */
+
+	public void create(String modelVersion, int processID, String processRef) {
+		super.create(null);
+		
+		getWorkitem().replaceItemValue("$ModelVersion", modelVersion);
+		getWorkitem().replaceItemValue("$ProcessID", processID);
+		getWorkitem().replaceItemValue("$UniqueIDRef", processRef);
+		
+		// find process
+		ItemCollection process=processController.getProcessById(processRef);
+		if (process!=null) {
+			String sNewProcessName = process.getItemValueString("txtName");
+			getWorkitem().replaceItemValue("txtProcessName", sNewProcessName);
+			
+		} else {
+			logger.warning("[WorkflowController] create - unable to find process entity '" + processRef + "'!");
+		}
+			
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_CREATED));
@@ -562,7 +596,7 @@ public class WorkflowController extends
 		logger.warning("WorkflowController cauth PluginException - error code="
 				+ pe.getErrorCode() + " - " + pe.getMessage());
 		if (logger.isLoggable(Level.FINE)) {
-			
+
 			pe.printStackTrace(); // Or use a logger.
 		}
 	}
@@ -577,7 +611,7 @@ public class WorkflowController extends
 		addErrorMessage(pe);
 		// print error message into log!
 		logger.warning("WorkflowController cauth ProcessingErrorException - error code="
-				+ pe.getErrorCode() + " - "+pe.getMessage());
+				+ pe.getErrorCode() + " - " + pe.getMessage());
 		pe.printStackTrace(); // Or use a logger.
 	}
 

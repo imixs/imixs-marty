@@ -186,6 +186,10 @@ public class DmsController implements Serializable {
 			fileUploadController.doClear(null);
 			fileUploadController.setAttachedFiles(workflowEvent.getWorkitem()
 					.getFileNames());
+			
+			
+			// reload dms list
+			readDmsList(workflowEvent.getWorkitem());
 
 		}
 
