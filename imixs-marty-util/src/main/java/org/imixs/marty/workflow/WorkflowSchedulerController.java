@@ -28,6 +28,9 @@
 package org.imixs.marty.workflow;
 
 import java.io.Serializable;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -49,13 +52,11 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
  */
 @Named("workflowSchedulerController")
 @RequestScoped
-public class WorkflowSchedulerController  implements Serializable {
+public class WorkflowSchedulerController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	private ItemCollection configItemCollection = null;
-	
-	
 
 	/* EJBs */
 	@EJB
@@ -78,13 +79,43 @@ public class WorkflowSchedulerController  implements Serializable {
 	 * */
 	@PostConstruct
 	public void init() {
-		
+
 		configItemCollection = workflowSchedulerService.findConfiguration();
 	}
-	
+
 	public void refresh() {
 		configItemCollection = workflowSchedulerService.findConfiguration();
-	
+
+	}
+
+	/**
+	 * 
+	 * converts time (in milliseconds) to human-readable format "<dd:>hh:mm:ss"
+	 * 
+	 * @return
+	 */
+	public String millisToShortDHMS(int duration) {
+
+		String res = "";
+		long days = TimeUnit.MILLISECONDS.toDays(duration);
+		long hours = TimeUnit.MILLISECONDS.toHours(duration)
+				- TimeUnit.DAYS.toHours(TimeUnit.MILLISECONDS.toDays(duration));
+		long minutes = TimeUnit.MILLISECONDS.toMinutes(duration)
+				- TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS
+						.toHours(duration));
+		long seconds = TimeUnit.MILLISECONDS.toSeconds(duration)
+				- TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS
+						.toMinutes(duration));
+		if (days == 0) {
+			res = String.format("%d hours, %d minutes, %d seconds",
+					hours, minutes, seconds);
+		} else {
+			res = String.format(
+					"%d days, %d hours, %d minutes, %d seconds", days,
+					hours, minutes, seconds);
+		}
+		return res;
+
 	}
 
 	/**
@@ -95,7 +126,6 @@ public class WorkflowSchedulerController  implements Serializable {
 	public ItemCollection getConfiguration() {
 		return this.configItemCollection;
 	}
-
 
 	/**
 	 * save method tries to load the config entity. if not availabe. the method
@@ -135,15 +165,5 @@ public class WorkflowSchedulerController  implements Serializable {
 		doStopScheduler(event);
 		doStartScheduler(event);
 	}
-
-	
-
-
-	
-
-
-	
-
-	
 
 }
