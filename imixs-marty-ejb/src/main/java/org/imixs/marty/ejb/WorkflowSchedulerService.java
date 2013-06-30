@@ -27,6 +27,7 @@
 
 package org.imixs.marty.ejb;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
@@ -40,10 +41,12 @@ import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RunAs;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
+import javax.ejb.ScheduleExpression;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
@@ -167,8 +170,18 @@ public class WorkflowSchedulerService {
 	/**
 	 * This Method starts the TimerService.
 	 * 
-	 * The method loads the configuration and evaluates the the following
-	 * informations:
+	 * The Timer can be started based on a Calendar setting stored in the
+	 * property txtConfiguration, or by interval based on the properties
+	 * datStart, datStop, numIntervall.
+	 * 
+	 * 
+	 * The method loads the configuration entity and evaluates the timer
+	 * configuration. THe $UniqueID of the configuration entity is the id of the
+	 * timer to be controlled.
+	 * 
+	 * $uniqueid - String - identifier for the Timer Service.
+	 * 
+	 * txtConfiguration - calendarBasedTimer configuration
 	 * 
 	 * datstart - Date Object
 	 * 
@@ -176,7 +189,6 @@ public class WorkflowSchedulerService {
 	 * 
 	 * numInterval - Integer Object (interval in seconds)
 	 * 
-	 * id - String - unique identifier for the Timer Service.
 	 * 
 	 * The method throws an exception if the configuration entity contains
 	 * invalid attributes or values.
@@ -185,78 +197,84 @@ public class WorkflowSchedulerService {
 	 * statusmessage
 	 * 
 	 * The method returns the current configuration
+	 * 
+	 * @throws AccessDeniedException
+	 * @throws ParseException
 	 */
 	public ItemCollection start() throws Exception {
 		ItemCollection configItemCollection = findConfiguration();
-
+		Timer timer = null;
 		if (configItemCollection == null)
 			return null;
 
-		// configuration = loadConfiguration();
 		String id = configItemCollection.getItemValueString("$uniqueid");
-		Date startDate = configItemCollection.getItemValueDate("datstart");
-		Date endDate = configItemCollection.getItemValueDate("datstop");
 
-		// compute interval
-		int hours = configItemCollection.getItemValueInteger("hours");
-		int minutes = configItemCollection.getItemValueInteger("minutes");
-
-		long interval = (hours * 60 + minutes) * 60 * 1000;
-
-		configItemCollection
-				.replaceItemValue("numInterval", new Long(interval));
 		// try to cancel an existing timer for this workflowinstance
-		Timer timer = this.findTimer(id);
-		if (timer != null)
-			timer.cancel();
+		while (this.findTimer(id) != null) {
+			this.findTimer(id).cancel();
+		}
 
-		// if endDate is in the past we do not start the timer!
-		Calendar calNow = Calendar.getInstance();
-		Calendar calEnd = Calendar.getInstance();
+		String sConfiguation = configItemCollection
+				.getItemValueString("txtConfiguration");
 
-		if (endDate != null)
-			calEnd.setTime(endDate);
-		if (calNow.after(calEnd)) {
-			logger.info("[WorkflowSchedulerService] "
-					+ configItemCollection.getItemValueString("txtName")
-					+ " not started because stop-date is in the past");
+		if (!sConfiguation.isEmpty()) {
+			// New timer will be started on calendar confiugration
+			timer = createTimerOnCalendar(configItemCollection);
+		} else {
+			// update the interval based on hour/minute configuration
+			int hours = configItemCollection.getItemValueInteger("hours");
+			int minutes = configItemCollection.getItemValueInteger("minutes");
+			long interval = (hours * 60 + minutes) * 60 * 1000;
+			configItemCollection.replaceItemValue("numInterval", new Long(
+					interval));
 
-			updateTimerDetails(configItemCollection);
-			return configItemCollection;
+			timer = createTimerOnInterval(configItemCollection);
 		}
 
 		// start and set statusmessage
+		if (timer != null) {
 
-		SimpleDateFormat dateFormatDE = new SimpleDateFormat(
-				"dd.MM.yy hh:mm:ss");
+			Calendar calNow = Calendar.getInstance();
+			SimpleDateFormat dateFormatDE = new SimpleDateFormat(
+					"dd.MM.yy hh:mm:ss");
+			String msg = "started at " + dateFormatDE.format(calNow.getTime())
+					+ " by " + ctx.getCallerPrincipal().getName();
+			configItemCollection.replaceItemValue("statusmessage", msg);
 
-		String msg = "started at " + dateFormatDE.format(calNow.getTime())
-				+ " by " + ctx.getCallerPrincipal().getName();
-		configItemCollection.replaceItemValue("statusmessage", msg);
-		timer = timerService.createTimer(startDate, interval,
-				configItemCollection);
+			if (timer.isCalendarTimer()) {
+				configItemCollection.replaceItemValue("Schedule", timer
+						.getSchedule().toString());
+			} else {
+				configItemCollection.replaceItemValue("Schedule", "");
 
-		logger.info("[WorkflowSchedulerService] "
-				+ configItemCollection.getItemValueString("txtName")
-				+ " started: " + id);
+			}
+			logger.info("[WorkflowSchedulerService] "
+					+ configItemCollection.getItemValueString("txtName")
+					+ " started: " + id);
+		}
 
-		saveConfiguration(configItemCollection);
+		configItemCollection=saveConfiguration(configItemCollection);
 
 		return configItemCollection;
 	}
 
 	/**
-	 * Cancels a running timer instance. After cancel a timer the configuration
+	 * Stops a running timer instance. After the timer was canceled the configuration
 	 * will be updated.
+	 * 
+	 * @throws AccessDeniedException
 	 * 
 	 */
 	public ItemCollection stop() throws Exception {
 		ItemCollection configItemCollection = findConfiguration();
 
 		String id = configItemCollection.getItemValueString("$uniqueid");
-		Timer timer = this.findTimer(id);
-		if (timer != null) {
-			timer.cancel();
+		boolean found = false;
+		while (this.findTimer(id) != null) {
+			this.findTimer(id).cancel();
+			found = true;
+		}
+		if (found) {
 
 			Calendar calNow = Calendar.getInstance();
 			SimpleDateFormat dateFormatDE = new SimpleDateFormat(
@@ -275,8 +293,12 @@ public class WorkflowSchedulerService {
 		}
 
 		configItemCollection = saveConfiguration(configItemCollection);
+
+		
+
 		return configItemCollection;
 	}
+
 
 	public boolean isRunning() {
 		try {
@@ -300,10 +322,22 @@ public class WorkflowSchedulerService {
 	 */
 	@Timeout
 	public void runTimer(javax.ejb.Timer timer) {
+		ItemCollection configItemCollection = findConfiguration();
+		
 
+		// test if imixsDayOfWeek is provided
+		// https://java.net/jira/browse/GLASSFISH-20673
+		if (!isImixsDayOfWeek(configItemCollection)) {
+			logger.info("[WorkflowSchedulerService] runTimer skipped because today is no imixsDayOfWeek");
+			return;
+		}
+
+		
 		processWorkItems();
 
-		ItemCollection configItemCollection = findConfiguration();
+		
+		configItemCollection.replaceItemValue("datLastRun",new Date());
+		
 		Date endDate = configItemCollection.getItemValueDate("datstop");
 		String sTimerID = configItemCollection.getItemValueString("$uniqueid");
 
@@ -719,6 +753,186 @@ public class WorkflowSchedulerService {
 		calTimeCompare.setTime(adate);
 		calTimeCompare.add(Calendar.SECOND, seconds);
 		return calTimeCompare.getTime();
+	}
+	
+	
+	
+	
+	/**
+	 * Create an interval timer whose first expiration occurs at a given point
+	 * in time and whose subsequent expirations occur after a specified
+	 * interval.
+	 **/
+	Timer createTimerOnInterval(ItemCollection configItemCollection) {
+
+		// Create an interval timer
+		Date startDate = configItemCollection.getItemValueDate("datstart");
+		Date endDate = configItemCollection.getItemValueDate("datstop");
+		long interval = configItemCollection.getItemValueInteger("numInterval");
+		// if endDate is in the past we do not start the timer!
+		Calendar calNow = Calendar.getInstance();
+		Calendar calEnd = Calendar.getInstance();
+
+		if (endDate != null)
+			calEnd.setTime(endDate);
+		if (calNow.after(calEnd)) {
+			logger.warning("[WorkflowSchedulerService] "
+					+ configItemCollection.getItemValueString("txtName")
+					+ " stop-date is in the past");
+
+			endDate = startDate;
+		}
+		Timer timer = timerService.createTimer(startDate, interval,
+				configItemCollection);
+
+		return timer;
+
+	}
+
+	/**
+	 * Create a calendar-based timer based on a input schedule expression. The
+	 * expression will be parsed by this method.
+	 * 
+	 * Example: <code>
+	 *   second=0
+	 *   minute=0
+	 *   hour=*
+	 *   dayOfWeek=
+	 *   dayOfMonth=25–Last,1–5
+	 *   month=
+	 *   year=*
+	 * </code>
+	 * 
+	 * @param sConfiguation
+	 * @return
+	 * @throws ParseException
+	 */
+	Timer createTimerOnCalendar(ItemCollection configItemCollection)
+			throws ParseException {
+
+		TimerConfig timerConfig = new TimerConfig();
+		timerConfig.setInfo(configItemCollection);
+		ScheduleExpression scheduerExpression = new ScheduleExpression();
+
+		@SuppressWarnings("unchecked")
+		List<String> calendarConfiguation = configItemCollection
+				.getItemValue("txtConfiguration");
+		// try to parse the configuration list....
+		for (String confgEntry : calendarConfiguation) {
+
+			if (confgEntry.startsWith("second=")) {
+				scheduerExpression.second(confgEntry.substring(confgEntry
+						.indexOf('=') + 1));
+			}
+			if (confgEntry.startsWith("minute=")) {
+				scheduerExpression.minute(confgEntry.substring(confgEntry
+						.indexOf('=') + 1));
+			}
+			if (confgEntry.startsWith("hour=")) {
+				scheduerExpression.hour(confgEntry.substring(confgEntry
+						.indexOf('=') + 1));
+			}
+			if (confgEntry.startsWith("dayOfWeek=")) {
+				scheduerExpression.dayOfWeek(confgEntry.substring(confgEntry
+						.indexOf('=') + 1));
+			}
+			if (confgEntry.startsWith("dayOfMonth=")) {
+				scheduerExpression.dayOfMonth(confgEntry.substring(confgEntry
+						.indexOf('=') + 1));
+			}
+			if (confgEntry.startsWith("month=")) {
+				scheduerExpression.month(confgEntry.substring(confgEntry
+						.indexOf('=') + 1));
+			}
+			if (confgEntry.startsWith("year=")) {
+				scheduerExpression.year(confgEntry.substring(confgEntry
+						.indexOf('=') + 1));
+			}
+			if (confgEntry.startsWith("timezone=")) {
+				scheduerExpression.timezone(confgEntry.substring(confgEntry
+						.indexOf('=') + 1));
+			}
+
+			/* Start date */
+			if (confgEntry.startsWith("start=")) {
+				SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+				Date convertedDate = dateFormat.parse(confgEntry
+						.substring(confgEntry.indexOf('=') + 1));
+				scheduerExpression.start(convertedDate);
+			}
+
+			/* End date */
+			if (confgEntry.startsWith("end=")) {
+				SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+				Date convertedDate = dateFormat.parse(confgEntry
+						.substring(confgEntry.indexOf('=') + 1));
+				scheduerExpression.end(convertedDate);
+			}
+
+		}
+
+		Timer timer = timerService.createCalendarTimer(scheduerExpression,
+				timerConfig);
+
+		return timer;
+
+	}
+
+	/**
+	 * Returns true if the param 'imixsDayOfWeek' is provided and the current
+	 * week day did not match.
+	 * 
+	 * @see https://java.net/jira/browse/GLASSFISH-20673
+	 * @param configItemCollection
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	private boolean isImixsDayOfWeek(ItemCollection configItemCollection) {
+
+		List<String> calendarConfiguation = configItemCollection
+				.getItemValue("txtConfiguration");
+		// try to parse the configuration list....
+		for (String confgEntry : calendarConfiguation) {
+			if (confgEntry.startsWith("imixsDayOfWeek=")) {
+
+				try {
+					String dayValue = confgEntry.substring(confgEntry
+							.indexOf('=') + 1);
+
+					int iStartDay = 0;
+					int iEndDay = 0;
+					int iSeparator = dayValue.indexOf('-');
+					if (iSeparator > -1) {
+						iStartDay = Integer.valueOf(dayValue.substring(0,
+								iSeparator));
+						iEndDay = Integer.valueOf(dayValue
+								.substring(iSeparator + 1));
+					} else {
+						iStartDay = Integer.valueOf(dayValue);
+						iEndDay = iStartDay;
+					}
+
+					// get current weekday
+					Calendar now = Calendar.getInstance();
+					now.setTime(new Date());
+
+					int iDay = now.get(Calendar.DAY_OF_WEEK);
+					// sunday = 1
+
+					if (iDay < iStartDay || iDay > iEndDay)
+						return false; // not a imixsDayOfWeek!
+					else
+						return true;
+
+				} catch (Exception e) {
+					logger.warning("[WorkflowSchedulerService] imixsDayOfWeek not parseable!");
+				}
+
+			}
+		}
+
+		// return true as default to allow run if now value was defined
+		return true;
 	}
 
 }
