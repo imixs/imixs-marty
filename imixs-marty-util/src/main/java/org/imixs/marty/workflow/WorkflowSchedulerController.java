@@ -28,14 +28,14 @@
 package org.imixs.marty.workflow;
 
 import java.io.Serializable;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.inject.Named;
 
@@ -66,7 +66,7 @@ public class WorkflowSchedulerController implements Serializable {
 	@EJB
 	WorkflowService workflowService;
 
-	private static Logger logger = Logger.getLogger("org.imixs.workflow");
+	private static Logger logger = Logger.getLogger(WorkflowSchedulerController.class.getName());
 
 	public WorkflowSchedulerController() {
 		super();
@@ -80,11 +80,12 @@ public class WorkflowSchedulerController implements Serializable {
 	@PostConstruct
 	public void init() {
 
-		configItemCollection = workflowSchedulerService.findConfiguration();
+		configItemCollection = workflowSchedulerService.loadConfiguration();
+		
 	}
 
 	public void refresh() {
-		configItemCollection = workflowSchedulerService.findConfiguration();
+		configItemCollection = workflowSchedulerService.loadConfiguration();
 
 	}
 
@@ -107,12 +108,11 @@ public class WorkflowSchedulerController implements Serializable {
 				- TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS
 						.toMinutes(duration));
 		if (days == 0) {
-			res = String.format("%d hours, %d minutes, %d seconds",
-					hours, minutes, seconds);
+			res = String.format("%d hours, %d minutes, %d seconds", hours,
+					minutes, seconds);
 		} else {
-			res = String.format(
-					"%d days, %d hours, %d minutes, %d seconds", days,
-					hours, minutes, seconds);
+			res = String.format("%d days, %d hours, %d minutes, %d seconds",
+					days, hours, minutes, seconds);
 		}
 		return res;
 
@@ -134,10 +134,19 @@ public class WorkflowSchedulerController implements Serializable {
 	 * @return
 	 * @throws Exception
 	 */
-	public void doSaveConfiguration(ActionEvent event) throws Exception {
+	public void doSaveConfiguration(ActionEvent event) {
 		// save entity
-		configItemCollection = workflowSchedulerService
-				.saveConfiguration(configItemCollection);
+		try {
+			configItemCollection = workflowSchedulerService
+					.saveConfiguration(configItemCollection);
+		} catch (Exception e) {
+			FacesContext.getCurrentInstance().addMessage(
+					null,
+					new FacesMessage(FacesMessage.SEVERITY_INFO,
+							e.getMessage(), null));
+			e.printStackTrace();
+
+		}
 
 	}
 
@@ -147,11 +156,29 @@ public class WorkflowSchedulerController implements Serializable {
 	 * @return
 	 * @throws Exception
 	 */
-	public void doStartScheduler(ActionEvent event) throws Exception {
+	public void doStartScheduler(ActionEvent event) {
 		configItemCollection.replaceItemValue("_enabled", true);
-		configItemCollection = workflowSchedulerService
-				.saveConfiguration(configItemCollection);
-		configItemCollection = workflowSchedulerService.start();
+		try {
+			configItemCollection = workflowSchedulerService
+					.saveConfiguration(configItemCollection);
+			configItemCollection = workflowSchedulerService.start();
+		} catch (Exception e) {
+			String message = "";
+
+			if (e.getCause() != null)
+				message = e.getCause().getMessage();
+			else
+				message = e.getMessage();
+
+			FacesContext.getCurrentInstance()
+					.addMessage(
+							null,
+							new FacesMessage(FacesMessage.SEVERITY_INFO,
+									message, null));
+			e.printStackTrace();
+
+		}
+
 	}
 
 	public void doStopScheduler(ActionEvent event) throws Exception {
@@ -162,6 +189,7 @@ public class WorkflowSchedulerController implements Serializable {
 	}
 
 	public void doRestartScheduler(ActionEvent event) throws Exception {
+		logger.fine("[WorkflowSchedulerCOntroller] restart timer service");
 		doStopScheduler(event);
 		doStartScheduler(event);
 	}

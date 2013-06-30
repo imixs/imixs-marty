@@ -67,7 +67,7 @@ public class SetupServlet extends HttpServlet {
 		// try to start the scheduler service
 		try {
 			ItemCollection configItemCollection = workflowSchedulerService
-					.findConfiguration();
+		 			.loadConfiguration();
 
 			if (configItemCollection.getItemValueBoolean("_enabled"))
 				workflowSchedulerService.start();
