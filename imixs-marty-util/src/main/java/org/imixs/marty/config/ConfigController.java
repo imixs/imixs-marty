@@ -28,10 +28,14 @@
 package org.imixs.marty.config;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
+import javax.faces.model.SelectItem;
 
 import org.imixs.marty.ejb.ConfigService;
 import org.imixs.workflow.ItemCollection;
@@ -54,9 +58,9 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
  * params or providing additional custom getter methods).
  * 
  * 
- * Use multiple instances in one application, bean can be decleared in the faces-config.xml file.
- * The managed-ban-name as the manged property 'name' 
- * can be set to custom values:
+ * Use multiple instances in one application, bean can be decleared in the
+ * faces-config.xml file. The managed-ban-name as the manged property 'name' can
+ * be set to custom values:
  * 
  * <code>
   	<managed-bean>
@@ -128,6 +132,52 @@ public class ConfigController implements Serializable {
 	}
 
 	/**
+	 * SelectItem getter Method provides a getter method to an ArrayList of
+	 * <SelectItem> objects for a specific param stored in the configuration
+	 * entity. A param entry can be devided by a | into a label and a value
+	 * component. Example:
+	 * 
+	 * <code>
+	 *   Important | 1 
+	 *   Unimportant | 0 
+	 * </code>
+	 * 
+	 * <code>
+	 * <f:selectItems value="#{configMB.selectItems['txtMyParam2']}" />
+	 * </code>
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public List<SelectItem> getSelectItems(String param) throws Exception {
+
+		ArrayList<SelectItem> selection;
+		selection = new ArrayList<SelectItem>();
+
+		// check if a value for this param is available...
+		// if not return an empty list
+		if (!this.configItemCollection.hasItem(param)) {
+			return selection;
+		}
+
+		// get value list first value from vector if size >0
+		List<?> valueList = this.configItemCollection.getItemValue(param);
+		for (Object aValue : valueList) {
+			// test if aValue has a | as an delimiter
+			String sValue = aValue.toString();
+			String sName = sValue;
+
+			if (sValue.indexOf("|") > -1) {
+				sValue = sValue.substring(0, sValue.indexOf("|"));
+				sName = sName.substring(sName.indexOf("|") + 1);
+			}
+			selection.add(new SelectItem(sName.trim(), sValue.trim()));
+
+		}
+		return selection;
+	}
+
+	/**
 	 * save method updates the txtname property and save the config entity
 	 * 
 	 * @throws AccessDeniedException
@@ -140,5 +190,4 @@ public class ConfigController implements Serializable {
 
 	}
 
-	
 }
