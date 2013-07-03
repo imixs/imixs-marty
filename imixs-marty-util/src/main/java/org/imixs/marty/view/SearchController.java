@@ -96,31 +96,31 @@ public class SearchController extends
 	private ItemCollection searchFilter = null;
 
 	// view filter
-	static final String QUERY_WORKLIST_BY_OWNER = "worklist.owner";
-	static final String QUERY_WORKLIST_BY_CREATOR = "worklist.creator";
-	static final String QUERY_WORKLIST_BY_AUTHOR = "worklist.author";
-	static final String QUERY_WORKLIST_ALL = "worklist";
-	static final String QUERY_WORKLIST_ARCHIVE = "archive";
-	static final String QUERY_WORKLIST_DELETIONS = "deletions";
-	static final int SORT_BY_CREATED = 0;
-	static final int SORT_BY_MODIFIED = 1;
-	static final int SORT_ORDER_DESC = 0;
-	static final int SORT_ORDER_ASC = 1;
+	public static final String QUERY_WORKLIST_BY_OWNER = "worklist.owner";
+	public static final String QUERY_WORKLIST_BY_CREATOR = "worklist.creator";
+	public static final String QUERY_WORKLIST_BY_AUTHOR = "worklist.author";
+	public static final String QUERY_WORKLIST_ALL = "worklist";
+	public static final String QUERY_WORKLIST_ARCHIVE = "archive";
+	public static final String QUERY_WORKLIST_DELETIONS = "deletions";
+	public static final int SORT_BY_CREATED = 0;
+	public static final int SORT_BY_MODIFIED = 1;
+	public static final int SORT_ORDER_DESC = 0;
+	public static final int SORT_ORDER_ASC = 1;
 
 	@Inject
-	private UserController userController = null;
+	protected UserController userController = null;
 
 	@Inject
-	private SetupController setupController = null;
+	protected SetupController setupController = null;
 
 	@Inject
-	private IQueryBuilder queryBuilder = null;
+	protected IQueryBuilder queryBuilder = null;
 
 	@EJB
-	private WorkflowService workflowService;
+	protected WorkflowService workflowService;
 
 	@EJB
-	private EntityService entityService;
+	protected EntityService entityService;
 
 	/**
 	 * Constructor sets the new ViewController

@@ -79,26 +79,27 @@ public class WorkflowController extends
 		org.imixs.workflow.jee.faces.workitem.WorkflowController implements
 		Serializable {
 
-	// private String lastUniqueID = null;
+	public  static final String DEFAULT_EDITOR_ID = "form_panel_simple#basic";
+
+
+	/* Services */
+	@EJB
+	protected org.imixs.marty.ejb.WorkitemService workitemService;
+
+	@Inject
+	protected ProcessController processController;
+
+	@Inject
+	protected Event<WorkflowEvent> events;
 
 	private static final long serialVersionUID = 1L;
-	private static final String DEFAULT_EDITOR_ID = "form_panel_simple#basic";
 	private static Logger logger = Logger.getLogger(WorkflowController.class
 			.getName());
 
 	private List<ItemCollection> versions = null;
 	private List<EditorSection> editorSections = null;
 
-	/* Services */
-	@EJB
-	private org.imixs.marty.ejb.WorkitemService workitemService;
-
-	@Inject
-	private ProcessController processController;
-
-	@Inject
-	private Event<WorkflowEvent> events;
-
+	
 	public WorkflowController() {
 		super();
 

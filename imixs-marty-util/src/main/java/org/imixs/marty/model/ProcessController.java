@@ -69,13 +69,13 @@ public class ProcessController implements Serializable {
 	private List<ItemCollection> processList = null;
 
 	@Inject
-	private LoginController loginController = null;
+	protected LoginController loginController = null;
 
 	@Inject
-	private ModelController modelController = null;
+	protected ModelController modelController = null;
 
 	@EJB
-	EntityService entityService;
+	protected EntityService entityService;
 
 	private static Logger logger = Logger.getLogger(ProcessController.class
 			.getName());

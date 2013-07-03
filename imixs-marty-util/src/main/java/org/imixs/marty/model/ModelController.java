@@ -84,16 +84,16 @@ public class ModelController implements Serializable {
 	private HashMap<String, List<ItemCollection>> processEntityCache = null;
 
 	@Inject
-	private FileUploadController fileUploadController;
+	protected FileUploadController fileUploadController;
 
 	@EJB
-	EntityService entityService;
+	protected EntityService entityService;
 
 	@EJB
-	ModelService modelService;
+	protected ModelService modelService;
 
 	@EJB
-	SetupService setupService;
+	protected SetupService setupService;
 
 	private static Logger logger = Logger.getLogger(ModelController.class
 			.getName());

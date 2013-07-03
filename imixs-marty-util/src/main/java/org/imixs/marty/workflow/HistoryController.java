@@ -53,13 +53,11 @@ import org.imixs.workflow.jee.ejb.EntityService;
 @SessionScoped
 public class HistoryController implements Serializable {
 
-	private static final long serialVersionUID = 1L;
-
 	@Inject
-	private WorkflowController workflowController;
+	protected WorkflowController workflowController;
 
+	private static final long serialVersionUID = 1L;
 	private List<ItemCollection> workitems = null;
-
 	private String currentId = null;
 
 	public HistoryController() {

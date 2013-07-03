@@ -62,6 +62,15 @@ public class ChildWorkitemController extends
 		org.imixs.workflow.jee.faces.workitem.WorkflowController implements
 		Serializable {
 
+	@EJB
+	protected org.imixs.workflow.jee.ejb.WorkflowService workflowService;
+
+	@Inject
+	protected ModelController modelController;
+
+	public static Logger logger = Logger.getLogger("org.imixs.marty");
+
+	
 	private static final long serialVersionUID = 1L;
 
 	private List<ItemCollection> childList = null;
@@ -69,17 +78,6 @@ public class ChildWorkitemController extends
 	private ItemCollection parentWorkitem = null;
 	private String childType="childworkitem";
 	private int sortOrder=1;
-
-	@EJB
-	org.imixs.workflow.jee.ejb.WorkflowService workflowService;
-
-	@Inject
-	ModelController modelController;
-
-	public static Logger logger = Logger.getLogger("org.imixs.marty");
-
-	
-	
 	
 	
 	/**

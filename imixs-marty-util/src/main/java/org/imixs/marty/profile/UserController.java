@@ -70,33 +70,35 @@ import org.imixs.workflow.jee.util.PropertyService;
 @SessionScoped
 public class UserController implements Serializable {
 
-	private static final long serialVersionUID = 1L;
-	private final String COOKIE_LOCALE = "imixs.workflow.locale";
-	private ItemCollection workitem = null;
-
-	@EJB
-	private ProfileService profileService;
-
-	@EJB
-	private PropertyService propertyService;
-
-	@EJB
-	private EntityService entityService;
-
-	@EJB
-	private WorkflowService workflowService;
-
 	public final static int MAX_PRIMARY_ENTRIES = 5;
 	public final static int START_PROFILE_PROCESS_ID = 200;
 	public final static int CREATE_PROFILE_ACTIVITY_ID = 5;
 	public final static int UPDATE_PROJECT_ACTIVITY_ID = 10;
 	public final static String DEFAULT_LOCALE = "de_DE";
+	public final static String COOKIE_LOCALE = "imixs.workflow.locale";
 
-	private boolean profileLoaded = false;
-	private Locale locale;
+
+	@EJB
+	protected  ProfileService profileService;
+
+	@EJB
+	protected   PropertyService propertyService;
+
+	@EJB
+	protected  EntityService entityService;
+
+	@EJB
+	protected  WorkflowService workflowService;
+
 
 	@Inject
-	private LoginController loginController;
+	protected  LoginController loginController;
+
+	
+	private static final long serialVersionUID = 1L;
+	private ItemCollection workitem = null;
+	private boolean profileLoaded = false;
+	private Locale locale;
 
 	private static Logger logger = Logger.getLogger(UserController.class
 			.getName());

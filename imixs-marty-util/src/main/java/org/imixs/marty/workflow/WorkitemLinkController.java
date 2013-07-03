@@ -62,18 +62,18 @@ import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
 @SessionScoped
 public class WorkitemLinkController implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	public static final String LINK_PROPERTY = "txtworkitemref";
 
-	private static final String LINK_PROPERTY = "txtworkitemref";
-
-	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	public static Logger logger = Logger.getLogger("org.imixs.marty");
 
 	@Inject
-	private WorkflowController workflowController;
+	protected WorkflowController workflowController;
 
 	@EJB
-	private WorkflowService workflowService;
+	protected WorkflowService workflowService;
 
+
+	private static final long serialVersionUID = 1L;
 	private List<ItemCollection> searchResult = null;
 	private List<ItemCollection> externalReferences = null;
 	private Map<String, List<ItemCollection>> references = null;

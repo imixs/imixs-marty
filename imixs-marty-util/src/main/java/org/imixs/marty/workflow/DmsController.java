@@ -69,20 +69,22 @@ import org.imixs.workflow.jee.faces.util.LoginController;
 @SessionScoped
 public class DmsController implements Serializable {
 
+	
+	@Inject
+	protected LoginController loginController = null;
+
+	@Inject
+	protected FileUploadController fileUploadController;
+
+	@Inject
+	protected WorkflowController workflowController;
+
 	private static final long serialVersionUID = 1L;
 
 	private List<ItemCollection> dmsList = null;
 	private ItemCollection blobWorkitem = null;
 
-	@Inject
-	private LoginController loginController = null;
-
-	@Inject
-	private FileUploadController fileUploadController;
-
-	@Inject
-	private WorkflowController workflowController;
-
+	
 	@PostConstruct
 	public void init() {
 

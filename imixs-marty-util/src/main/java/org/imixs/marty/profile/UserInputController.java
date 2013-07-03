@@ -66,23 +66,24 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 @SessionScoped
 public class UserInputController implements Serializable {
 
-	private static final long serialVersionUID = 1L;
-	private int maxSearchCount = 30;
-	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	
+	@Inject
+	protected WorkflowController workflowController;
 
 	@Inject
-	private WorkflowController workflowController;
-
-	@Inject
-	private UserController userController;
+	protected UserController userController;
 
 	@EJB
-	private WorkflowService workflowService;
+	protected WorkflowService workflowService;
 
 	private List<ItemCollection> searchResult = null;
 
 	private String input = null;
+	private static final long serialVersionUID = 1L;
+	private int maxSearchCount = 30;
+	private static Logger logger = Logger.getLogger("org.imixs.marty");
 
+	
 	public UserInputController() {
 		super();
 		searchResult = new ArrayList<ItemCollection>();

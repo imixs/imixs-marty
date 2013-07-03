@@ -60,24 +60,24 @@ public class SetupController extends ConfigController {
 
 	private static final long serialVersionUID = 1L;
 
-	private final static String CONFIGURATION_NAME = "BASIC";
+	public final static String CONFIGURATION_NAME = "BASIC";
 
 	private boolean setupOk = false;
 
 	@Inject
-	private ModelController modelController;
+	protected ModelController modelController;
 	
 	@Inject
-	private ProcessController processController;
+	protected ProcessController processController;
 
 	@EJB
-	org.imixs.workflow.jee.ejb.EntityService entityService;
+	protected org.imixs.workflow.jee.ejb.EntityService entityService;
 
 	@EJB
-	org.imixs.workflow.jee.ejb.ModelService modelService;
+	protected org.imixs.workflow.jee.ejb.ModelService modelService;
 
 	@EJB
-	PropertyService propertyService;
+	protected PropertyService propertyService;
 
 	private static Logger logger = Logger.getLogger(SetupController.class
 			.getName());
