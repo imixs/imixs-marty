@@ -30,6 +30,7 @@ package org.imixs.marty.workflow;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
@@ -52,6 +53,7 @@ import javax.inject.Named;
 import org.imixs.marty.model.ProcessController;
 import org.imixs.marty.plugins.RulePlugin;
 import org.imixs.marty.util.ErrorHandler;
+import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
@@ -552,7 +554,8 @@ public class WorkflowController extends
 
 	/**
 	 * this method loads all versions to the current workitem. Idependent from
-	 * the type property!
+	 * the type property! The method returns an empty list if no version exist
+	 * (only the main version)
 	 * 
 	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
 	 */
@@ -566,12 +569,18 @@ public class WorkflowController extends
 				+ " JOIN entity.textItems AS t"
 				+ "  WHERE t.itemName = '$workitemid'"
 				+ "  AND t.itemValue = '" + sRefID + "' "
-				+ " ORDER BY entity.created ASC";
+				+ " ORDER BY entity.modified ASC";
 
 		col = this.getEntityService().findAllEntities(refQuery, 0, -1);
-		for (ItemCollection aworkitem : col) {
-			versions.add(aworkitem);
+
+		// Only return version list if more than one version was found!
+		if (col.size() > 1) {
+			for (ItemCollection aworkitem : col) {
+				versions.add(aworkitem);
+			}
 		}
+		
+		
 
 	}
 

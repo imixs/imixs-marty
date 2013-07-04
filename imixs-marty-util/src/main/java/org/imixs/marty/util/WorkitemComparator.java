@@ -2,6 +2,7 @@ package org.imixs.marty.util;
 
 import java.text.Collator;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Locale;
 
 import javax.faces.context.FacesContext;
@@ -38,6 +39,31 @@ public class WorkitemComparator implements Comparator<ItemCollection> {
 	}
 
 	public int compare(ItemCollection a, ItemCollection b) {
+
+		// date compare?
+		if (a.isItemValueDate(itemName)) {
+
+			Date dateA = a.getItemValueDate(itemName);
+			Date dateB = b.getItemValueDate(itemName);
+			int result = dateB.compareTo(dateA);
+			if (!this.ascending) {
+				result = -result;
+			}
+			return result;
+
+		}
+
+		// integer compare?
+		if (a.isItemValueInteger(itemName)) {
+			int result = a.getItemValueInteger(itemName)-b.getItemValueInteger(itemName);
+			if (!this.ascending) {
+				result = -result;
+			}
+			return result;
+
+		}
+
+		// String compare
 		int result = this.collator.compare(a.getItemValueString(itemName),
 				b.getItemValueString(itemName));
 		if (!this.ascending) {
