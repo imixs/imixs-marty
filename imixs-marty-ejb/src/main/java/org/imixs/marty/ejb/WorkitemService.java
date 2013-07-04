@@ -38,6 +38,7 @@ import javax.ejb.Stateless;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
@@ -87,12 +88,6 @@ public class WorkitemService {
 	 * The Method set the property '$WriteAccess' to the default value of the
 	 * current Principal name. This allows initial updates of BlobWorkitems
 	 * 
-	 * The Method creates an new property 'txtProjectName' which holds the
-	 * property 'txtName' from the parent Workitem. This is normally the project
-	 * name where the workItem is assigned to. But in cases where the WorkItem
-	 * is created as a subprocess to another workItem the property can be mapped
-	 * to an individual value provided by the Parent workItem.
-	 * 
 	 * The Attributes txtWorkflowEditor, numProcessID, $modelVersion and
 	 * txtWrofklwoGroup will be set to the corresponding values of processEntity
 	 * 
@@ -135,8 +130,6 @@ public class WorkitemService {
 		// assign project name and reference
 		workItem.replaceItemValue("$uniqueidRef",
 				parent.getItemValueString("$uniqueid"));
-		workItem.replaceItemValue("txtProjectName",
-				parent.getItemValueString("txtname"));
 
 		// assign ModelVersion, group and editor
 		workItem.replaceItemValue("$modelversion", sModelVersion);
@@ -152,10 +145,11 @@ public class WorkitemService {
 	 * 
 	 * @throws ProcessingErrorException
 	 * @throws AccessDeniedException
+	 * @throws PluginException 
 	 * 
 	 */
 	public ItemCollection processWorkItem(ItemCollection aworkitem)
-			throws AccessDeniedException, ProcessingErrorException {
+			throws AccessDeniedException, ProcessingErrorException, PluginException {
 
 		// Process workitem...
 		workItem = workflowService.processWorkItem(aworkitem);

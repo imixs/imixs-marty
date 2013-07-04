@@ -43,7 +43,6 @@ import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 
 /**
@@ -81,7 +80,7 @@ public class UserInputController implements Serializable {
 	private String input = null;
 	private static final long serialVersionUID = 1L;
 	private int maxSearchCount = 30;
-	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	private static Logger logger = Logger.getLogger(UserInputController.class.getName());
 
 	
 	public UserInputController() {

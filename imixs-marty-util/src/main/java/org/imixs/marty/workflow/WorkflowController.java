@@ -51,10 +51,12 @@ import javax.inject.Named;
 
 import org.imixs.marty.model.ProcessController;
 import org.imixs.marty.plugins.RulePlugin;
+import org.imixs.marty.util.ErrorHandler;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.exceptions.WorkflowException;
 
 /**
  * The marty WorkflowController extends the
@@ -79,8 +81,7 @@ public class WorkflowController extends
 		org.imixs.workflow.jee.faces.workitem.WorkflowController implements
 		Serializable {
 
-	public  static final String DEFAULT_EDITOR_ID = "form_panel_simple#basic";
-
+	public static final String DEFAULT_EDITOR_ID = "form_panel_simple#basic";
 
 	/* Services */
 	@EJB
@@ -99,7 +100,6 @@ public class WorkflowController extends
 	private List<ItemCollection> versions = null;
 	private List<EditorSection> editorSections = null;
 
-	
 	public WorkflowController() {
 		super();
 
@@ -131,21 +131,22 @@ public class WorkflowController extends
 
 	public void create(String modelVersion, int processID, String processRef) {
 		super.create(null);
-		
+
 		getWorkitem().replaceItemValue("$ModelVersion", modelVersion);
 		getWorkitem().replaceItemValue("$ProcessID", processID);
 		getWorkitem().replaceItemValue("$UniqueIDRef", processRef);
-		
+
 		// find process
-		ItemCollection process=processController.getProcessById(processRef);
-		if (process!=null) {
+		ItemCollection process = processController.getProcessById(processRef);
+		if (process != null) {
 			String sNewProcessName = process.getItemValueString("txtName");
 			getWorkitem().replaceItemValue("txtProcessName", sNewProcessName);
-			
+
 		} else {
-			logger.warning("[WorkflowController] create - unable to find process entity '" + processRef + "'!");
+			logger.warning("[WorkflowController] create - unable to find process entity '"
+					+ processRef + "'!");
 		}
-			
+
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_CREATED));
@@ -153,23 +154,11 @@ public class WorkflowController extends
 	}
 
 	/**
-	 * This method provides the additional business information concerning the
-	 * assigned project and overrides the default behavior. Finally the method
-	 * fires a WorkflowEvent.
+	 * This method overwrites the default init() and fires a WorkflowEvent.
 	 * 
 	 */
 	@Override
 	public String init(String action) {
-		// fetch the assigned project
-		String sProjectRef = getWorkitem().getItemValueString("$UniqueidRef");
-		if (!"".equals(sProjectRef)) {
-			ItemCollection currentProject = this.getEntityService().load(
-					sProjectRef);
-			if (currentProject != null)
-				getWorkitem().replaceItemValue("txtprojectname",
-						currentProject.getItemValue("txtprojectname"));
-		}
-
 		String actionResult = super.init(action);
 
 		// fire event
@@ -404,10 +393,7 @@ public class WorkflowController extends
 			actionResult = super.process();
 		} catch (PluginException pe) {
 			// add a new FacesMessage into the FacesContext
-			handlePluginException(pe);
-		} catch (ProcessingErrorException pe) {
-			// add a new FacesMessage into the FacesContext
-			handleProcessingErrorExcpetion(pe);
+			ErrorHandler.handlePluginException(pe);
 		}
 		// reset versions and editor sections
 		versions = null;
@@ -561,105 +547,6 @@ public class WorkflowController extends
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_AFTER_RESTOREFROMSOFTDELETE));
-
-	}
-
-	/**
-	 * The Method expects a PluginException and adds the corresponding Faces
-	 * Error Message into the FacesContext.
-	 * 
-	 * If the PluginException was thrown from the RulePLugin then the method
-	 * test this exception for ErrorParams and generate separate Faces Error
-	 * Messages for each param.
-	 * */
-	private void handlePluginException(PluginException pe) {
-		// if the PluginException was throws from the RulePlugin then test
-		// for VALIDATION_ERROR and ErrorParams
-		if (RulePlugin.class.getSimpleName().equals(pe.getErrorContext())
-				&& (RulePlugin.VALIDATION_ERROR.equals(pe.getErrorCode()))
-				&& pe.getErrorParameters() != null
-				&& pe.getErrorParameters().length > 0) {
-
-			// create a faces messae for each param
-			Object[] messages = pe.getErrorParameters();
-			for (Object aMessage : messages) {
-
-				FacesContext.getCurrentInstance().addMessage(
-						null,
-						new FacesMessage(FacesMessage.SEVERITY_INFO, aMessage
-								.toString(), null));
-			}
-		} else {
-			// default behaivor
-			addErrorMessage(pe);
-		}
-
-		logger.warning("WorkflowController cauth PluginException - error code="
-				+ pe.getErrorCode() + " - " + pe.getMessage());
-		if (logger.isLoggable(Level.FINE)) {
-
-			pe.printStackTrace(); // Or use a logger.
-		}
-	}
-
-	/**
-	 * This Method expects a ProcessingErrorExpeption and add a FacesMessage
-	 * into the FacesContext.
-	 * 
-	 * @param pe
-	 */
-	private void handleProcessingErrorExcpetion(ProcessingErrorException pe) {
-		addErrorMessage(pe);
-		// print error message into log!
-		logger.warning("WorkflowController cauth ProcessingErrorException - error code="
-				+ pe.getErrorCode() + " - " + pe.getMessage());
-		pe.printStackTrace(); // Or use a logger.
-	}
-
-	/**
-	 * This helper method adds a error message to the faces context, based on
-	 * the data in a PluginException. This kind of error message can be
-	 * displayed in a page using:
-	 * 
-	 * <code>
-	 *          	<h:messages globalOnly="true" />
-	 * </code>
-	 * 
-	 * As the ProcessingErrorException contains an optional object array the
-	 * message is parsed for params to be replaced
-	 * 
-	 * Example:
-	 * 
-	 * <code>
-	 * ERROR_MESSAGE=Value should not be greater than {0} or lower as {1}.
-	 * </code>
-	 * 
-	 * @param pe
-	 */
-	private void addErrorMessage(ProcessingErrorException pe) {
-
-		String message = pe.getErrorCode();
-		// try to find the message text in resource bundle...
-		try {
-			ResourceBundle rb = ResourceBundle.getBundle("bundle.app");
-			message = rb.getString(pe.getErrorCode());
-		} catch (MissingResourceException mre) {
-			logger.warning("WorkflowController: " + mre.getMessage());
-		}
-
-		// parse message for params
-		if (pe instanceof PluginException) {
-			PluginException p = (PluginException) pe;
-			if (p.getErrorParameters() != null
-					&& p.getErrorParameters().length > 0) {
-				for (int i = 0; i < p.getErrorParameters().length; i++) {
-					message = message.replace("{" + i + "}",
-							p.getErrorParameters()[i].toString());
-				}
-			}
-		}
-		FacesContext.getCurrentInstance().addMessage(null,
-				new FacesMessage(FacesMessage.SEVERITY_INFO, message, null));
 
 	}
 

@@ -42,8 +42,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.ejb.ProfileService;
+import org.imixs.marty.util.ErrorHandler;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
@@ -144,7 +146,13 @@ public class UserController implements Serializable {
 				// process new profile...
 				profile.replaceItemValue("$ActivityID",
 						CREATE_PROFILE_ACTIVITY_ID);
-				profile = workflowService.processWorkItem(profile);
+				try {
+					profile = workflowService.processWorkItem(profile);
+				} catch (PluginException e) {
+					logger.severe("[UserController] unable to process new profile entity!");
+					throw new ProcessingErrorException(UserController.class.getName(),
+							ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!",e);
+				}
 				logger.info("New Profile created ");
 
 			} else {
@@ -157,7 +165,13 @@ public class UserController implements Serializable {
 						profile.replaceItemValue("$ActivityID", iActiviyID);
 						logger.fine("[UserController] autoprocess profile with autoProcessOnLogin="
 								+ iActiviyID);
-						profile = workflowService.processWorkItem(profile);
+						try {
+							profile = workflowService.processWorkItem(profile);
+						} catch (PluginException e) {
+							logger.severe("[UserController] unable to process new profile entity!");
+							throw new ProcessingErrorException(UserController.class.getName(),
+									ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!",e);
+						}
 
 					}
 				} catch (NumberFormatException nfe) {
@@ -326,12 +340,18 @@ public class UserController implements Serializable {
 	 * 
 	 * @return action result
 	 * @throws AccessDeniedException
+	 * @throws  
 	 */
 	public String process() throws AccessDeniedException,
 			ProcessingErrorException {
 
 		// process workItem now...
-		workitem = this.workflowService.processWorkItem(workitem);
+		try {
+			workitem = this.workflowService.processWorkItem(workitem);
+		} catch (PluginException e) {
+			// add a new FacesMessage into the FacesContext
+			ErrorHandler.handlePluginException(e);
+		}
 
 		// recache current user data...
 		// done by the profilePlugin
@@ -386,5 +406,9 @@ public class UserController implements Serializable {
 				.setLocale(profileLocale);
 
 	}
+	
+	
+	
+	
 
 }
