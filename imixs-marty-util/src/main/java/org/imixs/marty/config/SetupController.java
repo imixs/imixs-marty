@@ -27,6 +27,7 @@
 
 package org.imixs.marty.config;
 
+import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -38,6 +39,7 @@ import javax.inject.Named;
 
 import org.imixs.marty.model.ModelController;
 import org.imixs.marty.model.ProcessController;
+import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.util.PropertyService;
 
 /**
@@ -50,7 +52,7 @@ import org.imixs.workflow.jee.util.PropertyService;
  * and more flexible as the file based imixs.properties provided by the Imixs
  * Workflow Engine.
  * 
- *  
+ * 
  * @author rsoika
  * 
  */
@@ -66,7 +68,7 @@ public class SetupController extends ConfigController {
 
 	@Inject
 	protected ModelController modelController;
-	
+
 	@Inject
 	protected ProcessController processController;
 
@@ -102,6 +104,22 @@ public class SetupController extends ConfigController {
 
 		super.init();
 
+		// if the BASIC configuration was not yet saved before we neet to
+		// initalize it with a
+		// default setup
+		if (!getWorkitem().hasItem(EntityService.UNIQUEID)) {
+			Vector<String> v=new Vector<String>();
+			v.add("IMIXS-WORKFLOW-Manager");
+			v.add("IMIXS-WORKFLOW-Author");
+			v.add("IMIXS-WORKFLOW-Reader");
+			v.add("IMIXS-WORKFLOW-Editor");
+			
+			getWorkitem().replaceItemValue("usergroups", v);
+			getWorkitem().replaceItemValue("keyenableuserdb",true);
+			this.save();
+			
+		}
+
 		// now test if system model exists and if the systemSetup was
 		// successfully completed.
 		setupOk = (modelController.hasSystemModel() && getWorkitem()
@@ -130,14 +148,10 @@ public class SetupController extends ConfigController {
 
 		// reset modelController
 		modelController.reset();
-		
+
 		// reset processController
 		processController.reset();
 
 	}
-	
-	
-	
-
 
 }

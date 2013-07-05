@@ -68,7 +68,7 @@ public class ChildWorkitemController extends
 	@Inject
 	protected ModelController modelController;
 
-	public static Logger logger = Logger.getLogger("org.imixs.marty");
+	public static Logger logger = Logger.getLogger(ChildWorkitemController.class.getName());
 
 	
 	private static final long serialVersionUID = 1L;
