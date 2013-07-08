@@ -8,9 +8,9 @@ import java.util.logging.Logger;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 
-import org.imixs.marty.plugins.RulePlugin;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.WorkflowException;
+import org.imixs.workflow.plugins.RulePlugin;
 
 public class ErrorHandler {
 

@@ -30,19 +30,15 @@ package org.imixs.marty.workflow;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Event;
-import javax.faces.application.FacesMessage;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -51,14 +47,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.model.ProcessController;
-import org.imixs.marty.plugins.RulePlugin;
 import org.imixs.marty.util.ErrorHandler;
-import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
-import org.imixs.workflow.exceptions.WorkflowException;
 
 /**
  * The marty WorkflowController extends the
