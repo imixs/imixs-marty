@@ -253,14 +253,14 @@ public class WorkflowSchedulerService {
 					+ " started: " + id);
 		}
 
-		configItemCollection=saveConfiguration(configItemCollection);
+		configItemCollection = saveConfiguration(configItemCollection);
 
 		return configItemCollection;
 	}
 
 	/**
-	 * Stops a running timer instance. After the timer was canceled the configuration
-	 * will be updated.
+	 * Stops a running timer instance. After the timer was canceled the
+	 * configuration will be updated.
 	 * 
 	 * @throws AccessDeniedException
 	 * 
@@ -294,11 +294,8 @@ public class WorkflowSchedulerService {
 
 		configItemCollection = saveConfiguration(configItemCollection);
 
-		
-
 		return configItemCollection;
 	}
-
 
 	public boolean isRunning() {
 		try {
@@ -323,21 +320,19 @@ public class WorkflowSchedulerService {
 	@Timeout
 	public void runTimer(javax.ejb.Timer timer) {
 		ItemCollection configItemCollection = findConfiguration();
-		
-
+		logger.info("[WorkflowSchedulerService] started runTimer...");
 		// test if imixsDayOfWeek is provided
 		// https://java.net/jira/browse/GLASSFISH-20673
+
 		if (!isImixsDayOfWeek(configItemCollection)) {
 			logger.info("[WorkflowSchedulerService] runTimer skipped because today is no imixsDayOfWeek");
 			return;
 		}
 
-		
 		processWorkItems();
 
-		
-		configItemCollection.replaceItemValue("datLastRun",new Date());
-		
+		configItemCollection.replaceItemValue("datLastRun", new Date());
+
 		Date endDate = configItemCollection.getItemValueDate("datstop");
 		String sTimerID = configItemCollection.getItemValueString("$uniqueid");
 
@@ -754,10 +749,7 @@ public class WorkflowSchedulerService {
 		calTimeCompare.add(Calendar.SECOND, seconds);
 		return calTimeCompare.getTime();
 	}
-	
-	
-	
-	
+
 	/**
 	 * Create an interval timer whose first expiration occurs at a given point
 	 * in time and whose subsequent expirations occur after a specified
@@ -894,7 +886,7 @@ public class WorkflowSchedulerService {
 		// try to parse the configuration list....
 		for (String confgEntry : calendarConfiguation) {
 			if (confgEntry.startsWith("imixsDayOfWeek=")) {
-
+				logger.info("[WorkflowSchedulerService] " + confgEntry);
 				try {
 					String dayValue = confgEntry.substring(confgEntry
 							.indexOf('=') + 1);
@@ -919,17 +911,21 @@ public class WorkflowSchedulerService {
 					int iDay = now.get(Calendar.DAY_OF_WEEK);
 					// sunday = 1
 
-					if (iDay < iStartDay || iDay > iEndDay)
+					if (iDay < iStartDay || iDay > iEndDay) {
+						logger.info("[WorkflowSchedulerService] isImixsDayOfWeek=false");
 						return false; // not a imixsDayOfWeek!
-					else
+					} else {
+						logger.info("[WorkflowSchedulerService] isImixsDayOfWeek=true");
 						return true;
-
+					}
 				} catch (Exception e) {
 					logger.warning("[WorkflowSchedulerService] imixsDayOfWeek not parseable!");
 				}
 
 			}
 		}
+
+		logger.info("[WorkflowSchedulerService] - imixsDayOfWeek was not set! ");
 
 		// return true as default to allow run if now value was defined
 		return true;
