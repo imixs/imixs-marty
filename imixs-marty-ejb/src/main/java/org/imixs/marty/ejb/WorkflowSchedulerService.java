@@ -910,6 +910,8 @@ public class WorkflowSchedulerService {
 
 					int iDay = now.get(Calendar.DAY_OF_WEEK);
 					// sunday = 1
+					// adjust
+					iDay--;
 
 					if (iDay < iStartDay || iDay > iEndDay) {
 						logger.info("[WorkflowSchedulerService] isImixsDayOfWeek=false");
