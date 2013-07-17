@@ -103,6 +103,7 @@ public class TeamPlugin extends AbstractPlugin {
 
 	public static final String INVALID_SPACE_ASSIGNED_BY_MODEL = "INVALID_SPACE_ASSIGNED_BY_MODEL";
 	public static final String INVALID_PROCESS_ASSIGNED_BY_MODEL = "INVALID_PROCESS_ASSIGNED_BY_MODEL";
+	public static final String NO_PROCESS_ASSIGNED = "NO_PROCESS_ASSIGNED";
 
 	private WorkflowService workflowService = null;
 	private EntityService entityService = null;
@@ -155,6 +156,39 @@ public class TeamPlugin extends AbstractPlugin {
 		Map<String, ItemCollection> cacheRef = new HashMap<String, ItemCollection>();
 
 		List<String> newUnqiueIDRefList = new Vector<String>();
+
+		// 1.) if txtProcessRef is empty and $UniqueIdRef is a Process then
+		// then copy the $UnqiueIDRef into txtProcessRef
+		List<String> oldUnqiueIdRefList = workItem.getItemValue("$UniqueIdRef");
+		List<String> oldProcessRefList = workItem.getItemValue("txtProcessRef");
+
+		if (oldProcessRefList.isEmpty() && !oldUnqiueIdRefList.isEmpty()) {
+			for (String aUniqueID : oldUnqiueIdRefList) {
+				if (!aUniqueID.isEmpty()) {
+					ItemCollection entity = entityService.load(aUniqueID);
+					if (entity != null) {
+						// check type
+						String sType = entity.getItemValueString("type");
+						// update txtProcessRef
+						if ("process".equals(sType)) {
+							workItem.replaceItemValue("txtProcessRef",
+									aUniqueID);
+							break;
+						}
+					} else {
+						logger.warning("[TeamPlugin] UniqueIdRef '" + aUniqueID
+								+ "' is no longer valid and will be removed!");
+					}
+				}
+			}
+
+		}
+
+		// verify if a txtProcessRef is still empty
+		if (workItem.getItemValueString("txtProcessRef").isEmpty()) {
+			throw new PluginException(TeamPlugin.class.getSimpleName(),
+					NO_PROCESS_ASSIGNED, "No ProcessRef defined!");
+		}
 
 		/*
 		 * Check the txtActivityResult for a new Project reference.
@@ -249,7 +283,7 @@ public class TeamPlugin extends AbstractPlugin {
 			}
 		} else {
 			// 2.1.) verify if the current process assignement is still valid!
-			List<String> oldProcessRefList = workItem
+			oldProcessRefList = workItem
 					.getItemValue("txtProcessRef");
 			List<String> newProcessRefList = new Vector<String>();
 			for (String aUniqueID : oldProcessRefList) {
@@ -269,49 +303,6 @@ public class TeamPlugin extends AbstractPlugin {
 			}
 			// update spaceRef
 			workItem.replaceItemValue("txtProcessRef", newProcessRefList);
-
-		}
-
-		// 3.) Now if both lists (txtSpaceRef and txtProcessRef) were empty!
-		// then we will check the content of $UniqueIDRef and verify if the IDs
-		// are still valid! Also the txtSpaceRef and txtProcessRef will be
-		// updated
-		if (newUnqiueIDRefList.isEmpty()) {
-			List<String> oldUnqiueIdRefList = workItem
-					.getItemValue("$UniqueIdRef");
-			for (String aUniqueID : oldUnqiueIdRefList) {
-				if (!aUniqueID.isEmpty()) {
-					ItemCollection entity = entityService.load(aUniqueID);
-					if (entity != null) {
-						// valid reference!
-						newUnqiueIDRefList.add(aUniqueID);
-						// check type
-						String sType = entity.getItemValueString("type");
-						// update txtProcessRef
-						if ("process".equals(sType)) {
-							List<String> old = workItem
-									.getItemValue("txtProcessRef");
-							old.add(aUniqueID);
-							workItem.replaceItemValue("txtProcessRef", old);
-						}
-						// update txtSpaceRef
-						if ("space".equals(sType)) {
-							List<String> old = workItem
-									.getItemValue("txtSpaceRef");
-							old.add(aUniqueID);
-							workItem.replaceItemValue("txtSpaceRef", old);
-						}
-
-						cacheRef.put(entity
-								.getItemValueString(EntityService.UNIQUEID),
-								entity);
-
-					} else {
-						logger.warning("[TeamPlugin] UniqueIdRef '" + aUniqueID
-								+ "' is no longer valid and will be removed!");
-					}
-				}
-			}
 
 		}
 
@@ -343,7 +334,6 @@ public class TeamPlugin extends AbstractPlugin {
 		logger.fine("[TeamPlugin] new ProcessName= " + sNewProcessName);
 		logger.fine("[TeamPlugin] new SpaceName= " + sNewSpaceName);
 
-		
 		// 6.) Now the team lists will be updated depending of the current
 		// $uniqueidref
 		List vSpaceTeam = new Vector();

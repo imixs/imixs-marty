@@ -467,7 +467,9 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * This method returns a process entity for a given ModelVersion
+	 * This method returns a process entity for a given ModelVersion.
+	 * The method did not use a cache.
+	 * 
 	 * 
 	 * @param modelVersion
 	 *            - version for the model to search the process entity
@@ -475,8 +477,7 @@ public class ModelController implements Serializable {
 	 *            - id of the process entity
 	 * @return an instance of the matching process entity
 	 */
-	@Deprecated
-	public ItemCollection xxxgetProcessEntity(int processid, String modelversion) {
+	public ItemCollection getProcessEntity(int processid, String modelversion) {
 		return modelService.getProcessEntityByVersion(processid, modelversion);
 	}
 
