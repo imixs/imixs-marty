@@ -218,7 +218,7 @@ public class UserController implements Serializable {
 	/**
 	 * This method returns the current user locale. If the user is not logged in
 	 * the method try to get the locale out from the cookie. If no cockie is set
-	 * the method defaults to "en"
+	 * the method defaults to "de_DE"
 	 * 
 	 * @return - ISO Locale format
 	 */

@@ -52,6 +52,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
  * The marty WorkflowController extends the
@@ -161,6 +162,30 @@ public class WorkflowController extends
 				WorkflowEvent.WORKITEM_INITIALIZED));
 
 		return actionResult;
+	}
+
+	/**
+	 * Loades a new wokitem by a uniqueID
+	 * 
+	 * @param aUniqueID
+	 */
+	public void setUniqueId(String uniqueID) {
+		this.load(uniqueID);
+	}
+
+	/**
+	 * Returns the current uniqueid of the workitem or null if no workitem is
+	 * set.
+	 * 
+	 * @return uniqueid of current workitem or null
+	 */
+	public String getUniqueId() {
+		if (this.getWorkitem() == null) {
+			return null;
+		} else {
+			return this.getWorkitem()
+					.getItemValueString(EntityService.UNIQUEID);
+		}
 	}
 
 	/**
@@ -572,8 +597,6 @@ public class WorkflowController extends
 				versions.add(aworkitem);
 			}
 		}
-		
-		
 
 	}
 
