@@ -167,6 +167,9 @@ public class TeamPlugin extends AbstractPlugin {
 				if (!aUniqueID.isEmpty()) {
 					ItemCollection entity = entityService.load(aUniqueID);
 					if (entity != null) {
+						if (!newUnqiueIDRefList.contains(aUniqueID))
+							newUnqiueIDRefList.add(aUniqueID);
+
 						// check type
 						String sType = entity.getItemValueString("type");
 						// update txtProcessRef
@@ -184,8 +187,9 @@ public class TeamPlugin extends AbstractPlugin {
 
 		}
 
-		// verify if a txtProcessRef is still empty
-		if (workItem.getItemValueString("txtProcessRef").isEmpty()) {
+		// verify if a txtProcessRef is still empty - not allowed for workitems
+		if ("workitem".equals(workItem.getItemValueString("Type"))
+				&& workItem.getItemValueString("txtProcessRef").isEmpty()) {
 			throw new PluginException(TeamPlugin.class.getSimpleName(),
 					NO_PROCESS_ASSIGNED, "No ProcessRef defined!");
 		}
@@ -219,8 +223,10 @@ public class TeamPlugin extends AbstractPlugin {
 			if (parent != null) {
 				workItem.replaceItemValue("txtSpaceRef",
 						parent.getItemValueString(EntityService.UNIQUEID));
-				newUnqiueIDRefList.add(parent
-						.getItemValueString(EntityService.UNIQUEID));
+				if (!newUnqiueIDRefList.contains(parent
+						.getItemValueString(EntityService.UNIQUEID)))
+					newUnqiueIDRefList.add(parent
+							.getItemValueString(EntityService.UNIQUEID));
 
 				cacheRef.put(parent.getItemValueString(EntityService.UNIQUEID),
 						parent);
@@ -242,7 +248,8 @@ public class TeamPlugin extends AbstractPlugin {
 					ItemCollection entity = entityService.load(aUniqueID);
 					if (entity != null) {
 						newSpaceRefList.add(aUniqueID);
-						newUnqiueIDRefList.add(aUniqueID);
+						if (!newUnqiueIDRefList.contains(aUniqueID))
+							newUnqiueIDRefList.add(aUniqueID);
 						cacheRef.put(entity
 								.getItemValueString(EntityService.UNIQUEID),
 								entity);
@@ -268,8 +275,11 @@ public class TeamPlugin extends AbstractPlugin {
 			if (parent != null) {
 				workItem.replaceItemValue("txtProcessRef",
 						parent.getItemValueString(EntityService.UNIQUEID));
-				newUnqiueIDRefList.add(parent
-						.getItemValueString(EntityService.UNIQUEID));
+
+				if (!newUnqiueIDRefList.contains(parent
+						.getItemValueString(EntityService.UNIQUEID)))
+					newUnqiueIDRefList.add(parent
+							.getItemValueString(EntityService.UNIQUEID));
 				cacheRef.put(parent.getItemValueString(EntityService.UNIQUEID),
 						parent);
 			} else {
@@ -283,15 +293,15 @@ public class TeamPlugin extends AbstractPlugin {
 			}
 		} else {
 			// 2.1.) verify if the current process assignement is still valid!
-			oldProcessRefList = workItem
-					.getItemValue("txtProcessRef");
+			oldProcessRefList = workItem.getItemValue("txtProcessRef");
 			List<String> newProcessRefList = new Vector<String>();
 			for (String aUniqueID : oldProcessRefList) {
 				if (!aUniqueID.isEmpty()) {
 					ItemCollection entity = entityService.load(aUniqueID);
 					if (entity != null) {
 						newProcessRefList.add(aUniqueID);
-						newUnqiueIDRefList.add(aUniqueID);
+						if (!newUnqiueIDRefList.contains(aUniqueID))
+							newUnqiueIDRefList.add(aUniqueID);
 						cacheRef.put(entity
 								.getItemValueString(EntityService.UNIQUEID),
 								entity);
