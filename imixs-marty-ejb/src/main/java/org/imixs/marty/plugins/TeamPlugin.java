@@ -199,7 +199,7 @@ public class TeamPlugin extends AbstractPlugin {
 		 * 
 		 * Pattern:
 		 * 
-		 * '<item name="project">...</item>'
+		 * '<item name="process">...</item>'
 		 */
 		String sResult = "";
 		// try {

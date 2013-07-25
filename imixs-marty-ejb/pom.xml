@@ -32,5 +32,14 @@
 			<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
 		</dependency>
 
+
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.9.5</version>
+			<scope>test</scope>
+		</dependency>
+
+
 	</dependencies>
 </project>
