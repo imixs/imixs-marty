@@ -101,13 +101,14 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  */
 public class TeamPlugin extends AbstractPlugin {
 
-	public static final String INVALID_SPACE_ASSIGNED_BY_MODEL = "INVALID_SPACE_ASSIGNED_BY_MODEL";
-	public static final String INVALID_PROCESS_ASSIGNED_BY_MODEL = "INVALID_PROCESS_ASSIGNED_BY_MODEL";
+	public static final String INVALID_REFERENCE_ASSIGNED_BY_MODEL = "INVALID_REFERENCE_ASSIGNED_BY_MODEL";
 	public static final String NO_PROCESS_ASSIGNED = "NO_PROCESS_ASSIGNED";
 
 	private WorkflowService workflowService = null;
 	private EntityService entityService = null;
 	private static Logger logger = Logger.getLogger(TeamPlugin.class.getName());
+
+	private Map<String, ItemCollection> entityCache = null;
 
 	/**
 	 * Fetch workflowService and entityService from WorkflowContext
@@ -120,6 +121,9 @@ public class TeamPlugin extends AbstractPlugin {
 			workflowService = (WorkflowService) actx;
 			entityService = workflowService.getEntityService();
 		}
+
+		// init cache
+		entityCache = new HashMap<String, ItemCollection>();
 	}
 
 	/**
@@ -151,6 +155,325 @@ public class TeamPlugin extends AbstractPlugin {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public int run(ItemCollection workItem, ItemCollection documentActivity)
+			throws PluginException {
+
+		List<String> oldUnqiueIdRefList = workItem.getItemValue("$UniqueIdRef");
+		List<String> newUnqiueIDRefList = null;
+		List<String> processRefList = null;
+		List<String> spaceRefList = null;
+
+		// 1.1) if txtProcessRef don't exists then search for process ids in
+		// $UnqiueIDRef
+		if (!workItem.hasItem("txtProcessRef") && !oldUnqiueIdRefList.isEmpty()) {
+			processRefList = workItem.getItemValue("txtProcessRef");
+			for (String aUniqueID : oldUnqiueIdRefList) {
+				ItemCollection entity = fetchEntity(aUniqueID);
+				if (entity != null
+						&& "process".equals(entity.getItemValueString("type"))) {
+					// update txtProcessRef
+					processRefList.add(entity
+							.getItemValueString(EntityService.UNIQUEID));
+				}
+			}
+			// update txtProcessRef
+			workItem.replaceItemValue("txtProcessRef", processRefList);
+		} else {
+			// 1.1.1) validate content of txtProcessRef
+			if (workItem.hasItem("txtProcessRef")) {
+				processRefList = workItem.getItemValue("txtProcessRef");
+				List<String> verifiedRefList=new Vector<String>();
+				for (String aUniqueID : processRefList) {
+					ItemCollection entity = fetchEntity(aUniqueID);
+					if (entity != null
+							&& "process".equals(entity
+									.getItemValueString("type"))) {
+						// verified
+						verifiedRefList.add(aUniqueID);
+					}
+				}
+				// update txtProcessRef
+				workItem.replaceItemValue("txtProcessRef", verifiedRefList);
+			}
+		}
+
+		// 1.2) if txtSpaceRef don't exists then search for space ids in
+		// $UnqiueIDRef
+		if (!workItem.hasItem("txtSpaceRef") && !oldUnqiueIdRefList.isEmpty()) {
+			spaceRefList = workItem.getItemValue("txtSpaceRef");
+			for (String aUniqueID : spaceRefList) {
+				ItemCollection entity = fetchEntity(aUniqueID);
+				if (entity != null
+						&& "space".equals(entity.getItemValueString("type"))) {
+					// update txtProcessRef
+					spaceRefList.add(entity
+							.getItemValueString(EntityService.UNIQUEID));
+				}
+			}
+			// update txtProcessRef
+			workItem.replaceItemValue("txtSpaceRef", spaceRefList);
+		} else {
+			// 1.2.1) validate content of txtSpaceRef
+			if (workItem.hasItem("txtSpaceRef")) {
+				processRefList = workItem.getItemValue("txtSpaceRef");
+				List<String> verifiedRefList=new Vector<String>();
+				for (String aUniqueID : processRefList) {
+					ItemCollection entity = fetchEntity(aUniqueID);
+					if (entity != null
+							&& "space".equals(entity
+									.getItemValueString("type"))) {
+						// verified
+						verifiedRefList.add(aUniqueID);
+					}
+				}
+				// update txtProcessRef
+				workItem.replaceItemValue("txtSpaceRef", verifiedRefList);
+			}
+		}
+
+		/*
+		 * 2.) Check the txtActivityResult for a new Project reference.
+		 * 
+		 * Pattern:
+		 * 
+		 * '<item name="process">...</item>' '<item name="space">...</item>'
+		 */
+		String sRef = fetchRefFromActivity("process", documentActivity);
+		if (sRef != null && !sRef.isEmpty()) {
+			logger.fine("[TeamPlugin] Updating process reference based on model information: "
+					+ sRef);
+			workItem.replaceItemValue("txtProcessRef", sRef);
+		}
+		sRef = fetchRefFromActivity("space", documentActivity);
+		if (sRef != null && !sRef.isEmpty()) {
+			logger.fine("[TeamPlugin] Updating space reference based on model information: "
+					+ sRef);
+			workItem.replaceItemValue("txtSpaceRef", sRef);
+		}
+
+		// 3.) now synchronize txtProcessRef/txtSpaceRef with $UnqiueIDref
+		processRefList = workItem.getItemValue("txtProcessRef");
+		spaceRefList = workItem.getItemValue("txtSpaceRef");
+		newUnqiueIDRefList = new Vector<String>();
+		newUnqiueIDRefList.addAll(processRefList);
+		newUnqiueIDRefList.addAll(spaceRefList);
+
+		for (String aUniqueID : oldUnqiueIdRefList) {
+
+			ItemCollection entity = fetchEntity(aUniqueID);
+			// check if this is a deprecated process ref
+			if ("process".equals(entity.getItemValueString("type"))
+					&& !processRefList.contains(aUniqueID)) {
+				logger.fine("[TeamPlugin] remove deprecated processRef "
+						+ aUniqueID);
+			} else {
+				if ("space".equals(entity.getItemValueString("type"))
+						&& !spaceRefList.contains(aUniqueID)) {
+					logger.fine("[TeamPlugin] remove deprecated spaceRef "
+							+ aUniqueID);
+
+				} else {
+					// all other types of entities will still be contained...
+					if (!newUnqiueIDRefList.contains(aUniqueID))
+						newUnqiueIDRefList.add(aUniqueID);
+				}
+			}
+		}
+
+		// 4.) finally we can now update the $UniqueIDRef property
+		workItem.replaceItemValue("$UniqueIdRef", newUnqiueIDRefList);
+		logger.fine("[TeamPlugin] Updated $UniqueIdRef: " + newUnqiueIDRefList);
+
+		// and now $UnqiueIDref, txtProcessRef and txtSpaceRef are synchronized
+		// and verified!
+
+		// 6.) Now the team lists will be updated depending of the current
+		// $uniqueidref
+		List vSpaceTeam = new Vector();
+		List vSpaceManager = new Vector();
+		List vSpaceAssist = new Vector();
+		List vProcessTeam = new Vector();
+		List vProcessManager = new Vector();
+		List vProcessAssist = new Vector();
+		String sSpaceName = "";
+		String sProcessName = "";
+
+		for (String aUnqiueID : newUnqiueIDRefList) {
+
+			ItemCollection entity = fetchEntity(aUnqiueID);
+			if (entity != null) {
+				String parentType = entity.getItemValueString("type");
+
+				// Test type property....
+				if ("process".equals(parentType)) {
+					vProcessTeam.addAll(entity.getItemValue("namTeam"));
+					vProcessManager.addAll(entity.getItemValue("namManager"));
+					vProcessAssist.addAll(entity.getItemValue("namAssist"));
+					sProcessName = entity.getItemValueString("txtname");
+
+				}
+				if ("space".equals(parentType)) {
+					vSpaceTeam.addAll(entity.getItemValue("namTeam"));
+					vSpaceManager.addAll(entity.getItemValue("namManager"));
+					vSpaceAssist.addAll(entity.getItemValue("namAssist"));
+					sSpaceName = entity.getItemValueString("txtname");
+				}
+				if ("workitem".equals(parentType)) {
+					vSpaceTeam = entity.getItemValue("namSpaceTeam");
+					vSpaceManager = entity.getItemValue("namSpaceManager");
+					vSpaceAssist = entity.getItemValue("namSpaceAssist");
+					vProcessTeam = entity.getItemValue("namProcessTeam");
+					vProcessManager = entity.getItemValue("namProcessManager");
+					vProcessAssist = entity.getItemValue("namAssist");
+					sSpaceName = entity.getItemValueString("txtSpaceName");
+					sProcessName = entity.getItemValueString("txtProcessname");
+				}
+			}
+		}
+
+		// update properties
+		workItem.replaceItemValue("namSpaceTeam", vSpaceTeam);
+		workItem.replaceItemValue("namSpaceManager", vSpaceManager);
+		workItem.replaceItemValue("namSpaceAssist", vSpaceManager);
+		workItem.replaceItemValue("namProcessTeam", vProcessTeam);
+		workItem.replaceItemValue("namProcessManager", vProcessManager);
+		workItem.replaceItemValue("namProcessAssist", vProcessManager);
+
+		// removed duplicates...
+		uniqueElements(workItem, "$UniqueIdRef");
+		uniqueElements(workItem, "txtProcessRef");
+		uniqueElements(workItem, "txtSpaceRef");
+
+		uniqueElements(workItem, "namSpaceTeam");
+		uniqueElements(workItem, "namSpaceManager");
+		uniqueElements(workItem, "namSpaceAssist");
+		uniqueElements(workItem, "namProcessTeam");
+		uniqueElements(workItem, "namProcessManager");
+		uniqueElements(workItem, "namProcessAssist");
+
+		logger.fine("[TeamPlugin] new ProcessName= " + sProcessName);
+		logger.fine("[TeamPlugin] new SpaceName= " + sSpaceName);
+		workItem.replaceItemValue("txtSpaceName", sSpaceName);
+		workItem.replaceItemValue("txtProcessName", sProcessName);
+
+		return Plugin.PLUGIN_OK;
+	}
+
+	@Override
+	public void close(int arg0) throws PluginException {
+		// no op
+
+	}
+
+	/**
+	 * Helper method to lookup an entity in internal cache or load it from
+	 * database
+	 * 
+	 * @param id
+	 * @return entity or null if not exits
+	 */
+	private ItemCollection fetchEntity(String id) {
+
+		ItemCollection entity = entityCache.get(id);
+		if (entity == null) {
+			// load entity
+			entity = entityService.load(id);
+
+			if (entity == null) {
+				// add a dummy entry....
+				entity = new ItemCollection();
+
+			}
+			// cache entity
+			entityCache.put(id, entity);
+
+		}
+
+		// if entity is dummy return null
+		if (entity.getItemValueString(EntityService.UNIQUEID).isEmpty())
+			return null;
+		else
+			return entity;
+
+	}
+
+	private String fetchRefFromActivity(String type,
+			ItemCollection documentActivity) throws PluginException {
+
+		String sRef = null;
+		// Read workflow result directly from the activity definition
+		String sResult = documentActivity
+				.getItemValueString("txtActivityResult");
+
+		ItemCollection evalItemCollection = new ItemCollection();
+		ResultPlugin.evaluate(sResult, evalItemCollection);
+		String aActivityRefName = evalItemCollection.getItemValueString(type);
+
+		// 1.) check if a new space reference is defined in the current
+		// activity. This will overwrite the current value!!
+		if (!"".equals(aActivityRefName)) {
+			// load space entity
+			ItemCollection entity = findRefByName(aActivityRefName, type);
+			if (entity != null) {
+				sRef = entity.getItemValueString(EntityService.UNIQUEID);
+				logger.fine("[TeamPlugin] found ref from Activity for: "
+						+ aActivityRefName);
+			} else {
+				// throw a PLuginException
+				throw new PluginException(
+						TeamPlugin.class.getSimpleName(),
+						INVALID_REFERENCE_ASSIGNED_BY_MODEL,
+						type
+								+ " '"
+								+ aActivityRefName
+								+ "' defined by the current model can not be found!");
+			}
+		}
+		return sRef;
+	}
+
+	/**
+	 * This method returns a project ItemCollection for a specified name.
+	 * Returns null if no project with the provided name was found
+	 * 
+	 */
+	private ItemCollection findRefByName(String aName, String type) {
+		String sQuery = "SELECT project FROM Entity AS project "
+				+ " JOIN project.textItems AS t2" + " WHERE  project.type = '"
+				+ type + "' " + " AND t2.itemName = 'txtname' "
+				+ " AND t2.itemValue = '" + aName + "'";
+
+		List<ItemCollection> col = entityService.findAllEntities(sQuery, 0, 1);
+		if (col.size() > 0) {
+			// update cache
+			ItemCollection entity = col.iterator().next();
+			entityCache.put(entity.getItemValueString(EntityService.UNIQUEID),
+					entity);
+			return entity;
+		} else
+			return null;
+	}
+
+	/**
+	 * This method will remove empty or duplicate values from a list
+	 * 
+	 * @param target
+	 * @param source
+	 * @return
+	 */
+	private void uniqueElements(ItemCollection entity, String field) {
+		Vector<String> target = new Vector<String>();
+		@SuppressWarnings("unchecked")
+		List<String> source = entity.getItemValue(field);
+
+		for (String entry : source) {
+			if (entry != null && !entry.isEmpty() && !target.contains(entry))
+				target.add(entry);
+		}
+		entity.replaceItemValue(field, target);
+	}
+
+	@Deprecated
+	private int runOld(ItemCollection workItem, ItemCollection documentActivity)
 			throws PluginException {
 
 		Map<String, ItemCollection> cacheRef = new HashMap<String, ItemCollection>();
@@ -234,7 +557,7 @@ public class TeamPlugin extends AbstractPlugin {
 				// throw a PLuginException
 				throw new PluginException(
 						TeamPlugin.class.getSimpleName(),
-						INVALID_SPACE_ASSIGNED_BY_MODEL,
+						INVALID_REFERENCE_ASSIGNED_BY_MODEL,
 						"Space '"
 								+ aActivitySpaceName
 								+ "' defined by the current model can not be found!");
@@ -285,7 +608,7 @@ public class TeamPlugin extends AbstractPlugin {
 			} else {
 				throw new PluginException(
 						TeamPlugin.class.getSimpleName(),
-						INVALID_PROCESS_ASSIGNED_BY_MODEL,
+						INVALID_REFERENCE_ASSIGNED_BY_MODEL,
 						"Process '"
 								+ aActivityProcessName
 								+ "' defined by the current model can not be found!");
@@ -403,27 +726,4 @@ public class TeamPlugin extends AbstractPlugin {
 		return Plugin.PLUGIN_OK;
 	}
 
-	@Override
-	public void close(int arg0) throws PluginException {
-		// no op
-
-	}
-
-	/**
-	 * This method returns a project ItemCollection for a specified name.
-	 * Returns null if no project with the provided name was found
-	 * 
-	 */
-	public ItemCollection findRefByName(String aName, String type) {
-		String sQuery = "SELECT project FROM Entity AS project "
-				+ " JOIN project.textItems AS t2" + " WHERE  project.type = '"
-				+ type + "' " + " AND t2.itemName = 'txtname' "
-				+ " AND t2.itemValue = '" + aName + "'";
-
-		List<ItemCollection> col = entityService.findAllEntities(sQuery, 0, 1);
-		if (col.size() > 0)
-			return col.iterator().next();
-		else
-			return null;
-	}
 }
