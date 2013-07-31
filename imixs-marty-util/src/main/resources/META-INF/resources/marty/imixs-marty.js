@@ -38,7 +38,27 @@ $(document).ready(function() {
 
 
 	// this is the support for the marty userinput widget
-	$(".marty-userinput-inputbox [id$=\\:username_input]").each(function(index, input) {
+	initUserInput(document.body);
+	
+});
+
+var delayEvent = (function() {
+	
+    var timer = 0;
+    return function(callback, timeout) {
+        clearTimeout(timer);
+        timer = setTimeout(callback, timeout);
+    };
+})();
+
+
+
+
+
+
+function initUserInput(context) {
+	// this is the support for the marty userinput widget
+	$(".marty-userinput-inputbox [id$=\\:username_input]",context).each(function(index, input) {
 
 		// id 
     	var inputfield_id=$(this).next('input');
@@ -48,7 +68,6 @@ $(document).ready(function() {
 		input.onblur = null;	
     	// reset the username and userId input on blur event 
 	    $(input).on("blur", function(event) {
-	    	
 	    		
 	    	// reset userid to '' ? 
 	    	if ($(this).val()=='')
@@ -76,20 +95,7 @@ $(document).ready(function() {
 		inputfield_display.hide();
 	});
 	
-	
-});
-
-var delayEvent = (function() {
-	
-    var timer = 0;
-    return function(callback, timeout) {
-        clearTimeout(timer);
-        timer = setTimeout(callback, timeout);
-    };
-})();
-
-
-
+}
 
 
 /*
