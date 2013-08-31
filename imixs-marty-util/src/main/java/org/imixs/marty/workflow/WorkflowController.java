@@ -429,6 +429,16 @@ public class WorkflowController extends
 	}
 
 	/**
+	 * The action method overrides the default process method and provides an
+	 * optional action event param.
+	 **/
+	public String process(String actionResult) throws AccessDeniedException,
+			ProcessingErrorException {
+		this.process();
+		return actionResult;
+	}
+
+	/**
 	 * This method moves a workitem into the archive by appending the sufix
 	 * 'archive' to the attribute type. The Lucene search index will be
 	 * automatically updated by the workitemService.

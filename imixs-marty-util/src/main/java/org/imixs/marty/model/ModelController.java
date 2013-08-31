@@ -356,7 +356,8 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * Returns the first ProcessEntity in a specified workflow group
+	 * Returns the first ProcessEntity in a specified workflow group. 
+	 * 
 	 * 
 	 * @param group
 	 *            - name of group
