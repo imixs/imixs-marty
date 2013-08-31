@@ -226,8 +226,10 @@ public class ProfileService {
 				+ " JOIN profile.textItems AS t1"
 				+ " JOIN profile.textItems AS t2"
 				+ " WHERE  profile.type= 'profile' "
-				+ " AND (  (t1.itemName = 'txtusername' AND t1.itemValue = '"+ search + "') "
-				+ "      OR(t2.itemName = 'txtemail' AND t2.itemValue = '"+ search + "')) ";
+				+ " AND (  (t1.itemName = 'txtusername' AND t1.itemValue = '"
+				+ search + "') "
+				+ "      OR(t2.itemName = 'txtemail' AND t2.itemValue = '"
+				+ search + "')) ";
 
 		logger.finest("searchprofile: " + sQuery);
 
@@ -245,14 +247,13 @@ public class ProfileService {
 
 	/**
 	 * This method removes a profile from the cache.
+	 * 
 	 * @param userid
 	 */
 	public void discardCache(String userid) {
 		cache.remove(userid);
 	}
-	
-	
-	
+
 	public static ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
 		ItemCollection clone = new ItemCollection();
 
@@ -274,6 +275,7 @@ public class ProfileService {
 		clone.replaceItemValue("txtUserName",
 				aWorkitem.getItemValue("txtUserName"));
 		clone.replaceItemValue("txtEmail", aWorkitem.getItemValue("txtEmail"));
+		clone.replaceItemValue("namdeputy", aWorkitem.getItemValue("namdeputy"));
 
 		return clone;
 	}
