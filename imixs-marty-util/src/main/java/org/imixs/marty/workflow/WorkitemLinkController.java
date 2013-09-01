@@ -72,7 +72,6 @@ public class WorkitemLinkController implements Serializable {
 	@EJB
 	protected WorkflowService workflowService;
 
-
 	private static final long serialVersionUID = 1L;
 	private List<ItemCollection> searchResult = null;
 	private List<ItemCollection> externalReferences = null;
@@ -85,7 +84,6 @@ public class WorkitemLinkController implements Serializable {
 		searchResult = new ArrayList<ItemCollection>();
 	}
 
-
 	public String getInput() {
 		return input;
 	}
@@ -94,17 +92,15 @@ public class WorkitemLinkController implements Serializable {
 		this.input = input;
 	}
 
-	
-	
 	/**
 	 * This method reset the search and input state.
 	 */
 	public void reset() {
 		searchResult = new ArrayList<ItemCollection>();
-		input="";
+		input = "";
 		logger.fine("workitemLinkController reset");
 	}
-	
+
 	/**
 	 * This ajax event method reset the search and input state.
 	 * 
@@ -113,8 +109,6 @@ public class WorkitemLinkController implements Serializable {
 	public void reset(AjaxBehaviorEvent event) {
 		reset();
 	}
-
-	
 
 	/*
 	 * Starts a lucene search to provide searchResult for suggest list
@@ -129,6 +123,10 @@ public class WorkitemLinkController implements Serializable {
 
 		try {
 			String sSearchTerm = "";
+			
+			// search only type workitem and workitemsarchive
+			sSearchTerm+="((type:workitem) OR (type:workitemarchive)) AND "; 
+			
 			if (filter != null && !"".equals(filter)) {
 				String sNewFilter = filter;
 				sNewFilter = sNewFilter.replace(".", "?");
@@ -157,7 +155,6 @@ public class WorkitemLinkController implements Serializable {
 
 	/**
 	 * This methods adds a new workItem reference
-	
 	 */
 	public void add(String aUniqueID, ItemCollection workitem) {
 
@@ -180,11 +177,9 @@ public class WorkitemLinkController implements Serializable {
 		reset(null);
 		references = null;
 	}
-	
 
 	/**
 	 * This methods removes a workItem reference
-	
 	 */
 	public void remove(String aUniqueID, ItemCollection workitem) {
 
@@ -193,17 +188,15 @@ public class WorkitemLinkController implements Serializable {
 		@SuppressWarnings("unchecked")
 		List<String> refList = workitem.getItemValue(LINK_PROPERTY);
 
-		
 		// test if a member of
 		if (refList.indexOf(aUniqueID) > -1) {
-			refList.remove(aUniqueID);			
+			refList.remove(aUniqueID);
 			workitem.replaceItemValue(LINK_PROPERTY, refList);
 		}
 		// reset
 		reset(null);
 		references = null;
 	}
-
 
 	/**
 	 * This method returns a list of ItemCollections refered by the current
@@ -243,7 +236,7 @@ public class WorkitemLinkController implements Serializable {
 
 			// start query and filter the result
 			String sQuery = "SELECT entity FROM Entity entity "
-					+ " WHERE entity.type = 'workitem' AND entity.id IN (";
+					+ " WHERE entity.type IN ('workitem','workitemarchive') AND entity.id IN (";
 			for (String aID : list) {
 				sQuery += "'" + aID + "',";
 			}
@@ -303,7 +296,7 @@ public class WorkitemLinkController implements Serializable {
 		// select all references.....
 		String sQuery = "SELECT workitem FROM Entity AS workitem"
 				+ " JOIN workitem.textItems AS rnr"
-				+ " WHERE workitem.type = 'workitem' "
+				+ " WHERE workitem.type IN ('workitem','workitemarchive') "
 				+ " AND rnr.itemName = '" + LINK_PROPERTY + "'"
 				+ " AND rnr.itemValue='" + uniqueid + "'"
 				+ " ORDER BY workitem.created DESC";
@@ -337,10 +330,10 @@ public class WorkitemLinkController implements Serializable {
 	 */
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent)
 			throws AccessDeniedException {
-		
+
 		// reset suggest list state
 		reset();
-				
+
 		if (workflowEvent == null)
 			return;
 
