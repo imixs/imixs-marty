@@ -95,10 +95,22 @@ public class WorkflowController extends
 
 	private List<ItemCollection> versions = null;
 	private List<EditorSection> editorSections = null;
+	private String action = null; // optional page result
 
 	public WorkflowController() {
 		super();
 
+	}
+
+	/**
+	 * Defines an optinal Action Result used by the process method
+	 */
+	public String getAction() {
+		return action;
+	}
+
+	public void setAction(String action) {
+		this.action = action;
 	}
 
 	/**
@@ -425,16 +437,13 @@ public class WorkflowController extends
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_AFTER_PROCESS));
 
-		return actionResult;
-	}
+		// if a action is defined by the workflowController, then this action will be the action result String
+		if (action != null && !action.isEmpty()) {
+			actionResult = action;
+			// reset action
+			setAction(null);
+		}
 
-	/**
-	 * The action method overrides the default process method and provides an
-	 * optional action event param.
-	 **/
-	public String process(String actionResult) throws AccessDeniedException,
-			ProcessingErrorException {
-		this.process();
 		return actionResult;
 	}
 
