@@ -313,7 +313,7 @@ public class UserController implements Serializable {
 		if (userProfile != null)
 			return userProfile.getItemValueString("txtuserName");
 		else
-			return null;
+			return aAccount;
 	}
 
 	/**
