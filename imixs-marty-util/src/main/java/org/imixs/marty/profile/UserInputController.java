@@ -65,7 +65,6 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 @SessionScoped
 public class UserInputController implements Serializable {
 
-	
 	@Inject
 	protected WorkflowController workflowController;
 
@@ -80,9 +79,9 @@ public class UserInputController implements Serializable {
 	private String input = null;
 	private static final long serialVersionUID = 1L;
 	private int maxSearchCount = 30;
-	private static Logger logger = Logger.getLogger(UserInputController.class.getName());
+	private static Logger logger = Logger.getLogger(UserInputController.class
+			.getName());
 
-	
 	public UserInputController() {
 		super();
 		searchResult = new ArrayList<ItemCollection>();
@@ -101,7 +100,8 @@ public class UserInputController implements Serializable {
 	}
 
 	/**
-	 * Set the maximum length of a search result 
+	 * Set the maximum length of a search result
+	 * 
 	 * @param maxSearchCount
 	 */
 	public void setMaxSearchCount(int maxSearchCount) {
@@ -116,7 +116,7 @@ public class UserInputController implements Serializable {
 		input = "";
 		logger.fine("userInputController reset");
 	}
-	
+
 	/**
 	 * This ajax event method reset the search and input state.
 	 * 
@@ -205,25 +205,33 @@ public class UserInputController implements Serializable {
 			aList.add(aName);
 		}
 	}
-	
-//	public void add(String aName, String aValue) {
-//		if (aList == null)
-//			return;
-//
-//		if (!aList.contains(aName)) {
-//			logger.fine("userInputController add '" + aName + "' from list.");
-//			aList.add(aName);
-//		}
-//	}
 
+	
 	/**
 	 * This methods removes a name from the userid list
 	 */
 	public void remove(String aName, List<Object> aList) {
-		if (aList == null)
+		if (aList == null || aName==null)
 			return;
 		logger.fine("userInputController remove '" + aName + "' from list.");
-		aList.remove(aName);
+
+		// in some cases the username can be stored in wrong upper/lower case.
+		// This is the reason for a special double check
+		if (aList.contains(aName)) {
+			aList.remove(aName);
+		} else {
+			// here we try to find the entry ignoring upper/lower case ....
+			for (Object aEntry: aList) {
+				if (aEntry!=null) {
+					String aValue=aEntry.toString().toLowerCase();
+					if (aValue.equals(aName.toLowerCase())) {
+						logger.warning("userInputController remove '" + aName + "' from list ignoring upper/lower case!");
+						aList.remove(aEntry);
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -270,10 +278,10 @@ public class UserInputController implements Serializable {
 	 */
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent)
 			throws AccessDeniedException {
-		
+
 		// reset state
 		reset();
-		
+
 	}
 
 }
