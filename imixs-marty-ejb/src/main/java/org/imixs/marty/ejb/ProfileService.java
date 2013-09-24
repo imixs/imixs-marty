@@ -89,8 +89,7 @@ public class ProfileService {
 
 	/**
 	 * This method returns a profile by its id. The method uses an internal
-	 * cache. If no name is provided the remote user name will by used to find
-	 * the profile. The method returns null if no Profile for this name was
+	 * cache. The method returns null if no Profile for this name was
 	 * found
 	 * 
 	 * The returned workitem is a cloned version of the profile entity and can
@@ -108,8 +107,7 @@ public class ProfileService {
 
 	/**
 	 * This method returns a profile by its id. The method uses an internal
-	 * cache. If no name is provided the remote user name will by used to find
-	 * the profile. The method returns null if no Profile for this name was
+	 * cache. The method returns null if no Profile for this name was
 	 * found.
 	 * 
 	 * The returned workitem is a cloned version of the profile entity and can
@@ -128,7 +126,8 @@ public class ProfileService {
 	public ItemCollection findProfileById(String userid, boolean refresh) {
 
 		if (userid == null || userid.isEmpty())
-			userid = ctx.getCallerPrincipal().getName();
+			//userid = ctx.getCallerPrincipal().getName();
+			return null;
 
 		// try to get name out from cache
 		ItemCollection userProfile = null;

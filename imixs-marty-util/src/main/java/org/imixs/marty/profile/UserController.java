@@ -353,10 +353,6 @@ public class UserController implements Serializable {
 			ErrorHandler.handlePluginException(e);
 		}
 
-		// recache current user data...
-		// done by the profilePlugin
-		// profileService.findProfileById(workitem.getItemValueString("txtName"),
-		// true);
 
 		// get default workflowResult message
 		String action = workitem.getItemValueString("txtworkflowresultmessage");
