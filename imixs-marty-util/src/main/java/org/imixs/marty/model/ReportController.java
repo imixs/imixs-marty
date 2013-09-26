@@ -1,11 +1,14 @@
 package org.imixs.marty.model;
 
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
 
 import org.imixs.workflow.ItemCollection;
@@ -13,13 +16,17 @@ import org.imixs.workflow.jee.ejb.ReportService;
 import org.imixs.workflow.jee.faces.workitem.DataController;
 
 @Named("reportController")
-@ApplicationScoped
+@SessionScoped
 public class ReportController extends DataController {
 
 	@EJB
 	protected ReportService reportService;
 
 	Map<String, String> params;
+
+	String uri = null;
+	String format = null;
+	String encoding=null;
 
 	private static final long serialVersionUID = 1L;
 	private static Logger logger = Logger.getLogger(ReportController.class
@@ -66,6 +73,64 @@ public class ReportController extends DataController {
 		}
 
 		return params;
+	}
+
+	/**
+	 * Returns the Rest Service URI
+	 * 
+	 * @return
+	 */
+	public String getUri() {
+		logger.fine("[ReportController] Update uri...");
+
+		String sReport = this.getWorkitem().getItemValueString("txtName");
+		// cut . char
+		if (sReport.contains(".")) {
+			sReport=sReport.substring(0,sReport.indexOf('.')-1);
+		}
+		
+		
+		
+		uri = "/office-rest/report/" + sReport + "." + getFormat() + "?count=-1";
+
+		if (encoding!=null &&  !encoding.isEmpty()) {
+			uri += "&encoding="+ encoding;
+		}
+		
+		// now parse params....
+		if (params != null) {
+			Set<Entry<String, String>> set = params.entrySet();
+			for (Entry<String, String> entry : set) {
+				uri += "&" + entry.getKey() + "=" + entry.getValue();
+			}
+		}
+
+		logger.fine("[ReportController] uri=" + uri);
+
+		return uri;
+	}
+
+	public void setUri(String uri) {
+		this.uri = uri;
+	}
+
+	public String getFormat() {
+		if (format==null || format.isEmpty())
+			format="html";
+		
+		return format;
+	}
+
+	public void setFormat(String format) {
+		this.format = format;
+	}
+
+	public String getEncoding() {
+		return encoding;
+	}
+
+	public void setEncoding(String encoding) {
+		this.encoding = encoding;
 	}
 
 }
