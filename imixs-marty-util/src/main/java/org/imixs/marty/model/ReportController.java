@@ -86,12 +86,12 @@ public class ReportController extends DataController {
 		String sReport = this.getWorkitem().getItemValueString("txtName");
 		// cut . char
 		if (sReport.contains(".")) {
-			sReport=sReport.substring(0,sReport.indexOf('.')-1);
+			sReport=sReport.substring(0,sReport.indexOf('.'));
 		}
 		
 		
 		
-		uri = "/office-rest/report/" + sReport + "." + getFormat() + "?count=-1";
+		uri = "/rest-service/report/" + sReport + "." + getFormat() + "?count=-1";
 
 		if (encoding!=null &&  !encoding.isEmpty()) {
 			uri += "&encoding="+ encoding;
