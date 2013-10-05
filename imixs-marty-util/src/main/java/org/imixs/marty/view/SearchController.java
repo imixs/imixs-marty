@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.enterprise.event.Observes;
 import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -44,6 +45,7 @@ import javax.inject.Named;
 import org.imixs.marty.config.SetupController;
 import org.imixs.marty.profile.UserController;
 import org.imixs.marty.util.WorkitemHelper;
+import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
@@ -143,9 +145,9 @@ public class SearchController extends
 		super.doReset(event);
 	}
 
-
 	/**
 	 * rebuilds the full text search index for all workitems
+	 * 
 	 * @param event
 	 * @throws Exception
 	 */
@@ -171,33 +173,60 @@ public class SearchController extends
 				hasMoreData = false;
 			startpos = startpos + col.size();
 			totalcount = totalcount + col.size();
-			logger.info("[SearchController]  UpdateFulltextIndex - read " + totalcount
-					+ " workitems....");
+			logger.info("[SearchController]  UpdateFulltextIndex - read "
+					+ totalcount + " workitems....");
 
 			icount = icount + col.size();
 			// Update index
 			LucenePlugin.updateWorklist(col);
 
 		}
-		logger.info("[SearchController]  UpdateFulltextIndex finished - " + icount
-				+ " workitems updated in "
+		logger.info("[SearchController]  UpdateFulltextIndex finished - "
+				+ icount + " workitems updated in "
 				+ (System.currentTimeMillis() - ltime) + " ms");
 
 	}
-	
-	
+
 	/**
 	 * Searches for the a search phrase. The search phrase is stored in the
 	 * search filter property 'txtSearch' which is evaluated by the ViewAdapter.
 	 * 
-	 * @param phrase - search phrase
-	 * @param action - jsf navigation action
+	 * @param phrase
+	 *            - search phrase
+	 * @param action
+	 *            - jsf navigation action
 	 */
 	public String search(String phrase, String action) {
 
 		searchFilter.replaceItemValue("txtSearch", phrase);
 
 		return action;
+	}
+
+	/**
+	 * WorkflowEvent listener listens to WORKITEM events and reset the result
+	 * list after changing a workitem.
+	 * 
+	 * @param workflowEvent
+	 * 
+	 **/
+	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
+		if (workflowEvent == null || workflowEvent.getWorkitem() == null) {
+			return;
+		}
+
+		// skip if not a workItem...
+		if (!workflowEvent.getWorkitem().getItemValueString("type")
+				.startsWith("workitem"))
+			return;
+
+		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
+				.getEventType()
+				|| WorkflowEvent.WORKITEM_AFTER_SOFTDELETE == workflowEvent
+						.getEventType()) {
+			doRefresh();
+		}
+
 	}
 
 	public ItemCollection getSearchFilter() {
