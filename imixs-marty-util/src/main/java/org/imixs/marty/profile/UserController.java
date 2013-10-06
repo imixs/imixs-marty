@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.enterprise.event.Observes;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,6 +44,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.util.ErrorHandler;
+import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
@@ -79,24 +81,21 @@ public class UserController implements Serializable {
 	public final static String DEFAULT_LOCALE = "de_DE";
 	public final static String COOKIE_LOCALE = "imixs.workflow.locale";
 
+	@EJB
+	protected ProfileService profileService;
 
 	@EJB
-	protected  ProfileService profileService;
+	protected PropertyService propertyService;
 
 	@EJB
-	protected   PropertyService propertyService;
+	protected EntityService entityService;
 
 	@EJB
-	protected  EntityService entityService;
-
-	@EJB
-	protected  WorkflowService workflowService;
-
+	protected WorkflowService workflowService;
 
 	@Inject
-	protected  LoginController loginController;
+	protected LoginController loginController;
 
-	
 	private static final long serialVersionUID = 1L;
 	private ItemCollection workitem = null;
 	private boolean profileLoaded = false;
@@ -150,8 +149,10 @@ public class UserController implements Serializable {
 					profile = workflowService.processWorkItem(profile);
 				} catch (PluginException e) {
 					logger.severe("[UserController] unable to process new profile entity!");
-					throw new ProcessingErrorException(UserController.class.getName(),
-							ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!",e);
+					throw new ProcessingErrorException(
+							UserController.class.getName(),
+							ProcessingErrorException.INVALID_WORKITEM,
+							" unable to process new profile entity!", e);
 				}
 				logger.info("New Profile created ");
 
@@ -169,8 +170,10 @@ public class UserController implements Serializable {
 							profile = workflowService.processWorkItem(profile);
 						} catch (PluginException e) {
 							logger.severe("[UserController] unable to process new profile entity!");
-							throw new ProcessingErrorException(UserController.class.getName(),
-									ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!",e);
+							throw new ProcessingErrorException(
+									UserController.class.getName(),
+									ProcessingErrorException.INVALID_WORKITEM,
+									" unable to process new profile entity!", e);
 						}
 
 					}
@@ -340,7 +343,7 @@ public class UserController implements Serializable {
 	 * 
 	 * @return action result
 	 * @throws AccessDeniedException
-	 * @throws  
+	 * @throws
 	 */
 	public String process() throws AccessDeniedException,
 			ProcessingErrorException {
@@ -353,10 +356,42 @@ public class UserController implements Serializable {
 			ErrorHandler.handlePluginException(e);
 		}
 
-
 		// get default workflowResult message
 		String action = workitem.getItemValueString("txtworkflowresultmessage");
 		return ("".equals(action) ? null : action);
+
+	}
+
+	/**
+	 * WorkflowEvent listener listens to WORKITEM events to reset the current
+	 * username workitem if processed.
+	 * 
+	 * @param workflowEvent
+	 * 
+	 **/
+	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
+		if (workflowEvent == null || workflowEvent.getWorkitem() == null) {
+			return;
+		}
+
+		// skip if not a profile...
+		if (!workflowEvent.getWorkitem().getItemValueString("type")
+				.equals("profile"))
+			return;
+
+		// discared cached user profile
+		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
+				.getEventType()) {
+
+			// check if current user profile was processed....
+			String sName = workflowEvent.getWorkitem().getItemValueString(
+					"txtName");
+			if (sName.equals(this.getWorkitem().getItemValueString("txtName"))) {
+				logger.info("[UserController] reload current user profile");
+				setWorkitem(workflowEvent.getWorkitem());
+			}
+
+		}
 
 	}
 
@@ -388,7 +423,7 @@ public class UserController implements Serializable {
 
 			if (sLocale.indexOf('_') > -1) {
 				String language = sLocale.substring(0, sLocale.indexOf('_'));
-				String country = sLocale.substring(sLocale.indexOf('_')+1);
+				String country = sLocale.substring(sLocale.indexOf('_') + 1);
 				profileLocale = new Locale(language, country);
 			} else {
 				profileLocale = new Locale(sLocale);
@@ -402,9 +437,5 @@ public class UserController implements Serializable {
 				.setLocale(profileLocale);
 
 	}
-	
-	
-	
-	
 
 }
