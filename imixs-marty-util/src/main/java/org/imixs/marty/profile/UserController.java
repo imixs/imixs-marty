@@ -364,7 +364,7 @@ public class UserController implements Serializable {
 
 	/**
 	 * WorkflowEvent listener listens to WORKITEM events to reset the current
-	 * username workitem if processed.
+	 * username workitem if processed. The method also updates the user Locale
 	 * 
 	 * @param workflowEvent
 	 * 
@@ -379,7 +379,7 @@ public class UserController implements Serializable {
 				.equals("profile"))
 			return;
 
-		// discared cached user profile
+		// discared cached user profile and update locale
 		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
 				.getEventType()) {
 
@@ -389,6 +389,9 @@ public class UserController implements Serializable {
 			if (sName.equals(this.getWorkitem().getItemValueString("txtName"))) {
 				logger.info("[UserController] reload current user profile");
 				setWorkitem(workflowEvent.getWorkitem());
+
+				// update locale
+				updateLocaleFromProfile();
 			}
 
 		}
@@ -430,6 +433,7 @@ public class UserController implements Serializable {
 			}
 		}
 
+		logger.info("[UserController] update user locale: " + profileLocale);
 		// reset locale to update cookie
 		setLocale(profileLocale);
 		// set locale for context
