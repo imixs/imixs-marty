@@ -29,6 +29,7 @@ package org.imixs.marty.profile;
 
 import java.io.Serializable;
 import java.util.Locale;
+import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -240,9 +241,24 @@ public class UserController implements Serializable {
 				for (int i = 0; i < cookie.length; i++) {
 					cookieName = cookie[i].getName();
 					if (cookieName.equals(COOKIE_LOCALE)) {
-						if (cookie[i].getValue() != null
-								&& !"".equals(cookie[i].getValue())) {
-							locale = new Locale(cookie[i].getValue());
+						String sLocale = cookie[i].getValue();
+						if (sLocale != null && !"".equals(sLocale)) {
+
+							// split locale
+							StringTokenizer stLocale = new StringTokenizer(
+									sLocale, "_");
+							if (stLocale.countTokens() == 1) {
+								// only language variant
+								String sLang = stLocale.nextToken();
+								String sCount=sLang.toUpperCase();
+								locale = new Locale(sLang, sCount);
+							} else {
+								// language and country
+								String sLang = stLocale.nextToken();
+								String sCount = stLocale.nextToken();
+								locale = new Locale(sLang, sCount);
+							}
+
 						}
 						break;
 					}
