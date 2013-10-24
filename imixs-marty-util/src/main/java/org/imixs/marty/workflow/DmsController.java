@@ -69,7 +69,6 @@ import org.imixs.workflow.jee.faces.util.LoginController;
 @SessionScoped
 public class DmsController implements Serializable {
 
-	
 	@Inject
 	protected LoginController loginController = null;
 
@@ -84,7 +83,6 @@ public class DmsController implements Serializable {
 	private List<ItemCollection> dmsList = null;
 	private ItemCollection blobWorkitem = null;
 
-	
 	@PostConstruct
 	public void init() {
 
@@ -106,11 +104,17 @@ public class DmsController implements Serializable {
 	 * WorkflowEvent listener to update the DMS property if a WorkItem has
 	 * changed.
 	 * 
-	 * If a WorkItem was processed the method saves the BlobWorkitem
+	 * Newly attached files will be transfered into the BlobWorkitem. The
+	 * BlobWorkitem will be saved before the workitem is processed.
 	 * 
-	 * NOTE: if a plug-in adds a new file (like the reportPlugIn), and the
-	 * plug-in also updates the $file information of the parent WorkItem, then
-	 * the DMS property will be updated by the DmsController.
+	 * The read and write access for a BlobWorkitem will be updated by the
+	 * org.imixs.marty.plugins.BlobPlubin.
+	 * 
+	 * The DMSController also updates the file Properties after a workitem was
+	 * processed. This is because a plug-in can add a new file (like the
+	 * reportPlugIn), and so the plug-in also updates the $file information of
+	 * the parent WorkItem. For that reason the DMS property will be updated by
+	 * the DmsController on the WorkflowEvent WORKITEM_AFTER_PROCESS
 	 * 
 	 * @param workflowEvent
 	 * @throws AccessDeniedException
@@ -148,20 +152,16 @@ public class DmsController implements Serializable {
 			blobWorkitem = workflowController.loadBlobWorkitem(workflowEvent
 					.getWorkitem());
 
-			// test if blobworkItem is yet connected (property
-			// '$BlobWorkitem')
-			if (!workflowEvent.getWorkitem().hasItem("$BlobWorkitem")) {
-				// store the $BlobWorkitem
-				workflowEvent
-						.getWorkitem()
-						.replaceItemValue(
-								"$BlobWorkitem",
-								blobWorkitem
-										.getItemValueString(EntityService.UNIQUEID));
-				// save the blob workItem (which is still empty)
-				blobWorkitem = workflowController.saveBlobWorkitem(
-						blobWorkitem, workflowEvent.getWorkitem());
-			}
+			// update property '$BlobWorkitem'
+			workflowEvent.getWorkitem().replaceItemValue("$BlobWorkitem",
+					blobWorkitem.getItemValueString(EntityService.UNIQUEID));
+
+			// add new attachmetns
+			fileUploadController.updateWorkitem(blobWorkitem, false);
+			// save blob workitem for further processing through plugins
+			blobWorkitem = workflowController.saveBlobWorkitem(blobWorkitem,
+					workflowEvent.getWorkitem());
+
 			// update the file info for the current workitem
 			fileUploadController.updateWorkitem(workflowEvent.getWorkitem(),
 					true);
@@ -171,25 +171,16 @@ public class DmsController implements Serializable {
 
 		}
 
+		// ...reload the blobWorkitem after processing the parent
+		// because a plugin can have changed it
 		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
 				.getEventType()) {
-			// update the blobWorkitem in any case (update $writeaccess!)
-			// ...reload the blobWorkitem after processing the parent
-			// because a plugin can have changed it
-			blobWorkitem = workflowController.loadBlobWorkitem(workflowEvent
-					.getWorkitem());
-			if (blobWorkitem != null) {
-				fileUploadController.updateWorkitem(blobWorkitem, false);
-				blobWorkitem=workflowController.saveBlobWorkitem(blobWorkitem,
-						workflowEvent.getWorkitem());
-			}
 
 			// update the fileuploadController
 			fileUploadController.doClear(null);
 			fileUploadController.setAttachedFiles(workflowEvent.getWorkitem()
 					.getFileNames());
-			
-			
+
 			// reload dms list
 			readDmsList(workflowEvent.getWorkitem());
 
