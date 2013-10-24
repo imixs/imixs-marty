@@ -305,6 +305,78 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
+	 * Returns a Space for a given uniqueID.
+	 * 
+	 * @param uniqueId
+	 * @return itemCollection of process or null if not process with the
+	 *         specified id exists
+	 */
+	public ItemCollection getSpaceById(String uniqueId) {
+
+		if (uniqueId != null && !uniqueId.isEmpty()) {
+			// iterate over all spaces and compare the $UniqueIDRef
+			List<ItemCollection> list = getProcessList();
+			for (ItemCollection process : list) {
+				if (uniqueId.equals(process
+						.getItemValueString(EntityService.UNIQUEID))) {
+					return process;
+				}
+			}
+		}
+		return null;
+	}
+
+
+	/**
+	 * Returns a process by its name
+	 * 
+	 * @param name
+	 * @return itemCollection of process or null if not process with the
+	 *         specified id exists
+	 */
+	public ItemCollection getProcessByName(String name) {
+
+		if (name != null && !name.isEmpty()) {
+			// iterate over all processes and compare the txtname
+			List<ItemCollection> list = getProcessList();
+			for (ItemCollection process : list) {
+				if (name.equals(process
+						.getItemValueString("txtName"))) {
+					return process;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Returns a space by its name
+	 * 
+	 * @param name
+	 * @return itemCollection of process or null if not process with the
+	 *         specified id exists
+	 */
+	public ItemCollection getSpaceByName(String name) {
+
+		if (name != null && !name.isEmpty()) {
+			// iterate over all processes and compare the txtname
+			List<ItemCollection> list = getSpaces();
+			for (ItemCollection process : list) {
+				if (name.equals(process
+						.getItemValueString("txtName"))) {
+					return process;
+				}
+			}
+		}
+		return null;
+	}
+
+	
+	
+	
+	
+	
+	/**
 	 * Returns a list of all spaces which are assigned to a given process
 	 * entity.
 	 * 
