@@ -29,10 +29,7 @@ package org.imixs.marty.workflow;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Vector;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
@@ -41,9 +38,9 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.imixs.marty.plugins.DMSPlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
 import org.imixs.workflow.jee.faces.util.LoginController;
 
@@ -131,7 +128,9 @@ public class DmsController implements Serializable {
 			return;
 
 		// if workItem has changed, then update the dms list
-		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
+		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()
+				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
+						.getEventType()) {
 			fileUploadController.doClear(null);
 			if (workflowEvent.getWorkitem() != null) {
 				fileUploadController.setWorkitemID(workflowEvent.getWorkitem()
@@ -142,7 +141,8 @@ public class DmsController implements Serializable {
 			// reset blobWorkitem
 			blobWorkitem = null;
 			// load dms list
-			readDmsList(workflowEvent.getWorkitem());
+
+			dmsList = DMSPlugin.getDmsList(workflowEvent.getWorkitem());
 		}
 
 		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == workflowEvent
@@ -151,10 +151,6 @@ public class DmsController implements Serializable {
 			// load/create the blobWorkitem.....
 			blobWorkitem = workflowController.loadBlobWorkitem(workflowEvent
 					.getWorkitem());
-
-			// update property '$BlobWorkitem'
-			workflowEvent.getWorkitem().replaceItemValue("$BlobWorkitem",
-					blobWorkitem.getItemValueString(EntityService.UNIQUEID));
 
 			// add new attachmetns
 			fileUploadController.updateWorkitem(blobWorkitem, false);
@@ -167,22 +163,8 @@ public class DmsController implements Serializable {
 					true);
 
 			// store the dms list
-			storeDmsList(workflowEvent.getWorkitem());
-
-		}
-
-		// ...reload the blobWorkitem after processing the parent
-		// because a plugin can have changed it
-		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
-				.getEventType()) {
-
-			// update the fileuploadController
-			fileUploadController.doClear(null);
-			fileUploadController.setAttachedFiles(workflowEvent.getWorkitem()
-					.getFileNames());
-
-			// reload dms list
-			readDmsList(workflowEvent.getWorkitem());
+			DMSPlugin.setDmsList(workflowEvent.getWorkitem(), dmsList,
+					loginController.getUserPrincipal(), "");
 
 		}
 
@@ -221,106 +203,6 @@ public class DmsController implements Serializable {
 		fileUploadController.removeAttachmentAction(aFile);
 		workflowController.getWorkitem().removeFile(aFile);
 
-	}
-
-	/**
-	 * This method creates a new dmsList and reads all existing dms meta data
-	 * from the current workItem. The meta data is read from the property 'dms'.
-	 * 
-	 * If a file contained in the property '$file' is not part of the property
-	 * 'dms' the method will automatically create a new dms entry by calling the
-	 * method updateDmsList.
-	 * 
-	 * The dms property is saved during processing the workiItem.
-	 * 
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private void readDmsList(ItemCollection workitem) {
-		// build a new fileList and test if each file contained in the $files is
-		// listed
-		dmsList = new ArrayList<ItemCollection>();
-		if (workitem == null)
-			return;
-
-		List<Map> vDMS = workitem.getItemValue("dms");
-		// first we add all existing dms informations
-		for (Map aMetadata : vDMS) {
-			dmsList.add(new ItemCollection(aMetadata));
-		}
-		// add files which where not still part of the dms property.
-		updateDmsList(workitem);
-	}
-
-	/**
-	 * This method stores the dms meta information into the proeprty 'dms' from
-	 * a workItem.
-	 * 
-	 * @param workitem
-	 */
-	@SuppressWarnings("rawtypes")
-	private void storeDmsList(ItemCollection workitem) {
-		// first update the dmsList with new file entries
-		updateDmsList(workitem);
-		// get the current dms value....
-		Vector<Map> vDMSnew = new Vector<Map>();
-		for (ItemCollection aEntry : dmsList) {
-			vDMSnew.add(aEntry.getAllItems());
-		}
-		workitem.replaceItemValue("dms", vDMSnew);
-	}
-
-	/**
-	 * This method adds empty dms entries for new uploaded files or filesnames
-	 * which are still not contained in the dms list.
-	 * 
-	 * @param workitem
-	 */
-	private void updateDmsList(ItemCollection workitem) {
-
-		String uniqueIdRef = workitem.getItemValueString("$BlobWorkitem");
-		List<String> files = workitem.getFileNames();
-
-		// now we test for each file entry if a dms meta data entry still
-		// exists. If not we create a new one...
-		for (String aFilename : files) {
-
-			// test filename already exists
-			ItemCollection itemCol = findMetadata(aFilename);
-			if (itemCol == null) {
-
-				// no meta data exists.... create a new meta object
-				ItemCollection dmsEntry = new ItemCollection();
-
-				dmsEntry.replaceItemValue("txtname", aFilename);
-				dmsEntry.replaceItemValue("$uniqueidRef", uniqueIdRef);
-				dmsEntry.replaceItemValue("$created", new Date());
-				dmsEntry.replaceItemValue("namCreator",
-						loginController.getUserPrincipal());
-
-				dmsList.add(dmsEntry);
-			}
-
-		}
-	}
-
-	/**
-	 * This method returns the meta data of a specific file in the exiting
-	 * filelist.
-	 * 
-	 * @return
-	 */
-	private ItemCollection findMetadata(String aFilename) {
-
-		for (ItemCollection itemCol : dmsList) {
-			// test if filename matches...
-			String sName = itemCol.getItemValueString("txtName");
-			if (sName.equals(aFilename))
-				return itemCol;
-
-		}
-
-		// no matching meta data found!
-		return null;
 	}
 
 }
