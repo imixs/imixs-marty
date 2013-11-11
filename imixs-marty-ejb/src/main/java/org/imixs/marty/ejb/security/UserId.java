@@ -34,6 +34,8 @@ public class UserId implements java.io.Serializable {
 	 * A User will be automatically initialized with an id and password
 	 */
 	public UserId(String aid) {
+		if (aid!=null)
+			aid=aid.toLowerCase();
 		// Initialize time objects
 		this.id = aid;
 	}
@@ -49,6 +51,9 @@ public class UserId implements java.io.Serializable {
 	}
 
 	protected void setId(String aID) {
+		if (aID!=null)
+			aID=aID.toLowerCase();
+
 		id = aID;
 	}
 

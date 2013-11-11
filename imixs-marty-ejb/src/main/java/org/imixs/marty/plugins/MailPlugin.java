@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,6 +39,7 @@ import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
+import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.internet.AddressException;
@@ -78,15 +80,15 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
 	public static String PROFILESERVICE_NOT_BOUND = "PROFILESERVICE_NOT_BOUND";
 	public static String PROPERTYSERVICE_NOT_BOUND = "PROPERTYSERVICE_NOT_BOUND";
+	public static String INVALID_EMAIL = "INVALID_EMAIL";
 
 	private static Logger logger = Logger.getLogger(MailPlugin.class.getName());
 
-	
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
 
 		super.init(actx);
-		
+
 		// get workflow service instance
 		if (actx instanceof WorkflowService) {
 			// yes we are running in a WorkflowService EJB
@@ -127,7 +129,7 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 	public int run(ItemCollection documentContext,
 			ItemCollection documentActivity) throws PluginException {
 
-		if (this.getMailSession()!=null) {
+		if (this.getMailSession() != null) {
 
 			// run default functionality
 			int result = super.run(documentContext, documentActivity);
@@ -165,12 +167,16 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 	 */
 	@Override
 	public void close(int arg0) throws PluginException {
-		if (this.getMailSession()!=null) {
+		if (this.getMailSession() != null) {
 			// Test if a default From address was configured - if then change
 			// from property now!
 			if (propertyService != null) {
 				String sFrom = (String) propertyService.getProperties().get(
 						"mail.defaultSender");
+				String sTestRecipients = (String) propertyService
+						.getProperties().get("mail.testRecipients");
+
+				// test default from address...
 				if (sFrom != null && !"".equals(sFrom)) {
 
 					MimeMessage mailMessage = (MimeMessage) super
@@ -193,6 +199,42 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 						}
 					}
 				}
+
+				// test if TestReceipiens are defined...
+				if (sTestRecipients != null && !"".equals(sTestRecipients)) {
+					List<String> vRecipients = new Vector<String>();
+					// split multivalues
+					StringTokenizer st = new StringTokenizer(sTestRecipients,
+							",", false);
+					while (st.hasMoreElements()) {
+						vRecipients.add(st.nextToken().trim());
+					}
+
+					logger.info("[MailPlugin] - TestMode - forward to:");
+					for (String adr : vRecipients) {
+						logger.info("[MailPlugin]    " + adr);
+					}
+					try {
+						getMailMessage().setRecipients(
+								Message.RecipientType.CC, null);
+						getMailMessage().setRecipients(
+								Message.RecipientType.BCC, null);
+						getMailMessage().setRecipients(
+								Message.RecipientType.TO,
+								getInternetAddressArray(vRecipients));
+						// change subject
+						String sSubject = getMailMessage().getSubject();
+						getMailMessage().setSubject("[TEST]: " + sSubject);
+
+					} catch (MessagingException e) {
+						throw new PluginException(
+								ProfilePlugin.class.getSimpleName(),
+								INVALID_EMAIL,
+								"[MailPlugin] unable to set mail recipient: ",
+								e);
+					}
+				}
+
 			}
 			super.close(arg0);
 
@@ -236,7 +278,6 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		return super.getInternetAddress(aAddr);
 	}
 
-	
 	/**
 	 * This method lookups the emailadress for a given user account through the
 	 * ProfileService. If no profile is found or email is not valid the method
@@ -480,6 +521,31 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		}
 		return null;
 
+	}
+
+	/**
+	 * this method transforms a vector of emails into a InternetAddress Array.
+	 * 
+	 * @param aList
+	 * @return
+	 */
+	private InternetAddress[] getInternetAddressArray(List aList) {
+
+		// rebuild new InternetAddress array from TempVector...
+		InternetAddress[] receipsAdrs = new InternetAddress[aList.size()];
+		try {
+			for (int i = 0; i < aList.size(); i++) {
+				InternetAddress inetAddr;
+
+				inetAddr = new InternetAddress((String) aList.get(i));
+
+				receipsAdrs[i] = inetAddr;
+			}
+		} catch (AddressException e) {
+
+			e.printStackTrace();
+		}
+		return receipsAdrs;
 	}
 
 	/**
