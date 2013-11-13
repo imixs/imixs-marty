@@ -93,10 +93,6 @@ public class DMSPlugin extends AbstractPlugin {
 			// update property '$BlobWorkitem'
 			workitem.replaceItemValue("$BlobWorkitem",
 					blobWorkitem.getItemValueString(EntityService.UNIQUEID));
-
-			// update the dms list
-			// updateDmsList(workitem);
-			// storeDmsList(workitem);
 		}
 
 		return Plugin.PLUGIN_OK;
@@ -131,8 +127,6 @@ public class DMSPlugin extends AbstractPlugin {
 		for (Map aMetadata : vDMS) {
 			dmsList.add(new ItemCollection(aMetadata));
 		}
-		// add files which where not still part of the dms property.
-		// updateDmsList(workitem);
 
 		return dmsList;
 	}
@@ -165,6 +159,14 @@ public class DMSPlugin extends AbstractPlugin {
 		// check if some files are missing.....
 		List<String> files = aWorkitem.getFileNames();
 
+		String blobWorkitemId = aWorkitem.getItemValueString("$BlobWorkitem");
+		if (blobWorkitemId.isEmpty()) {
+			// WARNING we have no $BlobWorkitem - link can not be computed
+			logger.warning("[DMSPlugin] Workitem '"
+					+ aWorkitem.getItemValueString(EntityService.UNIQUEID)
+					+ "' $BlobWorkitem in is empty. File URL can not be computed!");
+		}
+
 		// now we test for each file entry if a dms meta data entry still
 		// exists. If not we create a new one...
 		for (String aFilename : files) {
@@ -172,18 +174,13 @@ public class DMSPlugin extends AbstractPlugin {
 			// test filename already exists
 			Map itemCol = findMetadata(aFilename, vDMSnew);
 			if (itemCol == null) {
-
 				// no meta data exists.... create a new meta object
 				Map dmsEntry = new HashMap();
-
 				dmsEntry.put("txtname", aFilename);
-				dmsEntry.put("$uniqueidRef",
-						aWorkitem.getItemValueString("$BlobWorkitem"));
+				dmsEntry.put("$uniqueidRef", blobWorkitemId);
 				dmsEntry.put("$created", new Date());
 				dmsEntry.put("namCreator", username);
-
 				dmsEntry.put("txtcomment", comment);
-
 				vDMSnew.add(dmsEntry);
 			}
 

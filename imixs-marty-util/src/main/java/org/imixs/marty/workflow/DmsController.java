@@ -41,6 +41,7 @@ import javax.inject.Named;
 import org.imixs.marty.plugins.DMSPlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
 import org.imixs.workflow.jee.faces.util.LoginController;
 
@@ -127,6 +128,35 @@ public class DmsController implements Serializable {
 						.startsWith("workitem"))
 			return;
 
+		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == workflowEvent
+				.getEventType()) {
+
+			// load/create the blobWorkitem.....
+			blobWorkitem = workflowController.loadBlobWorkitem(workflowEvent
+					.getWorkitem());
+
+			// if the BlobWorkitem was just created than we did not have yet set
+			// the field $BlobWorkitem
+			// so we update this property here
+			workflowEvent.getWorkitem().replaceItemValue("$BlobWorkitem",
+					blobWorkitem.getItemValueString(EntityService.UNIQUEID));
+
+			// add new attachmetns
+			fileUploadController.updateWorkitem(blobWorkitem, false);
+			// save blob workitem for further processing through plugins
+			blobWorkitem = workflowController.saveBlobWorkitem(blobWorkitem,
+					workflowEvent.getWorkitem());
+
+			// update the file info for the current workitem
+			fileUploadController.updateWorkitem(workflowEvent.getWorkitem(),
+					true);
+
+			// store the dms list
+			DMSPlugin.setDmsList(workflowEvent.getWorkitem(), dmsList,
+					loginController.getUserPrincipal(), "");
+
+		}
+
 		// if workItem has changed, then update the dms list
 		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()
 				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
@@ -143,29 +173,6 @@ public class DmsController implements Serializable {
 			// load dms list
 
 			dmsList = DMSPlugin.getDmsList(workflowEvent.getWorkitem());
-		}
-
-		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == workflowEvent
-				.getEventType()) {
-
-			// load/create the blobWorkitem.....
-			blobWorkitem = workflowController.loadBlobWorkitem(workflowEvent
-					.getWorkitem());
-
-			// add new attachmetns
-			fileUploadController.updateWorkitem(blobWorkitem, false);
-			// save blob workitem for further processing through plugins
-			blobWorkitem = workflowController.saveBlobWorkitem(blobWorkitem,
-					workflowEvent.getWorkitem());
-
-			// update the file info for the current workitem
-			fileUploadController.updateWorkitem(workflowEvent.getWorkitem(),
-					true);
-
-			// store the dms list
-			DMSPlugin.setDmsList(workflowEvent.getWorkitem(), dmsList,
-					loginController.getUserPrincipal(), "");
-
 		}
 
 	}
