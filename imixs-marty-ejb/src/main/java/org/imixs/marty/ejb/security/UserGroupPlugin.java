@@ -116,6 +116,15 @@ public class UserGroupPlugin extends AbstractPlugin {
 		if (!isUserDBEnabled())
 			return Plugin.PLUGIN_OK;
 
+		
+		// if processid=210 and activity=20 - delete all groups
+		int iProcessID=workitem.getItemValueInteger("$ProcessID");
+		int iActivityID=documentActivity.getItemValueInteger("numActivityID");
+		if (iProcessID==210 && iActivityID==20) {
+			workitem.replaceItemValue("txtGroups", "");
+		}
+		
+		
 		logger.fine("[UserGroupPlugin] update profile....");
 		userGroupService.updateUser(workitem);
 

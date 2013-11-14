@@ -56,8 +56,8 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 		     editmode="true" />
  * </code>
  * 
- * 
- * @author rsoika
+ *  
+ * @author rsoika 
  * @version 1.0
  */
 

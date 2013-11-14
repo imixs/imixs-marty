@@ -27,6 +27,7 @@
 
 package org.imixs.marty.profile;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Locale;
 import java.util.StringTokenizer;
@@ -159,6 +160,7 @@ public class UserController implements Serializable {
 
 			} else {
 				// check if profile.autoProcessOnLogin is defined
+
 				String sAutoProcessID = propertyService.getProperties()
 						.getProperty("profile.autoProcessOnLogin");
 				try {
@@ -250,7 +252,7 @@ public class UserController implements Serializable {
 							if (stLocale.countTokens() == 1) {
 								// only language variant
 								String sLang = stLocale.nextToken();
-								String sCount=sLang.toUpperCase();
+								String sCount = sLang.toUpperCase();
 								locale = new Locale(sLang, sCount);
 							} else {
 								// language and country
