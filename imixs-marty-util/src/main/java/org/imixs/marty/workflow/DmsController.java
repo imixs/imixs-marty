@@ -29,12 +29,16 @@ package org.imixs.marty.workflow;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -80,6 +84,7 @@ public class DmsController implements Serializable {
 
 	private List<ItemCollection> dmsList = null;
 	private ItemCollection blobWorkitem = null;
+	private String link=null;
 
 	@PostConstruct
 	public void init() {
@@ -90,6 +95,14 @@ public class DmsController implements Serializable {
 		fileUploadController.setRestServiceURI(path
 				+ "/rest-service/workflow/workitem/");
 
+	}
+
+	public String getLink() {
+		return link;
+	}
+
+	public void setLink(String link) {
+		this.link = link;
 	}
 
 	public void setFileUploadController(FileUploadController fleUploadController) {
@@ -211,5 +224,49 @@ public class DmsController implements Serializable {
 		workflowController.getWorkitem().removeFile(aFile);
 
 	}
+	
+	
+	
+	
+	
+	/**
+	 * This Method adds a new Link (url) into the DMS list.
+	 * 
+	 * @param event
+	 */
+	public void addLink(ActionEvent event) {
+		String sLink=getLink();
+		
+		if (sLink!= null && !"".equals(sLink)) {
+			
+		
+			// test for protocoll
+			if (!sLink.contains("://"))
+				sLink="http://"+ sLink;
+			
+			FacesContext context = FacesContext.getCurrentInstance();
+			ExternalContext externalContext = context.getExternalContext();
+			String remoteUser = externalContext.getRemoteUser();
+			
+
+			ItemCollection itemCol = new ItemCollection();
+			itemCol.replaceItemValue("url",sLink);
+			
+			itemCol.replaceItemValue("$created",new Date());
+			itemCol.replaceItemValue("$modified",new Date());
+			itemCol.replaceItemValue("namCreator", remoteUser);
+			itemCol.replaceItemValue("txtName", sLink);
+			dmsList.add(itemCol);
+			
+			
+			DMSPlugin.setDmsList(workflowController.getWorkitem(), dmsList);
+			
+			// clear link
+			setLink("");
+
+		}
+
+	}
+
 
 }
