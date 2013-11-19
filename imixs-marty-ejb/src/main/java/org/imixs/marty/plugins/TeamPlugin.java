@@ -261,12 +261,14 @@ public class TeamPlugin extends AbstractPlugin {
 
 			ItemCollection entity = fetchEntity(aUniqueID);
 			// check if this is a deprecated process ref
-			if ("process".equals(entity.getItemValueString("type"))
+			if (entity != null
+					&&  "process".equals(entity.getItemValueString("type"))
 					&& !processRefList.contains(aUniqueID)) {
 				logger.fine("[TeamPlugin] remove deprecated processRef "
 						+ aUniqueID);
 			} else {
-				if ("space".equals(entity.getItemValueString("type"))
+				if (entity != null
+						&& "space".equals(entity.getItemValueString("type"))
 						&& !spaceRefList.contains(aUniqueID)) {
 					logger.fine("[TeamPlugin] remove deprecated spaceRef "
 							+ aUniqueID);
