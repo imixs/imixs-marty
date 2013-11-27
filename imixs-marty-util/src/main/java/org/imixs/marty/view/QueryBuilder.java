@@ -1,16 +1,16 @@
 package org.imixs.marty.view;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
 
 import org.imixs.marty.ejb.ConfigService;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.util.PropertyService;
 
 /**
  * The default implementation of a QueryBuilder. The SearchController can use
@@ -25,6 +25,9 @@ public class QueryBuilder implements IQueryBuilder {
 
 	@EJB
 	private ConfigService configService;
+
+	@EJB
+	private PropertyService propertyService;
 
 	@Override
 	public String getSearchQuery(ItemCollection searchFilter) {
@@ -107,8 +110,39 @@ public class QueryBuilder implements IQueryBuilder {
 		String searchphrase = searchFilter.getItemValueString("txtSearch");
 
 		if (!"".equals(searchphrase)) {
-			sSearchTerm += " (*" + searchphrase.toLowerCase() + "*)";
+			// trim
+			searchphrase=searchphrase.trim();
+			// lower case....
+			searchphrase = searchphrase.toLowerCase();
+			// check the default operator
+			String defaultOperator = propertyService.getProperties()
+					.getProperty("lucence.defaultOperator");
+			if (defaultOperator != null
+					&& "AND".equals(defaultOperator.toUpperCase())) {
+				String[] segs = searchphrase.split(Pattern.quote(" "));
 
+				sSearchTerm += " (";
+				for (String seg : segs) {
+					sSearchTerm += " *" + seg + "* AND";
+				}
+				if (sSearchTerm.endsWith("AND"))
+					sSearchTerm = sSearchTerm.substring(0,
+							sSearchTerm.length() - 3);
+
+				sSearchTerm += ") ";
+
+			} else {
+				// because lucene parser default to OR operator no Operator is
+				// used here
+				String[] segs = searchphrase.split(Pattern.quote(" "));
+				sSearchTerm += " (";
+				for (String seg : segs) {
+					sSearchTerm += " *" + seg + "* ";
+				}
+
+				sSearchTerm += ") ";
+
+			}
 		} else
 		// cut last AND
 		if (sSearchTerm.endsWith("AND"))
