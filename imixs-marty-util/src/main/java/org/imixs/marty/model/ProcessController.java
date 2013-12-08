@@ -41,6 +41,7 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.imixs.marty.ejb.ProcessService;
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
@@ -76,6 +77,9 @@ public class ProcessController implements Serializable {
 
 	@EJB
 	protected EntityService entityService;
+	
+	@EJB
+	protected ProcessService processService;
 
 	private static Logger logger = Logger.getLogger(ProcessController.class
 			.getName());
@@ -101,71 +105,7 @@ public class ProcessController implements Serializable {
 	 */
 	public List<ItemCollection> getProcessList() {
 		if (processList == null) {
-			processList = new ArrayList<ItemCollection>();
-
-			String sQuery = "SELECT process FROM Entity AS process "
-					+ " JOIN process.textItems AS t2"
-					+ " WHERE process.type = 'process'"
-					+ " AND t2.itemName = 'txtname'"
-					+ " ORDER BY t2.itemValue asc";
-			Collection<ItemCollection> col = entityService.findAllEntities(
-					sQuery, 0, -1);
-
-			// create optimized list
-			for (ItemCollection process : col) {
-
-				ItemCollection clone = WorkitemHelper.clone(process);
-				clone.replaceItemValue("isTeam", false);
-				clone.replaceItemValue("isManager", false);
-
-				// check the isTeam status for the current user
-				List<String> userNameList = entityService.getUserNameList();
-				Vector<String> vNameList = (Vector<String>) process
-						.getItemValue("namTeam");
-				// check if one entry matches....
-				for (String username : userNameList) {
-					if (vNameList.indexOf(username) > -1) {
-						clone.replaceItemValue("isTeam", true);
-						break;
-					}
-				}
-				// check the isManager status for the current user
-				vNameList = (Vector<String>) process.getItemValue("namManager");
-				// check if one entry matches....
-				for (String username : userNameList) {
-					if (vNameList.indexOf(username) > -1) {
-						clone.replaceItemValue("isManager", true);
-						break;
-					}
-				}
-
-				// check the isAssist status for the current user
-				vNameList = (Vector<String>) process.getItemValue("namAssist");
-				// check if one entry matches....
-				for (String username : userNameList) {
-					if (vNameList.indexOf(username) > -1) {
-						clone.replaceItemValue("isAssist", true);
-						break;
-					}
-				}
-
-				// check if user is member of team or manager list
-				boolean bMember = false;
-				if (clone.getItemValueBoolean("isTeam")
-						|| clone.getItemValueBoolean("isManager")
-						|| clone.getItemValueBoolean("isAssist"))
-					bMember = true;
-				clone.replaceItemValue("isMember", bMember);
-
-				// add custom fields into clone...
-				clone.replaceItemValue("txtWorkflowList",
-						process.getItemValue("txtWorkflowList"));
-				clone.replaceItemValue("txtdescription",
-						process.getItemValue("txtdescription"));
-
-				processList.add(clone);
-
-			}
+			processList = processService.getProcessList();
 
 		}
 
