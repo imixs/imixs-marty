@@ -27,8 +27,9 @@
 
 package org.imixs.marty.profile;
 
-import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
@@ -65,9 +66,11 @@ import org.imixs.workflow.jee.util.PropertyService;
  * The user is identified by its principal user name. This name is mapped to the
  * attribute txtname.
  * 
+ * The UserController provides the user 'locale' and 'language' which is used in
+ * JSF Pages to display pages using the current user settings.
  * 
- * The Bean also provides the user 'locale' and 'language' which is used in JSF
- * Pages to display pages using the current user settings.
+ * With the methods mark() and unmark() workitems can be added into the users
+ * profile favorite list.
  * 
  * @author rsoika
  * 
@@ -102,7 +105,7 @@ public class UserController implements Serializable {
 	private ItemCollection workitem = null;
 	private boolean profileLoaded = false;
 	private Locale locale;
-
+	
 	private static Logger logger = Logger.getLogger(UserController.class
 			.getName());
 
@@ -413,6 +416,88 @@ public class UserController implements Serializable {
 			}
 
 		}
+
+	}
+
+	/**
+	 * Returns true if the uniqueid is stored in the profile favorites
+	 * 
+	 * @param id
+	 * @return
+	 */
+	public boolean isFavorite(String id) {
+		return getFavoriteIds().contains(id);
+	}
+
+	/**
+	 * Returns a list with all uniqueids stored in the profile favorites
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public List<String> getFavoriteIds() {
+		if (getWorkitem() == null)
+			return new ArrayList<String>();
+		return getWorkitem().getItemValue("txtWorkitemRef");
+	}
+
+	public void addFavorite(String id) {
+		if (getWorkitem() == null)
+			return;
+		
+		List<String> list=getFavoriteIds();
+		// we expect that the id is in the list-..
+		if (!list.contains(id)) {
+			logger.fine("[UserController] add WorkitemRef:" + id);
+			list.add(id);
+			workitem.replaceItemValue("txtWorkitemRef", list);
+			workitem = entityService.save(workitem);
+		}
+	}
+	
+	public void removeFavorite(String id) {
+		if (getWorkitem() == null)
+			return;
+		
+		List<String> list=getFavoriteIds();
+		// we expect that the id is in the list-..
+		if (list.contains(id)) {
+			logger.fine("[UserController] remove WorkitemRef:" + id);
+			list.remove(id);
+			workitem.replaceItemValue("txtWorkitemRef", list);
+			workitem = entityService.save(workitem);
+		}
+	}
+
+	/**
+	 * This method returns all workitems sotred in the users profile
+	 * txtWorkitemRef
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getFavorites() {
+		
+		List<String> favorites =getFavoriteIds();
+		if (favorites.size() <= 0)
+			return new ArrayList<ItemCollection>();
+
+		// create a JPQL statement....
+
+		// create IN list
+		String inStatement = "";
+		for (String aID : favorites) {
+			inStatement = inStatement + "'" + aID + "',";
+		}
+		// cut last ,
+		inStatement = inStatement.substring(0, inStatement.length() - 1);
+
+		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
+		sQuery += " WHERE wi.type IN ('workitem','workitemarchive')";
+		sQuery += " AND wi.id IN (" + inStatement + ")";
+		sQuery += " ORDER BY wi.modified DESC";
+
+		return workflowService.getEntityService()
+				.findAllEntities(sQuery, 0, -1);
 
 	}
 

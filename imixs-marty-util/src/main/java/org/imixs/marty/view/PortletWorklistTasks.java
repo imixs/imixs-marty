@@ -52,28 +52,7 @@ public class PortletWorklistTasks extends WorklistController {
 						controller.getRow(), controller.getMaxResult(),
 						controller.getType(), getSortOrder());
 			if (QUERY_WORKLIST_BY_FAVORITE.equals(getView())) {
-				
-				List<String> list = userController.getWorkitem().getItemValue("txtWorkitemRef");
-				if (list == null || list.size() <= 0)
-					return new ArrayList<ItemCollection>();
-
-				// create a JPQL statement....
-								
-				// create IN list
-				String inStatement = "";
-				for (String aID : list) {
-					inStatement = inStatement + "'" + aID + "',";
-				}
-				// cut last ,
-				inStatement = inStatement.substring(0, inStatement.length() - 1);
-
-				String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-				sQuery += " WHERE wi.type IN ('workitem','workitemarchive')";
-				sQuery += " AND wi.id IN (" + inStatement + ")";
-				sQuery += " ORDER BY wi.modified DESC";
-
-				return workflowService.getEntityService().findAllEntities(sQuery,
-						0, -1);
+				return userController.getFavorites();
 			}
 				
 
