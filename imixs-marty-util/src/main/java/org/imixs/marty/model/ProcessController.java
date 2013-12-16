@@ -68,6 +68,7 @@ public class ProcessController implements Serializable {
 
 	private List<ItemCollection> spaces = null;
 	private List<ItemCollection> processList = null;
+	private ItemCollection process=null;
 
 	@Inject
 	protected LoginController loginController = null;
@@ -91,6 +92,23 @@ public class ProcessController implements Serializable {
 	public void reset() {
 		spaces = null;
 		processList = null;
+		process=null;
+	}
+
+	/**
+	 * Returns the current process entity
+	 * @return
+	 */
+	public ItemCollection getProcess() {
+		return process;
+	}
+
+	/**
+	 * Set the current process entity
+	 * @param process
+	 */
+	public void setProcess(ItemCollection process) {
+		this.process = process;
 	}
 
 	/**
@@ -106,7 +124,6 @@ public class ProcessController implements Serializable {
 	public List<ItemCollection> getProcessList() {
 		if (processList == null) {
 			processList = processService.getProcessList();
-
 		}
 
 		return processList;
