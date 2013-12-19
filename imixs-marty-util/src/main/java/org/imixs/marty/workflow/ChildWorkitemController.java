@@ -43,6 +43,8 @@ import org.imixs.marty.model.ModelController;
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
@@ -68,20 +70,20 @@ public class ChildWorkitemController extends
 	@Inject
 	protected ModelController modelController;
 
-	public static Logger logger = Logger.getLogger(ChildWorkitemController.class.getName());
+	public static Logger logger = Logger
+			.getLogger(ChildWorkitemController.class.getName());
 
-	
 	private static final long serialVersionUID = 1L;
 
 	private List<ItemCollection> childList = null;
 	private String uniqueIdRef = null;
 	private ItemCollection parentWorkitem = null;
-	private String childType="childworkitem";
-	private int sortOrder=1;
-	
-	
+	private String childType = "childworkitem";
+	private int sortOrder = 1;
+
 	/**
 	 * Default type for new created child workitems
+	 * 
 	 * @return
 	 */
 	public String getChildType() {
@@ -94,6 +96,7 @@ public class ChildWorkitemController extends
 
 	/**
 	 * Sort order for child workitem list
+	 * 
 	 * @return
 	 */
 	public int getSortOrder() {
@@ -121,9 +124,17 @@ public class ChildWorkitemController extends
 	public ItemCollection getParentWorkitem() {
 		return parentWorkitem;
 	}
-	
-	
-	
+
+	/**
+	 * Override process to reset the child list
+	 */
+	@Override
+	public String process() throws AccessDeniedException,
+			ProcessingErrorException, PluginException {
+		String result = super.process();
+		this.reset();
+		return result;
+	}
 
 	/**
 	 * WorkflowEvent listener to update the child list of the current parent
@@ -165,29 +176,6 @@ public class ChildWorkitemController extends
 	}
 
 	/**
-	 * this method returns a list of all sub process entities for the workflow
-	 * group assigend to the current parent workitem.
-	 * 
-	 * @return - list process entities
-	 */
-//	public List<ItemCollection> getWxxorkitems() {
-//		List<ItemCollection> subInitialProcessList = new ArrayList<ItemCollection>();
-//
-//		String workflowGroup = parentWorkitem
-//				.getItemValueString("txtWorkflowGroup");
-//
-//		List<String> allGroups = modelController
-//				.getSubWorkflowGroups(workflowGroup);
-//		for (String aGroupName : allGroups) {
-//			subInitialProcessList.add(modelController
-//					.getInitialProcessEntityByGroup(aGroupName));
-//
-//		}
-//
-//		return subInitialProcessList;
-//	}
-
-	/**
 	 * this method returns a list of all child workitems for the current
 	 * workitem
 	 * 
@@ -201,8 +189,8 @@ public class ChildWorkitemController extends
 		childList = new ArrayList<ItemCollection>();
 
 		if (uniqueIdRef != null) {
-			List<ItemCollection> result = workflowService
-					.getWorkListByRef(uniqueIdRef,0,-1,null, getSortOrder());
+			List<ItemCollection> result = workflowService.getWorkListByRef(
+					uniqueIdRef, 0, -1, null, getSortOrder());
 			for (ItemCollection aWorkitem : result) {
 				childList.add(cloneWorkitem(aWorkitem));
 			}
@@ -216,8 +204,8 @@ public class ChildWorkitemController extends
 	 * reset the current childlist
 	 */
 	@Override
-	public void reset(ActionEvent event) {
-		super.reset(event);
+	public void reset() {
+		super.reset();
 		childList = null;
 	}
 
@@ -231,8 +219,18 @@ public class ChildWorkitemController extends
 		this.getWorkitem().replaceItemValue("type", getChildType());
 	}
 
+	/**
+	 * This method is a placeholder which can be used by a subclass to clone
+	 * workitems. In the default behavior of the a workitem is not cloned by the
+	 * childworkitem controller
+	 * 
+	 * @param aWorkitem
+	 * @return
+	 */
 	public ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
-		return WorkitemHelper.clone(aWorkitem);
+		// only a placeholder
+		// return WorkitemHelper.clone(aWorkitem);
+		return aWorkitem;
 	}
 
 }
