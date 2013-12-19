@@ -50,7 +50,7 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * stored in the $UniqueIDRef property of the WorkItem. In addition to the
  * $UniqueIDRef poroperty the TeamPlugin manages the properties txtProcessRef
  * and txtSpaceRef which containing only uniqueIDs of the corresponding entity
- * type. The properties txtProcessRef and txtSpaceRef can be modiefied by an
+ * type. The properties txtProcessRef and txtSpaceRef can be modified by an
  * application to reassign the workitem.
  * 
  * This plugin supports also additional workflow properties for further
@@ -181,7 +181,7 @@ public class TeamPlugin extends AbstractPlugin {
 			// 1.1.1) validate content of txtProcessRef
 			if (workItem.hasItem("txtProcessRef")) {
 				processRefList = workItem.getItemValue("txtProcessRef");
-				List<String> verifiedRefList=new Vector<String>();
+				List<String> verifiedRefList = new Vector<String>();
 				for (String aUniqueID : processRefList) {
 					ItemCollection entity = fetchEntity(aUniqueID);
 					if (entity != null
@@ -215,14 +215,49 @@ public class TeamPlugin extends AbstractPlugin {
 			// 1.2.1) validate content of txtSpaceRef
 			if (workItem.hasItem("txtSpaceRef")) {
 				processRefList = workItem.getItemValue("txtSpaceRef");
-				List<String> verifiedRefList=new Vector<String>();
+				List<String> verifiedRefList = new Vector<String>();
 				for (String aUniqueID : processRefList) {
 					ItemCollection entity = fetchEntity(aUniqueID);
 					if (entity != null
-							&& "space".equals(entity
-									.getItemValueString("type"))) {
+							&& "space"
+									.equals(entity.getItemValueString("type"))) {
 						// verified
 						verifiedRefList.add(aUniqueID);
+					} else {
+						// optional code: try to lookup the space by name.....
+						logger.fine("[TeamPlugin] spaceRef '" + aUniqueID
+								+ "' not found by id. Lookup for name....");
+
+						String sQuery = "SELECT space FROM Entity AS space "
+								+ " JOIN space.textItems AS t2"
+								+ " WHERE space.type = 'space'"
+								+ " AND t2.itemName = 'txtname' AND t2.itemValue='"
+								+ aUniqueID + "'";
+						Collection<ItemCollection> col = entityService
+								.findAllEntities(sQuery, 0, 2);
+
+						if (col != null) {
+							if (col.size() == 0) {
+								logger.warning("[TeamPlugin] spaceRef '"
+										+ aUniqueID + "' nod found!");
+							} else {
+								if (col.size() > 1) {
+									logger.warning("[TeamPlugin] spaceRef '"
+											+ aUniqueID + "' ambiguous!");
+								} else {
+									// we found one!
+									ItemCollection spaceEntity=col.iterator().next();
+									if (spaceEntity!=null) {
+										String aID=spaceEntity.getItemValueString(EntityService.UNIQUEID);
+										logger.info("[TeamPlugin] spaceRef '"
+												+ aUniqueID + "' translated into '" + aID + "'");
+										// verified
+										verifiedRefList.add(aID);
+									}
+								}
+							}
+						}
+
 					}
 				}
 				// update txtProcessRef
@@ -262,7 +297,7 @@ public class TeamPlugin extends AbstractPlugin {
 			ItemCollection entity = fetchEntity(aUniqueID);
 			// check if this is a deprecated process ref
 			if (entity != null
-					&&  "process".equals(entity.getItemValueString("type"))
+					&& "process".equals(entity.getItemValueString("type"))
 					&& !processRefList.contains(aUniqueID)) {
 				logger.fine("[TeamPlugin] remove deprecated processRef "
 						+ aUniqueID);
