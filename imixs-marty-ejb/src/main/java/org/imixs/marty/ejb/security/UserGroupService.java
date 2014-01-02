@@ -31,7 +31,7 @@ import javax.annotation.Resource;
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RunAs;
 import javax.ejb.EJB;
-import javax.ejb.Local;
+import javax.ejb.LocalBean;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -50,7 +50,7 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Stateless
 @RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
-//@Local
+@LocalBean
 public class UserGroupService {
 
 	@PersistenceContext(unitName = "org.imixs.workflow.jee.jpa")
