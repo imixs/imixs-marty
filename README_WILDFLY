@@ -1,0 +1,9 @@
+
+Looks like we should change ejb implemenation and replace/reove @Local
+
+
+//@Local
+@LocalBean
+public class AdminPService {
+...
+} 

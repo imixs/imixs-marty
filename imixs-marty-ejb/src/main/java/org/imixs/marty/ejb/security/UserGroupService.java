@@ -50,7 +50,7 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Stateless
 @RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
-@Local
+//@Local
 public class UserGroupService {
 
 	@PersistenceContext(unitName = "org.imixs.workflow.jee.jpa")

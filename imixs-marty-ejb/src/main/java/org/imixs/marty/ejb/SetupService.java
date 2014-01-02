@@ -59,7 +59,7 @@ import org.imixs.workflow.xml.XMLItemCollectionAdapter;
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Stateless
 @RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
-@Local
+//@Local
 public class SetupService {
 
 	@EJB

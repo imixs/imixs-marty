@@ -38,7 +38,7 @@ import org.imixs.workflow.jee.util.PropertyService;
  * 
  */
 @Stateless
-@Local
+//@Local
 public class LDAPLookupService {
 
 	private boolean enabled = false;
