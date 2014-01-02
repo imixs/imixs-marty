@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.ejb.Local;
+import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -38,7 +38,7 @@ import org.imixs.workflow.jee.util.PropertyService;
  * 
  */
 @Stateless
-@Local
+@LocalBean
 public class LDAPLookupService {
 
 	private boolean enabled = false;

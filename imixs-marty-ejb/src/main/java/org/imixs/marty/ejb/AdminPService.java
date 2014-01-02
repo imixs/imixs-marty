@@ -32,7 +32,7 @@ import javax.annotation.Resource;
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RunAs;
 import javax.ejb.EJB;
-import javax.ejb.Local;
+import javax.ejb.LocalBean;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.Timeout;
@@ -42,6 +42,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
+
 
 /**
  * The AmdinPService provides methods to replace entries in the fields
@@ -80,7 +81,7 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Stateless
 @RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
-@Local
+@LocalBean
 public class AdminPService {
 
 	@Resource
