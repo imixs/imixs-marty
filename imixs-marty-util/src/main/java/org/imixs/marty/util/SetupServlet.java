@@ -2,6 +2,7 @@ package org.imixs.marty.util;
 
 import java.util.logging.Logger;
 
+import javax.annotation.security.RunAs;
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -22,6 +23,7 @@ import org.imixs.workflow.jee.ejb.WorkflowSchedulerService;
  * 
  */
 @WebServlet(loadOnStartup=1)
+@RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
 public class SetupServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
