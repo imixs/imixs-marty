@@ -545,7 +545,7 @@ public class LDAPLookupService {
 			logger.fine("LDAPGroupLookupService Context initialized");
 
 		} catch (NamingException e) {
-			logger.severe("Unable to open ldap context: " + ldapJndiName);
+			logger.severe("Unable to open ldap context: '" + ldapJndiName + "' : " + e.getMessage());
 			if (logger.isLoggable(java.util.logging.Level.FINE))
 				e.printStackTrace();
 		}
