@@ -133,12 +133,8 @@ public class QueryBuilder implements IQueryBuilder {
 		
 		
 		// serach date range?
-		String sDateFrom=null;
-		String sDateTo=null;
-		if (datFrom != null && datTo == null)
-			datTo = datFrom;
-		if (datTo != null && datFrom == null)
-			datFrom = datTo;
+		String sDateFrom="191401070000"; // because * did not work here
+		String sDateTo="211401070000";
 		SimpleDateFormat dateformat = new SimpleDateFormat("yyyyMMddHHmm");
 
 		if (datFrom != null) {
@@ -153,11 +149,10 @@ public class QueryBuilder implements IQueryBuilder {
 			sDateTo = dateformat.format(cal.getTime());
 		}
 
-		if (sDateFrom != null && sDateTo != null) {
+		if (datFrom != null || datTo != null) {
 			// expected format $created:[20020101 TO 20030101]
 			sSearchTerm += " ($created:[" + sDateFrom + " TO " + sDateTo
 					+ "]) AND";
-
 		}
 		
 		
