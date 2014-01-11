@@ -13,6 +13,8 @@ import org.imixs.workflow.ItemCollection;
 
 public interface IQueryBuilder {
 
+	boolean isSearchMode(ItemCollection searchFilter);
+
 	String getSearchQuery(ItemCollection searchFilter);
 
 	String getJPQLStatement(ItemCollection queryFilter);

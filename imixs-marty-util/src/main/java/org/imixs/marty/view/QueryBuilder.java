@@ -1,6 +1,9 @@
 package org.imixs.marty.view;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -29,6 +32,27 @@ public class QueryBuilder implements IQueryBuilder {
 	@EJB
 	private PropertyService propertyService;
 
+	
+	
+	
+	@Override
+	public boolean isSearchMode(ItemCollection searchFilter) {
+		
+		boolean bSearch=false;
+		
+		if 	(!searchFilter.getItemValueString("txtSearch").isEmpty())
+			bSearch=true;
+		if 	(!searchFilter.getItemValueString("namCreator").isEmpty())
+			bSearch=true;
+		if 	(searchFilter.getItemValueDate("datFrom")!=null)
+			bSearch=true;
+		if 	(searchFilter.getItemValueDate("datTo")!=null)
+			bSearch=true;
+		
+		
+		return bSearch;
+	}
+
 	@Override
 	public String getSearchQuery(ItemCollection searchFilter) {
 		String sSearchTerm = "";
@@ -49,6 +73,11 @@ public class QueryBuilder implements IQueryBuilder {
 		}
 		sSearchTerm += "(" + sTypeQuery + ") AND";
 
+		
+		String sCreator=searchFilter.getItemValueString("namCreator");
+		Date datFrom=searchFilter.getItemValueDate("datFrom");
+		Date datTo=searchFilter.getItemValueDate("datTo");
+		
 		List<String> processRefList = searchFilter
 				.getItemValue("txtProcessRef");
 		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
@@ -101,6 +130,44 @@ public class QueryBuilder implements IQueryBuilder {
 			sSearchTerm += " ) AND";
 
 		}
+		
+		
+		// serach date range?
+		String sDateFrom=null;
+		String sDateTo=null;
+		if (datFrom != null && datTo == null)
+			datTo = datFrom;
+		if (datTo != null && datFrom == null)
+			datFrom = datTo;
+		SimpleDateFormat dateformat = new SimpleDateFormat("yyyyMMddHHmm");
+
+		if (datFrom != null) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(datFrom);
+			sDateFrom = dateformat.format(cal.getTime());
+		}
+		if (datTo != null) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(datTo);
+			cal.add(Calendar.DATE, 1);
+			sDateTo = dateformat.format(cal.getTime());
+		}
+
+		if (sDateFrom != null && sDateTo != null) {
+			// expected format $created:[20020101 TO 20030101]
+			sSearchTerm += " ($created:[" + sDateFrom + " TO " + sDateTo
+					+ "]) AND";
+
+		}
+		
+		
+		// creator
+		if (!"".equals(sCreator)) {
+			sSearchTerm += " (namcreator:\"" + sCreator.toLowerCase()
+					+ "\") AND";
+		}
+		
+		
 
 		int processID = searchFilter.getItemValueInteger("$ProcessID");
 		if (processID > 0)

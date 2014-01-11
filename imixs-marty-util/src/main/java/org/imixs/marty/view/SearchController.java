@@ -312,7 +312,7 @@ public class SearchController extends
 		@Override
 		public List<ItemCollection> getViewEntries(ViewController controller) {
 			// test if a search phrase exists
-			if (getSearchFilter().getItemValueString("txtSearch").isEmpty())
+			if (!queryBuilder.isSearchMode(searchFilter))
 				return findWorkitems(controller);
 			else
 				return searchWorkitems(controller);
