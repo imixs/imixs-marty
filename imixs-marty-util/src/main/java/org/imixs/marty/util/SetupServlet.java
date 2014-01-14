@@ -23,7 +23,8 @@ import org.imixs.workflow.jee.ejb.WorkflowSchedulerService;
  * 
  */
 @WebServlet(loadOnStartup=1)
-@RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
+// Because of a Deployment Issue in GlassFish we need to disable this runas option here!
+//@RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
 public class SetupServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
