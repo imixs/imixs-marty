@@ -147,8 +147,8 @@ public class WorkflowController extends
 		// find process
 		ItemCollection process = processController.getProcessById(processRef);
 		if (process != null) {
-			String sNewProcessName = process.getItemValueString("txtName");
-			getWorkitem().replaceItemValue("txtProcessName", sNewProcessName);
+			getWorkitem().replaceItemValue("txtProcessName", process.getItemValueString("txtName"));
+			getWorkitem().replaceItemValue("txtProcessRef", process.getItemValueString(EntityService.UNIQUEID));
 
 		} else {
 			logger.warning("[WorkflowController] create - unable to find process entity '"
