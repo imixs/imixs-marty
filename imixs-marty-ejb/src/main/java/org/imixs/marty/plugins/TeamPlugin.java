@@ -299,13 +299,13 @@ public class TeamPlugin extends AbstractPlugin {
 			if (entity != null
 					&& "process".equals(entity.getItemValueString("type"))
 					&& !processRefList.contains(aUniqueID)) {
-				logger.fine("[TeamPlugin] remove deprecated processRef "
+				logger.info("[TeamPlugin] remove deprecated processRef "
 						+ aUniqueID);
 			} else {
 				if (entity != null
 						&& "space".equals(entity.getItemValueString("type"))
 						&& !spaceRefList.contains(aUniqueID)) {
-					logger.fine("[TeamPlugin] remove deprecated spaceRef "
+					logger.info("[TeamPlugin] remove deprecated spaceRef "
 							+ aUniqueID);
 
 				} else {

@@ -20,6 +20,8 @@ public class WorkflowEvent {
 
 	// childevents
 	public static final int CHILDWORKITEM_CREATED = 21;
+	public static final int CHILDWORKITEM_BEFORE_PROCESS = 24;
+	public static final int CHILDWORKITEM_AFTER_PROCESS = 25;
 	public static final int CHILDWORKITEM_BEFORE_SOFTDELETE = 28;
 	public static final int CHILDWORKITEM_AFTER_SOFTDELETE = 29;
 

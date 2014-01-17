@@ -139,7 +139,16 @@ public class ChildWorkitemController extends
 	@Override
 	public String process() throws AccessDeniedException,
 			ProcessingErrorException, PluginException {
+
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.CHILDWORKITEM_BEFORE_PROCESS));
+
 		String result = super.process();
+
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.CHILDWORKITEM_AFTER_PROCESS));
 		this.reset();
 		return result;
 	}
@@ -225,7 +234,7 @@ public class ChildWorkitemController extends
 		super.create(event);
 		// update type property
 		this.getWorkitem().replaceItemValue("type", getChildType());
-		
+
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.CHILDWORKITEM_CREATED));
@@ -237,7 +246,7 @@ public class ChildWorkitemController extends
 	 * @param uniqueID
 	 *            - $uniqueId of the workItem to be deleted
 	 */
-	public String softDeleteChild(String uniqueID,String action) {
+	public String softDeleteChild(String uniqueID, String action) {
 		// load workitem
 		this.load(uniqueID);
 
@@ -253,7 +262,7 @@ public class ChildWorkitemController extends
 
 		logger.fine("ItemCollection '" + uniqueID + "' deleted");
 		reset();
-		
+
 		return action;
 	}
 
