@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
@@ -64,11 +65,18 @@ public class ChildWorkitemController extends
 		org.imixs.workflow.jee.faces.workitem.WorkflowController implements
 		Serializable {
 
+	/* Services */
 	@EJB
 	protected org.imixs.workflow.jee.ejb.WorkflowService workflowService;
 
+	@EJB
+	protected org.imixs.marty.ejb.WorkitemService workitemService;
+
 	@Inject
 	protected ModelController modelController;
+
+	@Inject
+	protected Event<WorkflowEvent> events;
 
 	public static Logger logger = Logger
 			.getLogger(ChildWorkitemController.class.getName());
@@ -217,6 +225,36 @@ public class ChildWorkitemController extends
 		super.create(event);
 		// update type property
 		this.getWorkitem().replaceItemValue("type", getChildType());
+		
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.CHILDWORKITEM_CREATED));
+	}
+
+	/**
+	 * Deletes a childWorkitem
+	 * 
+	 * @param uniqueID
+	 *            - $uniqueId of the workItem to be deleted
+	 */
+	public String softDeleteChild(String uniqueID,String action) {
+		// load workitem
+		this.load(uniqueID);
+
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.CHILDWORKITEM_BEFORE_SOFTDELETE));
+
+		workitemService.softDeleteWorkitem(getWorkitem(), true);
+
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.CHILDWORKITEM_AFTER_SOFTDELETE));
+
+		logger.fine("ItemCollection '" + uniqueID + "' deleted");
+		reset();
+		
+		return action;
 	}
 
 	/**
