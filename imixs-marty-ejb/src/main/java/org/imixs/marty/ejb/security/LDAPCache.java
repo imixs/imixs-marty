@@ -1,14 +1,15 @@
 package org.imixs.marty.ejb.security;
 
-import java.io.FileInputStream;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
-import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.ejb.Singleton;
+
+import org.imixs.workflow.jee.util.PropertyService;
 
 /**
  * This singleton ejb provides a cache to lookup ldap user informations. The
@@ -34,22 +35,21 @@ import javax.ejb.Singleton;
 @Singleton
 public class LDAPCache {
 
-	// private ItemCollection configItemCollection = null;
-	private Properties configurationProperties = null;
-
 	int DEFAULT_CACHE_SIZE = 30;
 	int DEFAULT_EXPIRES_TIME = 60000;
 	long expiresTime = 0;
 	long lastReset = 0;
 	private Cache cache = null; // cache holds userdata
 
-	private static Logger logger = Logger.getLogger("org.imixs.office");
+	@EJB
+	PropertyService propertyService;
+
+	private static Logger logger = Logger.getLogger(LDAPCache.class
+			.getSimpleName());
 
 	@PostConstruct
 	void init() {
 		try {
-			// load confiugration entity
-			loadProperties();
 			resetCache();
 		} catch (Exception e) {
 			logger.severe("LDAPCache unable to initalize LDAPCache");
@@ -67,8 +67,8 @@ public class LDAPCache {
 		logger.fine("LDAPCache resetCache - initalizing settings....");
 		int iCacheSize = DEFAULT_CACHE_SIZE;
 		try {
-			iCacheSize = Integer.valueOf(configurationProperties
-					.getProperty("cache-size"));
+			iCacheSize = Integer.valueOf(propertyService.getProperties()
+					.getProperty("ldap.cache-size", "100"));
 		} catch (NumberFormatException nfe) {
 			iCacheSize = DEFAULT_CACHE_SIZE;
 		}
@@ -81,16 +81,15 @@ public class LDAPCache {
 		// read expires time...
 		try {
 			expiresTime = DEFAULT_EXPIRES_TIME;
-			String sExpires = configurationProperties
-					.getProperty("cache-expires");
+			String sExpires = propertyService.getProperties().getProperty(
+					"ldap.cache-expires", "600000");
 			expiresTime = Long.valueOf(sExpires);
 		} catch (NumberFormatException nfe) {
 			expiresTime = DEFAULT_EXPIRES_TIME;
 		}
 		if (expiresTime <= 0)
 			expiresTime = DEFAULT_EXPIRES_TIME;
-		
-		
+
 		lastReset = System.currentTimeMillis();
 
 	}
@@ -101,13 +100,13 @@ public class LDAPCache {
 			Long now = System.currentTimeMillis();
 			if ((now - lastReset) > expiresTime) {
 				logger.fine("LDAPCache Cache expired!");
-				resetCache();				
+				resetCache();
 			}
 		}
 		return cache.get(key);
 	}
-	
-	/** 
+
+	/**
 	 * returns true if the key is contained in the cache.
 	 * 
 	 */
@@ -117,30 +116,6 @@ public class LDAPCache {
 
 	public void put(String key, Object value) {
 		cache.put(key, value);
-	}
-
-	/**
-	 * loads a imixs-ldap.property file
-	 * 
-	 * (located at domains/domain1/config/imixs-office-ldap.properties)
-	 * 
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public void loadProperties() throws Exception {
-		// try loading imixs-search properties
-		configurationProperties = new Properties();
-		try {
-			FileInputStream fis = new FileInputStream(
-					"imixs-office-ldap.properties");
-			configurationProperties.load(fis);
-			fis.close();
-		} catch (Exception ep) {
-			// no properties found
-			logger.severe("LDAPCache imixs-ldap.properties not found");
-			configurationProperties = null;
-		}
 	}
 
 	/**
