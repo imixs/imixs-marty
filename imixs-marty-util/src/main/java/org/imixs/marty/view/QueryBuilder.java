@@ -82,11 +82,15 @@ public class QueryBuilder implements IQueryBuilder {
 				.getItemValue("txtProcessRef");
 		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
 
-		// trim projectlist
+		// trim process and space list
 		while (processRefList.contains(""))
 			processRefList.remove("");
 		while (spacesRefList.contains(""))
 			spacesRefList.remove("");
+		while (processRefList.contains("-"))
+			processRefList.remove("-");
+		while (spacesRefList.contains("-"))
+			spacesRefList.remove("-");
 
 		// process ref
 		if (!processRefList.isEmpty()) {
