@@ -85,7 +85,7 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 
 	int sequenceNumber = -1;
 	ItemCollection workitem = null;
-	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	private static Logger logger = Logger.getLogger(SequenceNumberPlugin.class.getName());
 	public static String NO_SEQUENCE_SERVICE_FOUND = "NO_SEQUENCE_SERVICE_FOUND";
 
 	public void init(WorkflowContext actx) throws PluginException {

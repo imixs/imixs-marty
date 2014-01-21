@@ -45,7 +45,7 @@ public class DeputyPlugin extends AbstractPlugin {
 	private String[] ignoreList = { "namcreator", "namcurrenteditor",
 			"namlasteditor", "namrequester" };
 	private static Logger logger = Logger.getLogger(DeputyPlugin.class
-			.getSimpleName());
+			.getName());
 
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
@@ -64,7 +64,7 @@ public class DeputyPlugin extends AbstractPlugin {
 			profileService = (ProfileService) ctx.lookup(jndiName);
 		} catch (NamingException e) {
 
-			throw new PluginException(MailPlugin.class.getSimpleName(),
+			throw new PluginException(MailPlugin.class.getName(),
 					PROFILESERVICE_NOT_BOUND, "ProfileService not bound", e);
 		}
 

@@ -64,7 +64,7 @@ public class WorkitemLinkController implements Serializable {
 
 	public static final String LINK_PROPERTY = "txtworkitemref";
 
-	public static Logger logger = Logger.getLogger("org.imixs.marty");
+	public static Logger logger = Logger.getLogger(WorkitemLinkController.class.getName());
 
 	@Inject
 	protected WorkflowController workflowController;

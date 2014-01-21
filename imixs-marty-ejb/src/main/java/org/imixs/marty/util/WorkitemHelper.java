@@ -13,7 +13,7 @@ import org.imixs.workflow.ItemCollection;
  * 
  */
 public class WorkitemHelper {
-	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	private static Logger logger = Logger.getLogger(WorkitemHelper.class.getName());
 
 	/**
 	 * This method clones the given workItem with a minimum of attributes.

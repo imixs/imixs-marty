@@ -99,7 +99,7 @@ public class AdminPService {
 	private String lastUnqiueID = null;
 	private static int MAX_COUNT = 1000;
 	private static Logger logger = Logger.getLogger(AdminPService.class
-			.getSimpleName());
+			.getName());
 
 	/**
 	 * This method starts a new replacement.

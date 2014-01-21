@@ -61,7 +61,7 @@ public class UserGroupPlugin extends AbstractPlugin {
 
 	int sequenceNumber = -1;
 	ItemCollection workitem = null;
-	private static Logger logger = Logger.getLogger("org.imixs.office");
+	private static Logger logger = Logger.getLogger(UserGroupPlugin.class.getName());
 
 	/**
 	 * Try to lookup the UserGroupService. If not availalbe the plugin will not

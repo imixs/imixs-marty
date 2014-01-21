@@ -45,7 +45,7 @@ public class LDAPCache {
 	PropertyService propertyService;
 
 	private static Logger logger = Logger.getLogger(LDAPCache.class
-			.getSimpleName());
+			.getName());
 
 	@PostConstruct
 	void init() {

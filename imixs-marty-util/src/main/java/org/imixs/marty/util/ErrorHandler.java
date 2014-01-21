@@ -27,7 +27,7 @@ public class ErrorHandler {
 	public static void handlePluginException(PluginException pe) {
 		// if the PluginException was throws from the RulePlugin then test
 		// for VALIDATION_ERROR and ErrorParams
-		if (RulePlugin.class.getSimpleName().equals(pe.getErrorContext())
+		if (RulePlugin.class.getName().equals(pe.getErrorContext())
 				&& (RulePlugin.VALIDATION_ERROR.equals(pe.getErrorCode()))
 				&& pe.getErrorParameters() != null
 				&& pe.getErrorParameters().length > 0) {

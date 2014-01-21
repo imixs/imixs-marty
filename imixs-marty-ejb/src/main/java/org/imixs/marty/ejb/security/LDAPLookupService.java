@@ -55,8 +55,8 @@ public class LDAPLookupService {
 	@EJB
 	PropertyService propertyService;
 
-
-	private static Logger logger = Logger.getLogger("org.imixs.office");
+	
+	private static Logger logger = Logger.getLogger(LDAPLookupService.class.getName());
 
 	@PostConstruct
 	void init() {
@@ -477,9 +477,8 @@ public class LDAPLookupService {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private LdapContext getDirContext() {
 		String ldapJndiName = null;
-
 		LdapContext ldapCtx = null;
-
+		
 		// test if configuration is available
 		if (configurationProperties == null) {
 			return null;
@@ -494,6 +493,9 @@ public class LDAPLookupService {
 			// test if manually ldap context should be build
 			String sDisabled = configurationProperties
 					.getProperty("ldap.disable-jndi");
+			
+			logger.fine("LDAPGroupLookupService ldap.disable-jndi=" + sDisabled);
+			
 			if (sDisabled != null && "true".equals(sDisabled.toLowerCase())) {
 				logger.fine("LDAPGroupLookupService lookup LDAP Ctx manually.....");
 				Hashtable env = new Hashtable();
@@ -507,7 +509,7 @@ public class LDAPLookupService {
 						env.put(sKey,
 								configurationProperties
 										.getProperty(sKey));
-						logger.fine("Set key: " + sKey +" with value: " + configurationProperties
+						logger.fine("Set key: " + sKey +"=" + configurationProperties
 										.getProperty(sKey));
 					}
 					

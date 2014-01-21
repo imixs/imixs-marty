@@ -28,7 +28,7 @@ public class LDAPGroupInterceptor {
 	@Resource
 	SessionContext ejbCtx;
 
-	private static Logger logger = Logger.getLogger("org.imixs.office");
+	private static Logger logger = Logger.getLogger(LDAPGroupInterceptor.class.getName());
 
 	/**
 	 * The interceptor method injects the LDAP groups into the contextData map.

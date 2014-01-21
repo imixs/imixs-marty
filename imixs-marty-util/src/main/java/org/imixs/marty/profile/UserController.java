@@ -166,6 +166,9 @@ public class UserController implements Serializable {
 
 				String sAutoProcessID = propertyService.getProperties()
 						.getProperty("profile.autoProcessOnLogin");
+				
+				logger.fine("[UserController] profile.autoProcessOnLogin="+sAutoProcessID);
+				
 				try {
 					if (sAutoProcessID != null) {
 						int iActiviyID = Integer.valueOf(sAutoProcessID);

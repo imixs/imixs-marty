@@ -220,7 +220,7 @@ public class SequenceService {
 		String sParentID = aworkitem.getItemValueString("$UniqueIDRef");
 
 		if ("".equals(sParentID))
-			throw new PluginException(SequenceService.class.getSimpleName(),SEQUENCE_ERROR,
+			throw new PluginException(SequenceService.class.getName(),SEQUENCE_ERROR,
 					"WARNING: SequenceService : No $UniqueIDRef defined");
 
 		ItemCollection parent = entityService.load(sParentID);

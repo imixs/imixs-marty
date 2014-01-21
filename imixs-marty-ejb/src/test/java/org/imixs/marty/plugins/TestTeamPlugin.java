@@ -9,6 +9,7 @@ import java.util.Vector;
 
 import junit.framework.Assert;
 
+import org.imixs.marty.ejb.security.LDAPLookupService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.exceptions.PluginException;
@@ -40,6 +41,9 @@ public class TestTeamPlugin {
 	public void setup() throws PluginException {
 		ItemCollection entity = null;
 
+		
+		System.out.println("ClassName: "+TestTeamPlugin.class.getName());
+		
 		// simulate process and space entities
 		for (int i = 1; i < 6; i++) {
 			entity = new ItemCollection();

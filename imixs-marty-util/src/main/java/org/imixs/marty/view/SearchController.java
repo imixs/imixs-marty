@@ -89,7 +89,7 @@ public class SearchController extends
 		Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private static Logger logger = Logger.getLogger("org.imixs.marty");
+	private static Logger logger = Logger.getLogger(SearchController.class.getName());
 
 	private String viewTitle = null;
 	private IViewAdapter viewAdapter = null;

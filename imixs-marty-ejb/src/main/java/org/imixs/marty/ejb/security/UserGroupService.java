@@ -63,7 +63,7 @@ public class UserGroupService {
 	org.imixs.workflow.jee.ejb.EntityService entityService;
 
 
-	private static Logger logger = Logger.getLogger("org.imixs.office");
+	private static Logger logger = Logger.getLogger(UserGroupService.class.getName());
 
 	public void updateUser(ItemCollection profile) {
 		boolean bNewEntity = false;

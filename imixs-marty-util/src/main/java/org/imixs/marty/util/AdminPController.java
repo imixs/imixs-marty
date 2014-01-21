@@ -19,7 +19,7 @@ public class AdminPController extends DataController {
 
 	private static final long serialVersionUID = 1L;
 	private static Logger logger = Logger.getLogger(AdminPController.class
-			.getSimpleName());
+			.getName());
 
 	public AdminPController() {
 		super();
