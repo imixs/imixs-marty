@@ -142,19 +142,23 @@ public class WorkflowController extends
 
 		getWorkitem().replaceItemValue("$ModelVersion", modelVersion);
 		getWorkitem().replaceItemValue("$ProcessID", processID);
-		getWorkitem().replaceItemValue("$UniqueIDRef", processRef);
 
-		// find process
-		ItemCollection process = processController.getProcessById(processRef);
-		if (process != null) {
-			getWorkitem().replaceItemValue("txtProcessName", process.getItemValueString("txtName"));
-			getWorkitem().replaceItemValue("txtProcessRef", process.getItemValueString(EntityService.UNIQUEID));
+		if (processRef != null) {
+			getWorkitem().replaceItemValue("$UniqueIDRef", processRef);
+			// find process
+			ItemCollection process = processController
+					.getProcessById(processRef);
+			if (process != null) {
+				getWorkitem().replaceItemValue("txtProcessName",
+						process.getItemValueString("txtName"));
+				getWorkitem().replaceItemValue("txtProcessRef",
+						process.getItemValueString(EntityService.UNIQUEID));
 
-		} else {
-			logger.warning("[WorkflowController] create - unable to find process entity '"
-					+ processRef + "'!");
+			} else {
+				logger.warning("[WorkflowController] create - unable to find process entity '"
+						+ processRef + "'!");
+			}
 		}
-
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_CREATED));
@@ -437,7 +441,8 @@ public class WorkflowController extends
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.WORKITEM_AFTER_PROCESS));
 
-		// if a action is defined by the workflowController, then this action will be the action result String
+		// if a action is defined by the workflowController, then this action
+		// will be the action result String
 		if (action != null && !action.isEmpty()) {
 			actionResult = action;
 			// reset action
