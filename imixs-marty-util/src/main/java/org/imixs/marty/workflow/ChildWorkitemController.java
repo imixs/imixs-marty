@@ -232,14 +232,63 @@ public class ChildWorkitemController extends
 	@Override
 	public void create(ActionEvent event) {
 		super.create(event);
-		// update type property
-		this.getWorkitem().replaceItemValue("type", getChildType());
-
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(),
 				WorkflowEvent.CHILDWORKITEM_CREATED));
 	}
 
+
+	/**
+	 * Method to create a new workitem with inital values. The method fires a
+	 * WorkfowEvent
+	 * 
+	 * @param modelVersion
+	 *            - model version
+	 * @param processID
+	 *            - processID
+	 * @param processRef
+	 *            - uniqueid ref
+	 */
+
+	public void create(String modelVersion, int processID, String parentRef) {
+		super.create(null);
+
+		getWorkitem().replaceItemValue("$ModelVersion", modelVersion);
+		getWorkitem().replaceItemValue("$ProcessID", processID);
+		getWorkitem().replaceItemValue("$UniqueIDRef", parentRef);
+
+
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.CHILDWORKITEM_CREATED));
+
+	}
+	
+	
+	
+	/**
+	 * This method overwrites the default init() and fires a WorkflowEvent.
+	 * 
+	 */
+	@Override
+	public String init(String action) {
+		String actionResult = super.init(action);
+
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.CHILDWORKITEM_INITIALIZED));
+
+		return actionResult;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	/**
 	 * Deletes a childWorkitem
 	 * 
