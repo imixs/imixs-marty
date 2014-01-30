@@ -105,7 +105,7 @@ public class UserController implements Serializable {
 	private ItemCollection workitem = null;
 	private boolean profileLoaded = false;
 	private Locale locale;
-	
+
 	private static Logger logger = Logger.getLogger(UserController.class
 			.getName());
 
@@ -166,9 +166,10 @@ public class UserController implements Serializable {
 
 				String sAutoProcessID = propertyService.getProperties()
 						.getProperty("profile.autoProcessOnLogin");
-				
-				logger.fine("[UserController] profile.autoProcessOnLogin="+sAutoProcessID);
-				
+
+				logger.fine("[UserController] profile.autoProcessOnLogin="
+						+ sAutoProcessID);
+
 				try {
 					if (sAutoProcessID != null) {
 						int iActiviyID = Integer.valueOf(sAutoProcessID);
@@ -329,7 +330,8 @@ public class UserController implements Serializable {
 	}
 
 	/**
-	 * This method returns the username (displayname) for a useraccount
+	 * This method returns the username (displayname) for a useraccount.
+	 * If no Username is set in the profile then we return the useraccount.
 	 * 
 	 * @param aName
 	 * @return
@@ -337,10 +339,16 @@ public class UserController implements Serializable {
 	public String getUserName(String aAccount) {
 
 		ItemCollection userProfile = profileService.findProfileById(aAccount);
-		if (userProfile != null)
-			return userProfile.getItemValueString("txtuserName");
-		else
+		if (userProfile != null) {
+			String value = userProfile.getItemValueString("txtuserName");
+			if (!value.isEmpty())
+				return value;
+			else
+				return aAccount;
+
+		} else {
 			return aAccount;
+		}
 	}
 
 	/**
@@ -447,8 +455,8 @@ public class UserController implements Serializable {
 	public void addFavorite(String id) {
 		if (getWorkitem() == null)
 			return;
-		
-		List<String> list=getFavoriteIds();
+
+		List<String> list = getFavoriteIds();
 		// we expect that the id is in the list-..
 		if (!list.contains(id)) {
 			logger.fine("[UserController] add WorkitemRef:" + id);
@@ -457,12 +465,12 @@ public class UserController implements Serializable {
 			workitem = entityService.save(workitem);
 		}
 	}
-	
+
 	public void removeFavorite(String id) {
 		if (getWorkitem() == null)
 			return;
-		
-		List<String> list=getFavoriteIds();
+
+		List<String> list = getFavoriteIds();
 		// we expect that the id is in the list-..
 		if (list.contains(id)) {
 			logger.fine("[UserController] remove WorkitemRef:" + id);
@@ -479,8 +487,8 @@ public class UserController implements Serializable {
 	 * @return
 	 */
 	public List<ItemCollection> getFavorites() {
-		
-		List<String> favorites =getFavoriteIds();
+
+		List<String> favorites = getFavoriteIds();
 		if (favorites.size() <= 0)
 			return new ArrayList<ItemCollection>();
 
