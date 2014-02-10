@@ -484,16 +484,23 @@ public class UserController implements Serializable {
 	 * This method returns all workitems sotred in the users profile
 	 * txtWorkitemRef
 	 * 
+	 * @param refId - a UnqiueIdRef as optional filter criterium
 	 * @return
 	 */
-	public List<ItemCollection> getFavorites() {
+	public List<ItemCollection> getFavorites(String refId) {
 
 		List<String> favorites = getFavoriteIds();
 		if (favorites.size() <= 0)
 			return new ArrayList<ItemCollection>();
 
-		// create a JPQL statement....
+		// verify optional refId param
+		if (refId!=null && ("-".equals(refId) || refId.isEmpty()) ) {
+			refId=null;
+		}
 
+		// create a JPQL statement....
+		
+		
 		// create IN list
 		String inStatement = "";
 		for (String aID : favorites) {
@@ -503,7 +510,20 @@ public class UserController implements Serializable {
 		inStatement = inStatement.substring(0, inStatement.length() - 1);
 
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
+		
+		if (refId!=null) {
+			sQuery+= "	 JOIN wi.textItems as ref ";
+		}
+		
 		sQuery += " WHERE wi.type IN ('workitem','workitemarchive')";
+		
+
+		if (refId!=null) {
+			sQuery+= "	AND ref.itemName = '$uniqueidref' AND ref.itemValue = '"
+						+ refId + "'";
+		}
+		
+		
 		sQuery += " AND wi.id IN (" + inStatement + ")";
 		sQuery += " ORDER BY wi.modified DESC";
 
@@ -512,6 +532,10 @@ public class UserController implements Serializable {
 
 	}
 
+	public List<ItemCollection> getFavorites() {
+		return getFavorites(null);
+		
+	}
 	/*
 	 * HELPER METHODS
 	 */
