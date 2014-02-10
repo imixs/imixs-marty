@@ -96,6 +96,7 @@ public class WorkflowController extends
 	private List<ItemCollection> versions = null;
 	private List<EditorSection> editorSections = null;
 	private String action = null; // optional page result
+	private String deepLinkId = null; // deep link UniqueId
 
 	public WorkflowController() {
 		super();
@@ -202,6 +203,29 @@ public class WorkflowController extends
 			return this.getWorkitem()
 					.getItemValueString(EntityService.UNIQUEID);
 		}
+	}
+
+	/**
+	 * The method loads a new wokitem by a uniqueID. If no id is provided the
+	 * method did not change the current workitem reference. If the uniqueId is
+	 * invalid the workitem will be set to null (see setUnqiueId)
+	 * 
+	 * This method is used for the DeepLink Feature used by workitem.xhml.
+	 * 
+	 * 
+	 * @param aUniqueID
+	 */
+	public void setDeepLinkId(String adeepLinkId) {
+		this.deepLinkId = adeepLinkId;
+		// if Id is provided try to load the corresponding workitem.
+		// (can result to null!)
+		if (deepLinkId != null && !deepLinkId.isEmpty()) {
+			this.load(deepLinkId);
+		}
+	}
+
+	public String getDeepLinkId() {
+		return deepLinkId;
 	}
 
 	/**
