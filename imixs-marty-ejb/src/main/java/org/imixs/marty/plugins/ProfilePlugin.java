@@ -67,6 +67,7 @@ public class ProfilePlugin extends AbstractPlugin {
 
 	// error codes
 	public static String USERNAME_ALREADY_TAKEN = "USERNAME_ALREADY_TAKEN";
+	public static String INVALID_USERNAME = "INVALID_USERNAME";
 	public static String EMAIL_ALREADY_TAKEN = "EMAIL_ALREADY_TAKEN";
 	public static String NO_PROFILE_SERVICE_FOUND = "NO_SEQUENCE_SERVICE_FOUND";
 
@@ -146,14 +147,31 @@ public class ProfilePlugin extends AbstractPlugin {
 
 	}
 
+	/**
+	 * The method validates the userProfile entity.
+	 * The txtName property will be initialized if a new profile is created
+	 * The txtName property will always be lower case!
+	 * 
+	 * @param profile
+	 * @throws PluginException
+	 */
 	void validateUserProfile(ItemCollection profile) throws PluginException {
 		String sUsername = profile.getItemValueString("txtName");
 
+		if (this.getUserName()==null || this.getUserName().isEmpty()) {
+			throw new PluginException(
+					ProfilePlugin.class.getSimpleName(),
+					INVALID_USERNAME,
+					"Invalid username - username is empty");
+		}
+		
 		// update the txtname if not already set
 		if ("".equals(sUsername)) {
+			// trim and lower case username!
+			sUsername=this.getUserName().toLowerCase().trim();
 			logger.fine("initialize profile with username: "
-					+ this.getUserName());
-			profile.replaceItemValue("txtName", this.getUserName());
+					+ sUsername);
+			profile.replaceItemValue("txtName", sUsername);
 		}
 		if (!isValidUserName(profile))
 			throw new PluginException(

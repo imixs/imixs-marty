@@ -89,8 +89,7 @@ public class ProfileService {
 
 	/**
 	 * This method returns a profile by its id. The method uses an internal
-	 * cache. The method returns null if no Profile for this name was
-	 * found
+	 * cache. The method returns null if no Profile for this name was found
 	 * 
 	 * The returned workitem is a cloned version of the profile entity and can
 	 * not be processed or updated. Use lookupProfile to get the full entity of
@@ -107,8 +106,7 @@ public class ProfileService {
 
 	/**
 	 * This method returns a profile by its id. The method uses an internal
-	 * cache. The method returns null if no Profile for this name was
-	 * found.
+	 * cache. The method returns null if no Profile for this name was found.
 	 * 
 	 * The returned workitem is a cloned version of the profile entity and can
 	 * not be processed or updated. Use lookupProfile to get the full entity of
@@ -116,6 +114,8 @@ public class ProfileService {
 	 * 
 	 * If the boolean 'refresh' is true the method lookup the user in any case
 	 * with a JQPL statement and updates the cache.
+	 * 
+	 * The userId is always lower case!
 	 * 
 	 * @param userid
 	 *            - the profile id
@@ -125,9 +125,12 @@ public class ProfileService {
 	 */
 	public ItemCollection findProfileById(String userid, boolean refresh) {
 
-		if (userid == null || userid.isEmpty())
-			//userid = ctx.getCallerPrincipal().getName();
+		if (userid == null || userid.isEmpty()) {
 			return null;
+		}
+
+		// lower case userId
+		userid = userid.toLowerCase();
 
 		// try to get name out from cache
 		ItemCollection userProfile = null;
@@ -164,6 +167,8 @@ public class ProfileService {
 	 * Use findProfileById to work with the internal cache if there is no need
 	 * to update the profile.
 	 * 
+	 * The userId is always lower case!
+	 * 
 	 * @param userid
 	 *            - the profile id
 	 * @return profile workitem
@@ -174,6 +179,10 @@ public class ProfileService {
 			logger.warning("[ProfileService] lookupProfileById - no id provided!");
 			return null;
 		}
+
+		// lower case userId
+		userid = userid.toLowerCase();
+
 		// try to get name out from cache
 		ItemCollection userProfile = null;
 
