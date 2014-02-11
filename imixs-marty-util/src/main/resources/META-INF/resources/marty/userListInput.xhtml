@@ -14,22 +14,8 @@
 
 <cc:implementation>
 
-	<script type="text/javascript">
-		/*<![CDATA[*/
-		$(document)
-				.ready(
-						function() {
-							// test if delayEvent is defined
-							if (typeof (window.delayEvent) != 'function') {
-								alert('function delayEvent() not defined! Please check if script library marty/imixs-marty.js is loaded!');
-							}
-						});
-
-		/*]]>*/
-	</script>
-
-
 	<div class="marty-userlistinput">
+	
 		<!-- Input Field -->
 		<h:panelGroup id="input_box" layout="block"
 			class="marty-userlistinput-inputbox" rendered="#{cc.attrs.editmode}">
@@ -40,11 +26,11 @@
 					listener="#{userInputController.reset}" />
 			</h:inputText>
 
-			<h:commandButton
+			<h:commandLink id="input_add" style="margin-left:5px;"
 				actionListener="#{userInputController.add(userInputController.input,cc.attrs.value)}"
-				value="#{message.add}">
-				<f:ajax render="suggest_box datalist" />
-			</h:commandButton>
+				value="[#{message.add}]">
+				<f:ajax render="suggest_box datalist input_add" />
+			</h:commandLink>
 
 			<h:panelGroup id="suggest_box">
 				<h:panelGroup id="suggest_resultlist" layout="block"
@@ -93,7 +79,7 @@
 				</h:column>
 				<!-- Delete member -->
 				<h:column>
-					<h:commandLink value="#{message.remove}" id="remove_owner_link_id"
+					<h:commandLink value="[#{message.remove}]" id="remove_owner_link_id" style="margin-left:5px;"
 						actionListener="#{userInputController.remove(record.item['txtName'],cc.attrs.value)}">
 						<f:ajax render=":#{component.parent.parent.parent.clientId}" />
 					</h:commandLink>
