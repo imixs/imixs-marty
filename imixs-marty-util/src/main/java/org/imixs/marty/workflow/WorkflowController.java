@@ -53,6 +53,7 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.jee.faces.util.LoginController;
 
 /**
  * The marty WorkflowController extends the
@@ -85,6 +86,9 @@ public class WorkflowController extends
 
 	@Inject
 	protected ProcessController processController;
+
+	@Inject
+	protected LoginController loginController = null;
 
 	@Inject
 	protected Event<WorkflowEvent> events;
@@ -130,6 +134,11 @@ public class WorkflowController extends
 	 * Method to create a new workitem with inital values. The method fires a
 	 * WorkfowEvent
 	 * 
+	 * This method also set an empyt $workitemID field and the namowner field to
+	 * the current user. This is used in case that a workitem is not processed
+	 * but save (see dmsController save). In such a case the workitem is asigned
+	 * to the current user.
+	 * 
 	 * @param modelVersion
 	 *            - model version
 	 * @param processID
@@ -143,6 +152,13 @@ public class WorkflowController extends
 
 		getWorkitem().replaceItemValue("$ModelVersion", modelVersion);
 		getWorkitem().replaceItemValue("$ProcessID", processID);
+
+		// set default owner
+		getWorkitem().replaceItemValue("namowner",
+				loginController.getUserPrincipal());
+
+		// set empty $workitemid
+		getWorkitem().replaceItemValue("$workitemid", "");
 
 		if (processRef != null) {
 			getWorkitem().replaceItemValue("$UniqueIDRef", processRef);
