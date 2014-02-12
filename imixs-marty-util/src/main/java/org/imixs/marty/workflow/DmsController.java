@@ -113,15 +113,15 @@ public class DmsController implements Serializable {
 
 	/**
 	 * WorkflowEvent listener to update the DMS property if a WorkItem has
-	 * changed.
+	 * changed, processed or saved.
 	 * 
 	 * Newly attached files will be transfered into the BlobWorkitem. The
-	 * BlobWorkitem will be saved before the workitem is processed.
+	 * BlobWorkitem will be saved before the workItem is processed.
 	 * 
 	 * The read and write access for a BlobWorkitem will be updated by the
 	 * org.imixs.marty.plugins.BlobPlugin.
 	 * 
-	 * The DMSController also updates the file Properties after a workitem was
+	 * The DMSController also updates the file Properties after a workItem was
 	 * processed. This is because a plug-in can add a new file (like the
 	 * reportPlugIn), and so the plug-in also updates the $file information of
 	 * the parent WorkItem. For that reason the DMS property will be updated by
@@ -141,8 +141,10 @@ public class DmsController implements Serializable {
 						.startsWith("workitem"))
 			return;
 
-		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == workflowEvent
-				.getEventType()) {
+		int eventType = workflowEvent.getEventType();
+
+		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == eventType
+				|| WorkflowEvent.WORKITEM_BEFORE_SAVE == eventType) {
 
 			// load/create the blobWorkitem.....
 			blobWorkitem = workflowController.loadBlobWorkitem(workflowEvent
@@ -171,9 +173,9 @@ public class DmsController implements Serializable {
 		}
 
 		// if workItem has changed, then update the dms list
-		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()
-				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
-						.getEventType()) {
+		if (WorkflowEvent.WORKITEM_CHANGED == eventType
+				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == eventType
+				|| WorkflowEvent.WORKITEM_AFTER_SAVE == eventType) {
 			fileUploadController.doClear(null);
 			if (workflowEvent.getWorkitem() != null) {
 				fileUploadController.setWorkitemID(workflowEvent.getWorkitem()
@@ -258,62 +260,6 @@ public class DmsController implements Serializable {
 			setLink("");
 
 		}
-
-	}
-
-	/**
-	 * This method allows to save the current uploaded files into the blob
-	 * workItem and updates the DMS information in the parent workitem without
-	 * processing the parent workItem.
-	 * 
-	 * NOTE: The method assumes that the user has sufficient write access to the
-	 * blob workitem and the parent workitem.
-	 * 
-	 * It is not recommended to use this method. Instead the
-	 * WorkflowController.process() method should be used.
-	 */
-	public void saveWorkitem() {
-		// load/create the blobWorkitem.....
-		blobWorkitem = workflowController.loadBlobWorkitem(workflowController
-				.getWorkitem());
-
-		// add new attachments
-		fileUploadController.updateWorkitem(blobWorkitem, false);
-		// save blob workitem for further processing through plugins
-		blobWorkitem = workflowController.saveBlobWorkitem(blobWorkitem,
-				workflowController.getWorkitem());
-
-		// if the BlobWorkitem was just created than we did not have yet set
-		// the field $BlobWorkitem
-		// so we update this property here
-		workflowController.getWorkitem().replaceItemValue("$BlobWorkitem",
-				blobWorkitem.getItemValueString(EntityService.UNIQUEID));
-
-		// update the file info for the current workitem
-		fileUploadController.updateWorkitem(workflowController.getWorkitem(),
-				true);
-
-		// store the dms list
-		DMSPlugin.setDmsList(workflowController.getWorkitem(), dmsList,
-				loginController.getUserPrincipal(), "");
-
-		// Kritische Stelle - jetzt das workitem saven - krass - wolfwurst
-		// idee...
-		workflowController.save();
-
-		// Update aktuelle dms daten
-
-		fileUploadController.doClear(null);
-		fileUploadController.setWorkitemID(workflowController.getWorkitem()
-				.getItemValueString("$BlobWorkitem"));
-		fileUploadController.setAttachedFiles(workflowController.getWorkitem()
-				.getFileNames());
-
-		// reset blobWorkitem
-		blobWorkitem = null;
-		// load dms list
-
-		dmsList = DMSPlugin.getDmsList(workflowController.getWorkitem());
 
 	}
 

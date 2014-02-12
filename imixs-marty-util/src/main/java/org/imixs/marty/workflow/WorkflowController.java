@@ -493,6 +493,29 @@ public class WorkflowController extends
 	}
 
 	/**
+	 * The method saves the current workItem and fires the WorkflowEvents
+	 * WORKITEM_BEFORE_SAVE and WORKITEM_AFTER_SAVE.
+	 * 
+	 * NOTE: the super class changes the behavior of save(action) and process a
+	 * workItem instead of saving. This may conflict in future cases. If so we
+	 * should decide if we simply add a new method here called 'saveAsDraft()'
+	 * which would more precisely describe the behavior of this method.
+	 */
+	@Override
+	public void save() throws AccessDeniedException {
+		logger.fine("[WorkflowController] save");
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_BEFORE_SAVE));
+
+		super.save();
+
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(),
+				WorkflowEvent.WORKITEM_AFTER_SAVE));
+	}
+
+	/**
 	 * This method moves a workitem into the archive by appending the sufix
 	 * 'archive' to the attribute type. The Lucene search index will be
 	 * automatically updated by the workitemService.

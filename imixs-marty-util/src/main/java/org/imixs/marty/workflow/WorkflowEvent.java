@@ -17,6 +17,9 @@ public class WorkflowEvent {
 	public static final int WORKITEM_AFTER_RESTOREFROMARCHIVE = 11;
 	public static final int WORKITEM_BEFORE_RESTOREFROMSOFTDELETE = 12;
 	public static final int WORKITEM_AFTER_RESTOREFROMSOFTDELETE = 13;
+	public static final int WORKITEM_BEFORE_SAVE = 14;
+	public static final int WORKITEM_AFTER_SAVE = 15;
+
 
 	// childevents
 	public static final int CHILDWORKITEM_CREATED = 21;
