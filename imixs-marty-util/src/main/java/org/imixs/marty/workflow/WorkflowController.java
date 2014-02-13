@@ -39,6 +39,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Event;
+import javax.enterprise.event.ObserverException;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -52,6 +53,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.exceptions.WorkflowException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.faces.util.LoginController;
 
@@ -460,13 +462,21 @@ public class WorkflowController extends
 	public String process() throws AccessDeniedException,
 			ProcessingErrorException {
 		String actionResult = null;
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.WORKITEM_BEFORE_PROCESS));
 
 		// process workItem and catch exceptions
 		try {
+			// fire event
+			events.fire(new WorkflowEvent(getWorkitem(),
+					WorkflowEvent.WORKITEM_BEFORE_PROCESS));
 			actionResult = super.process();
+		} catch (ObserverException oe) {
+
+			if (oe.getCause() instanceof PluginException) {
+				ErrorHandler.addErrorMessage((PluginException) oe.getCause());
+
+			} else {
+				throw oe;
+			}
 		} catch (PluginException pe) {
 			// add a new FacesMessage into the FacesContext
 			ErrorHandler.handlePluginException(pe);
