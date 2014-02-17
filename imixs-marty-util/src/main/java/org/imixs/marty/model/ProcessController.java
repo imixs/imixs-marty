@@ -68,7 +68,7 @@ public class ProcessController implements Serializable {
 
 	private List<ItemCollection> spaces = null;
 	private List<ItemCollection> processList = null;
-	private ItemCollection process=null;
+	private ItemCollection process = null;
 
 	@Inject
 	protected LoginController loginController = null;
@@ -78,7 +78,7 @@ public class ProcessController implements Serializable {
 
 	@EJB
 	protected EntityService entityService;
-	
+
 	@EJB
 	protected ProcessService processService;
 
@@ -92,11 +92,12 @@ public class ProcessController implements Serializable {
 	public void reset() {
 		spaces = null;
 		processList = null;
-		process=null;
+		process = null;
 	}
 
 	/**
 	 * Returns the current process entity
+	 * 
 	 * @return
 	 */
 	public ItemCollection getProcess() {
@@ -105,6 +106,7 @@ public class ProcessController implements Serializable {
 
 	/**
 	 * Set the current process entity
+	 * 
 	 * @param process
 	 */
 	public void setProcess(ItemCollection process) {
@@ -112,10 +114,11 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
-	 * This method returns all project entities for the current user. This list
-	 * can be used to display project informations inside a form. The returned
-	 * project list is optimized and provides additional the following
-	 * attributes
+	 * This method returns all process entities - indepenedend if the current
+	 * user is member of.
+	 * 
+	 * The returned project list is optimized and provides additional the
+	 * following attributes
 	 * <p>
 	 * isMember, isTeam, isOwner, isManager, isAssist
 	 * 
@@ -283,7 +286,6 @@ public class ProcessController implements Serializable {
 		return null;
 	}
 
-
 	/**
 	 * Returns a process by its name
 	 * 
@@ -297,8 +299,7 @@ public class ProcessController implements Serializable {
 			// iterate over all processes and compare the txtname
 			List<ItemCollection> list = getProcessList();
 			for (ItemCollection process : list) {
-				if (name.equals(process
-						.getItemValueString("txtName"))) {
+				if (name.equals(process.getItemValueString("txtName"))) {
 					return process;
 				}
 			}
@@ -319,8 +320,7 @@ public class ProcessController implements Serializable {
 			// iterate over all processes and compare the txtname
 			List<ItemCollection> list = getSpaces();
 			for (ItemCollection process : list) {
-				if (name.equals(process
-						.getItemValueString("txtName"))) {
+				if (name.equals(process.getItemValueString("txtName"))) {
 					return process;
 				}
 			}
@@ -328,11 +328,6 @@ public class ProcessController implements Serializable {
 		return null;
 	}
 
-	
-	
-	
-	
-	
 	/**
 	 * Returns a list of all spaces which are assigned to a given process
 	 * entity.
