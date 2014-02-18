@@ -22,7 +22,6 @@ import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.util.PropertyService;
 
 /**
  * This EJB provides a ldap lookup service for user informations
@@ -30,6 +29,17 @@ import org.imixs.workflow.jee.util.PropertyService;
  * The bean reads its configuration from the configuration property file located
  * in the glassfish domains config folder
  * (GLASSFISH_DOMAIN/config/imixs-office-ldap.properties).
+ * 
+ * 
+ * 
+ * IMPORTANT!
+ * 
+ * The LDAPLookupService can not use the EJB PropertyService because of the
+ * PropertyInterceptor Class which will lead into a endless loop between
+ * LDAPGroupInterceptor and PropertyInterceptor !!!
+ * 
+ * For that reason the proertyService is used manually here!!
+ * 
  * 
  * 
  * 
@@ -51,19 +61,31 @@ public class LDAPLookupService {
 
 	@EJB
 	LDAPCache ldapCache;
-	
-	@EJB
-	PropertyService propertyService;
 
-	
-	private static Logger logger = Logger.getLogger(LDAPLookupService.class.getName());
+	// Disabled!!
+	// @EJB
+	// PropertyService xpropertyService;
+
+	private static Logger logger = Logger.getLogger(LDAPLookupService.class
+			.getName());
 
 	@PostConstruct
 	void init() {
 		try {
 			logger.info("LDAPLookupService @PostConstruct - init");
 			// load confiugration entity
-			configurationProperties =propertyService.getProperties();
+
+			// Disabled because of confglict with LDAPGroupInterceptor
+			// configurationProperties = propertyService.getProperties();
+			configurationProperties = new Properties();
+			try {
+				configurationProperties.load(Thread.currentThread()
+						.getContextClassLoader()
+						.getResource("imixs.properties").openStream());
+			} catch (Exception e) {
+				logger.warning("LDAPLookupService unable to find imixs.properties in current classpath");
+				e.printStackTrace();
+			}
 
 			// skip if no configuration
 			if (configurationProperties == null)
@@ -92,8 +114,8 @@ public class LDAPLookupService {
 		// determine the cache size....
 		logger.fine("LDAPLookupService reset....");
 
-		searchContext = configurationProperties.getProperty("ldap.search-context",
-				"");
+		searchContext = configurationProperties.getProperty(
+				"ldap.search-context", "");
 		dnSearchFilter = configurationProperties.getProperty(
 				"ldap.dn-search-filter", "(uid=%u)");
 		groupSearchFilter = configurationProperties.getProperty(
@@ -113,7 +135,7 @@ public class LDAPLookupService {
 			try {
 				if (ldapCtx != null) {
 					ldapCtx.close();
-					ldapCtx=null;
+					ldapCtx = null;
 				}
 			} catch (NamingException e) {
 				e.printStackTrace();
@@ -370,7 +392,7 @@ public class LDAPLookupService {
 			logger.finest("LDAP put groups into cache for '" + aUID + "'");
 
 		} catch (NamingException e) {
-			groupArrayList=null;
+			groupArrayList = null;
 			logger.warning("Unable to fetch groups for: " + aUID);
 			if (logger.isLoggable(java.util.logging.Level.FINEST))
 				e.printStackTrace();
@@ -463,8 +485,6 @@ public class LDAPLookupService {
 		return sAttriubteValue;
 	}
 
-	
-
 	/**
 	 * This method lookups the ldap context either from a Jndi name
 	 * 'LdapJndiName' (DisableJndi=false) or manually if DisableJndi=true.
@@ -478,7 +498,7 @@ public class LDAPLookupService {
 	private LdapContext getDirContext() {
 		String ldapJndiName = null;
 		LdapContext ldapCtx = null;
-		
+
 		// test if configuration is available
 		if (configurationProperties == null) {
 			return null;
@@ -493,31 +513,27 @@ public class LDAPLookupService {
 			// test if manually ldap context should be build
 			String sDisabled = configurationProperties
 					.getProperty("ldap.disable-jndi");
-			
+
 			logger.fine("LDAPGroupLookupService ldap.disable-jndi=" + sDisabled);
-			
+
 			if (sDisabled != null && "true".equals(sDisabled.toLowerCase())) {
 				logger.fine("LDAPGroupLookupService lookup LDAP Ctx manually.....");
 				Hashtable env = new Hashtable();
-				
-				
+
 				// scann all properties starting with 'java.naming'
-				Enumeration<Object> keys=configurationProperties.keys();
+				Enumeration<Object> keys = configurationProperties.keys();
 				while (keys.hasMoreElements()) {
-					String sKey=keys.nextElement().toString();
+					String sKey = keys.nextElement().toString();
 					if (sKey.startsWith("java.naming")) {
-						env.put(sKey,
-								configurationProperties
-										.getProperty(sKey));
-						logger.fine("Set key: " + sKey +"=" + configurationProperties
-										.getProperty(sKey));
+						env.put(sKey, configurationProperties.getProperty(sKey));
+						logger.fine("Set key: " + sKey + "="
+								+ configurationProperties.getProperty(sKey));
 					}
-					
+
 				}
-				
-				
+
 				// set default params...
-				
+
 				env.put("java.naming.factory.initial", configurationProperties
 						.getProperty("java.naming.factory.initial",
 								"com.sun.jndi.ldap.LdapCtxFactory"));
@@ -526,9 +542,7 @@ public class LDAPLookupService {
 								.getProperty(
 										"java.naming.security.authentication",
 										"simple"));
-				
-				
-								
+
 				ldapCtx = new InitialLdapContext(env, null);
 				logger.finest("Get DirContext Manually successful! ");
 
@@ -547,7 +561,8 @@ public class LDAPLookupService {
 			logger.fine("LDAPGroupLookupService Context initialized");
 
 		} catch (NamingException e) {
-			logger.severe("Unable to open ldap context: '" + ldapJndiName + "' : " + e.getMessage());
+			logger.severe("Unable to open ldap context: '" + ldapJndiName
+					+ "' : " + e.getMessage());
 			if (logger.isLoggable(java.util.logging.Level.FINE))
 				e.printStackTrace();
 		}

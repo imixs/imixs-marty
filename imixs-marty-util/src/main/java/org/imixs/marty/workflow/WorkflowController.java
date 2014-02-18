@@ -463,6 +463,9 @@ public class WorkflowController extends
 			ProcessingErrorException {
 		String actionResult = null;
 
+		// remove old action result to hold current page
+		getWorkitem().removeItem("action");
+		
 		// process workItem and catch exceptions
 		try {
 			// fire event
@@ -470,11 +473,12 @@ public class WorkflowController extends
 					WorkflowEvent.WORKITEM_BEFORE_PROCESS));
 			actionResult = super.process();
 		} catch (ObserverException oe) {
-
+			// test if we can handle the exception...
 			if (oe.getCause() instanceof PluginException) {
+				// add error message into current form
 				ErrorHandler.addErrorMessage((PluginException) oe.getCause());
-
 			} else {
+				// throw unknown exception 
 				throw oe;
 			}
 		} catch (PluginException pe) {

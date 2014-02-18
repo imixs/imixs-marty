@@ -3,13 +3,11 @@ package org.imixs.marty.ejb.security;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.EJB;
 import javax.ejb.Singleton;
-
-import org.imixs.workflow.jee.util.PropertyService;
 
 /**
  * This singleton ejb provides a cache to lookup ldap user informations. The
@@ -39,10 +37,12 @@ public class LDAPCache {
 	int DEFAULT_EXPIRES_TIME = 60000;
 	long expiresTime = 0;
 	long lastReset = 0;
+	private Properties configurationProperties = null;
 	private Cache cache = null; // cache holds userdata
 
-	@EJB
-	PropertyService propertyService;
+	// Disable because of dead-lock
+	//@EJB
+	//PropertyService propertyService;
 
 	private static Logger logger = Logger.getLogger(LDAPCache.class
 			.getName());
@@ -50,6 +50,19 @@ public class LDAPCache {
 	@PostConstruct
 	void init() {
 		try {
+			
+			configurationProperties = new Properties();
+			try {
+				configurationProperties.load(Thread.currentThread()
+						.getContextClassLoader()
+						.getResource("imixs.properties").openStream());
+			} catch (Exception e) {
+				logger.warning("LDAPLookupService unable to find imixs.properties in current classpath");
+				e.printStackTrace();
+			}
+
+			
+			
 			resetCache();
 		} catch (Exception e) {
 			logger.severe("LDAPCache unable to initalize LDAPCache");
@@ -67,7 +80,7 @@ public class LDAPCache {
 		logger.fine("LDAPCache resetCache - initalizing settings....");
 		int iCacheSize = DEFAULT_CACHE_SIZE;
 		try {
-			iCacheSize = Integer.valueOf(propertyService.getProperties()
+			iCacheSize = Integer.valueOf(configurationProperties
 					.getProperty("ldap.cache-size", "100"));
 		} catch (NumberFormatException nfe) {
 			iCacheSize = DEFAULT_CACHE_SIZE;
@@ -81,7 +94,7 @@ public class LDAPCache {
 		// read expires time...
 		try {
 			expiresTime = DEFAULT_EXPIRES_TIME;
-			String sExpires = propertyService.getProperties().getProperty(
+			String sExpires = configurationProperties.getProperty(
 					"ldap.cache-expires", "600000");
 			expiresTime = Long.valueOf(sExpires);
 		} catch (NumberFormatException nfe) {
