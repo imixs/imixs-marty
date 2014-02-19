@@ -53,7 +53,6 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
-import org.imixs.workflow.exceptions.WorkflowException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.faces.util.LoginController;
 
@@ -453,56 +452,61 @@ public class WorkflowController extends
 	 * The action method processes the current workItem and fires the
 	 * WorkflowEvents WORKITEM_BEFORE_PROCESS and WORKITEM_AFTER_PROCESS.
 	 * 
-	 * The Method also catches a PluginException and adds the corresponding
-	 * Faces Error Message into the FacesContext. If the PluginException was
-	 * thrown from the RulePLugin then the method test this exception for
-	 * ErrorParams with will generate separate Faces Error Messages.
+	 * The Method also catches PluginExceptions and adds the corresponding Faces
+	 * Error Message into the FacesContext. 
+	 * 
+	 * In case of an exception the WorkflowEvent WORKITEM_AFTER_PROCESS will not
+	 * be fired.
 	 */
 	@Override
 	public String process() throws AccessDeniedException,
 			ProcessingErrorException {
 		String actionResult = null;
 
-		// remove old action result to hold current page
-		getWorkitem().removeItem("action");
-		
 		// process workItem and catch exceptions
 		try {
 			// fire event
 			events.fire(new WorkflowEvent(getWorkitem(),
 					WorkflowEvent.WORKITEM_BEFORE_PROCESS));
+
+			// process workitem
 			actionResult = super.process();
+
+			// reset versions and editor sections
+			versions = null;
+			editorSections = null;
+			// ! Do not call setWorkitem here because this fires a
+			// WORKITEM_CHANGED event !
+
+			// fire event
+			events.fire(new WorkflowEvent(getWorkitem(),
+					WorkflowEvent.WORKITEM_AFTER_PROCESS));
+
+			// if a action was set by the workflowController, then this
+			// action will be the action result String
+			if (action != null && !action.isEmpty()) {
+				actionResult = action;
+				// reset action
+				setAction(null);
+			}
+
 		} catch (ObserverException oe) {
+			actionResult = null;
 			// test if we can handle the exception...
 			if (oe.getCause() instanceof PluginException) {
 				// add error message into current form
 				ErrorHandler.addErrorMessage((PluginException) oe.getCause());
 			} else {
-				// throw unknown exception 
+				// throw unknown exception
 				throw oe;
 			}
 		} catch (PluginException pe) {
+			actionResult = null;
 			// add a new FacesMessage into the FacesContext
 			ErrorHandler.handlePluginException(pe);
 		}
-		// reset versions and editor sections
-		versions = null;
-		editorSections = null;
-		// ! Do not call setWorkitem here because this fires a WORKITEM_CHANGED
-		// event !
 
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.WORKITEM_AFTER_PROCESS));
-
-		// if a action is defined by the workflowController, then this action
-		// will be the action result String
-		if (action != null && !action.isEmpty()) {
-			actionResult = action;
-			// reset action
-			setAction(null);
-		}
-
+		// return action result - null in case of an exception
 		return actionResult;
 	}
 
