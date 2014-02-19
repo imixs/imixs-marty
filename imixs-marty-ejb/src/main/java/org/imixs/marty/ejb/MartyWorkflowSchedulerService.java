@@ -29,11 +29,13 @@ package org.imixs.marty.ejb;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
@@ -101,6 +103,7 @@ public class MartyWorkflowSchedulerService {
 
 	int iProcessWorkItems = 0;
 	int iScheduledWorkItems = 0;
+	List<String> processedIDs=null;
 
 	/**
 	 * This method loads the current scheduler configuration. If no
@@ -161,10 +164,13 @@ public class MartyWorkflowSchedulerService {
 		// update write and read access
 		configItemCollection.replaceItemValue("type", TYPE);
 		configItemCollection.replaceItemValue("txtName", NAME);
-		configItemCollection.replaceItemValue("$writeAccess",
-				"org.imixs.ACCESSLEVEL.MANAGERACCESS");
-		configItemCollection.replaceItemValue("$readAccess",
-				"org.imixs.ACCESSLEVEL.MANAGERACCESS");
+		// configItemCollection.replaceItemValue("$writeAccess",
+		// "org.imixs.ACCESSLEVEL.MANAGERACCESS");
+		// configItemCollection.replaceItemValue("$readAccess",
+		// "org.imixs.ACCESSLEVEL.MANAGERACCESS");
+
+		configItemCollection.replaceItemValue("$writeAccess", "");
+		configItemCollection.replaceItemValue("$readAccess", "");
 
 		configItemCollection = updateTimerDetails(configItemCollection);
 		// save entity
@@ -502,6 +508,9 @@ public class MartyWorkflowSchedulerService {
 	@Timeout
 	void runTimer(javax.ejb.Timer timer) throws AccessDeniedException {
 
+		
+		processedIDs=new ArrayList<String>();
+		
 		ItemCollection configItemCollection = loadConfiguration();
 		logger.info("[MartyWorkflowSchedulerService] runTimer started....");
 
@@ -859,11 +868,28 @@ public class MartyWorkflowSchedulerService {
 	 */
 	@TransactionAttribute(value = TransactionAttributeType.REQUIRES_NEW)
 	void processWorkitem(ItemCollection aWorkitem) {
+
+		String sID = aWorkitem.getItemValueString(EntityService.UNIQUEID);
+		
+		
+		if (processedIDs.indexOf(sID)>-1) {
+			
+			logger.warning("[MartyWorkflowScheduler] ERROR - processing twice : " +sID);
+		}
+		
+		processedIDs.add(sID);
+		
+		logger.fine("[MartyWorkflowScheduler] processing: " + sID);
 		try {
+
 			workflowService.processWorkItem(aWorkitem);
 		} catch (Exception e) {
+			logger.warning("[MartyWorkflowScheduler] error processing workitem: "
+					+ sID);
 
-			e.printStackTrace();
+			if (logger.isLoggable(Level.FINEST)) {
+				e.printStackTrace();
+			}
 		}
 	}
 
