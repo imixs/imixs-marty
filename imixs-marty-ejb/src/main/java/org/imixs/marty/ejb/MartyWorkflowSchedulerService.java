@@ -40,7 +40,7 @@ import javax.annotation.Resource;
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RunAs;
 import javax.ejb.EJB;
-import javax.ejb.Local;
+import javax.ejb.LocalBean;
 import javax.ejb.ScheduleExpression;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
@@ -73,7 +73,7 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
  * 
  */
 @Stateless
-@Local
+@LocalBean
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
 public class MartyWorkflowSchedulerService {
