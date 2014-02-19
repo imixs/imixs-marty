@@ -40,7 +40,7 @@ public class DMSPlugin extends AbstractPlugin {
 	private ItemCollection blobWorkitem = null;
 
 	private static Logger logger = Logger.getLogger(DMSPlugin.class
-			.getSimpleName());
+			.getName());
 
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
