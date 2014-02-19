@@ -46,7 +46,7 @@ public class ErrorHandler {
 			addErrorMessage(pe);
 		}
 
-		logger.warning("WorkflowController cauth PluginException - error code="
+		logger.warning("ErrorHandler cauth PluginException - error code="
 				+ pe.getErrorCode() + " - " + pe.getMessage());
 		if (logger.isLoggable(Level.FINE)) {
 
@@ -57,14 +57,14 @@ public class ErrorHandler {
 	
 	/**
 	 * This helper method adds a error message to the faces context, based on
-	 * the data in a PluginException. This kind of error message can be
+	 * the data in a WorkflowException. This kind of error message can be
 	 * displayed in a page using:
 	 * 
 	 * <code>
 	 *          	<h:messages globalOnly="true" />
 	 * </code>
 	 * 
-	 * As the ProcessingErrorException contains an optional object array the
+	 * If the PluginException contains an optional object array the
 	 * message is parsed for params to be replaced
 	 * 
 	 * Example:
