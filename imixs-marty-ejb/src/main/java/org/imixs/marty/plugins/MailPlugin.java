@@ -168,20 +168,22 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 	@Override
 	public void close(int arg0) throws PluginException {
 		if (this.getMailSession() != null) {
-			// Test if a default From address was configured - if then change
-			// from property now!
-			if (propertyService != null) {
-				String sFrom = (String) propertyService.getProperties().get(
-						"mail.defaultSender");
-				String sTestRecipients = (String) propertyService
-						.getProperties().get("mail.testRecipients");
 
-				// test default from address...
-				if (sFrom != null && !"".equals(sFrom)) {
+			MimeMessage mailMessage = (MimeMessage) super.getMailMessage();
+			if (mailMessage != null) {
 
-					MimeMessage mailMessage = (MimeMessage) super
-							.getMailMessage();
-					if (mailMessage != null) {
+				// Test if a default From address was configured - if then
+				// change
+				// from property now!
+				if (propertyService != null) {
+					String sFrom = (String) propertyService.getProperties()
+							.get("mail.defaultSender");
+					String sTestRecipients = (String) propertyService
+							.getProperties().get("mail.testRecipients");
+
+					// test default from address...
+					if (sFrom != null && !"".equals(sFrom)) {
+
 						try {
 							logger.fine("[MartyMailPlugin] set from address: "
 									+ sFrom);
@@ -197,47 +199,48 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 							if (logger.isLoggable(Level.FINE))
 								e.printStackTrace();
 						}
+
 					}
+
+					// test if TestReceipiens are defined...
+					if (sTestRecipients != null && !"".equals(sTestRecipients)) {
+						List<String> vRecipients = new Vector<String>();
+						// split multivalues
+						StringTokenizer st = new StringTokenizer(
+								sTestRecipients, ",", false);
+						while (st.hasMoreElements()) {
+							vRecipients.add(st.nextToken().trim());
+						}
+
+						logger.info("[MailPlugin] - TestMode - forward to:");
+						for (String adr : vRecipients) {
+							logger.info("[MailPlugin]    " + adr);
+						}
+						try {
+							getMailMessage().setRecipients(
+									Message.RecipientType.CC, null);
+							getMailMessage().setRecipients(
+									Message.RecipientType.BCC, null);
+							getMailMessage().setRecipients(
+									Message.RecipientType.TO,
+									getInternetAddressArray(vRecipients));
+							// change subject
+							String sSubject = getMailMessage().getSubject();
+							getMailMessage().setSubject("[TEST]: " + sSubject);
+
+						} catch (MessagingException e) {
+							throw new PluginException(
+									ProfilePlugin.class.getSimpleName(),
+									INVALID_EMAIL,
+									"[MailPlugin] unable to set mail recipient: ",
+									e);
+						}
+					}
+
 				}
-
-				// test if TestReceipiens are defined...
-				if (sTestRecipients != null && !"".equals(sTestRecipients)) {
-					List<String> vRecipients = new Vector<String>();
-					// split multivalues
-					StringTokenizer st = new StringTokenizer(sTestRecipients,
-							",", false);
-					while (st.hasMoreElements()) {
-						vRecipients.add(st.nextToken().trim());
-					}
-
-					logger.info("[MailPlugin] - TestMode - forward to:");
-					for (String adr : vRecipients) {
-						logger.info("[MailPlugin]    " + adr);
-					}
-					try {
-						getMailMessage().setRecipients(
-								Message.RecipientType.CC, null);
-						getMailMessage().setRecipients(
-								Message.RecipientType.BCC, null);
-						getMailMessage().setRecipients(
-								Message.RecipientType.TO,
-								getInternetAddressArray(vRecipients));
-						// change subject
-						String sSubject = getMailMessage().getSubject();
-						getMailMessage().setSubject("[TEST]: " + sSubject);
-
-					} catch (MessagingException e) {
-						throw new PluginException(
-								ProfilePlugin.class.getSimpleName(),
-								INVALID_EMAIL,
-								"[MailPlugin] unable to set mail recipient: ",
-								e);
-					}
-				}
+				super.close(arg0);
 
 			}
-			super.close(arg0);
-
 		}
 	}
 
