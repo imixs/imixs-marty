@@ -845,7 +845,7 @@ public class MartyWorkflowSchedulerService {
 					// call from new instance because of transaction new...
 					// see: https://www.java.net/node/705304
 					ctx.getBusinessObject(MartyWorkflowSchedulerService.class)
-							.processSingelWorkitem(workitem);
+							.processSingleWorkitem(workitem);
 					iProcessWorkItems++;
 				} catch (Exception e) {
 					logger.warning("[WorkflowSchedulerService] error processing workitem: "
@@ -870,7 +870,7 @@ public class MartyWorkflowSchedulerService {
 	 * @throws AccessDeniedException
 	 */
 	@TransactionAttribute(value = TransactionAttributeType.REQUIRES_NEW)
-	public void processSingelWorkitem(ItemCollection aWorkitem)
+	public void processSingleWorkitem(ItemCollection aWorkitem)
 			throws AccessDeniedException, ProcessingErrorException,
 			PluginException {
 		workflowService.processWorkItem(aWorkitem);
