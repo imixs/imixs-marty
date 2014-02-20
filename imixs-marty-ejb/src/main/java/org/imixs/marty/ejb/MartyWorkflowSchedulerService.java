@@ -71,7 +71,8 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
  * 'configuration' and the txtName = '"org.imixs.marty.workflow.scheduler'.
  * 
  * 
- * 
+ * The method processSingleWorkitem() is used to process a workitem in an
+ * isolated transaction. See: http://blog.imixs.org/?p=155
  * 
  * @author rsoika
  * 
