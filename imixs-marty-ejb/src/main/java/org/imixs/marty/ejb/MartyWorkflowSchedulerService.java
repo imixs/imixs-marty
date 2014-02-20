@@ -545,24 +545,25 @@ public class MartyWorkflowSchedulerService {
 			}
 
 		} catch (Exception e) {
-			logger.severe("[WorkflowSchedulerService] error processing worklist: " + e.getMessage());
+			logger.severe("[WorkflowSchedulerService] error processing worklist: "
+					+ e.getMessage());
 			if (logger.isLoggable(Level.FINE)) {
 				e.printStackTrace();
 			}
 		}
 
 		logger.info("[WorkflowSchedulerService] finished successfull");
-		
+
 		logger.info("[WorkflowSchedulerService] " + iProcessWorkItems
 				+ " workitems processed");
-		
-		if (unprocessedIDs.size()>0) {
-			logger.warning("[WorkflowSchedulerService] " + unprocessedIDs.size()
-					+ " workitems could be processed!");
-			for (String aid: unprocessedIDs) {
+
+		if (unprocessedIDs.size() > 0) {
+			logger.warning("[WorkflowSchedulerService] "
+					+ unprocessedIDs.size() + " workitems could be processed!");
+			for (String aid : unprocessedIDs) {
 				logger.warning("[WorkflowSchedulerService]          " + aid);
 			}
-			
+
 		}
 
 		Date endDate = configItemCollection.getItemValueDate("datstop");
@@ -794,11 +795,14 @@ public class MartyWorkflowSchedulerService {
 
 	/**
 	 * This method processes all workitems for a specific processID. the
-	 * processID is idenfied by the activityEntity Object (numprocessid)
+	 * processID is identified by the activityEntity Object (numprocessid)
 	 * 
 	 * If the ActivityEntity has defined a EQL statement (attribute
 	 * txtscheduledview) then the method selects the workitems by this query.
 	 * Otherwise the method use the standard method getWorklistByProcessID()
+	 * 
+	 * 
+	 * @see http://blog.imixs.org/?p=155
 	 * 
 	 * @param aProcessID
 	 * @throws Exception
@@ -843,6 +847,7 @@ public class MartyWorkflowSchedulerService {
 				try {
 					logger.finest("[WorkflowSchedulerService] getBusinessObject.....");
 					// call from new instance because of transaction new...
+					// see: http://blog.imixs.org/?p=155
 					// see: https://www.java.net/node/705304
 					ctx.getBusinessObject(MartyWorkflowSchedulerService.class)
 							.processSingleWorkitem(workitem);
