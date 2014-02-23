@@ -58,13 +58,23 @@ public class UserGroupService {
 
 	@Resource
 	SessionContext ctx;
-	
+
 	@EJB
 	org.imixs.workflow.jee.ejb.EntityService entityService;
 
+	private static Logger logger = Logger.getLogger(UserGroupService.class
+			.getName());
 
-	private static Logger logger = Logger.getLogger(UserGroupService.class.getName());
-
+	/**
+	 * This method verifies the profile data and creates or update the corresponding user
+	 * entries in the user tables.
+	 * 
+	 * NOTE: this method did not change a userid. To do this use the method
+	 * changeUser!
+	 * 
+	 * @param profile
+	 */
+	@SuppressWarnings("unchecked")
 	public void updateUser(ItemCollection profile) {
 		boolean bNewEntity = false;
 
@@ -114,12 +124,72 @@ public class UserGroupService {
 			manager.merge(user);
 	}
 
+	
+	
+	
+	
+	
+	
+	/**
+	 * This method changes the userID of an exsiting user entry and updates the userGroup table entries.
+	 * 
+	 * @param oldID - the existing userentry
+	 * @param newID - the name of the new id
+	 */
+	public void changeUserId(String oldID, String newID) {
+		UserId user = null;
+	
+		// test if new userid still exits
+		user = manager.find(UserId.class, newID);
+		if (user != null) {
+			logger.warning("[UserGroupService] changeUser - new userId '" 
+					+newID +"'is still in Use!");
+			return;
+		}
+
+		// find old user entry....
+		user = manager.find(UserId.class, oldID);
+		if (user == null) {
+			logger.warning("[UserGroupService] changeUser - UserID '" +  oldID + "' not found!");
+			return;
+		}
+
+	
+		// change id
+		UserId newUser = new UserId(newID);
+		newUser.setPassword(user.getPassword());
+		newUser.setUserGroups(user.getUserGroups());
+		manager.persist(newUser);
+		
+		// remove old
+		manager.remove(user);
+	}
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	/**
 	 * This method verifies if a default user id already exists. If no userID
 	 * exists the method generates a default account 'admin' with password
 	 * 'adminadmin'
-	 * @throws AccessDeniedException 
+	 * 
+	 * @throws AccessDeniedException
 	 */
+	@SuppressWarnings("unchecked")
 	public void initUserIDs() {
 
 		String sQuery = "SELECT user FROM UserId AS user ";
@@ -130,32 +200,31 @@ public class UserGroupService {
 
 		Collection<UserId> entityList = q.getResultList();
 
-		if (entityList == null || entityList.size()==0) {
+		if (entityList == null || entityList.size() == 0) {
 			logger.info("Create default admin account");
 			// create a default account
-			ItemCollection profile=new ItemCollection();
+			ItemCollection profile = new ItemCollection();
 			profile.replaceItemValue("type", "profile");
 			profile.replaceItemValue("txtName", "admin");
 			profile.replaceItemValue("txtPassword", "adminadmin");
 			profile.replaceItemValue("txtGroups", "IMIXS-WORKFLOW-Manager");
-			
+
 			// hard coded version nummer!
 			profile.replaceItemValue("$modelversion", "system-en-0.0.1");
 			profile.replaceItemValue("$processid", 210);
-				
-			
+
 			try {
 				entityService.save(profile);
 			} catch (AccessDeniedException e) {
 				logger.warning("UserGroupService - unable to initialize default admin account");
 				logger.severe(e.getMessage());
-				//throw new RuntimeException(e);
+				// throw new RuntimeException(e);
 				return;
 			}
 			this.updateUser(profile);
-			
+
 		}
-	
+
 	}
 
 }
