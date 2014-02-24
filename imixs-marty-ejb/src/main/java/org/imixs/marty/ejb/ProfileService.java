@@ -42,6 +42,7 @@ import javax.ejb.SessionContext;
 import javax.ejb.Singleton;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.util.PropertyService;
 
 /**
  * The Marty ProfileService is a sigelton EJB providing user attributes like the
@@ -74,6 +75,9 @@ public class ProfileService {
 
 	@EJB
 	private org.imixs.workflow.jee.ejb.EntityService entityService;
+	
+	@EJB 
+	private PropertyService propertyService;
 
 	@Resource
 	private SessionContext ctx;
@@ -87,6 +91,21 @@ public class ProfileService {
 		cache = new Cache(DEFAULT_CACHE_SIZE);
 	}
 
+	
+	/**
+	 * This method returns the property 'profile.lowerCaseUserID'. 
+	 * The default value is 'true'
+	 * @return
+	 */
+	public boolean useLowerCaseUserID() {		
+		String value=propertyService.getProperties().getProperty("profile.lowerCaseUserID", "true");
+		if ("false".equals(value))
+			return false;
+		else
+			return true;
+	}
+	
+	
 	/**
 	 * This method returns a profile by its id. The method uses an internal
 	 * cache. The method returns null if no Profile for this name was found
@@ -130,7 +149,8 @@ public class ProfileService {
 		}
 
 		// lower case userId
-		userid = userid.toLowerCase();
+		if (useLowerCaseUserID())
+			userid = userid.toLowerCase();
 
 		// try to get name out from cache
 		ItemCollection userProfile = null;
@@ -181,7 +201,8 @@ public class ProfileService {
 		}
 
 		// lower case userId
-		userid = userid.toLowerCase();
+		if (useLowerCaseUserID())
+			userid = userid.toLowerCase();
 
 		// try to get name out from cache
 		ItemCollection userProfile = null;

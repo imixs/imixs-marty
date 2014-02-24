@@ -136,7 +136,7 @@ public class ProfilePlugin extends AbstractPlugin {
 		String sText;
 
 		String[] fields = { "rtfresultlog", "txtworkflowabstract",
-				"txtworkflowsummary","txtMailSubject","rtfMailBody" };
+				"txtworkflowsummary", "txtMailSubject", "rtfMailBody" };
 
 		for (String aField : fields) {
 			sText = documentActivity.getItemValueString(aField);
@@ -148,9 +148,9 @@ public class ProfilePlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * The method validates the userProfile entity.
-	 * The txtName property will be initialized if a new profile is created
-	 * The txtName property will always be lower case!
+	 * The method validates the userProfile entity. The txtName property will be
+	 * initialized if a new profile is created The txtName property will always
+	 * be lower case!
 	 * 
 	 * @param profile
 	 * @throws PluginException
@@ -158,19 +158,16 @@ public class ProfilePlugin extends AbstractPlugin {
 	void validateUserProfile(ItemCollection profile) throws PluginException {
 		String sUsername = profile.getItemValueString("txtName");
 
-		if (this.getUserName()==null || this.getUserName().isEmpty()) {
-			throw new PluginException(
-					ProfilePlugin.class.getSimpleName(),
-					INVALID_USERNAME,
-					"Invalid username - username is empty");
+		if (this.getUserName() == null || this.getUserName().isEmpty()) {
+			throw new PluginException(ProfilePlugin.class.getSimpleName(),
+					INVALID_USERNAME, "Invalid username - username is empty");
 		}
-		
+
 		// update the txtname if not already set
 		if ("".equals(sUsername)) {
 			// trim and lower case username!
-			sUsername=this.getUserName().toLowerCase().trim();
-			logger.fine("initialize profile with username: "
-					+ sUsername);
+			sUsername = this.getUserName().toLowerCase().trim();
+			logger.fine("initialize profile with username: " + sUsername);
 			profile.replaceItemValue("txtName", sUsername);
 		}
 		if (!isValidUserName(profile))
@@ -208,6 +205,13 @@ public class ProfilePlugin extends AbstractPlugin {
 			sName = sName.trim();
 			profile.replaceItemValue("txtName", sName);
 		}
+		// lower case userid?
+		if ((profileService.useLowerCaseUserID())
+				&& (!sName.equals(sName.toLowerCase()))) {
+			sName = sName.toLowerCase();
+			profile.replaceItemValue("txtName", sName);
+		}
+
 		if (!sUserName.equals(sUserName.trim())) {
 			sUserName = sUserName.trim();
 			profile.replaceItemValue("txtUserName", sUserName);
@@ -369,7 +373,7 @@ public class ProfilePlugin extends AbstractPlugin {
 
 			List<String> tempList = documentContext.getItemValue(sItemValue);
 			// clone List
-			List<String> vUserIDs=new Vector(tempList);
+			List<String> vUserIDs = new Vector(tempList);
 			// get usernames ....
 			for (int i = 0; i < vUserIDs.size(); i++) {
 				ItemCollection profile = profileService
