@@ -70,7 +70,7 @@ public class BrowserCacheController implements Serializable {
 	 * @return
 	 */
 	public long getCacheID() {
-		return System.nanoTime();
+		return System.currentTimeMillis();
 	}
 	
 }

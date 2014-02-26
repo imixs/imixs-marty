@@ -9,8 +9,7 @@
 
 <cc:interface>
 	<cc:attribute name="redirect"></cc:attribute>
-	<cc:attribute name="clear" default="false"
-		type="java.lang.Boolean"></cc:attribute>
+	<cc:attribute name="clear" default="false" type="java.lang.Boolean"></cc:attribute>
 </cc:interface>
 
 <cc:implementation>
@@ -25,21 +24,36 @@
 		<!-- Redirect if cached page -->
 		<script type="text/javascript">
 		/*<![CDATA[*/
-	
 		// check for latestCacheID
-		if (!isValidCacheID(#{browserCacheController.cacheID})) {
-			document.location="#{cc.attrs.redirect}";
+		           
+		// because of Firefox did not run document.ready from a cached page we use optional an eventListener
+		
+		// test if eventListener is supported
+		if(window.onpageshow || window.onpageshow === null){
+			window.addEventListener('pageshow', function() {
+				if (!isValidCacheID(#{browserCacheController.cacheID})) {
+					document.location="#{cc.attrs.redirect}";
+				}
+			}, false);
+		} else {
+			// use jquery document ready
+			$(document).ready(function() {
+				if (!isValidCacheID(#{browserCacheController.cacheID})) {
+					document.location="#{cc.attrs.redirect}";
+				}
+			}); 
 		}
+	
 		// test cache id to redirect if page comes from browser cache
 		function isValidCacheID(currentCacheID) {
 			if (!('localStorage' in window && window['localStorage'] !== null))
 				return true; // old browsers not supported
-			var latestCacheID=localStorage.getItem("org.imixs.latestCacheID");
+			var latestCacheID=sessionStorage.getItem("org.imixs.latestCacheID");
 			if (latestCacheID!=null && currentCacheID<=latestCacheID) {
 				return false;
 			}
 			// set new id
-			localStorage.setItem("org.imixs.latestCacheID", currentCacheID);
+			sessionStorage.setItem("org.imixs.latestCacheID", currentCacheID);
 			return true;
 		}
 
