@@ -54,6 +54,14 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * activityEntity to replace placeholders for a user id with the corresponding
  * user name. There for the plugin uses the profileService EJB
  * 
+ * Example:
+ * 
+ * <code>
+ *    Workitem updated by: <username>namcurrenteditor</username>.
+ * </code>
+ * 
+ * This will replace the namcurrenteditor with the corrsponding profile full username
+ * 
  * @author rsoika
  * 
  */

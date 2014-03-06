@@ -1,0 +1,42 @@
+
+*Browser Cache and History Back Button
+~~~~~~~~~~~~~~
+
+In JSF the browser history back button can lead into an inconsistent page state which can produce unexpected states in processed data.
+Especially for the Workflow Service this can produce a wrong process state of a workitem. For example if a user processes a workitem, and
+then navigates back to the previous workitem state. If the user clicks again on a workflow activity the workitem can be processed wrong.
+
+** The CacheConroller
+~~~~~~~~~~~~~~
+
+ The Class org.imixs.marty.util.BrowserCachController can be used to disable browser caching or define a redirect if the user clicks on 
+ the history back button in his browser. The controller bean provides two ways to avoid history back navigation.
+ 
+*** Disable the Browser Cache for a single page
+~~~~~~~~~~~~~~
+
+ The easiest way to avoid history back navigation is to prevent the browser to cache a page. This can be done with the following marty 
+ faclet which need to be placed inside a <f:view> component:
+ 
++--------------------------+
+	<!-- Disable browser cache! -->
+	<marty:cacheControl clear="true" />		
++--------------------------+
+
+ This tag clears the brwwser cache and prevents the browser from caching a page by setting "Cache-Control" to "no-cache, no-store, must-revalidate".
+
+
+
+
+*** Redirect the user after history back navigation
+~~~~~~~~~~~~~~
+ The disadvantage of disabling the browser cache is that the user will see a browser error page. To avoid this behavior it is possible
+ to use the marty cacheControl and redirect the user to a new page if he clicks the browser back button
+
++--------------------------+
+	<!-- Disable browser cache! -->
+	<marty:cacheControl redirect="#{facesContext.externalContext.requestContextPath}/index.jsf?workitem=#{workflowController.workitem.item['$uniqueid']}" />
+		
++--------------------------+
+ 
+  This example redirects the user to another page if he clicks the history back button. 
