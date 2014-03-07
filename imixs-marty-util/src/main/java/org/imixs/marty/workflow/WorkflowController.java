@@ -238,6 +238,9 @@ public class WorkflowController extends
 		// (can result to null!)
 		if (deepLinkId != null && !deepLinkId.isEmpty()) {
 			this.load(deepLinkId);
+			// finally we destroy the deepLinkId to avoid a reload on the next
+			// post event
+			deepLinkId = null; // !
 		}
 	}
 
@@ -453,7 +456,7 @@ public class WorkflowController extends
 	 * WorkflowEvents WORKITEM_BEFORE_PROCESS and WORKITEM_AFTER_PROCESS.
 	 * 
 	 * The Method also catches PluginExceptions and adds the corresponding Faces
-	 * Error Message into the FacesContext. 
+	 * Error Message into the FacesContext.
 	 * 
 	 * In case of an exception the WorkflowEvent WORKITEM_AFTER_PROCESS will not
 	 * be fired.

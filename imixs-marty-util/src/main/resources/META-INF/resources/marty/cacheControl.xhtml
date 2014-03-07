@@ -20,48 +20,58 @@
 			listener="#{browserCacheController.clearCache}" />
 	</c:if>
 
-	<c:if test="#{! empty cc.attrs.redirect}">
-		<!-- Redirect if cached page -->
-		<script type="text/javascript">
+	
+	<script type="text/javascript">
 		/*<![CDATA[*/
-		// check for latestCacheID
 		           
-		// because of Firefox did not run document.ready from a cached page we use optional an eventListener
-		
-		// test if eventListener is supported
+		var currentBrowserWindowID=#{browserCacheController.browserWindowID};
+		           
+		// update _browserWindowID for next post		           
 		if(window.onpageshow || window.onpageshow === null){
 			window.addEventListener('pageshow', function() {
-				if (!isValidCacheID(#{browserCacheController.cacheID})) {
-					document.location="#{cc.attrs.redirect}";
-				}
+				validateBrowserWindowID(currentBrowserWindowID);
 			}, false);
 		} else {
 			// use jquery document ready
 			$(document).ready(function() {
-				if (!isValidCacheID(#{browserCacheController.cacheID})) {
-					document.location="#{cc.attrs.redirect}";
-				}
+				validateBrowserWindowID(currentBrowserWindowID);
 			}); 
 		}
-	
-		// test cache id to redirect if page comes from browser cache
-		function isValidCacheID(currentCacheID) {
+		
+		
+		/* 
+		 * Update browserWindowID and test if SesseionStorrage for lastbrowserWindowID
+		 * to redirect if page comes from browser cache
+		 */
+		function validateBrowserWindowID(browserWindowID) {
+			// set _browserWindowID for the next post request
+			$("[id$=\\:browserWindowID]").val(browserWindowID);
+			
+			// try to redirect if the browserWindowID is deprecated.....
 			if (!('localStorage' in window && window['localStorage'] !== null))
-				return true; // old browsers not supported
-			var latestCacheID=sessionStorage.getItem("org.imixs.latestCacheID");
-			if (latestCacheID!=null && currentCacheID<=latestCacheID) {
-				return false;
+				return true; // old browsers are not supported for that feature
+
+			// test if a redirect was defined.....
+			var newLocation="#{cc.attrs.redirect}";
+			if (newLocation!=null && newLocation.length>0) {
+				// read lastBrowserWindowID from the sessionStorrage
+				var lastBrowserWindowID=sessionStorage.getItem("org.imixs.lastBrowserWindowID");
+				if (lastBrowserWindowID!=null && browserWindowID<=lastBrowserWindowID) {
+					// ID is deprecated - redirect!
+					document.location="#{cc.attrs.redirect}";
+				} else {
+					// update lastBrowserWindowID...
+					sessionStorage.setItem("org.imixs.lastBrowserWindowID", browserWindowID);
+				}
 			}
-			// set new id
-			sessionStorage.setItem("org.imixs.latestCacheID", currentCacheID);
-			return true;
 		}
-
+		
+		
+		
 		/*]]>*/
-		</script>
-	</c:if>
-
-
+	</script>
+	<!-- hidden field to store the _BrowserWindowID -->
+	<h:inputText id="browserWindowID" value="#{workflowController.workitem.item['_browserWindowID']}" />
 
 </cc:implementation>
 
