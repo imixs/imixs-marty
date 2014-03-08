@@ -96,15 +96,10 @@ public class BrowserCacheController implements Serializable {
 	 */
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent)
 			throws AccessDeniedException, PluginException {
-		if (workflowEvent == null)
+		if (workflowEvent == null || workflowEvent.getWorkitem()==null)
 			return;
 
-		// skip if not a workItem...
-		if (workflowEvent.getWorkitem() != null
-				&& !workflowEvent.getWorkitem().getItemValueString("type")
-						.startsWith("workitem"))
-			return;
-
+		
 		int eventType = workflowEvent.getEventType();
 
 		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == eventType
