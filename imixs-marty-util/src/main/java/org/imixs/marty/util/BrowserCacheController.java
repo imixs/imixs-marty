@@ -19,7 +19,8 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 
 /**
  * This class is to avoid history back button in browser by discarding the
- * browser cache
+ * browser cache. Also the controller detects multible Browser Tabs/Windows and
+ * avoids posting wrong/deprecated workitems
  * 
  * @author rsoika
  * 
@@ -71,7 +72,7 @@ public class BrowserCacheController implements Serializable {
 	}
 
 	/**
-	 * Returns a unique increasing id for each request The id is stored in the
+	 * Returns a unique increasing id for each request. The id is stored in the
 	 * workitemController
 	 * 
 	 * @return
@@ -86,6 +87,13 @@ public class BrowserCacheController implements Serializable {
 		return cacheID;
 	}
 
+	/**
+	 * Verifies the _browserWindowID before saving or processing a workitem.
+	 * 
+	 * @param workflowEvent
+	 * @throws AccessDeniedException
+	 * @throws PluginException
+	 */
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent)
 			throws AccessDeniedException, PluginException {
 		if (workflowEvent == null)
@@ -119,6 +127,9 @@ public class BrowserCacheController implements Serializable {
 						"[BrowserCacheController] Browser Window contains invalid data! ");
 
 			}
+			// remove the cacheIds from the workItem which are no longer needed
+			workflowEvent.getWorkitem().removeItem("_browserWindowID");
+			workflowEvent.getWorkitem().removeItem("_cachedBrowserWindowID");
 		}
 	}
 }
