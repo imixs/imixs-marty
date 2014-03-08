@@ -8,7 +8,6 @@
 	xmlns:cc="http://java.sun.com/jsf/composite">
 
 <cc:interface>
-	<cc:attribute name="redirect"></cc:attribute>
 	<cc:attribute name="clear" default="false" type="java.lang.Boolean"></cc:attribute>
 </cc:interface>
 
@@ -20,59 +19,18 @@
 			listener="#{browserCacheController.clearCache}" />
 	</c:if>
 
-	
-	<script type="text/javascript">
-		/*<![CDATA[*/
-		           
-		var currentBrowserWindowID=#{browserCacheController.browserWindowID};
-		           
-		// update _browserWindowID for next post		           
-		if(window.onpageshow || window.onpageshow === null){
-			window.addEventListener('pageshow', function() {
-				validateBrowserWindowID(currentBrowserWindowID);
-			}, false);
-		} else {
-			// use jquery document ready
-			$(document).ready(function() {
-				validateBrowserWindowID(currentBrowserWindowID);
-			}); 
-		}
-		
-		
-		/* 
-		 * Update browserWindowID and test if SesseionStorrage for lastbrowserWindowID
-		 * to redirect if page comes from browser cache
-		 */
-		function validateBrowserWindowID(browserWindowID) {
-			// set _browserWindowID for the next post request
-			$("[id$=\\:browserWindowID]").val(browserWindowID);
-			
-			// try to redirect if the browserWindowID is deprecated.....
-			if (!('localStorage' in window && window['localStorage'] !== null))
-				return true; // old browsers are not supported for that feature
+	<f:view beforePhase="#{browserCacheController.beforePhase}">
 
-			// test if a redirect was defined.....
-			var newLocation="#{cc.attrs.redirect}";
-			if (newLocation!=null && newLocation.length>0) {
-				// read lastBrowserWindowID from the sessionStorrage
-				var lastBrowserWindowID=sessionStorage.getItem("org.imixs.lastBrowserWindowID");
-				if (lastBrowserWindowID!=null && browserWindowID<=lastBrowserWindowID) {
-					// ID is deprecated - redirect!
-					document.location="#{cc.attrs.redirect}";
-				} else {
-					// update lastBrowserWindowID...
-					sessionStorage.setItem("org.imixs.lastBrowserWindowID", browserWindowID);
-				}
-			}
-		}
-		
-		
-		
-		/*]]>*/
-	</script>
-	<!-- hidden field to store the _BrowserWindowID -->
-	<h:inputHidden id="browserWindowID" value="#{workflowController.workitem.item['_browserWindowID']}" />
-
+		<!-- hidden fields to store the process state -->
+		<h:inputHidden id="browserWindowID"
+			value="#{workflowController.workitem.item['_browserWindowID']}" />
+		<h:inputHidden id="uniqueID"
+			value="#{workflowController.workitem.item['$uniqueid']}" />
+		<h:inputHidden id="modelversionID"
+			value="#{workflowController.workitem.item['$modelversion']}" />
+		<h:inputHidden id="processID"
+			value="#{workflowController.workitem.item['$processID']}" />
+	</f:view>
 </cc:implementation>
 
 

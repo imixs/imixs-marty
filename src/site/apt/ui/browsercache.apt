@@ -6,7 +6,79 @@ In JSF the browser history back button can lead into an inconsistent page state 
 Especially for the Workflow Service this can produce a wrong process state of a workitem. For example if a user processes a workitem, and
 then navigates back to the previous workitem state. If the user clicks again on a workflow activity the workitem can be processed wrong.
 
-** The CacheConroller
+UseCases
+
+** Use-Case-1 - two brower tabs with same workitem
+~~~~~~~~~~~~~~
+ - The user open a browserwindow and navigates to a workitem.
+ - The user open a second browser window and navigates to the same workitem
+ - The user process the workitem in the second browser window
+ - The user switch back to the first browser window 
+     - the data in the first browser window is now deprecated.
+ - The user process the workitem in the first browser window
+ 
+Expected behavior:
+ An error message occurs telling the user that his data is outdated.
+ 
+  
+
+
+** Use-Case-2 - two brower tabs with different workitems
+~~~~~~~~~~~~~~
+ - The user open a browserwindow and navigates to a workitem (1).
+ - The user open a second browser window and navigates to another workitem (2)
+ - The user switch back to the first browser window 
+     - the data in the first browser window is no longer synchronized with the backend
+ - The user process the workitem (1) in the first browser window
+ 
+Expected behavior:
+ The phase listener recognizes the wrong workitem (2) and reloads workitem (1) before 
+  'applyDataPhase'. The workitem (1) is processed correctly. No error occurs
+  
+  
+  
+  
+ ** Use-Case-3 - HistoryBack Navigation
+~~~~~~~~~~~~~~
+ - The user open a browserwindow and navigates to a workitem (1).
+ - The user navigates to a second workitem (2).
+ - The user click on browser history back to get back directly to workitem (1) from workitem (2)
+     - the data for workitem (1) - comming from browsers cache is no longer synchronized with 
+       the backend workitem (2)
+ - The user now process the workitem (1)
+ 
+Expected behavior:
+  The phase listener recognizes the wrong workitem (2) and reloads workitem (1) before 
+  'applyDataPhase'. The workitem (1) is processed correctly. No error occurs
+
+
+
+
+
+ ** Use-Case-3 - HistoryBack Navigation with different $ProcessID
+~~~~~~~~~~~~~~
+ - The user open a browserwindow and navigates to a workitem (1).
+ - The user process the workitem (1) with leads to a new process state ($processid changed).
+ - The user click on browser history back to get back to a previous state of workitem (1) 
+     - the data for workitem (1) - comming from browsers cache is no longer synchronized with 
+       the backend workitem (1) which was processed in the meantime.
+ - The user now process the workitem (1)
+ 
+Expected behavior:
+  The phase listener recognizes the wrong workitem uniqueid maches. But the $ProcessID not.
+  It makes no sense to relad the workitem. 
+  An error message occurs telling the user that his data is outdated.
+
+
+
+
+
+
+
+
+
+
+* The CacheConroller
 ~~~~~~~~~~~~~~
 
  The Class org.imixs.marty.util.BrowserCachController can be used to disable browser caching or define a redirect if the user clicks on 
