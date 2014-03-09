@@ -1,0 +1,74 @@
+The Architecture
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ The Marty project consist of different modules to provide a stable and flexible framework 
+ for building workflow applications. As the marty project uses the maven build and configuration 
+ framework each of these modules is a separate maven artefact. This architecture makes it easy 
+ to reuse these modules in different business applications.
+
+*imixs-marty-util
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ The marty util module contains jsf backing beans and util classes for building frontends 
+ based on the JSF specification. This is the main part of the project to give developers the
+  ability to setup custom business application frontends very fast and easy.
+
+*imixs-marty-ejb
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ The ejb module contains mainly workflow plugins to provide business logig independent from 
+ the frontend. It is important to understand that business logic should be outsourced into 
+ this module. Using imixs workflow plugins guaranties that the implementation can also be used 
+ from external clients which access the workflow service through remote ejb calls or WebServices.
+
+* imixs-marty-web
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ This module provides a basic concept for a frontend client, based on xhtml, css and javascript. 
+ The web module is build on the jsf standard and allows building frontends very fast and easy.
+
+
+*The architectural layers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ The maven artefacts shown above, represent the architectural layers of the framework. Each of these layers has a more or less fine-grained view on the system.
+
+**service layer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ The service layer contains stateless session ejbs which offer a fine grained functionality of the system. This layer is typically constructed from the core services provided from the Imixs Workflow project.
+
+ * EntityService - The EntityService allows to access the imixs data model
+
+ * ModelService - The ModelService can control and manage different workflow models
+
+ * WorkflowService - The WorkflowService process workitems based on workflow models
+
+ * ReportService - The ReportService aggregates workitems into complex views
+
+ []
+ 
+ It should not be necessary to implement additional services in this layer. But it can be 
+ useful to implement general additional functionality.
+
+**business logic - Workflow Plug-Ins
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ As the imixs workflow engine is the core component of this framework all the business logic 
+ is mainly implemented in imixs workflow plugins. These plugins allow to separate additional 
+ business functionality from the other layers. An important advantage of this concept is the 
+ fact that each client can access these business logic through the different interfaces from 
+ the imixs workflow. For example a RESTfull service client has the same functionality if the 
+ business logic is encapsulated into plugins.
+
+** frontend / service facade - JSF Controller
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ The frontend or service facade is represented by backing beans from the marty-util artefact. 
+ These backing beans are mainly implemented as controller classes which can be easily 
+ integrated into any web frontend based on the jsf 2.0 specification. CDI is fully supported by 
+ these components. This provides a very flexible way to uses these components in a modern web 
+ architecture. The service facade interacts with the service layer by calling directly the 
+ WorkflowService or the EntitySerivce components.
+
+*The WorkflowController
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ The WorkflowController implementation in the marty project acts as the general frontent 
+ controller for any type of workitem. It is used for general workitems as also for projects 
+ and profiles. So for this reason there is no implementation of a ProjectController or 
+ ProfileController
+ 
+ 

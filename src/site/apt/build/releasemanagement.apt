@@ -1,0 +1,121 @@
+The Buid- and Releasemanagement
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ The Imixs Workflow Project 'Marty' consists of the main framework providing a EJB, 
+ Web and a Java Util module and different subprojects containing complete workflow 
+ applications based on the Marty main framework. All components in this project use the 
+ same release and versioning management. The following section gives an overview how the 
+ release management and versioning is handled in this project.
+
+*The Release Number
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ The release Number is separated into three digits.
+ 
++---------------------+
+  2. 0. 1 
+  |  |  |-- minor version
+  |  |-------- major version 
+  |-------------- main version
++---------------------+
+
+
+**Main Version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ The main version number indicates the general main release of a component. 
+ This number did not change very often. Typical this number will be increase when the 
+ next main version of the Imixs-Workflow Engine is used or a main technology changed. 
+ For example switching from JSF 1.2 to JSF 2.0 can lead to an increase of the version number. 
+ You can not mix artifacts or components with different main versions!
+
+**Major Version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ The major version number is for general grouping the different artifacts and modules. 
+ Major versions are often started when a new major feature or conceptis introduced. For 
+ example when a new mobile client is started. As we use Maven as the general build and 
+ configuration framework major versions are typical reflected in dependencies. So for example 
+ the EJB and Web module form the marty project will have always the same major version. 
+ You should not mix artifacts or components with different majorversions.
+
+**Minor Version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ The minor version number is for bug fixes, enhancements and small feature requests. In most 
+ cases artifacts and components with different minor versions should work together.
+
+The Release Management
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ All releases of components and applications from this project are build with the configuration 
+ and build framework Maven.
+
+ During development we did not work with snapshot staging concept from maven like in the 
+ Imixs Workflow main project. This means that the trunk always contains the current release
+  which is work under progress. If a version of a component or application is stable or 
+  used in a productive environment we create a release candidate from the latest development 
+  version. A release candidate is tagged in the code repository and should not be changed! 
+  (In the beginning we worked with the sufix 'RC-' followed by a number. But this will not 
+  be continued since main version 2.0.0!)
+
+
+Create a release manually
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ To create a new release follow these steps:
+
+ * Verify that your current development sources are up to date
+ 
+ * Create a new tag from the current develpment version (trunk) with the current version number under the tags/ tree. e.g /tags/2.0.1
+
+ * Increase the version number of the trunk version in the parent pom and all including project modules
+ 
+ * check in your changes into the trunk
+
+ []
+ 
+ Before we start a new version the last build should be uploaded into the imixs repository. 
+ As we did not use the staging process provided by sonatype this process is done manually.
+
+*Create a release using the mvn release command
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ You can optional use the mvn release:prepare command to automate the process. 
+ To use the mvn relase command make sure the pom.xml contains the follwong sections:
+
++-----------------------+
+....
+<scm>
+<connection>scm:svn:https://svn.java.net/svn/imixs-workflow-marty~svn/imixs-marty</connection>
+<developerConnection>scm:svn:https://svn.java.net/svn/imixs-workflow-marty~svn/imixs-marty</developerConnection>
+<url>scm:svn:https://svn.java.net/svn/imixs-workflow-marty~svn/imixs-marty</url>
+</scm>
++-----------------------+
+
+ Make sure the urls points to the valid scm location.
+
+ maven-release-plugin add the maven-relase-plugin configuration to the pom:
+
+
++-----------------------+
+....
+<!-- relase management -->
+<plugin>
+<groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-release-plugin</artifactId>
+<configuration>
+<tagBase>https://svn.java.net/svn/imixs-workflow-marty~svn/imixs-marty/tags</tagBase>
+<mavenExecutorId>forked-path</mavenExecutorId>
+</configuration>
+</plugin>
++-----------------------+
+
+ also here the tagBase tag need to point to the valid scm location!
+
+ To create a new version, run the mvn commands:
+
++-----------------------+
+ 
+ mvn clean
+ mvn release:prepare
+ mvn release:clean
++-----------------------+
+
+ Note: you need to verify that the current developer version is a snaptshot release! 
+ and did not use any snaptshot dependencies from the Imixs Workflow project. Otherwise 
+ the maven release plugin will not succeed.

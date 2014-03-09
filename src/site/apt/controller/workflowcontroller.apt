@@ -1,26 +1,32 @@
 
-*WorkflowController
-~~~~~~~~~~~~~~
+WorkflowController
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+ The marty util project provides a general controller bean to process workitems, called 'org.imixs.marty.workflow.WorkflowController'. 
+ This bean is used in session scope and holds a reference to the currently process workitem. 
+ The controller is independent from the type of workitem. So it is uses to not only process workitems 
+ of the main workflow but also project or profile workitems. The controller subclasses the 
+ org.imixs.workflow.jee.faces.workitem.WorkflowController and provides additional business logic. 
+ The WorkflowController provides easy acccess to properties of a workitem, so you can bind input fields to 
+ specific properties of a workitem:
 
-The marty util project provides a general controller bean to process workitems, called 'org.imixs.marty.workflow.WorkflowController'. This bean is used in session scope and holds a reference to the currently process workitem. The controller is independent from the type of workitem. So it is uses to not only process workitems of the main workflow but also project or profile workitems.
-The controller subclasses the org.imixs.workflow.jee.faces.workitem.WorkflowController and provides additional business logic.
-The WorkflowController provides easy acccess to properties of a workitem, so you can bind input fields to specific properties of a workitem:
-
++--------------------------------------------------------+
  <h:panelGroup layout="block"  >
-  <h:outputLabel value="#{workitemMB.item['txtaddress']}" />
-  <h:outputLabel value="#{workitemMB.item['txtzip']} #{workitemMB.item['txtcity']}" />
-  <h:outputLabel value="#{workitemMB.item['txtstate']}" />
-  <h:outputLabel value="#{workitemMB.item['txtcountry']}" />
+  <h:outputLabel value="#{workflowController.workitem.item['txtaddress']}" />
+  <h:outputLabel value="#{workflowController.workitem.item['txtzip']} #{workitemMB.item['txtcity']}" />
+  <h:outputLabel value="#{workflowController.workitemB.item['txtstate']}" />
+  <h:outputLabel value="#{workflowController.workitem.item['txtcountry']}" />
  </h:panelGroup>
++--------------------------------------------------------+
 
+*Editor Sections
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Editor Sections
-~~~~~~~~~~~~~~
+ The workflowController analyses the txtWorkflowEditorID property and provides these information to setup custom xthml forms. 
+ The marty web module provides some basis from layout to spearate form sections e.g. in tabs:
 
-The workflowController analyses the txtWorkflowEditorID property and provides these information to setup custom xthml forms. The marty web module provides some basis from layout to spearate form sections e.g. in tabs:
-
-+-------------------+
-<div class="imixs-tabs">
++--------------------------------------------------------+
+   <div class="imixs-tabs">
 	 <ul>
 	  <c:forEach items="#{workflowController.editorSections}"
 		 var="section">
@@ -33,74 +39,84 @@ The workflowController analyses the txtWorkflowEditorID property and provides th
 	</div>
 	</c:forEach>
 	</div>
-+-------------------+
-**WorkflowEvents
-~~~~~~~~~~~~~~
++--------------------------------------------------------+
+   
+*WorkflowEvents
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The WorkflowController fires events depending on the state of the workitem which can be consumed by other CDI beans in an applicaton. The event handling is implemented using the CDI observer pattern (JSR-299/JSR-330).
-To consume an event a CDI bean have to implement a method with a @Observes annotation for the WorkflowEvent.
+ The WorkflowController fires events depending on the state of the workitem which can be consumed by other 
+ CDI beans in an applicaton. The event handling is implemented using the CDI observer pattern (JSR-299/JSR-330). 
+ To consume an event a CDI bean have to implement a method with a @Observes annotation for the WorkflowEvent.
 
-+-------------------+
++--------------------------------------------------------+
     public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
          .....
      }   
-+-------------------+
++--------------------------------------------------------+
 
-The Events are only triggered by the CDI Bean WorkflowController. If a Workitem is updated or processed by the WorkflowService EJB directyl in the backend (e.g. from the TimerSerivce) no events will be fired. 
+ The Events are only triggered by the CDI Bean WorkflowController. If a Workitem is updated or processed by the 
+ WorkflowService EJB directyl in the backend (e.g. from the TimerSerivce) no events will be fired.
 
-***WORKITEM_INITIALIZED
-+-------------------+
-Fired during the workflowController is initialized
+ *WORKITEM_INITIALIZED 
+ Fired during the workflowController is initialized
 
-***WORKITEM_CREATED
-+-------------------+
-Fired after a new empty woritem was created
+ * WORKITEM_CREATED
+ Fired after a new empty woritem was created
 
-===WORKITEM_CHANGED
-Fired when the workitem has changed (method setWorkitem() called). The event is typical fired if a workitem was clicked by the user in a view. Note: this event is not fired if a workitem was created or during it is processed!
+ * WORKITEM_CHANGED
+ Fired when the workitem has changed (method setWorkitem() called). The event is typical fired if a workitem was clicked by the user in a view. Note: this event is not fired if a workitem was created or during it is processed!
 
-===WORKITEM_BEFORE_PROCESS
-Fired before a workitem will be processed by the workflow engine
+ * WORKITEM_BEFORE_PROCESS
+ Fired before a workitem will be processed by the workflow engine
 
-===WORKITEM_AFTER_PROCESS
-Fired after a workitem was processed by the workflow engine
+ * WORKITEM_AFTER_PROCESS
+ Fired after a workitem was processed by the workflow engine
 
-===WORKITEM_BEFORE_ARCHIVE
-Before a workitem will be archived 
+ * WORKITEM_BEFORE_ARCHIVE
+ Before a workitem will be archived
 
-===WORKITEM_AFTER_ARCHIVE
-After a workitem was archived
+ *WORKITEM_AFTER_ARCHIVE
+ After a workitem was archived
 
-===WORKITEM_BEFORE_SOFTDELETE
-Before a workitem is soft deleted
+ * WORKITEM_BEFORE_SOFTDELETE
+ Before a workitem is soft deleted
 
-===WORKITEM_AFTER_SOFTDELETE
-After a workitem was soft deleted
+ * WORKITEM_AFTER_SOFTDELETE
+ After a workitem was soft deleted
 
-===WORKITEM_BEFORE_RESTOREFROMARCHIVE
-Before a workitem is restored from the archive
+ * WORKITEM_BEFORE_RESTOREFROMARCHIVE
+ Before a workitem is restored from the archive
 
-===WORKITEM_AFTER_RESTOREFROMARCHIVE
-After a worktiem was restored from the archive
+ * WORKITEM_AFTER_RESTOREFROMARCHIVE
+ After a worktiem was restored from the archive
 
-===WORKITEM_BEFORE_RESTOREFROMSOFTDELETE
-Before restore from soft delete
+ * WORKITEM_BEFORE_RESTOREFROMSOFTDELETE
+  Before restore from soft delete
 
-===WORKITEM_AFTER_RESTOREFROMSOFTDELETE
-After restore from soft delete
+ * WORKITEM_AFTER_RESTOREFROMSOFTDELETE
+ After restore from soft delete
 
-=WorklistController=
+ []
+ 
+*WorklistController
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The backing Bean org.imixs.marty.web.workitem.WorklistController is used to manage collections of workitems. The bean is used in view scope to display the current result set of a worklist selection or a search result:
+ The backing Bean org.imixs.marty.web.workitem.WorklistController is used to manage collections of workitems. 
+ The bean is used in view scope to display the current result set of a worklist selection or a search result:
 
++--------------------------------------------------------+
  <h:dataTable var="workitem" value="#{worklistController.workitems}">
  ....
++--------------------------------------------------------+
 
-The WorklistMB also provides methods to navigate through a list of workitems (also called paging)
+ The WorklistMB also provides methods to navigate through a list of workitems (also called paging)
 
-   <h:commandButton actionListener="#{worklistController.doLoadPrev}"
++--------------------------------------------------------+
+  <h:commandButton actionListener="#{worklistController.doLoadPrev}"
     disabled="#{worklistMB.row==0}" value="#{global.prev}">
-   </h:commandButton>
-   <h:commandButton actionListener="#{worklistMB.doLoadNext}"
+  </h:commandButton>
+  <h:commandButton actionListener="#{worklistMB.doLoadNext}"
  	disabled="#{worklistMB.endOfList}" value="#{global.next}">
   </h:commandButton>
++--------------------------------------------------------+
+ 

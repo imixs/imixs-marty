@@ -1,0 +1,164 @@
+How to create a custom build from Imixs Office Workflow
+~~~~~~~~~~~~~~
+
+ There a different ways how you can build and customize Imixs Office Workfow. 
+ One possibility is to check out the Imixs Office Project source and build it from source. 
+ After that you can customize each element of your build. See How to build Imixs Office 
+ Workflow This way is typical used if you plan to test, customize and contribute you changes 
+ directly to this open source project. The disadvantage of this strategy is that you run out 
+ of sync and create a lot of merge conflicts if you work on the trunk version of Imixs Office 
+ Workflow.
+
+* Create a custom build from the Imixs Office Archetype
+~~~~~~~~~~~~~~
+ The recommended way to create a custom build from Imixs Office Workflow is using the 
+ imixs-office-archetype. In this scenario you create you own custom build based on the 
+ latest version of Imixs Office Workflow. You can change the behaviour and layout of your 
+ custom build without conflicting with any updates made by the Imixs Marty project. Also 
+ you can easily upgrade to any new version of imixs worklow or imixs marty.
+
+*Add the Imixs Maven repository
+~~~~~~~~~~~~~~
+ Before you can create a custom build from the imixs-office-archetype you need to add the 
+ Imixs Repository server to your maven configuration. Open your maven settings.xml 
+ ([USERHOME]/.m2/settings.xml) and add the imixs server to your default maven profile 
+ configuration section:
+
++-----------------------------+
+ ....
+ ......
+ <profiles>
+        <profile>
+            <id>default</id>
+             <repositories>          
+             <!-- Imixs Maven Repository -->
+                <repository>
+                    <id>imixs-repository</id>
+                    <name>Imixs Maven Repository</name>
+                    <url>http://www.imixs.org/maven/</url>
+                    <layout>default</layout>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+    <activeProfiles>
+        <activeProfile>default</activeProfile>
+    </activeProfiles>
+</settings>
++-----------------------------+
+
+
+ Now you can create a new maven project based on the latest version of the archetype
+
+* Creating a custom build using Eclipse
+~~~~~~~~~~~~~~
+
+ To create a new maven project from an archetype you can use the Eclipse IDE with the 
+ Maven Plugin (m2e). This Eclipse plugin provides an easy wizard to create a new maven 
+ project based on an archetype.
+
+ * 1.) From the main menue choose 'File -> New -> other'
+
+ * 2.) Select 'Maven -> Maven Project' and click next
+
+ * 3.) Leave the default creation setup and click next again
+
+ * 4.) Now search for the Imixs archetype by entering 'com.imixs.workflow'. Eclipse will search the repository for the latest archetype
+
+[../images/maven001.png]
+
+ * 5.) Click next to setup your project, choose a groupid and artefact id
+
+[../images/maven002.png]
+
+
+ * 6.) Choose the jdbc database, the realm and worklfow version (don't change if you like to work with the defaults)
+
+ 
+ NOTE: if you see no properties restart your Eclipse IDE!
+
+ * 7.) click finish to create the project
+
+*Create a custom build using maven comandline tool
+~~~~~~~~~~~~~~
+ These are the steps to create you own new custom build using the maven command line:
+
++----------+
+ mvn archetype:generate -Dfilter=imixs-office
++---------------+
+
+ this is an example from the maven command line tool:
+
+
++---------------+
+ >/home$ mvn archetype:generate -Dfilter=imixs-office
+ [INFO] Scanning for projects...
+ [INFO] Searching repository for plugin with prefix: 'archetype'.
+ [INFO] ------------------------------------------------------------------------
+ [INFO] Building Maven Default Project
+ [INFO]    task-segment: [archetype:generate] (aggregator-style)
+ [INFO] ------------------------------------------------------------------------
+ [INFO] Preparing archetype:generate
+ [INFO] No goals needed for project - skipping
+ [INFO] [archetype:generate {execution: default-cli}]
+ [INFO] Generating project in Interactive mode
+ [INFO] No archetype defined. Using maven-archetype-quickstart (org.apache.maven.archetypes:maven-archetype-quickstart:1.0) 
+ Choose archetype:
+ 1: local -> com.imixs.workflow:imixs-office-archetype (imixs-office-archetype)
+ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive contains): : 1
+ Define value for property 'groupId': : mytest.com 
+ Define value for property 'artifactId': : mycustom-office
+ Define value for property 'version': 1.0-SNAPSHOT: 
+ Define value for property 'package': mytest.com: 
+ [INFO] Using property: contextRoot = office
+ [INFO] Using property: jtaDataSource = jdbc/imixs_office
+ [INFO] Using property: realmName = imixsrealm
+ [INFO] Using property: versionNumber-marty = 1.1.1-RC-3
+ [INFO] Using property: versionNumber-office = 1.1.1-RC-2
+ [INFO] Using property: versionNumber-workflow = 3.0.2 
+ Confirm properties configuration: 
+ groupId: mytest.com 
+ artifactId: mycustom-office
+ version: 1.0-SNAPSHOT
+ package: mytest.com
+ contextRoot: office
+ jtaDataSource: jdbc/imixs_office
+ realmName: imixsrealm
+ versionNumber-marty: 1.1.1-RC-3
+ versionNumber-office: 1.1.1-RC-2
+ versionNumber-workflow: 3.0.2
+ Y: 
+ [INFO] ----------------------------------------------------------------------------
+ [INFO] Using following parameters for creating project from Archetype: imixs-office-archetype:0.0.2
+ [INFO] ----------------------------------------------------------------------------
+ [INFO] Parameter: groupId, Value: mytest.com
+ [INFO] Parameter: artifactId, Value: mycustom-office
+ [INFO] Parameter: version, Value: 1.0-SNAPSHOT
+ [INFO] Parameter: package, Value: mytest.com
+ [INFO] Parameter: packageInPathFormat, Value: mytest/com
+ [INFO] Parameter: jtaDataSource, Value: jdbc/imixs_office
+ [INFO] Parameter: groupId, Value: mytest.com
+ [INFO] Parameter: version, Value: 1.0-SNAPSHOT
+ [INFO] Parameter: versionNumber-marty, Value: 1.1.1-RC-3
+ [INFO] Parameter: versionNumber-workflow, Value: 3.0.2
+ [INFO] Parameter: package, Value: mytest.com
+ [INFO] Parameter: realmName, Value: imixsrealm
+ [INFO] Parameter: artifactId, Value: mycustom-office
+ [INFO] Parameter: versionNumber-office, Value: 1.1.1-RC-2
+ [INFO] Parameter: contextRoot, Value: office
+ [INFO] Parent element not overwritten in /home/mycustom-office/mycustom-office-ear/pom.xml
+ [INFO] Parent element not overwritten in /home/mycustom-office/mycustom-office-web/pom.xml
+ [INFO] Parent element not overwritten in /homemycustom-office/mycustom-office-ejb/pom.xml
+ [INFO] project created from Archetype in dir: /home/mycustom-office
+ [INFO] ------------------------------------------------------------------------
+ [INFO] BUILD SUCCESSFUL
+ [INFO] ------------------------------------------------------------------------
+ [INFO] Total time: 56 seconds
+ [INFO] Finished at: Sat Jul 07 14:01:35 CEST 2012
+ [INFO] Final Memory: 21M/129M
+ [INFO] ------------------------------------------------------------------------
+ ....
+ +---------------+
+ 
+ 
+ 

@@ -1,0 +1,47 @@
+How to manual build Imixs-Office-Workflow ear from souces.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ Imixs Office Workflow is based on the Imixs Workflow project and the subproject 'marty'. 
+ All artifacts are based on maven so it is quite simple to build the imixs-office-workflow 
+ form sources.
+
+ Follow these steps to build Imixs Office Workflow
+
+ * checkout the marty project (https://svn.java.net/svn/imixs-workflow-marty~svn/imixs-marty/trunk)
+
+ * checkout the imixs-office-workflow project (https://svn.java.net/svn/imixs-workflow-marty~svn/imixs-office-workflow/trunk)
+
+ []
+ 
++----------------+ 
+run >mvn install on the marty parent project
+run >mvn install on the imixs-office-workflow parent project
++----------------+ 
+
+ Note: The required artifacts from the Imixs Workflow project are hosted by the maven 
+ centrale repository. So there is no need to checkout and build these artifacts. If 
+ you are working with the latest snapshot releases please make sure that the sonatype 
+ maven snapshot repository is listed in your maven ./m2/settings.xml file:
+
++----------------+ 
+....
+<repositories>
+....
+<!-- Sonatype Snapshot repository -->
+<repository>
+<id>sonatype-snaptshots</id>
+<name>Sonatype Snapshot repository</name>
+<url>http://oss.sonatype.org/content/repositories/snapshots </url>
+</repository>
+</repositories>
+....
++----------------+ 
+
+* Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ After the maven build process was successful you can install the ear file into 
+ GlassFish. The EAR expects the following configurations:
+
+ * a jndi database pool named 'jdbc/imixs_office' (see the file imixs-office-workflow-ejb/src/main/resources/META-INF/persistence.xml)
+
+ * a jaas security realm named 'imixsrealm' with at least one user assigned to the group 'IMIXS-WORKFLOW-Manager' (see the file imixs-office-workflow-ear/src/main/application/META-INF/sun-application.xml)

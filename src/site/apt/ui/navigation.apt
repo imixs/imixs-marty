@@ -1,0 +1,44 @@
+
+The Navigation Concepts
+~~~~~~~~~~~~~~
+
+ Imixs Office Workflow supports the JSF navigation rule system. 
+ In addition the project provides a concept of a cookie based home navigation. This can be used
+ to support a dynamic home navigation.
+
+ Therefore the template.xhml defines the method 'setNavigationCookie'
+
++----------------+
+function setNavigationCookie(page) {
+ var cookie_name = "imixs.office.navigation";
+ document.cookie = cookie_name+"="+page+";path=#{facesContext.externalContext.requestContextPath};";
+}
++----------------+
+
+ This method can be used by any page to set a navigation path. Example
+
++----------------+
+<script type="text/javascript">
+/*<![CDATA[*/           
+   setNavigationCookie('/pages/notes.jsf');
+/*]]>*/
+</script>
++----------------+
+
+
+ To navigate to the last set navigation page the page /pages/home.jsf can be opened. 
+ This page contains a javaScript which evaluates the cookie value and redirects to the 
+ corresponding page. Also the navigation rule 'home' can be used to redirect the user to this page.
+ 
+ We use this concept for the /page/notes.jsf and /pages/workitems/worklist.jsf to redirect the 
+ user to the search result or notes.jsf depending on his last page flow.
+ 
+ 
+* Deep Links to open a workitem
+~~~~~~~~~~~~~~
+
+ Workitems can be opened directly with the following deep link URL pattern
+
++----------------+
+http://localhost:8080/office/index.jsf?workitem=[$uniqueID]
++----------------+

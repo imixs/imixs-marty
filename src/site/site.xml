@@ -13,58 +13,68 @@
 	<body>
 		<links>
 			<item name="Home" href="http://www.imixs.org/" />
-			<!-- <item name="Quick Start" href="index.html" /> <item name="Workflow 
-				Engine" href="http://www.imixs.org/jee/" /> <item name="XML &amp; WebServices" 
-				href="http://www.imixs.org/xml/" /> <item name="Web Tools" href="http://www.imixs.org/jsf/" 
-				/> <item name="Modelling" href="http://www.imixs.org/modeler/" /> <item name="Script!" 
-				href="http://www.imixs.org/script/" /> -->
 		</links>
 
 
-		<menu name="Introduction">
-			<item name="How does it work?" href="index.html" />
+		<menu name="General concepts">
+			<item name="Quickstart" href="concepts/quickstart.html" />
+			<item name="Architecture" href="concepts/architecture.html" />
 
-			<item name="Business Data" href="quickstart_workitem.html" />
-			<item name="Business Process" href="quickstart_businessprocess.html" />
-			<item name="Workflow Engine" href="quickstart_workflowengine.html" />
+			<item name="Coordinates of Workitem" href="concepts/coordinatesofworkitem.html" />
 
+			<item name="Configuration and Setup" href="concepts/configuration.html" />
+			<item name="Modelling" href="concepts/modelling.html" />
+			<item name="Localization" href="concepts/localization.html" />
+			<item name="Workitem Linking" href="concepts/workitemlinking.html" />
 		</menu>
-
-		<menu name="Build Management">
-			<item name="Overview" href="api-overview.html" />
-			<item name="WorkflowManager" href="workflowmanager.html" />
-			<item name="Model" href="model.html" />
-			<item name="Plugin API" href="plugin-api.html" />
-			<item name="Workflowkernel" href="workflowkernel.html" />
-
+		
+		<menu name="Services and EJBs">
+			<item name="ImageInterceptor" href="services/imageinterceptor.html" />
 		</menu>
-
-		<menu name="Services">
-			<item name="Goals" href="goals.html" />
-			<item name="Forum" href="forum.html" />
-			<item name="Download &amp; Maven" href="maven_howto.html" />
-			<!-- <item name="Project Summary" href="project-summary.html"/> -->
-			<item name="Project License" href="license.html" />
-			<item name="Project Team" href="team-list.html" />
-			<item name="Issue Tracking" href="issue-tracking.html" />
-			<item name="Mailing Lists" href="mail-lists.html" />
-		</menu>
-
-
+		
 		<menu name="Controller">
 			<item name="WorkflowController" href="controller/workflowcontroller.html" />
-			<item name="Forum" href="forum.html" />
-			<item name="Download &amp; Maven" href="maven_howto.html" />
-			<!-- <item name="Project Summary" href="project-summary.html"/> -->
-			<item name="Project License" href="license.html" />
-			<item name="Project Team" href="team-list.html" />
-			<item name="Issue Tracking" href="issue-tracking.html" />
-			<item name="Mailing Lists" href="mail-lists.html" />
+			<item name="ChildWorkflowController" href="controller/childworkitemcontroller.html" />
+			<item name="Worklists and Searching" href="controller/worklists.html" />
 		</menu>
 
-		<menu name="UI">
+		<menu name="User Interface">
+			<item name="Overview" href="ui/overview.html" />
+			<item name="Navigation" href="ui/navigation.html" />
+			<item name="UserInput Widgets" href="ui/userinput.html" />
 			<item name="Browser Cache - History Back" href="ui/browsercache.html" />
 
+		</menu>
+		
+		
+		<menu name="Build Management">
+			<item name="Releasemanagement" href="build/releasemanagement.html" />
+			<item name="Manual build from sources" href="build/manualbuild.html" />
+			<item name="Custom builds" href="build/custombuild.html" />
+			<item name="Integration" href="build/integration.html" />
+
+		</menu>
+
+		<menu name="Project Information">
+			<item name="Summary" href="project-summary.html" />
+			<item name="Info" href="project-info.html" />
+			<item name="License" href="license.html" />
+			<item name="Team" href="team-list.html" />
+			<item name="Tracking" href="issue-tracking.html" />
+		</menu>
+
+		<menu name="Maven">
+			<item name="Modules" href="modules.html" />
+			<item name="Dependency-Info" href="dependency-info.html" />
+			<item name="Dependency-Convergence" href="dependency-convergence.html" />
+			<item name="Dependency-Management" href="dependency-management.html" />
+			<item name="Plugins" href="plugins.html" />
+			<item name="Plugin Management" href="plugin-management.html" />
+		</menu>
+		<menu name="Source Code">
+			<item name="Source Repository" href="source-repository.html" />
+			<item name="JavaDocs" href="./apidocs/index.html" />
+			<item name="Source Xref" href="./xref/index.html" />
 		</menu>
 
 

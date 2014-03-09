@@ -1,0 +1,84 @@
+
+Worklists and Searching
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ The result of a worklist or a search query is controlled by the Marty WorklistController bean. 
+ This is a session scoped backing bean providing mechanisms for performing JPQL query as also a 
+ Lucene search. There for the Marty WorklistController provides two ItemCollections for a custom 
+ searchfilter and a custom queryfilter. These ItemCollections can be used to provide filter 
+ attributes.
+
+ The ViewResult is computed by a custom IViewHandler implemented as a inner class of the Marty 
+ WorklistController. Depending on the provided attributes the Marty WorklistController decides 
+ if a JPQL or a Lucene search is triggered. The queries for both are by a IQueryBuilder included 
+ in the Marty WorklistController .
+
+*Lucene
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ For a fulltext search the searchquery is handled by the Imixs Workfow LucenePlugin. 
+ The plugin allows some configuration through the imixs.properties. Per default the 
+ lucene plugin uses a OR operator to search for multiple words.
+
+ For example
+
++--------------+
+ capital of Hungary
++--------------+
+ 
+ results to an internal search phrase
+
++--------------+
+ *capital* OR *of* OR *Hungary*
++--------------+
+
+ The default operator can be chanted to 'AND'. The above mentioned query is then parsed as
+
++--------------+
+ *capital* AND *of* AND *Hungary*
++--------------+
+
+ To set the AND operator mode the imixs.properties param need to be set:
+
++--------------+
+lucence.defaultOperator=OR
++--------------+
+
+ This can be done by Administration->Configuration->additional properties. 
+ Or directly in the imixs.properties file.
+
+*Example of a custo QueryBuilder
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+ This is an example how to adapt the QueryBuilder
+
++--------------+
+....
+@Inject
+private WorklistController worklistController;
+ 
+public MyController() {
+super();       
+worklistController.setQueryBuilder(new MyCustomQueryBuilder())
+}
+ 
+...
+protected class MyCustomQueryBuilder implements IQueryBuilder {
+ 
+@Override
+public String getSearchQuery(ItemCollection searchFilter) {
+String sSearchTerm = "";
+ 
+Date date = searchFilter.getItemValueDate("datdate");
+....
+return sSearchTerm;
+ 
+ 
+}
+public String getJPQLStatement(ItemCollection queryFilter) {
+String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
+.....
+return sQuery;
+}
+}
++--------------+
