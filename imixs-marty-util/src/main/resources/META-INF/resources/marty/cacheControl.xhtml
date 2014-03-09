@@ -13,23 +13,19 @@
 
 <cc:implementation>
 
-	<c:if test="#{cc.attrs.clear}">
-		<!-- Clear browser cache -->
-		<f:event type="preRenderView"
-			listener="#{browserCacheController.clearCache}" />
-	</c:if>
 
 	<f:view beforePhase="#{browserCacheController.beforePhase}">
+		<c:if test="#{cc.attrs.clear}">
+			<!-- Clear browser cache -->
+			<f:event type="preRenderView"
+				listener="#{browserCacheController.clearCache}" />
+		</c:if>
 
-		<!-- hidden fields to store the process state -->
-		<h:inputHidden id="browserWindowID"
-			value="#{workflowController.workitem.item['_browserWindowID']}" />
+		<!-- hidden fields to verify the process state -->
 		<h:inputHidden id="uniqueID"
 			value="#{workflowController.workitem.item['$uniqueid']}" />
-		<h:inputHidden id="modelversionID"
-			value="#{workflowController.workitem.item['$modelversion']}" />
-		<h:inputHidden id="processID"
-			value="#{workflowController.workitem.item['$processID']}" />
+		<h:inputHidden id="modified"
+			value="#{workflowController.workitem.item['$modified']}" />
 	</f:view>
 </cc:implementation>
 

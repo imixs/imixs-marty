@@ -24,6 +24,14 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
  * This class is used by the cacheControl.xhtml facelet to avoid history back
  * navigation and posting wrong or deprecated data.
  * 
+ * Usage:
+ * 
+ * <code>
+ * 		<h:form>
+ * 			<marty:cacheControl />
+ * 			.....
+ * 		</h:form>
+ * </code>
  * 
  * @author rsoika
  * 
@@ -41,22 +49,11 @@ public class BrowserCacheController implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * This method changes the response header and set the browser cash to 0.
+	 * This method changes the response header and disables any browser cache.
 	 * This disables a browser history back navigation.
-	 * 
-	 * Can be included into a jsf page:
-	 * 
-	 * <code>
-	 * 
-		<f:view>
-			<f:event type="preRenderView" listener="#{browserCacheController.clearCache}" />
-		   ....
-	 * 
-	 * </code>
 	 * 
 	 */
 	public void clearCache() {
-		// Do here your job which should run right before the RENDER_RESPONSE.
 		if (workflowController.getWorkitem() != null) {
 			logger.fine("[BrowserCacheController] clear cache-control for: "
 					+ workflowController.getWorkitem().getItemValueString(
@@ -70,6 +67,99 @@ public class BrowserCacheController implements Serializable {
 					"no-cache, no-store, must-revalidate"); // HTTP 1.1.
 			response.setHeader("Pragma", "no-cache"); // HTTP 1.0.
 			response.setDateHeader("Expires", 0); // Proxies.
+		}
+	}
+
+	/**
+	 * Phase Listener for PhaseId=APPLY_REQUEST_VALUES
+	 * 
+	 * The method verifies if the posted workitem data matches the backend data
+	 * of the current workitem. If the uniqueId is not equal the method will
+	 * reload the backend data. Finally the modified date will be compared with
+	 * the backenddata. In case that the date did not match an attribute
+	 * '_invalidRequestID' will be added. This attribute is checked in the
+	 * onWorkflowEvents 'WORKITEM_BEFORE_PROCESS' and 'WORKITEM_BEFORE_SAVE'.
+	 * 
+	 * @see method: onWorkflowEvent
+	 * @throws PluginException
+	 */
+	public void beforePhase(PhaseEvent event) throws PluginException {
+		String requestUniqueid = null;
+		String requestModified = null;
+		String backendUniqueid = null;
+		String backendModified = null;
+
+		// only run during APPLY_REQUEST_VALUES phase
+		if (event.getPhaseId() == PhaseId.APPLY_REQUEST_VALUES) {
+			logger.fine("[BrowserCacheController] Before phase: "
+					+ event.getPhaseId());
+
+			// analyze request data....
+			FacesContext fc = FacesContext.getCurrentInstance();
+			Map<String, String> requestValues = fc.getExternalContext()
+					.getRequestParameterMap();
+			for (String key : requestValues.keySet()) {
+
+				if (key.endsWith(":uniqueID")) {
+					requestUniqueid = requestValues.get(key);
+					logger.fine("[BrowserCacheController] Apply Value for UnqiueID="
+							+ requestUniqueid);
+				}
+				if (key.endsWith(":modified")) {
+					requestModified = requestValues.get(key);
+					logger.fine("[BrowserCacheController] Apply Value for modified="
+							+ requestModified);
+				}
+
+				if (requestUniqueid != null && requestModified != null)
+					break;
+			}
+
+			if (requestUniqueid == null) {
+				logger.fine("[BrowserCacheController] no request data found");
+				return;
+			}
+
+			// analyze backend data....
+			if (workflowController.getWorkitem() != null) {
+				backendUniqueid = workflowController.getWorkitem()
+						.getItemValueString(WorkflowService.UNIQUEID);
+				backendModified = workflowController.getWorkitem()
+						.getItemValueString("$modified");
+			}
+
+			// verify backend workitem
+			if (workflowController.getWorkitem() == null
+					|| !requestUniqueid.equals(backendUniqueid)) {
+				logger.info("[BrowserCacheController] refresh workitem: "
+						+ requestUniqueid);
+
+				workflowController.load(requestUniqueid);
+
+				// if null - throw a PluginException (e.g no access)
+				if (workflowController.getWorkitem() == null) {
+					throw new PluginException(
+							BrowserCacheController.class.getSimpleName(),
+							BROWSER_DATA_INVALID,
+							"[BrowserCacheController] Browser Window contains invalid data: no backend data found.");
+				}
+
+				// update new process data...
+				backendUniqueid = workflowController.getWorkitem()
+						.getItemValueString(WorkflowService.UNIQUEID);
+				backendModified = workflowController.getWorkitem()
+						.getItemValueString("$modified");
+			}
+
+			// finally verify the modified date....
+		
+			if (!backendModified.equals(requestModified)) {
+				logger.warning("[BrowserCacheController] invalid browser data - modified: "
+						+ requestModified + " - expected: " + backendModified);
+
+				workflowController.getWorkitem().replaceItemValue(
+						"_invalidRequestID", requestModified);
+			}
 
 		}
 	}
@@ -105,113 +195,4 @@ public class BrowserCacheController implements Serializable {
 		}
 	}
 
-	/**
-	 * Phase Listener for PhaseId=APPLY_REQUEST_VALUES
-	 * 
-	 * The method verifies if the posted workitem data matches the backend data
-	 * of the current workitem. If the uniqueId is not equal the method will
-	 * reload the backend data. Finally the processData ($modelVersion,
-	 * $ProcessID) will be verified. In case that the data can not be verified,
-	 * an attribute '_invalidRequestID' will be added. This attribute is checked
-	 * in the onWorkflowEvent method.
-	 * 
-	 * <code>
-	 *  <f:view beforePhase="#{browserCacheController.beforePhase}">
-	 * 	...
-	 * 	</f:view>
-	 * </code>
-	 * 
-	 * @throws PluginException
-	 */
-	public void beforePhase(PhaseEvent event) throws PluginException {
-		String requestUniqueid = null;
-		String requestModelversion = null;
-		String requestProcessid = null;
-		String backendUniqueid = null;
-		String backendProcessid = null;
-		String backendModelversion = null;
-
-		if (event.getPhaseId() == PhaseId.APPLY_REQUEST_VALUES) {
-			logger.fine("[BrowserCacheController] Before phase: "
-					+ event.getPhaseId());
-
-			// analyze request data....
-			FacesContext fc = FacesContext.getCurrentInstance();
-			Map<String, String> requestValues = fc.getExternalContext()
-					.getRequestParameterMap();
-			for (String key : requestValues.keySet()) {
-
-				if (key.endsWith(":uniqueID")) {
-					requestUniqueid = requestValues.get(key);
-					logger.fine("[BrowserCacheController] Apply Value for UnqiueID="
-							+ requestUniqueid);
-				}
-				if (key.endsWith(":modelversionID")) {
-					requestModelversion = requestValues.get(key);
-					logger.fine("[BrowserCacheController] Apply Value for modelversionID="
-							+ requestModelversion);
-				}
-				if (key.endsWith(":processID")) {
-					requestProcessid = requestValues.get(key);
-					logger.fine("[BrowserCacheController] Apply Value for processID="
-							+ requestProcessid);
-				}
-
-			}
-
-			if (requestUniqueid == null) {
-				logger.fine("[BrowserCacheController] no request data found");
-				return;
-			}
-
-			// analyze backend data....
-			if (workflowController.getWorkitem() != null) {
-				backendUniqueid = workflowController.getWorkitem()
-						.getItemValueString(WorkflowService.UNIQUEID);
-				backendProcessid = workflowController.getWorkitem()
-						.getItemValueString(WorkflowService.PROCESSID);
-				backendModelversion = workflowController.getWorkitem()
-						.getItemValueString(WorkflowService.MODELVERSION);
-			}
-
-			// verify backend workitem
-			if (workflowController.getWorkitem() == null
-					|| !requestUniqueid.equals(backendUniqueid)) {
-				logger.info("[BrowserCacheController] refresh workitem: "
-						+ requestUniqueid);
-
-				workflowController.load(requestUniqueid);
-
-				// if null - create empty workitem and set error (e.g no access)
-				if (workflowController.getWorkitem() == null) {
-					throw new PluginException(
-							BrowserCacheController.class.getSimpleName(),
-							BROWSER_DATA_INVALID,
-							"[BrowserCacheController] Browser Window contains invalid data: no backend data found.");
-				}
-
-				// update new process data...
-				backendUniqueid = workflowController.getWorkitem()
-						.getItemValueString(WorkflowService.UNIQUEID);
-				backendProcessid = workflowController.getWorkitem()
-						.getItemValueString(WorkflowService.PROCESSID);
-				backendModelversion = workflowController.getWorkitem()
-						.getItemValueString(WorkflowService.MODELVERSION);
-			}
-
-			// finally verify the process data....
-			String requestID = "" + requestUniqueid + requestModelversion
-					+ requestProcessid;
-			String backendID = "" + backendUniqueid + backendModelversion
-					+ backendProcessid;
-			if (!requestID.equals(backendID)) {
-				logger.warning("[BrowserCacheController] invalid browser data: "
-						+ requestID + " - expected: " + backendID);
-
-				workflowController.getWorkitem().replaceItemValue(
-						"_invalidRequestID", requestID);
-			}
-
-		}
-	}
 }
