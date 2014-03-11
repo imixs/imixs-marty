@@ -98,7 +98,7 @@ public class AdminPService {
 	EntityService entityService;
 
 	private String lastUnqiueID = null;
-	private static int MAX_COUNT = 100;
+	private static int MAX_COUNT = 300;
 	private static Logger logger = Logger.getLogger(AdminPService.class
 			.getName());
 
@@ -146,13 +146,11 @@ public class AdminPService {
 				+ "		 OR	( n1.itemName='namowner' AND n1.itemValue='"
 				+ fromName + "')"
 				+ "		 OR	( n1.itemName='namcreator' AND n1.itemValue='"
-				+ fromName + "'))  ORDER BY workitem.created asc";
+				+ fromName + "'))  ORDER BY workitem.created DESC";
 
 		adminp.replaceItemValue("txtQuery", sQuery);
 
-		// save it...
-		// entityService.save(adminp);
-
+	
 		// start timer
 		adminp = startTimer(adminp);
 		return adminp;
@@ -207,6 +205,9 @@ public class AdminPService {
 			logger.info("[AdminPService]  Processing : " + sTimerID);
 			adminp = updateWorkitems(adminp);
 
+			// prepare for rerun
+			adminp.replaceItemValue("txtworkflowStatus", "Waiting");
+
 			// if numLastCount<numMacCount then we can stop the timer
 			int iMax = adminp.getItemValueInteger("numMaxCount");
 			int iLast = adminp.getItemValueInteger("numLastCount");
@@ -217,7 +218,9 @@ public class AdminPService {
 
 			}
 			adminp.replaceItemValue("errormessage", "");
-			adminp = entityService.save(adminp);
+			//adminp = entityService.save(adminp);
+			adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(adminp);
+
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -228,7 +231,9 @@ public class AdminPService {
 			try {
 				adminp.replaceItemValue("txtworkflowStatus", "Error");
 				adminp.replaceItemValue("errormessage", e.toString());
-				adminp = entityService.save(adminp);
+				//adminp = entityService.save(adminp);
+				adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(adminp);
+
 			} catch (Exception e2) {
 				e2.printStackTrace();
 
@@ -252,6 +257,7 @@ public class AdminPService {
 	private ItemCollection updateWorkitems(ItemCollection adminp)
 			throws AccessDeniedException {
 
+		long lProfiler = System.currentTimeMillis();
 		// get Query
 		String sQuery = adminp.getItemValueString("txtQuery");
 		int iStart = adminp.getItemValueInteger("numStart");
@@ -264,8 +270,9 @@ public class AdminPService {
 
 		adminp.replaceItemValue("txtworkflowStatus", "Processing");
 		// save it...
-		adminp = entityService.save(adminp);
-
+		//adminp = entityService.save(adminp);
+		adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(adminp);
+		
 		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
 				iStart, iCount);
 
@@ -293,7 +300,12 @@ public class AdminPService {
 		iStart = iStart + col.size();
 		adminp.replaceItemValue("numStart", iStart);
 
-		logger.info("[AdminP] " + col.size() + " workitems processed");
+		
+		String timerid=adminp.getItemValueString(EntityService.UNIQUEID);
+		
+		long time= (System.currentTimeMillis() - lProfiler)/1000; 
+		
+		logger.info("[AdminP] Timer:" +timerid  + " " + col.size() + " workitems processed in "+time + " sec.");
 
 		return adminp;
 
@@ -349,6 +361,24 @@ public class AdminPService {
 		return bUpdate;
 	}
 
+	
+	
+	/**
+	 * Save AdminP Entity
+	 */
+	@TransactionAttribute(value = TransactionAttributeType.REQUIRES_NEW)
+	public ItemCollection saveJobEntity(ItemCollection adminp)
+			throws AccessDeniedException {
+
+		adminp = entityService.save(adminp);
+		return adminp;
+		
+	}
+	
+	
+	
+	
+	
 	/**
 	 * Update the values of a single list.
 	 * 
@@ -445,7 +475,9 @@ public class AdminPService {
 
 		adminp.replaceItemValue("txtTimerStatus", "Running");
 
-		adminp = entityService.save(adminp);
+		//adminp = entityService.save(adminp);
+		adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(adminp);
+
 		// start timer...
 		timer = timerService.createTimer(startDate, interval,
 				adminp.getItemValueString(EntityService.UNIQUEID));
@@ -471,7 +503,9 @@ public class AdminPService {
 
 			adminp.replaceItemValue("txtTimerStatus", "Stopped");
 
-			adminp = entityService.save(adminp);
+			//adminp = entityService.save(adminp);
+			adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(adminp);
+
 
 			logger.info("[AdminPService] Timer ID=" + id + " STOPPED.");
 		}

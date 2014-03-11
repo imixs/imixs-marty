@@ -41,10 +41,14 @@ public class AdminPController extends DataController {
 	
 	public void cancelJob(String id) {
 		adminPService.cancleJob(id);
+		reset();
+
 	}
 
 	public void restartJob(String id) {
 		adminPService.restartJob(id);
+		reset();
+
 	}
 
 	
