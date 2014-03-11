@@ -4,7 +4,6 @@ import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.event.ActionEvent;
 import javax.inject.Named;
 
 import org.imixs.marty.ejb.AdminPService;
@@ -27,19 +26,29 @@ public class AdminPController extends DataController {
 
 	}
 
-	public void doStart(ActionEvent event) throws Exception {
+	public void createJob() {
 		logger.info("[AdminPController] doStart");
 		String fromName = this.getWorkitem().getItemValueString("namFrom");
 		String toName = this.getWorkitem().getItemValueString("namTo");
 
 		boolean replace = this.getWorkitem().getItemValueBoolean("keyReplace");
 
-		setWorkitem(adminPService.start(fromName, toName, replace));
+		setWorkitem(adminPService.createJob(fromName, toName, replace));
 
 		reset();
 
 	}
+	
+	public void cancelJob(String id) {
+		adminPService.cancleJob(id);
+	}
 
+	public void restartJob(String id) {
+		adminPService.restartJob(id);
+	}
+
+	
+	
 	@Override
 	public void reset() {
 		super.reset();

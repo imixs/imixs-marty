@@ -37,12 +37,13 @@ import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
-
 
 /**
  * The AmdinPService provides methods to replace entries in the fields
@@ -97,27 +98,28 @@ public class AdminPService {
 	EntityService entityService;
 
 	private String lastUnqiueID = null;
-	private static int MAX_COUNT = 1000;
+	private static int MAX_COUNT = 100;
 	private static Logger logger = Logger.getLogger(AdminPService.class
 			.getName());
 
 	/**
-	 * This method starts a new replacement.
+	 * This method creates a new AdminP Job.
 	 * 
 	 * @throws AccessDeniedException
 	 */
-	public ItemCollection start(String fromName, String toName, boolean replace)
-			throws AccessDeniedException {
+	public ItemCollection createJob(String fromName, String toName,
+			boolean replace) throws AccessDeniedException {
 
-		logger.info("[AdminP] started:");
+		logger.info("[AdminP] Create new job:");
 		logger.info("[AdminP]   fromName=" + fromName);
 		logger.info("[AdminP]   toName=" + toName);
+		logger.info("[AdminP]   replace=" + replace);
 
 		// create new adminp document
 		ItemCollection adminp = new ItemCollection();
 
 		if (fromName == null || "".equals(fromName)) {
-			logger.info("[AdminP] wrong configuration!");
+			logger.severe("[AdminP] wrong configuration!");
 			return adminp;
 		}
 
@@ -149,12 +151,24 @@ public class AdminPService {
 		adminp.replaceItemValue("txtQuery", sQuery);
 
 		// save it...
-	//	entityService.save(adminp);
+		// entityService.save(adminp);
 
 		// start timer
-		startTimer(adminp);
+		adminp = startTimer(adminp);
 		return adminp;
 
+	}
+
+	public ItemCollection cancleJob(String id) throws AccessDeniedException {
+		ItemCollection adminp = stopTimer(id);
+		return adminp;
+	}
+
+	public ItemCollection restartJob(String id) {
+		ItemCollection adminp = stopTimer(id);
+		// start timer
+		adminp = startTimer(adminp);
+		return adminp;
 	}
 
 	/**
@@ -250,7 +264,7 @@ public class AdminPService {
 
 		adminp.replaceItemValue("txtworkflowStatus", "Processing");
 		// save it...
-	//	entityService.save(adminp);
+		adminp = entityService.save(adminp);
 
 		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
 				iStart, iCount);
@@ -258,8 +272,14 @@ public class AdminPService {
 		// check all selected documents
 		for (ItemCollection entity : col) {
 			iProcessed++;
-			if (updateEntity(entity, from, to, replace,
-					adminp.getItemValueString(EntityService.UNIQUEID))) {
+
+			// call from new instance because of transaction new...
+			// see: http://blog.imixs.org/?p=155
+			// see: https://www.java.net/node/705304
+			boolean result = ctx.getBusinessObject(AdminPService.class)
+					.updateSingleEntity(entity, from, to, replace,
+							adminp.getItemValueString(EntityService.UNIQUEID));
+			if (result == true) {
 				// inc counter
 				iUpdates++;
 			}
@@ -290,8 +310,9 @@ public class AdminPService {
 	 * @return true if the entiy was modified.
 	 * @throws AccessDeniedException
 	 */
-	private boolean updateEntity(ItemCollection entity, String from, String to,
-			boolean replace, String adminpUniqueid)
+	@TransactionAttribute(value = TransactionAttributeType.REQUIRES_NEW)
+	public boolean updateSingleEntity(ItemCollection entity, String from,
+			String to, boolean replace, String adminpUniqueid)
 			throws AccessDeniedException {
 
 		boolean bUpdate = false;
@@ -365,6 +386,7 @@ public class AdminPService {
 		return update;
 	}
 
+	@SuppressWarnings("rawtypes")
 	private void logOldValues(ItemCollection entity, String field) {
 
 		// update log
@@ -428,7 +450,31 @@ public class AdminPService {
 		timer = timerService.createTimer(startDate, interval,
 				adminp.getItemValueString(EntityService.UNIQUEID));
 
-		logger.info("[AdminPService] Timer Service started - ID=" + id);
+		logger.info("[AdminPService] Timer ID=" + id + " STARTED");
+		return adminp;
+	}
+
+	private ItemCollection stopTimer(String id) {
+
+		logger.info("[AdminPService] Stopping timer ID=" + id + "....");
+		ItemCollection adminp = entityService.load(id);
+		if (adminp == null) {
+			logger.warning("[AdminPService] anable to load timer data ID=" + id
+					+ " ");
+			return null;
+		}
+
+		// try to cancel an existing timer for this workflowinstance
+		Timer timer = this.findTimer(id);
+		if (timer != null) {
+			timer.cancel();
+
+			adminp.replaceItemValue("txtTimerStatus", "Stopped");
+
+			adminp = entityService.save(adminp);
+
+			logger.info("[AdminPService] Timer ID=" + id + " STOPPED.");
+		}
 		return adminp;
 	}
 
@@ -441,9 +487,9 @@ public class AdminPService {
 	 * @throws Exception
 	 */
 	private Timer findTimer(String id) {
-		if (id==null || id.isEmpty())
+		if (id == null || id.isEmpty())
 			return null;
-		
+
 		for (Object obj : timerService.getTimers()) {
 			Timer timer = (javax.ejb.Timer) obj;
 			if (timer.getInfo() instanceof String) {
