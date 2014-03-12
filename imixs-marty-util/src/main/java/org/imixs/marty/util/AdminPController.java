@@ -26,17 +26,21 @@ public class AdminPController extends DataController {
 
 	}
 
-	public void createJob() {
-		logger.info("[AdminPController] doStart");
+	public void createRenameUserJob() {
 		String fromName = this.getWorkitem().getItemValueString("namFrom");
 		String toName = this.getWorkitem().getItemValueString("namTo");
 
 		boolean replace = this.getWorkitem().getItemValueBoolean("keyReplace");
 
-		setWorkitem(adminPService.createJob(fromName, toName, replace));
+		setWorkitem(adminPService.createJobRenameUser(fromName, toName, replace));
 
 		reset();
 
+	}
+	
+	public void createRebuildLuceneIndexJob() {
+		adminPService.createJobRebuildLuceneIndex();
+		reset();
 	}
 	
 	public void cancelJob(String id) {

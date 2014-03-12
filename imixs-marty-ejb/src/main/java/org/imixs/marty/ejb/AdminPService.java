@@ -42,36 +42,33 @@ import javax.ejb.TransactionAttributeType;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
+import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
 
 /**
- * The AmdinPService provides methods to replace entries in the fields
- * $WriteAccess, $ReadAccess and namOwner. An update request is stored in a
- * adminp entity containing alll necessary informations. The service starts a
- * timer instances for each update process
+ * The AmdinPService provides a mechanim to start long runing jobs to update
+ * workitems in batch jobs. This is called a adminp process. The result of a
+ * adminp process is documented into an log entity from type='adminp'. The job
+ * description is stored in the field 'txtWorkflowSummary'. The current startpos
+ * and maxcount are stored in the configuration entity in the properties
+ * 'numStart' 'numMaxCount'
  * 
- * The result of a adminp process are documented into an log entity from
- * type='adminp'
+ * The service provides methods to create and start different types of
+ * jobs. The job type is stored in the field 'job':
+ * 
+ * RenameUserJob:
+ * 
+ * This job is to replace entries in the fields $WriteAccess, $ReadAccess and
+ * namOwner. An update request is stored in a adminp entity containing alll
+ * necessary informations. The service starts a timer instances for each update
+ * process
  * 
  * 
- * JQPL Statement to quey workitems:
+ * LuceneRebuildIndexJob:
  * 
- * <code>
-   SELECT workitem FROM Entity AS workitem
-   	 LEFT JOIN workitem.writeAccessList as wa
-   	 LEFT JOIN workitem.readAccessList as ra
-	      JOIN workitem.textItems AS n1
-	  WHERE  workitem.type IN ('workitem', 'workitemarchive', 'childworkitem', 'childworkitemarchive','workitemlob')
-	  AND ( ( wa.value = 'rsoika') 
-	  	OR	( ra.value = 'rsoika') 
-	  	OR	( n1.itemName='namowner' AND n1.itemValue='rsoika')
-	  	OR	( n1.itemName='namcreator' AND n1.itemValue='rsoika')
-	  	)
-	  ORDER BY workitem.created asc
-	  
-	 
-	</code>
+ * This job is to update the lucene index.
  * 
  * 
  * @see AdminPController
@@ -84,6 +81,9 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 @RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
 @LocalBean
 public class AdminPService {
+
+	public static final String JOB_RENAME_USER = "RENAME_USER";
+	public static final String JOB_REBUILD_LUCENE_INDEX = "REBUILD_LUCENE_INDEX";
 
 	@Resource
 	SessionContext ctx;
@@ -103,14 +103,32 @@ public class AdminPService {
 			.getName());
 
 	/**
-	 * This method creates a new AdminP Job.
+	 * This method creates a new AdminP Job. Depending on the data provided in
+	 * the job description this will result in different kind of timer tasks.
+	 * 
+	 * JQPL Statement to quey workitems:
+	 * 
+	 * <code>
+		   SELECT workitem FROM Entity AS workitem
+		   	 LEFT JOIN workitem.writeAccessList as wa
+		   	 LEFT JOIN workitem.readAccessList as ra
+			      JOIN workitem.textItems AS n1
+			  WHERE  workitem.type IN ('workitem', 'workitemarchive', 'childworkitem', 'childworkitemarchive','workitemlob')
+			  AND ( ( wa.value = 'rsoika') 
+			  	OR	( ra.value = 'rsoika') 
+			  	OR	( n1.itemName='namowner' AND n1.itemValue='rsoika')
+			  	OR	( n1.itemName='namcreator' AND n1.itemValue='rsoika')
+			  	)
+			  ORDER BY workitem.created asc
+	 * </code>
+	 * 
 	 * 
 	 * @throws AccessDeniedException
 	 */
-	public ItemCollection createJob(String fromName, String toName,
+	public ItemCollection createJobRenameUser(String fromName, String toName,
 			boolean replace) throws AccessDeniedException {
 
-		logger.info("[AdminP] Create new job:");
+		logger.info("[AdminP] Create new RenameUser job:");
 		logger.info("[AdminP]   fromName=" + fromName);
 		logger.info("[AdminP]   toName=" + toName);
 		logger.info("[AdminP]   replace=" + replace);
@@ -124,6 +142,7 @@ public class AdminPService {
 		}
 
 		adminp.replaceItemValue("type", "adminp");
+		adminp.replaceItemValue("job", JOB_RENAME_USER);
 		adminp.replaceItemValue("namFrom", fromName);
 		adminp.replaceItemValue("namTo", toName);
 		adminp.replaceItemValue("numProcessed", 0);
@@ -133,8 +152,7 @@ public class AdminPService {
 		adminp.replaceItemValue("numMaxCount", MAX_COUNT);
 		adminp.replaceItemValue("numLastCount", 0);
 
-		// Select Statement
-
+		// Select Statement - ASC sorting is important here!
 		String sQuery = "";
 		sQuery = "SELECT workitem FROM Entity AS workitem"
 				+ "	 LEFT JOIN workitem.writeAccessList as wa"
@@ -146,11 +164,64 @@ public class AdminPService {
 				+ "		 OR	( n1.itemName='namowner' AND n1.itemValue='"
 				+ fromName + "')"
 				+ "		 OR	( n1.itemName='namcreator' AND n1.itemValue='"
-				+ fromName + "'))  ORDER BY workitem.created DESC";
+				+ fromName + "'))  ORDER BY workitem.created ASC";
 
 		adminp.replaceItemValue("txtQuery", sQuery);
 
-	
+		// update txtWorkflowSummary
+		String summary = "Rename: " + fromName + ">>" + toName + " (";
+		if (replace)
+			summary += "replace";
+		else
+			summary += "no replace";
+
+		summary += ")";
+		adminp.replaceItemValue("txtWorkflowSummary", summary);
+
+		// start timer
+		adminp = startTimer(adminp);
+		return adminp;
+
+	}
+
+	/**
+	 * This method creates a new AdminP Job for updating the lucene index JQPL
+	 * Statement to quey workitems:
+	 * 
+	 * <code>
+		   SELECT workitem FROM Entity AS workitem
+			  ORDER BY workitem.created asc
+	 * </code>
+	 * 
+	 * 
+	 * @throws AccessDeniedException
+	 */
+	public ItemCollection createJobRebuildLuceneIndex()
+			throws AccessDeniedException {
+
+		logger.info("[AdminP] Create new RebuildLuceneIndex job:");
+		// create new adminp document
+		ItemCollection adminp = new ItemCollection();
+
+		adminp.replaceItemValue("type", "adminp");
+		adminp.replaceItemValue("job", JOB_REBUILD_LUCENE_INDEX);
+		adminp.replaceItemValue("numProcessed", 0);
+		adminp.replaceItemValue("txtworkflowStatus", "New");
+		adminp.replaceItemValue("numMaxCount", MAX_COUNT);
+		adminp.replaceItemValue("numLastCount", 0);
+
+		// Select Statement - ASC sorting is important here!
+		String sQuery = "";
+		sQuery = "SELECT workitem FROM Entity AS workitem"
+				+ " ORDER BY workitem.created ASC";
+
+		adminp.replaceItemValue("txtQuery", sQuery);
+
+		// update txtWorkflowSummary
+		String summary = "RebuildLuceneIndex";
+
+		adminp.replaceItemValue("txtWorkflowSummary", summary);
+
 		// start timer
 		adminp = startTimer(adminp);
 		return adminp;
@@ -170,13 +241,9 @@ public class AdminPService {
 	}
 
 	/**
-	 * This is the method which processes the timeout event depending on the
-	 * running timer settings.
-	 * 
-	 * The method updates all affected workitems.
-	 * 
-	 * 
-	 * 
+	 * This method processes the timeout event. The method loads the
+	 * corresponding job description (adminp entity) and delegates the
+	 * processing to a subroutine.
 	 * 
 	 * @param timer
 	 */
@@ -203,7 +270,14 @@ public class AdminPService {
 			}
 
 			logger.info("[AdminPService]  Processing : " + sTimerID);
-			adminp = updateWorkitems(adminp);
+
+			String job = adminp.getItemValueString("job");
+			if (job.equals(JOB_RENAME_USER)) {
+				adminp = processJobRenameUser(adminp);
+			}
+			if (job.equals(JOB_REBUILD_LUCENE_INDEX)) {
+				adminp = processJobRebuildLuceneIndex(adminp);
+			}
 
 			// prepare for rerun
 			adminp.replaceItemValue("txtworkflowStatus", "Waiting");
@@ -218,9 +292,9 @@ public class AdminPService {
 
 			}
 			adminp.replaceItemValue("errormessage", "");
-			//adminp = entityService.save(adminp);
-			adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(adminp);
-
+			// adminp = entityService.save(adminp);
+			adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(
+					adminp);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -231,8 +305,9 @@ public class AdminPService {
 			try {
 				adminp.replaceItemValue("txtworkflowStatus", "Error");
 				adminp.replaceItemValue("errormessage", e.toString());
-				//adminp = entityService.save(adminp);
-				adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(adminp);
+				// adminp = entityService.save(adminp);
+				adminp = ctx.getBusinessObject(AdminPService.class)
+						.saveJobEntity(adminp);
 
 			} catch (Exception e2) {
 				e2.printStackTrace();
@@ -247,14 +322,15 @@ public class AdminPService {
 	}
 
 	/**
-	 * Thisi Method runns the query and updates affected workitems The current
+	 * This method runs the RenameUserJob. The adminp entity contains the query.
+	 * The method updates all affected workitems of a user rename. The current
 	 * startpos and maxcount are stored in the configuration entity in the
 	 * properties 'numStart' 'numMaxCount'
 	 * 
 	 * @param adminp
 	 * @throws AccessDeniedException
 	 */
-	private ItemCollection updateWorkitems(ItemCollection adminp)
+	private ItemCollection processJobRenameUser(ItemCollection adminp)
 			throws AccessDeniedException {
 
 		long lProfiler = System.currentTimeMillis();
@@ -270,9 +346,10 @@ public class AdminPService {
 
 		adminp.replaceItemValue("txtworkflowStatus", "Processing");
 		// save it...
-		//adminp = entityService.save(adminp);
-		adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(adminp);
-		
+		// adminp = entityService.save(adminp);
+		adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(
+				adminp);
+
 		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
 				iStart, iCount);
 
@@ -284,7 +361,7 @@ public class AdminPService {
 			// see: http://blog.imixs.org/?p=155
 			// see: https://www.java.net/node/705304
 			boolean result = ctx.getBusinessObject(AdminPService.class)
-					.updateSingleEntity(entity, from, to, replace,
+					.updateWorkitemUserIds(entity, from, to, replace,
 							adminp.getItemValueString(EntityService.UNIQUEID));
 			if (result == true) {
 				// inc counter
@@ -300,12 +377,76 @@ public class AdminPService {
 		iStart = iStart + col.size();
 		adminp.replaceItemValue("numStart", iStart);
 
+		String timerid = adminp.getItemValueString(EntityService.UNIQUEID);
+
+		long time = (System.currentTimeMillis() - lProfiler) / 1000;
+
+		logger.info("[AdminP] Timer:" + timerid + " " + col.size()
+				+ " workitems processed in " + time + " sec.");
+
+		return adminp;
+
+	}
+
+	/**
+	 * This method runs the RebuildLuceneIndexJob. The adminp entity contains
+	 * the query and the start pos. The method updates teh index for all
+	 * affected workitems. Then the job starts the first time the method delets
+	 * an existing lucene index.
+	 * 
+	 * The current startpos and maxcount are stored in the configuration entity
+	 * in the properties 'numStart' 'numMaxCount'
+	 * 
+	 * @param adminp
+	 * @throws AccessDeniedException
+	 * @throws PluginException 
+	 */
+	private ItemCollection processJobRebuildLuceneIndex(ItemCollection adminp)
+			throws AccessDeniedException, PluginException {
+
+		long lProfiler = System.currentTimeMillis();
+		// get Query
+		String sQuery = adminp.getItemValueString("txtQuery");
+		int iStart = adminp.getItemValueInteger("numStart");
+		int iCount = adminp.getItemValueInteger("numMaxCount");
+		int iUpdates = adminp.getItemValueInteger("numUpdates");
+		int iProcessed = adminp.getItemValueInteger("numProcessed");
+		String from = adminp.getItemValueString("namFrom");
+		String to = adminp.getItemValueString("namTo");
+		boolean replace = adminp.getItemValueBoolean("keyReplace");
+
+		adminp.replaceItemValue("txtworkflowStatus", "Processing");
+		// save it...
+		// adminp = entityService.save(adminp);
+		adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(
+				adminp);
+
 		
-		String timerid=adminp.getItemValueString(EntityService.UNIQUEID);
+	
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+				iStart, iCount);
 		
-		long time= (System.currentTimeMillis() - lProfiler)/1000; 
+		int colSize=col.size();
+		// Update index
+		LucenePlugin.updateWorklist(col);
 		
-		logger.info("[AdminP] Timer:" +timerid  + " " + col.size() + " workitems processed in "+time + " sec.");
+		iUpdates=iUpdates+colSize;
+		iProcessed=iUpdates;
+		
+		// adjust start pos and update count
+		adminp.replaceItemValue("numUpdates", iUpdates);
+		adminp.replaceItemValue("numProcessed", iProcessed);
+
+		adminp.replaceItemValue("numLastCount", colSize);
+		iStart = iStart + col.size();
+		adminp.replaceItemValue("numStart", iStart);
+
+		String timerid = adminp.getItemValueString(EntityService.UNIQUEID);
+
+		long time = (System.currentTimeMillis() - lProfiler) / 1000;
+
+		logger.info("[AdminP] Timer:" + timerid + " " + col.size()
+				+ " workitems processed in " + time + " sec.");
 
 		return adminp;
 
@@ -323,7 +464,7 @@ public class AdminPService {
 	 * @throws AccessDeniedException
 	 */
 	@TransactionAttribute(value = TransactionAttributeType.REQUIRES_NEW)
-	public boolean updateSingleEntity(ItemCollection entity, String from,
+	public boolean updateWorkitemUserIds(ItemCollection entity, String from,
 			String to, boolean replace, String adminpUniqueid)
 			throws AccessDeniedException {
 
@@ -361,8 +502,6 @@ public class AdminPService {
 		return bUpdate;
 	}
 
-	
-	
 	/**
 	 * Save AdminP Entity
 	 */
@@ -372,13 +511,9 @@ public class AdminPService {
 
 		adminp = entityService.save(adminp);
 		return adminp;
-		
+
 	}
-	
-	
-	
-	
-	
+
 	/**
 	 * Update the values of a single list.
 	 * 
@@ -475,8 +610,9 @@ public class AdminPService {
 
 		adminp.replaceItemValue("txtTimerStatus", "Running");
 
-		//adminp = entityService.save(adminp);
-		adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(adminp);
+		// adminp = entityService.save(adminp);
+		adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(
+				adminp);
 
 		// start timer...
 		timer = timerService.createTimer(startDate, interval,
@@ -503,9 +639,9 @@ public class AdminPService {
 
 			adminp.replaceItemValue("txtTimerStatus", "Stopped");
 
-			//adminp = entityService.save(adminp);
-			adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(adminp);
-
+			// adminp = entityService.save(adminp);
+			adminp = ctx.getBusinessObject(AdminPService.class).saveJobEntity(
+					adminp);
 
 			logger.info("[AdminPService] Timer ID=" + id + " STOPPED.");
 		}
