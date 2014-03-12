@@ -133,7 +133,7 @@ public class SearchController extends
 	}
 
 	/**
-	 * Resets the search and query filter and also the worklist.
+	 * Resets the search filter and the current result.
 	 * 
 	 * @param event
 	 */
@@ -144,47 +144,23 @@ public class SearchController extends
 
 		super.doReset(event);
 	}
-
+	
 	/**
-	 * rebuilds the full text search index for all workitems
+	 * Resets the search filter but not the search phrase (txtSearch)
+	 * The method reset the current result.
 	 * 
 	 * @param event
-	 * @throws Exception
 	 */
-	public void doRebuildFullTextIndex(ActionEvent event) throws Exception {
-		int JUNK_SIZE = 100;
-		long totalcount = 0;
-		int startpos = 0;
-		int icount = 0;
-		boolean hasMoreData = true;
+	public void doResetFilter(ActionEvent event) {
+		String searchPhrase=searchFilter.getItemValueString("txtSearch");
+		
+		searchFilter = new ItemCollection();
+		searchFilter.replaceItemValue("type", "workitem");
 
-		// find all workitems
-		long ltime = System.currentTimeMillis();
-		String sQuery = "SELECT entity FROM Entity entity ";
-
-		logger.info("[SearchController] UpdateFulltextIndex starting....");
-
-		while (hasMoreData) {
-			// read a junk....
-			Collection<ItemCollection> col = entityService.findAllEntities(
-					sQuery, startpos, JUNK_SIZE);
-
-			if (col.size() < JUNK_SIZE)
-				hasMoreData = false;
-			startpos = startpos + col.size();
-			totalcount = totalcount + col.size();
-			logger.info("[SearchController]  UpdateFulltextIndex - read "
-					+ totalcount + " workitems....");
-
-			icount = icount + col.size();
-			// Update index
-			LucenePlugin.updateWorklist(col);
-
-		}
-		logger.info("[SearchController]  UpdateFulltextIndex finished - "
-				+ icount + " workitems updated in "
-				+ (System.currentTimeMillis() - ltime) + " ms");
-
+		super.doReset(event);
+		
+		// restore search phrase
+		searchFilter.replaceItemValue("txtSearch", searchPhrase);
 	}
 
 	/**
