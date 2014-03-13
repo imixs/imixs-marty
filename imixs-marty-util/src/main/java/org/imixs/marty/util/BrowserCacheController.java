@@ -115,7 +115,7 @@ public class BrowserCacheController implements Serializable {
 					break;
 			}
 
-			if (requestUniqueid == null) {
+			if (requestUniqueid == null || requestUniqueid.isEmpty()) {
 				logger.fine("[BrowserCacheController] no request data found");
 				return;
 			}
@@ -152,7 +152,7 @@ public class BrowserCacheController implements Serializable {
 			}
 
 			// finally verify the modified date....
-		
+
 			if (!backendModified.equals(requestModified)) {
 				logger.warning("[BrowserCacheController] invalid browser data - modified: "
 						+ requestModified + " - expected: " + backendModified);

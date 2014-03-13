@@ -64,7 +64,8 @@ public class WorkitemLinkController implements Serializable {
 
 	public static final String LINK_PROPERTY = "txtworkitemref";
 
-	public static Logger logger = Logger.getLogger(WorkitemLinkController.class.getName());
+	public static Logger logger = Logger.getLogger(WorkitemLinkController.class
+			.getName());
 
 	@Inject
 	protected WorkflowController workflowController;
@@ -123,10 +124,10 @@ public class WorkitemLinkController implements Serializable {
 
 		try {
 			String sSearchTerm = "";
-			
+
 			// search only type workitem and workitemsarchive
-			sSearchTerm+="((type:workitem) OR (type:workitemarchive)) AND "; 
-			
+			sSearchTerm += "((type:workitem) OR (type:workitemarchive)) AND ";
+
 			if (filter != null && !"".equals(filter)) {
 				String sNewFilter = filter;
 				sNewFilter = sNewFilter.replace(".", "?");
@@ -283,7 +284,8 @@ public class WorkitemLinkController implements Serializable {
 
 		externalReferences = new ArrayList<ItemCollection>();
 
-		long lTime = System.currentTimeMillis();
+		if (workflowController.getWorkitem() == null)
+			return externalReferences;
 
 		String uniqueid = workflowController.getWorkitem().getItemValueString(
 				"$uniqueid");
@@ -293,6 +295,7 @@ public class WorkitemLinkController implements Serializable {
 		if ("".equals(uniqueid))
 			return externalReferences;
 
+		long lTime = System.currentTimeMillis();
 		// select all references.....
 		String sQuery = "SELECT workitem FROM Entity AS workitem"
 				+ " JOIN workitem.textItems AS rnr"
