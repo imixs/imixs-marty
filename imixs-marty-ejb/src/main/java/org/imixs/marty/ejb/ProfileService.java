@@ -223,7 +223,7 @@ public class ProfileService {
 		if (col.size() > 0) {
 			userProfile = col.iterator().next();
 		} else {
-			logger.warning("[ProfileService] lookup profile '" + userid
+			logger.fine("[ProfileService] lookup profile '" + userid
 					+ "' failed");
 		}
 		return userProfile;
@@ -268,7 +268,7 @@ public class ProfileService {
 		if (col.size() > 0) {
 			userProfile = col.iterator().next();
 		} else {
-			logger.warning("[ProfileService] lookup profile '" + search
+			logger.fine("[ProfileService] lookup profile '" + search
 					+ "' failed");
 		}
 		return userProfile;
