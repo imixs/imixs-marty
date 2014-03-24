@@ -22,10 +22,15 @@
 		</c:if>
 
 		<!-- hidden fields to verify the process state -->
-		<h:inputHidden id="uniqueID"
-			value="#{workflowController.workitem.item['$uniqueid']}" />
-		<h:inputHidden id="modified"
-			value="#{workflowController.workitem.item['$modified']}" />
+		<h:inputHidden id="_cached_uniqueid"
+			value="#{browserCacheController.cachedUniqueid}" />
+		<h:inputHidden id="_cached_modified"
+			value="#{browserCacheController.cachedModified}" />
+		<h:inputHidden id="_cached_sessionid"
+			value="#{browserCacheController.cachedSessionid}" />
+
+
+
 	</f:view>
 </cc:implementation>
 

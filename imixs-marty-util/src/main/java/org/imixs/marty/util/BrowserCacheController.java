@@ -41,6 +41,19 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 public class BrowserCacheController implements Serializable {
 	public static String BROWSER_DATA_INVALID = "BROWSER_DATA_INVALID";
 
+	public static String CACHE_UNIQUEID="_cached_uniqueid";
+	public static String CACHE_MODIFIED="_cached_modified";
+	public static String CACHE_SESSIONID="_cached_sessionid";
+	
+	
+	// request cache values
+	private String cachedSessionid=null;
+	private String cachedUniqueid=null;
+	private String cachedModified=null;
+	
+	
+	
+	
 	@Inject
 	protected WorkflowController workflowController;
 
@@ -71,6 +84,61 @@ public class BrowserCacheController implements Serializable {
 	}
 
 	/**
+	 * The cacheId is used to identify the workItem independent from its
+	 * modified date or unqiueId
+	 * 
+	 * @return
+	 */
+	
+	
+	public String getCachedSessionid() {
+		cachedSessionid= "";
+		if (workflowController.getWorkitem() != null) {
+			cachedSessionid = workflowController.getWorkitem().getItemValueString(CACHE_SESSIONID);
+			if ("".equals(cachedSessionid)) {
+				// compute id
+				cachedSessionid = "" + System.currentTimeMillis();
+				workflowController.getWorkitem()
+						.replaceItemValue(CACHE_SESSIONID, cachedSessionid);
+			}
+		}
+		return cachedSessionid;
+	}
+
+	public void setCachedSessionid(String cachedSessionid) {
+		this.cachedSessionid = cachedSessionid;
+	}
+
+	public String getCachedUniqueid() {
+		cachedUniqueid= "";
+		if (workflowController.getWorkitem() != null) {
+			cachedUniqueid = workflowController.getWorkitem().getItemValueString(WorkflowService.UNIQUEID);
+		}
+		return cachedUniqueid;
+	}
+
+	public void setCachedUniqueid(String cachedUniqueid) {
+		this.cachedUniqueid = cachedUniqueid;
+	}
+
+	public String getCachedModified() {
+		cachedModified= "";
+		if (workflowController.getWorkitem() != null) {
+			cachedModified = workflowController.getWorkitem().getItemValueString("$modified");
+		}
+		return cachedModified;
+	}
+
+	public void setCachedModified(String cachedModified) {
+		this.cachedModified = cachedModified;
+	}
+
+	
+	
+	
+
+
+	/**
 	 * Phase Listener for PhaseId=APPLY_REQUEST_VALUES
 	 * 
 	 * The method verifies if the posted workitem data matches the backend data
@@ -88,7 +156,10 @@ public class BrowserCacheController implements Serializable {
 		String requestModified = null;
 		String backendUniqueid = null;
 		String backendModified = null;
-
+		String backendCacheid = null;
+		String requestCacheid = null;
+		
+		
 		// only run during APPLY_REQUEST_VALUES phase
 		if (event.getPhaseId() == PhaseId.APPLY_REQUEST_VALUES) {
 			logger.fine("[BrowserCacheController] Before phase: "
@@ -100,24 +171,27 @@ public class BrowserCacheController implements Serializable {
 					.getRequestParameterMap();
 			for (String key : requestValues.keySet()) {
 
-				if (key.endsWith(":uniqueID")) {
+				if (key.endsWith(":"+CACHE_UNIQUEID)) {
 					requestUniqueid = requestValues.get(key);
+					
 					logger.fine("[BrowserCacheController] Apply Value for UnqiueID="
 							+ requestUniqueid);
 				}
-				if (key.endsWith(":modified")) {
+				if (key.endsWith(":"+CACHE_MODIFIED)) {
 					requestModified = requestValues.get(key);
 					logger.fine("[BrowserCacheController] Apply Value for modified="
 							+ requestModified);
 				}
 
-				if (requestUniqueid != null && requestModified != null)
-					break;
-			}
+				if (key.endsWith(":"+CACHE_SESSIONID)) {
+					requestCacheid = requestValues.get(key);
+					logger.fine("[BrowserCacheController] Apply Value for cacheid="
+							+ requestCacheid);
+				}
 
-			if (requestUniqueid == null || requestUniqueid.isEmpty()) {
-				logger.fine("[BrowserCacheController] no request data found");
-				return;
+				if (requestUniqueid != null && requestModified != null
+						&& requestCacheid != null)
+					break;
 			}
 
 			// analyze backend data....
@@ -126,6 +200,35 @@ public class BrowserCacheController implements Serializable {
 						.getItemValueString(WorkflowService.UNIQUEID);
 				backendModified = workflowController.getWorkitem()
 						.getItemValueString("$modified");
+				backendCacheid = workflowController.getWorkitem()
+						.getItemValueString(CACHE_SESSIONID);
+			}
+
+			if (requestUniqueid == null)
+				requestUniqueid = "";
+
+			if (backendUniqueid == null)
+				backendUniqueid = "";
+
+			if (requestUniqueid.isEmpty() && backendUniqueid.isEmpty()) {
+				logger.fine("[BrowserCacheController] no request data found");
+				return;
+			}
+
+			if (requestUniqueid.isEmpty() && !backendUniqueid.isEmpty()) {
+				if (backendCacheid.equals(requestCacheid)) {
+					requestUniqueid = backendUniqueid;
+					requestModified = backendModified;
+					
+
+					logger.info("[BrowserCacheController] update request data: "
+							+ backendUniqueid);
+				} else {
+					throw new PluginException(
+							BrowserCacheController.class.getSimpleName(),
+							BROWSER_DATA_INVALID,
+							"[BrowserCacheController] Browser Window contains invalid data: no backend data found.");
+				}
 			}
 
 			// verify backend workitem
@@ -183,9 +286,14 @@ public class BrowserCacheController implements Serializable {
 
 			String requestdata = workflowEvent.getWorkitem()
 					.getItemValueString("_invalidRequestID");
+
+			// remove request fields
+			workflowEvent.getWorkitem().removeItem("_invalidRequestID");
+		//	workflowEvent.getWorkitem().removeItem(CACHE_ID);
+
+			
 			if (!requestdata.isEmpty()) {
 				// remove _invalidRequestID which is no longer needed
-				workflowEvent.getWorkitem().removeItem("_invalidRequestID");
 				throw new PluginException(
 						BrowserCacheController.class.getSimpleName(),
 						BROWSER_DATA_INVALID,
