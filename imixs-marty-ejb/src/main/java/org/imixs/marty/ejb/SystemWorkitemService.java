@@ -72,8 +72,24 @@ public class SystemWorkitemService extends WorkitemService {
 			throws AccessDeniedException, ProcessingErrorException,
 			PluginException {
 
-		logger.fine("SystemWorkitemService - processWorkItem...");
+		logger.fine("SystemWorkitemService - processWorkItem with org.imixs.ACCESSLEVEL.MANAGERACCESS");
 		return super.processWorkItem(aworkitem);
 	}
 
+
+	/**
+	 * The method saves an entity
+	 * 
+	 * @throws AccessDeniedException
+	 * 
+	 * @throws Exception
+	 * 
+	 * 
+	 */
+	public ItemCollection save(ItemCollection entity)
+			throws AccessDeniedException {
+		logger.fine("Entity saved by SystemWorkitemService running with org.imixs.ACCESSLEVEL.MANAGERACCESS");
+		return entityService.save(entity);
+
+	}
 }
