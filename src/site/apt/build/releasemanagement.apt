@@ -71,7 +71,7 @@ Create a release manually
  
  [[5]] Switch back into the development branch 
  
- [[6]] Update the version number 
+ [[6]] Update the version number of the parent pom and the version numbers of all sub modules. 
  
  
   []
