@@ -1,0 +1,98 @@
+
+The Imixs Office Worklfow User Database
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Imixs Office Workflow provides a internal user database. This database can be used to manage user IDs 
+ and user groups and authenticate users with a JDBCRealm. To install these database tables make sure 
+ that the persistence.xml file contains a reference to the actual imixs-office-ejb module
+
++---------+
+<jar-file>imixs-office-workflow-ejb-1.1.1-RC-3.jar</jar-file>
++---------+
+ After the first deployment the connected database contains three tables:
+
+ * USERID - listing userids and passwords
+ 
+ * USERGROUP - listing group names
+ 
+ * USERID_USERGROUP - contains the assignment of userids to groups.
+
+*How to setup a JDBC Realm in GlassFish
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ GlassFish provides a feature called 'JDBC realm'. This realm configuration can be used to connect a 
+ user/group table to a JAAS security configuration. To use the Imixs Office Workflow User Database you 
+ can setup a realm configuration. The following example setup assumes that you allready have configured the 
+ Imixs Office Workflow database connection
+
+ From the Glassfish admin panel navigate to 'Configurations->server-config->Security->Realms', select 'New' 
+ Use the following settings to configure a JDBC realm:
+
++---------+
+Realm Name	 imixsrealm
+Class Name	 com.sun.enterprise.security.auth.realm.jdbc.JDBCRealm
+JAAS Context	jdbcRealm
+JNDI	jdbc/imixs_office
+User Table	USERID
+User Name Column	ID
+Password Column	PASSWORD
+Group Table	USERID_USERGROUP
+Group Name Column	GROUP_ID
+Digest Algorithm	SHA-256
++---------+
+ 
+ All other fields can be left empty.
+
+*Default admin user
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ When you deploy Imixs Office Workflow the first time a default admin account with the userid='admin' 
+ and the password 'adminadmin' will be created automatically. You should overwrite this account after 
+ your first login!
+
+*Restore the admin user
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ If you want to restore the admin account you have to delete all table entries from the database tables 
+ USERID_USERGROUP, USERID and USERGROUP. After a restart of the application the default account will be recreated.
+
+*Enable the User DB Frontend
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ If you have configured a JDBC realm and logged into Imixs Office Workflow using the 'admin' account you can enable 
+ the database user management in the frontend
+
+ From the Imixs Office Workflow frontend navigate to 'Administration->Configuration' and enable the option 'UserDB'.
+ In the field 'Groups' you should at least configure the following default groups:
+
++---------+
+IMIXS-WORKFLOW-Manager
+IMIXS-WORKFLOW-Author
+IMIXS-WORKFLOW-Reader
+IMIXS-WORKFLOW-Editor
++---------+
+
+ Note! do not leave this field empty if you setup the configuration the first time! Remove spaces at the beginning 
+ and the end of a role name!
+
+ Now you can add new user profiles and update existing user profiles. In the profile form you will now also see 
+ the input fields 'Password' and 'Groups' which are used to set a default password and assign a user to one of 
+ the predefined user groups.
+
+ If you are working with a custom build from Imixs Office Workflow, you can also add additional Groups into the 
+ configuration depending on your current implementation.
+
+*Update the Workflow System Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ To synchronize the user profiles with the user database it is necessary to add the following Worklfow Plug-In to 
+ the system models system-de-0.0.1 and system-en-0.0.1'
+
++---------+
+ org.imixs.office.ejb.security.UserGroupPlugin
++---------+
+
+ If you have configured the imixsrealm as a JDBC realm you can synchronize the models from the imixs modeller 
+ using the admin account 'admin' (password='adminadmin')
+
+ Note! If you did not add this plugin into the system model the user profiles will not be synchronized with the 
+ user database! 

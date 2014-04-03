@@ -26,7 +26,12 @@
 			<item name="Modelling" href="concepts/modelling.html" />
 			<item name="Localization" href="concepts/localization.html" />
 			<item name="Workitem Linking" href="concepts/workitemlinking.html" />
+			<item name="Mail" href="concepts/mail.html" />
+			<item name="User Profiles" href="concepts/profiles.html" />
+			<item name="User DB" href="concepts/userdb.html" />
+			<item name="LDAP" href="concepts/ldap.html" />
 		</menu>
+		
 		
 		<menu name="Services and EJBs">
 			<item name="ImageInterceptor" href="services/imageinterceptor.html" />

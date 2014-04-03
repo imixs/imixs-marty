@@ -1,0 +1,127 @@
+
+Using a LDAP Directory for Authentication
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ Running Imixs Office Workflow on Glassfish it is easy to setup a security realm for the user 
+ authentication from an existing LDAP Directory like Microsoft Active Directory. To authenticate 
+ a JEE application against Active Directory (AD) you can setup a LDAPRealm in Glassfish. Use the 
+ folowing example settings when creating a new JAAS Realm. For Imixs Office Workflow the realmname 
+ is 'imixsrealm':
+
++-------------------+
+JAAS Context: 'ldapRealm'
+Directory : ldap://your-ad-server:389
+Base DN: 'DC=mycompany,DC=local'
++-------------------+
+
+ Additional to these standard connection settings (you should use your own environment configuration) 
+ you need to add the following additional Properties:
+
++-------------------+
+search-filter = (&(objectClass=user)(sAMAccountName=%s))
+group-search-filter = (&(objectClass=group)(member=%d))
+search-bind-dn = some-technical-account (do not use distinguished name)
+search-bind-password = your-technical-account-password
+java.naming.referral = follow
++-------------------+
+
+ The property 'java.naming.referral = follow' is necessary in most cases to avoid internal exceptions during a 
+ search request.
+
+ If you have created a filebased or databased security realm with the name 'imixsrealm' before you need to delete 
+ the old realm first.
+ 
+ 
+ 
+ 
+ 
+Using LDAP Groups
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Imixs Office Workflow provides a concept to allow the mapping of GroupsNames to the reader and author fields 
+ of a WorkItem. There for the LDAPGroupInterceptor has to be configured in the ejb module (ejb-jar.xml) of 
+ Imixs Office Workflow.
+
+This is an example:
+
++-------------------+  
+ <enterprise-beans>
+    <!-- .... -->
+ </enterprise-beans>
+ <interceptors>
+    <interceptor>
+        <interceptor-class>org.imixs.office.ejb.LDAPGroupInterceptor</interceptor-class>
+    </interceptor>
+  </interceptors>
+  <assembly-descriptor>
+      <interceptor-binding>
+        <description>Intercepter to add project-role mapping into EJB Context Data</description>
+        <ejb-name>EntityService</ejb-name>
+        <interceptor-class>org.imixs.office.ejb.LDAPGroupInterceptor</interceptor-class>
+      </interceptor-binding>
+ </assembly-descriptor>
++-------------------+		
+ 
+
+ The interceptor adds all group names the user blongs to into the user-name-list (which contains the UserPrincipal 
+ and the User Roles)
+
+*Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ The configuration for the LDAP Interceptor is provided in a file named 'imixs-office-ldap.properties'. 
+ This file is located in the config folder of the GlassFish Domain (GLASSFISH_DOMAIN/config/imixs-office-ldap.properties)
+
+  
+  
++-------------------+  
+ ##############################
+ # Imixs Ldap Lookup Configuration 
+ # Note: this file have to be copied at: 
+ # domains/domain1/config/imixs-office-ldap.properties 
+ ##############################
+ 
+ # JNDI Context
+ ldap-jndi-name=org.imixs.office.ldap
+ 
+ # Search Filter  (%u=uid  %d=DistinguisedName)
+ dn-search-filter=(uid=%u)
+ group-search-filter=(member=%d)
+ # User Attributes
+ user-attributes=uid,CN,SN,mail,displayName,sAMAccountName,department,givenName,telephoneNumber
+ # Cache size
+ cache-size=100
+ cache-expires=10000
+ # Group Präfix
+ group-name-praefix=
++-------------------+
+  
+ The LdapJndiName points to a LDAP directory context configured in GlassFish : Resources->JNDI->External Resources 
+ See: http://javaevangelist.blogspot.de/2007/03/sun-java-system-application-server-9x_15.html
+
+ The property 'user-attributes' defines a set of ldap attributes which are cached during user lookup. The 
+ CacheSize should be set to the value of minimum concurrent user sessions. CacheExpires specifies the expire 
+ time of the cache in miliseconds. GroupNamePraefix is an optional prafix of GroupNames searched by the LDAPService
+
+*Manually LDAP Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ It is also possible to setup the ldap context manually. In this case the following additonal properties have 
+ to be defined:
+
++-------------------+
+ disable-jndi=true
+ search-context=DC=mydomain,DC=local
+ java.naming.factory.initial=com.sun.jndi.ldap.LdapCtxFactory
+ java.naming.security.authentication=simple
+ java.naming.security.principal=username
+ java.naming.security.credentials=password
+ java.naming.provider.url=ldap://localhost
++-------------------+
+
+ The property 'search-context' in a manual configuration is optional and used to define a general search context. This param is typically provided by a jndi external resource configuration. So in case when you define a JNDI-Lookup context for a external resource you can leave this property empty.
+
+ New Property File
+ Since Version 1.2.x the imixs workflow project provides a general property service ejb. The properties are stored in application class path file 'imixs.properties'
+
+ Note: All properties in the imixs.property file start with the prafix 'ldap.' 
+ 
+ 

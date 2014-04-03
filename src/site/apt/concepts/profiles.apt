@@ -1,0 +1,46 @@
+User Profile management and the ProfilePlugin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ User Profiles (type='profile) are created automatically if a user first logged in. If the Database 
+ user profile management is enabled (see configuration) a profile an also be created manually by an 
+ administrator.
+
+ The creation of a new profile is handled by the userController CDI Bean. In addition the UserController 
+ can also process an existing profile the first time a user is logged in. To enable this 'auto process mode' 
+ the system property profile.autoProcessOnLogin can be enabled.
+
+*Example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ profile.autoProcessOnLogin=10
+
+The Marty ProfilePlugin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ The Plugin org.imixs.marty.plugins.ProfilePlugin provides additional business logic for profile entities and 
+ workitems. The plugin is used for the System Workflow as also for the default workflows. When a userProfile is 
+ processed (typically when a User logged in) the plugin validates the username and email address.
+
+
+*Traslate userIDs into User Name
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ In additon the Plugin provides a mechanism to translate elements of an activityEntity to replace 
+ placeholders for a user id with the corresponding user name. There for the plugin uses the profileService EJB.
+
+ In a workflow activity text (e.g. History text or Email Body) the new tag 'username' can be used.
+
++--------------+
+Request saved by <username>namcurrenteditor</username>.
++--------------+
+
+ It is also possible to translate list of user entries. See the next example to translate a team list in a mail text:
+
++--------------+
+Current Team: <username sparator=",">namTeam</username>.
++--------------+
+
+ In this example the usernames stored in the property 'namTeam' are replaced with the corresponding usernames 
+ and separated with a ','
+ 
+ 
