@@ -48,7 +48,9 @@ The Release Management
  and build framework Maven.
 
  During development we did not work with snapshot staging concept from maven like in the 
- Imixs Workflow main project. The current development release is located in the branch 'development'. 
+ Imixs Workflow main project. Therefor we did not use the mvn:prepare command. 
+ 
+ The current development release is located in the branch 'development'. 
  If a version is stable or 
   used in a productive environment we create a release from the latest development 
   version. A release is tagged in the code repository.
@@ -59,62 +61,20 @@ Create a release manually
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  To create a new release follow these steps:
 
- * Verify that your current development sources are up to date
+ [[1]] Verify that your current development sources are up to date
  
- * Create a new tag from the current develpment version (trunk) with the current version number under the tags/ tree. e.g /tags/2.0.1
-
- * Increase the version number of the trunk version in the parent pom and all including project modules
+ [[2]] Merge the development branch into the master branch.
  
- * check in your changes into the trunk
-
- []
+ [[3]] Run tests on the master branch. Run all the tests. If one or more fail, fix them first.
+ 
+ [[4]] Make a tag on git with the current release version (from development branch)
+ 
+ [[5]] Switch back into the development branch 
+ 
+ [[6]] Update the version number 
+ 
+ 
+  []
  
  Before we start a new version the last build should be uploaded into the imixs repository. 
  As we did not use the staging process provided by sonatype this process is done manually.
-
-*Create a release using the mvn release command
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- You can optional use the mvn release:prepare command to automate the process. 
- To use the mvn relase command make sure the pom.xml contains the follwong sections:
-
-+-----------------------+
-....
-<scm>
-<connection>scm:svn:https://svn.java.net/svn/imixs-workflow-marty~svn/imixs-marty</connection>
-<developerConnection>scm:svn:https://svn.java.net/svn/imixs-workflow-marty~svn/imixs-marty</developerConnection>
-<url>scm:svn:https://svn.java.net/svn/imixs-workflow-marty~svn/imixs-marty</url>
-</scm>
-+-----------------------+
-
- Make sure the urls points to the valid scm location.
-
- maven-release-plugin add the maven-relase-plugin configuration to the pom:
-
-
-+-----------------------+
-....
-<!-- relase management -->
-<plugin>
-<groupId>org.apache.maven.plugins</groupId>
-<artifactId>maven-release-plugin</artifactId>
-<configuration>
-<tagBase>https://svn.java.net/svn/imixs-workflow-marty~svn/imixs-marty/tags</tagBase>
-<mavenExecutorId>forked-path</mavenExecutorId>
-</configuration>
-</plugin>
-+-----------------------+
-
- also here the tagBase tag need to point to the valid scm location!
-
- To create a new version, run the mvn commands:
-
-+-----------------------+
- 
- mvn clean
- mvn release:prepare
- mvn release:clean
-+-----------------------+
-
- Note: you need to verify that the current developer version is a snaptshot release! 
- and did not use any snaptshot dependencies from the Imixs Workflow project. Otherwise 
- the maven release plugin will not succeed.
