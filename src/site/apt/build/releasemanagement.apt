@@ -48,12 +48,11 @@ The Release Management
  and build framework Maven.
 
  During development we did not work with snapshot staging concept from maven like in the 
- Imixs Workflow main project. This means that the trunk always contains the current release
-  which is work under progress. If a version of a component or application is stable or 
-  used in a productive environment we create a release candidate from the latest development 
-  version. A release candidate is tagged in the code repository and should not be changed! 
-  (In the beginning we worked with the sufix 'RC-' followed by a number. But this will not 
-  be continued since main version 2.0.0!)
+ Imixs Workflow main project. The current development release is located in the branch 'development'. 
+ If a version is stable or 
+  used in a productive environment we create a release from the latest development 
+  version. A release is tagged in the code repository.
+ 
 
 
 Create a release manually
