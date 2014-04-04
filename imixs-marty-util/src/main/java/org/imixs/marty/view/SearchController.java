@@ -128,7 +128,7 @@ public class SearchController extends
 	 * Constructor sets the new ViewController
 	 */
 	public SearchController() {
-		super();
+		super();		
 		setViewAdapter(new ViewAdapter());
 	}
 
@@ -257,26 +257,21 @@ public class SearchController extends
 		return viewTitle;
 	}
 
-	/*
-	 * public IQueryBuilder getQueryBuilder() { if (queryBuilder == null)
-	 * queryBuilder = new QueryBuilder();
-	 * 
-	 * return queryBuilder; }
-	 * 
-	 * public void setQueryBuilder(IQueryBuilder queryBuilder) {
-	 * this.queryBuilder = queryBuilder; }
-	 */
+	
 
-	public IViewAdapter getViewAdapter() {
-		if (viewAdapter == null)
-			viewAdapter = new ViewAdapter();
 
-		return viewAdapter;
+
+	public IQueryBuilder getQueryBuilder() {
+		return queryBuilder;
 	}
 
-	public void setViewAdapter(IViewAdapter viewAdapter) {
-		this.viewAdapter = viewAdapter;
+	public void setQueryBuilder(IQueryBuilder queryBuilder) {
+		this.queryBuilder = queryBuilder;
 	}
+
+
+
+
 
 	protected class ViewAdapter implements IViewAdapter {
 		/**
