@@ -31,6 +31,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -60,7 +62,8 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  *    Workitem updated by: <username>namcurrenteditor</username>.
  * </code>
  * 
- * This will replace the namcurrenteditor with the corrsponding profile full username
+ * This will replace the namcurrenteditor with the corrsponding profile full
+ * username
  * 
  * @author rsoika
  * 
@@ -77,7 +80,14 @@ public class ProfilePlugin extends AbstractPlugin {
 	public static String USERNAME_ALREADY_TAKEN = "USERNAME_ALREADY_TAKEN";
 	public static String INVALID_USERNAME = "INVALID_USERNAME";
 	public static String EMAIL_ALREADY_TAKEN = "EMAIL_ALREADY_TAKEN";
+	public static String INVALID_EMAIL = "INVALID_EMAIL";
+
 	public static String NO_PROFILE_SERVICE_FOUND = "NO_SEQUENCE_SERVICE_FOUND";
+
+	public static String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
+			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+
+	public static String USERID_PATTERN = "^[A-Za-z0-9\\-\\w]+";
 
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
@@ -164,7 +174,10 @@ public class ProfilePlugin extends AbstractPlugin {
 	 * @throws PluginException
 	 */
 	void validateUserProfile(ItemCollection profile) throws PluginException {
+		Pattern pattern;
+		Matcher matcher;
 		String sUsername = profile.getItemValueString("txtName");
+		String sEmail = profile.getItemValueString("txtEmail");
 
 		if (this.getUserName() == null || this.getUserName().isEmpty()) {
 			throw new PluginException(ProfilePlugin.class.getSimpleName(),
@@ -178,6 +191,27 @@ public class ProfilePlugin extends AbstractPlugin {
 			logger.fine("initialize profile with username: " + sUsername);
 			profile.replaceItemValue("txtName", sUsername);
 		}
+
+		// verify email pattern
+		pattern = Pattern.compile(EMAIL_PATTERN);
+		matcher = pattern.matcher(sEmail);
+		if (!matcher.matches()) {
+			throw new PluginException(ProfilePlugin.class.getSimpleName(),
+					INVALID_EMAIL, "Invalid Email Address",
+					new Object[] { profile.getItemValueString("txtEmail") });
+		}
+
+
+		// verify userid pattern
+		pattern = Pattern.compile(USERID_PATTERN);
+		matcher = pattern.matcher(sUsername);
+		if (!matcher.matches()) {
+			throw new PluginException(ProfilePlugin.class.getSimpleName(),
+					INVALID_USERNAME, "Invalid Username",
+					new Object[] { profile.getItemValueString("txtName") });
+		}
+
+		
 		if (!isValidUserName(profile))
 			throw new PluginException(
 					ProfilePlugin.class.getSimpleName(),
@@ -287,6 +321,42 @@ public class ProfilePlugin extends AbstractPlugin {
 
 		return (col.size() == 0);
 
+	}
+
+	/**
+	 * Check for special characters
+	 * 
+	 * @param profile
+	 * @return true if special character found
+	 */
+	boolean isValidUserNameInput(ItemCollection profile) {
+
+		String sName = profile.getItemValueString("txtName");
+
+		// if (Pattern.matches( "'.*'", "'Hallo Welt" ))
+
+		if (sName.contains("ö"))
+			return true;
+		if (sName.contains("ü"))
+			return true;
+		if (sName.contains("ä"))
+			return true;
+		if (sName.contains("Ü"))
+			return true;
+		if (sName.contains("Ö"))
+			return true;
+		if (sName.contains("Ä"))
+			return true;
+		if (sName.contains("ß"))
+			return true;
+		if (sName.contains("ö"))
+			return true;
+		if (sName.contains("ö"))
+			return true;
+		if (sName.contains("ö"))
+			return true;
+
+		return false;
 	}
 
 	/**
