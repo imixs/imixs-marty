@@ -9,40 +9,45 @@ import org.imixs.workflow.exceptions.PluginException;
 import org.junit.Test;
 
 /**
- * Test regex
+ * Test regex from the ProfilePugin
  * 
  * @author rsoika
  */
 public class TestRegex {
+	Pattern pattern;
+	Matcher matcher;
 
+	
 	@Test
-	public void test() throws PluginException {
-
-		
-		
-		Pattern pattern;
-		Matcher matcher;
-
-		String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
-				+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
-
-
-		
-		String USERID_PATTERN = "^[A-Za-z0-9\\-\\w]+";
-
-		
-		pattern = Pattern.compile(EMAIL_PATTERN);
+	public void testEmail() throws PluginException {
+		pattern = Pattern.compile(ProfilePlugin.EMAIL_PATTERN);
 		matcher = pattern.matcher("hl+o@imixs.com");
 		Assert.assertTrue( matcher.matches());
-
-
+	
+	}
 	
 	
-		pattern = Pattern.compile(USERID_PATTERN);
+	
+	
+	@Test
+	public void testUserid() throws PluginException {
+		pattern = Pattern.compile(ProfilePlugin.USERID_PATTERN);
 		matcher = pattern.matcher("pin_gi-");
 		Assert.assertTrue( matcher.matches());
 
+		
+		pattern = Pattern.compile(ProfilePlugin.USERID_PATTERN);
+		matcher = pattern.matcher("pingiimixs.com");
+		Assert.assertTrue( matcher.matches());
+		
+		pattern = Pattern.compile(ProfilePlugin.USERID_PATTERN);
+		matcher = pattern.matcher("www.imixs.com");
+		Assert.assertTrue( matcher.matches());
 	
+		
+		pattern = Pattern.compile(ProfilePlugin.USERID_PATTERN);
+		matcher = pattern.matcher("pingi@imixs.com");
+		Assert.assertTrue( matcher.matches());
 	}
 
 }
