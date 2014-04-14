@@ -69,7 +69,9 @@
 	</modules>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
+		<org.imixs.workflow.version>3.1.7-SNAPSHOT</org.imixs.workflow.version>
+	</properties>	
+	
 	<build>
 		<plugins>
 			<plugin>
@@ -141,7 +143,7 @@
 			<dependency>
 				<groupId>org.imixs.workflow</groupId>
 				<artifactId>imixs-workflow-core</artifactId>
-				<version>3.1.5</version>
+				<version>${org.imixs.workflow.version}</version>
 				<scope>provided</scope>
 				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
 			</dependency>
@@ -149,7 +151,7 @@
 			<dependency>
 				<groupId>org.imixs.workflow</groupId>
 				<artifactId>imixs-workflow-engine</artifactId>
-				<version>3.1.5</version>
+				<version>${org.imixs.workflow.version}</version>
 				<scope>provided</scope>
 				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
 			</dependency>
@@ -157,7 +159,7 @@
 			<dependency>
 				<groupId>org.imixs.workflow</groupId>
 				<artifactId>imixs-workflow-faces</artifactId>
-				<version>3.1.5</version>
+				<version>${org.imixs.workflow.version}</version>
 				<scope>provided</scope>
 			</dependency>
 

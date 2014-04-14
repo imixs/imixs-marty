@@ -9,6 +9,10 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Logger;
 
+import javax.ejb.SessionContext;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
@@ -38,9 +42,7 @@ public class DMSPlugin extends AbstractPlugin {
 	private EntityService entityService = null;
 	ItemCollection workitem = null;
 	private ItemCollection blobWorkitem = null;
-
-	private static Logger logger = Logger.getLogger(DMSPlugin.class
-			.getName());
+	private static Logger logger = Logger.getLogger(DMSPlugin.class.getName());
 
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
@@ -85,18 +87,55 @@ public class DMSPlugin extends AbstractPlugin {
 
 			blobWorkitem.replaceItemValue("$uniqueidRef",
 					workitem.getItemValueString(EntityService.UNIQUEID));
-			blobWorkitem.replaceItemValue("type", "workitemlob");
+			blobWorkitem.replaceItemValue("type", "workitemlob"); 
 
 			// Update BlobWorkitem
-			blobWorkitem = entityService.save(blobWorkitem);
+			//blobWorkitem = entityService.save(blobWorkitem);
+			// new transaction....
+			blobWorkitem= this.getEjbSessionContext().getBusinessObject(WorkflowService.class)
+						.getEntityService().saveByNewTransaction(blobWorkitem);
+			 
+			 
+			
 
 			// update property '$BlobWorkitem'
 			workitem.replaceItemValue("$BlobWorkitem",
 					blobWorkitem.getItemValueString(EntityService.UNIQUEID));
 		}
 
+		
+		// update the dms list - e.g. if another plugin had added a file....
+		updateDMSList(workitem);
+		
+		
 		return Plugin.PLUGIN_OK;
 	}
+	
+	
+	
+	
+	
+	/**
+	 * 
+	 */
+	@TransactionAttribute(value = TransactionAttributeType.REQUIRES_NEW)
+	public ItemCollection saveBlobWorkitem(ItemCollection blobWorkitem){
+		blobWorkitem= entityService.save(blobWorkitem);
+		return blobWorkitem;
+	}
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 	public void close(int arg0) {
 		// no op
@@ -206,6 +245,17 @@ public class DMSPlugin extends AbstractPlugin {
 	public static void setDmsList(ItemCollection aWorkitem,
 			List<ItemCollection> dmsList) {
 		setDmsList(aWorkitem, dmsList, null, null);
+	}
+
+	/**
+	 * This Method updates the DMS entry. The method verifies if a new file was
+	 * added (e.g. from the ReportPlugin). If the $files contains a filename not
+	 * listed in the current DMS entry the method updates this prperty.
+	 * 
+	 */
+	private void updateDMSList(ItemCollection aWorkitem) {
+		List<ItemCollection> dmsList = getDmsList(aWorkitem);
+		setDmsList(aWorkitem,dmsList); 
 	}
 
 	/**
