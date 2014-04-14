@@ -9,10 +9,6 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Logger;
 
-import javax.ejb.SessionContext;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
@@ -110,30 +106,6 @@ public class DMSPlugin extends AbstractPlugin {
 		
 		return Plugin.PLUGIN_OK;
 	}
-	
-	
-	
-	
-	
-	/**
-	 * 
-	 */
-	@TransactionAttribute(value = TransactionAttributeType.REQUIRES_NEW)
-	public ItemCollection saveBlobWorkitem(ItemCollection blobWorkitem){
-		blobWorkitem= entityService.save(blobWorkitem);
-		return blobWorkitem;
-	}
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 
