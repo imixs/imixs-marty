@@ -193,14 +193,15 @@ public class ProfilePlugin extends AbstractPlugin {
 		}
 
 		// verify email pattern
-		pattern = Pattern.compile(EMAIL_PATTERN);
-		matcher = pattern.matcher(sEmail);
-		if (!matcher.matches()) {
-			throw new PluginException(ProfilePlugin.class.getSimpleName(),
-					INVALID_EMAIL, "Invalid Email Address",
-					new Object[] { profile.getItemValueString("txtEmail") });
+		if (!sEmail.isEmpty()) {
+			pattern = Pattern.compile(EMAIL_PATTERN);
+			matcher = pattern.matcher(sEmail);
+			if (!matcher.matches()) {
+				throw new PluginException(ProfilePlugin.class.getSimpleName(),
+						INVALID_EMAIL, "Invalid Email Address",
+						new Object[] { profile.getItemValueString("txtEmail") });
+			}
 		}
-
 
 		// verify userid pattern
 		pattern = Pattern.compile(USERID_PATTERN);
@@ -211,7 +212,6 @@ public class ProfilePlugin extends AbstractPlugin {
 					new Object[] { profile.getItemValueString("txtName") });
 		}
 
-		
 		if (!isValidUserName(profile))
 			throw new PluginException(
 					ProfilePlugin.class.getSimpleName(),
