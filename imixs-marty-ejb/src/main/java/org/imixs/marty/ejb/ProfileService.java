@@ -158,8 +158,8 @@ public class ProfileService {
 		// use cache?
 		if (!refresh)
 			userProfile = (ItemCollection) cache.get(userid);
-		// not found?
-		if (userProfile == null) {
+		// not yet cached?
+		if (userProfile == null && !cache.containsKey(userid)) {
 			userProfile = lookupProfileById(userid);
 			if (userProfile != null) {
 				// put a clone workitem into the cahe
