@@ -170,6 +170,8 @@ public class ProfileService {
 			} else {
 				logger.fine("[ProfileService] profile '" + userid
 						+ "' not found");
+				// put null entry into cache to avoid next lookup!
+				cache.put(userid, null);
 			}
 		} else {
 			logger.fine("[ProfileService] get profile '" + userid
