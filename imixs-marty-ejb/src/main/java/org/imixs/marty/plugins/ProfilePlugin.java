@@ -131,9 +131,8 @@ public class ProfilePlugin extends AbstractPlugin {
 			profileService.discardCache(workItem.getItemValueString("txtName"));
 		}
 
-		// translate dynamic activity values
-		if ("workitem".equals(workItem.getItemValueString("type")))
-			updateActivityEntity(workItem, documentActivity);
+		// translate dynamic activity values - (this is independent form the type of the workitem)
+		updateActivityEntity(workItem, documentActivity);
 
 		return Plugin.PLUGIN_OK;
 	}
