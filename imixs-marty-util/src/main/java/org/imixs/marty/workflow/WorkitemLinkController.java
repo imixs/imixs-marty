@@ -244,6 +244,7 @@ public class WorkitemLinkController implements Serializable {
 			// cut last ,
 			sQuery = sQuery.substring(0, sQuery.length() - 1);
 			sQuery += ")";
+			sQuery += " ORDER BY entity.created DESC";
 
 			Collection<ItemCollection> workitems = workflowService
 					.getEntityService().findAllEntities(sQuery, 0, -1);
