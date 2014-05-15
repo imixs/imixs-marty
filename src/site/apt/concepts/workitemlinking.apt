@@ -14,6 +14,13 @@ Workitem Linking
   hidereferences="false"  filter="$processid:9..." /> 
 +-----------------------+
 
+ With the attribute 'minimumChars' it is possible to define the minimum length of a search phrase. The default value is 3. 
+ 
++-----------------------+
+ <marty:workitemLink workitem="#{workflowController.workitem}"
+  hidereferences="false"  filter="$processid:9..." minimumChars="5"/> 
++-----------------------+
+
  Before you can add the custom component in one of your JSF pages, make sure that you link 
  the marty namespace:
 
