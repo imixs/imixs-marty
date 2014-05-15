@@ -193,6 +193,13 @@ public class BrowserCacheController implements Serializable {
 						&& requestCacheid != null)
 					break;
 			}
+			
+
+			if (requestUniqueid==null && requestModified==null && requestCacheid==null) {
+				logger.fine("[BrowserCacheController] no request data found");
+				return;
+			}			
+			
 
 			// analyze backend data....
 			if (workflowController.getWorkitem() != null) {
@@ -214,6 +221,7 @@ public class BrowserCacheController implements Serializable {
 				logger.fine("[BrowserCacheController] no request data found");
 				return;
 			}
+			
 
 			if (requestUniqueid.isEmpty() && !backendUniqueid.isEmpty()) {
 				if (backendCacheid.equals(requestCacheid)) {
