@@ -79,6 +79,7 @@ public class WorkitemLinkController implements Serializable {
 	private Map<String, List<ItemCollection>> references = null;
 
 	private String input = null;
+	private int minimumChars=3; // minimum input required for a suggestion
 
 	public WorkitemLinkController() {
 		super();
@@ -91,6 +92,19 @@ public class WorkitemLinkController implements Serializable {
 
 	public void setInput(String input) {
 		this.input = input;
+	}
+
+	/**
+	 *  minimum input required for a suggestion
+	 *  Default is 3
+	 * @return
+	 */
+	public int getMinimumChars() {
+		return minimumChars;
+	}
+
+	public void setMinimumChars(int minimumChars) {
+		this.minimumChars = minimumChars;
 	}
 
 	/**
@@ -111,15 +125,18 @@ public class WorkitemLinkController implements Serializable {
 		reset();
 	}
 
-	/*
+	/**
 	 * Starts a lucene search to provide searchResult for suggest list
+	 * 
+	 * @param filter - search filter
+	 * @param minchars - the minimum length for the filter string
 	 */
-	public void search(String filter) {
+	public void search(String filter,int minchars) {
 
-		if (input == null)
+		if (input == null || input.isEmpty() || input.length()<minchars)
 			return;
 
-		logger.info("LinkController SearchOption=" + filter);
+		logger.fine("LinkController SearchOption=" + filter);
 		searchResult = new ArrayList<ItemCollection>();
 
 		try {
@@ -149,6 +166,14 @@ public class WorkitemLinkController implements Serializable {
 		}
 
 	}
+	
+	/*
+	 * Starts a lucene search to provide searchResult for suggest list
+	 */
+	public void search(String filter) {
+		search(filter,minimumChars);
+	}
+	
 
 	public List<ItemCollection> getSearchResult() {
 		return searchResult;

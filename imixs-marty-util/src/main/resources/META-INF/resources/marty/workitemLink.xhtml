@@ -10,6 +10,7 @@
 <cc:interface>
 	<cc:attribute name="workitem"></cc:attribute>
 	<cc:attribute name="filter"></cc:attribute>
+	<cc:attribute name="minimumChars" type="java.lang.Integer" default="3" ></cc:attribute>
 	<cc:attribute name="hidereferences" default="false"
 		type="java.lang.Boolean"></cc:attribute>
 </cc:interface>
@@ -59,7 +60,7 @@
 			class="marty-workitemlink-inputbox" layout="block">
 			<h:inputText value="#{workitemLinkController.input}">
 				<f:ajax event="keyup" render="suggest_box"
-					listener="#{workitemLinkController.search(cc.attrs.filter)}" />
+					listener="#{workitemLinkController.search(cc.attrs.filter,cc.attrs.minimumChars)}" />
 				<f:ajax event="blur" render="suggest_box"
 					listener="#{workitemLinkController.reset}" />
 			</h:inputText>
