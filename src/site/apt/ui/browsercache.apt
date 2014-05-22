@@ -78,7 +78,7 @@ Browser Cache and History Back Button
 
 
 
-* Use-Case-3 - HistoryBack Navigation with different $modified date
+* Use-Case-4 - HistoryBack Navigation with different $modified date
 ~~~~~~~~~~~~~~
  * The user open a browserwindow and navigates to a workitem (1).
  
@@ -97,6 +97,36 @@ Browser Cache and History Back Button
   The phase listener recognizes the wrong workitem uniqueid maches. But the $modified not.
   An error message occurs telling the user that his data is outdated. The browserdata will be 
  again synchronized. So a second save now succeeds. 
+
+
+
+* Use-Case-5 - Start new Workitem navigate to different Browser Window
+~~~~~~~~~~~~~~
+ * The user open a browserwindow and start to create a new workitem (1).
+ 
+ * The user open another browser window and navigate to another workitem (2)
+ 
+ * The user process the workitem 2 (BrowserCacheControler recoginizes 
+ 
+     * the data for workitem (2) is deprecated but BrowserCacheController reloads this data into the backend and process complets. 
+     
+ * The user switch back to the frist browser window with the new and empty  workitem (1) 
+ 
+ * The user fills in data and clicks on a action (e.g. save) 
+ 
+ []
+ 
+ <<Expected behavior:>>
+
+  The phase listener recognizes that the user is posing a complete new workitem which is different to the last 
+  processed workitem in the backend. nd clea wrong workitem uniqueid maches. But the $modified not.
+  An error message occurs telling the user that his data is outdated. The browserdata will be 
+ again synchronized. So a second save now succeeds. 
+
+
+
+
+
 
 
 The CacheConroller
