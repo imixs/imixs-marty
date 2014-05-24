@@ -125,3 +125,22 @@ This is an example:
  Note: All properties in the imixs.property file start with the prafix 'ldap.' 
  
  
+ 
+*Automated Profile Update
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Using the Plugin 'org.imixs.marty.plugins.LDAPPlugin' allows an automated update of profile attributes 
+ depending on the corresponding attribute in a LDAP Directory. The 
+ 
+ The plugin makes a ldap lookup to update the properties 'txtUserName' and 'txtEmail'.
+ The ldap property attribute-names are read from the imixs.propries file. Example:
+ 
++----------------+ 
+ldap.username-attribute=displayName
+ldap.email-attribute=mail
++----------------+ 
+ 
+ To update attributes during user login, this Plugin can to be configured to run before the profile plugin. 
+ Also the automated save during user login need to be configured (see ProfilePlugin)
+ 
+  

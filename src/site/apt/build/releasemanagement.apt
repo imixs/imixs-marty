@@ -48,12 +48,11 @@ The Release Management
  and build framework Maven.
 
  During development we did not work with snapshot staging concept from maven like in the 
- Imixs Workflow main project. Therefor we did not use the mvn:prepare command. 
+ Imixs Workflow main project. There for we did not use the mvn:prepare command. 
  
  The current development release is located in the branch 'development'. 
- If a version is stable or 
-  used in a productive environment we create a release from the latest development 
-  version. A release is tagged in the code repository.
+ If a version is stable or used in a productive environment we create a release from the 
+ latest development version. A release is tagged in the code repository.
  
 
 
