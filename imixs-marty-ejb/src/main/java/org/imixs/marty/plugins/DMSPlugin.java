@@ -1,5 +1,10 @@
 package org.imixs.marty.plugins;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -31,10 +36,17 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * filed.
  * 
  * 
+ * If the workitem contains the property 'txtDmsImport" all files from the given
+ * path will be added into the blobWorkitem
+ * 
  * @author rsoika
  * 
  */
 public class DMSPlugin extends AbstractPlugin {
+
+	public final static String DMS_IMPORT_PROPERTY = "txtDmsImport";
+	public final static String DEFAULT_PROTOCOLL = "file://";
+
 	private EntityService entityService = null;
 	ItemCollection workitem = null;
 	private ItemCollection blobWorkitem = null;
@@ -55,7 +67,10 @@ public class DMSPlugin extends AbstractPlugin {
 	/**
 	 * Update the read and writeaccess of the blobworkitem
 	 * 
+	 * If the workitem contains the property 'txtDmsImport" all files from the
+	 * given path will be added into the blobWorkitem
 	 **/
+	@SuppressWarnings("unchecked")
 	@Override
 	public int run(ItemCollection aworkItem, ItemCollection documentActivity) {
 
@@ -71,6 +86,12 @@ public class DMSPlugin extends AbstractPlugin {
 		blobWorkitem = loadBlobWorkitem(workitem);
 		if (blobWorkitem != null) {
 
+			// import files if txtDmsImport is defined.
+			if (aworkItem.hasItem(DMS_IMPORT_PROPERTY)) {
+				importFilesFromPath(workitem,blobWorkitem,
+						aworkItem.getItemValue(DMS_IMPORT_PROPERTY));
+			}
+
 			logger.fine("[BlobPlugin] updating $readaccess/$writeaccess for "
 					+ workitem.getItemValueString(EntityService.UNIQUEID));
 
@@ -83,31 +104,25 @@ public class DMSPlugin extends AbstractPlugin {
 
 			blobWorkitem.replaceItemValue("$uniqueidRef",
 					workitem.getItemValueString(EntityService.UNIQUEID));
-			blobWorkitem.replaceItemValue("type", "workitemlob"); 
+			blobWorkitem.replaceItemValue("type", "workitemlob");
 
 			// Update BlobWorkitem
-			//blobWorkitem = entityService.save(blobWorkitem);
+			// blobWorkitem = entityService.save(blobWorkitem);
 			// new transaction....
-			blobWorkitem= this.getEjbSessionContext().getBusinessObject(WorkflowService.class)
-						.getEntityService().saveByNewTransaction(blobWorkitem);
-			 
-			 
-			
+			blobWorkitem = this.getEjbSessionContext()
+					.getBusinessObject(WorkflowService.class)
+					.getEntityService().saveByNewTransaction(blobWorkitem);
 
 			// update property '$BlobWorkitem'
 			workitem.replaceItemValue("$BlobWorkitem",
 					blobWorkitem.getItemValueString(EntityService.UNIQUEID));
 		}
 
-		
 		// update the dms list - e.g. if another plugin had added a file....
 		updateDMSList(workitem);
-		
-		
+
 		return Plugin.PLUGIN_OK;
 	}
-	
-	
 
 	public void close(int arg0) {
 		// no op
@@ -227,7 +242,7 @@ public class DMSPlugin extends AbstractPlugin {
 	 */
 	private void updateDMSList(ItemCollection aWorkitem) {
 		List<ItemCollection> dmsList = getDmsList(aWorkitem);
-		setDmsList(aWorkitem,dmsList); 
+		setDmsList(aWorkitem, dmsList);
 	}
 
 	/**
@@ -307,4 +322,84 @@ public class DMSPlugin extends AbstractPlugin {
 		// no matching meta data found!
 		return null;
 	}
+
+	/**
+	 * Import files from a given location.
+	 * 
+	 * @param aWorkitem
+	 * @param importList
+	 *            - list of files
+	 * 
+	 * */
+	private void importFilesFromPath(ItemCollection adocumentContext , ItemCollection blobWorkitem,
+			List<String> importList) {
+
+		for (String fileUri : importList) {
+
+			if (fileUri.isEmpty()) {
+				continue;
+			}
+			
+			String fullFileUri=fileUri;
+			String fileName=null;
+			
+			// check for a protocoll
+			if (!fullFileUri.contains("://")) {
+				fullFileUri=DEFAULT_PROTOCOLL+fullFileUri;
+			}
+			
+			// extract fileame....
+			if (!fullFileUri.contains("/")) {
+				continue;
+			}
+			fileName=fullFileUri.substring(fullFileUri.lastIndexOf("/")+1);
+			
+			
+			logger.info("[DMSPlugin] importFilesFromPath: " + fullFileUri);
+
+			try {
+
+				URL url = new URL(fullFileUri);
+
+				ByteArrayOutputStream bais = new ByteArrayOutputStream();
+				InputStream is = null;
+				try {
+					is = url.openStream();
+					byte[] byteChunk = new byte[4096]; // Or whatever size you
+														// want to read in at a
+														// time.
+					int n;
+
+					while ((n = is.read(byteChunk)) > 0) {
+						bais.write(byteChunk, 0, n);
+					}
+				} catch (IOException e) {
+					logger.severe("Failed while reading bytes from " + url.toExternalForm());
+					e.printStackTrace();
+					// Perform any other exception handling that's appropriate.
+				} finally {
+					if (is != null) {
+						is.close();
+					}
+				}
+
+				blobWorkitem.addFile(bais.toByteArray(), fileName, "");
+				
+				// add the file name (with empty data) into the
+				// parentWorkitem.
+				byte[] empty = { 0 };
+				adocumentContext.addFile(empty, fileName, "");
+
+				logger.info("[DMSPlugin] file import successfull ");
+
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		}
+
+	}
+
 }
