@@ -90,6 +90,8 @@ public class DMSPlugin extends AbstractPlugin {
 			if (aworkItem.hasItem(DMS_IMPORT_PROPERTY)) {
 				importFilesFromPath(workitem,blobWorkitem,
 						aworkItem.getItemValue(DMS_IMPORT_PROPERTY));
+				// remove proeprty
+				aworkItem.removeItem(DMS_IMPORT_PROPERTY);
 			}
 
 			logger.fine("[BlobPlugin] updating $readaccess/$writeaccess for "
