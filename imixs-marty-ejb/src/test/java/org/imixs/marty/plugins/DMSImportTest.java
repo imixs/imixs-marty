@@ -39,14 +39,16 @@ public class DMSImportTest {
 	}
 
 	@Test
-	public void importTest() throws Exception {
+	public void importLocalTest() throws Exception {
 
 		Assert.assertNotNull(testSuite.getClient("anna"));
 		Assert.assertNull(testSuite.getClient("xxx"));
  
 		ItemCollection workitem = createWorkitem();
 
-		workitem.replaceItemValue("_subject", "Test-1");
+		workitem.replaceItemValue("_subject", "Imixs Servicerechnung August");
+		workitem.replaceItemValue("_description", "Anbei übersenden wir Ihnen unsere Monatsrechnung");
+		workitem.replaceItemValue("_contact", "anna@imixs.com");
 
 		// import file
 		workitem.replaceItemValue("txtDmsImport",
@@ -58,6 +60,36 @@ public class DMSImportTest {
 		WorkflowTestSuite.log(Level.INFO, "UID=" + uid);
 
 	}
+	
+	
+	
+	@Test
+	public void importTociTest() throws Exception {
+
+		testSuite.setHost("http://toci01.imixs.com:11182/office-rest/");
+		
+		Assert.assertNotNull(testSuite.getClient("anna"));
+		Assert.assertNull(testSuite.getClient("xxx"));
+ 
+		ItemCollection workitem = createWorkitem();
+
+		workitem.replaceItemValue("_subject", "Imixs Servicerechnung August");
+		workitem.replaceItemValue("_description", "Anbei übersenden wir Ihnen unsere Monatsrechnung");
+		workitem.replaceItemValue("_contact", "anna@imixs.com");
+
+		// import file
+		workitem.replaceItemValue("txtDmsImport",
+				"/home/imixs/servicevertrag_0.0.3.pdf");
+
+		workitem = testSuite.processWorkitem(workitem, "admin");
+
+		String uid = workitem.getItemValueString("$UniqueID");
+		WorkflowTestSuite.log(Level.INFO, "UID=" + uid);
+
+	}
+	
+	
+	
 
 	/**
 	 * Creates a user profile for this user
@@ -71,8 +103,8 @@ public class DMSImportTest {
 		ItemCollection workitem = new ItemCollection();
 		workitem.replaceItemValue("type", "workitem");
 		workitem.replaceItemValue("$ModelVersion", "office-de-0.0.2");
-		workitem.replaceItemValue("$processid", 2000);
-		workitem.replaceItemValue("$activityid", 10);
+		workitem.replaceItemValue("$processid", 5000);
+		workitem.replaceItemValue("$activityid", 100);
 
 		return workitem;
 
