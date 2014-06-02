@@ -348,6 +348,7 @@ public class TeamPlugin extends AbstractPlugin {
 		String sSpaceName = "";
 		String sProcessName = "";
 
+		// interate over all refs if defined
 		for (String aUnqiueID : newUnqiueIDRefList) {
 
 			ItemCollection entity = findEntity(aUnqiueID);
@@ -368,16 +369,26 @@ public class TeamPlugin extends AbstractPlugin {
 					vSpaceAssist.addAll(entity.getItemValue("namAssist"));
 					sSpaceName = entity.getItemValueString("txtname");
 				}
-				if ("workitem".equals(parentType)) {
-					vSpaceTeam = entity.getItemValue("namSpaceTeam");
-					vSpaceManager = entity.getItemValue("namSpaceManager");
-					vSpaceAssist = entity.getItemValue("namSpaceAssist");
-					vProcessTeam = entity.getItemValue("namProcessTeam");
-					vProcessManager = entity.getItemValue("namProcessManager");
-					vProcessAssist = entity.getItemValue("namAssist");
-					sSpaceName = entity.getItemValueString("txtSpaceName");
-					sProcessName = entity.getItemValueString("txtProcessname");
-				}
+
+				/*
+				 * The following code is dangerous.
+				 * 
+				 * It makes no sense to overwrite the name fields if a workitem
+				 * ref exits!
+				 * 
+				 * See: https://github.com/imixs/imixs-marty/issues/43
+				 */
+				// if ("workitem".equals(parentType)) {
+				// vSpaceTeam = entity.getItemValue("namSpaceTeam");
+				// vSpaceManager = entity.getItemValue("namSpaceManager");
+				// vSpaceAssist = entity.getItemValue("namSpaceAssist");
+				// vProcessTeam = entity.getItemValue("namProcessTeam");
+				// vProcessManager = entity.getItemValue("namProcessManager");
+				// vProcessAssist = entity.getItemValue("namAssist");
+				// sSpaceName = entity.getItemValueString("txtSpaceName");
+				// sProcessName = entity.getItemValueString("txtProcessname");
+				// }
+
 			}
 		}
 

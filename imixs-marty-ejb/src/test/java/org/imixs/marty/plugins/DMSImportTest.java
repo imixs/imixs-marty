@@ -7,6 +7,7 @@ import org.imixs.workflow.test.WorkflowTestSuite;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -39,6 +40,7 @@ public class DMSImportTest {
 	}
 
 	@Test
+	@Ignore
 	public void importLocalTest() throws Exception {
 
 		Assert.assertNotNull(testSuite.getClient("anna"));
@@ -52,7 +54,7 @@ public class DMSImportTest {
 
 		// import file
 		workitem.replaceItemValue("txtDmsImport",
-				"/home/rsoika/Downloads/Scan_1.pdf");
+				"/home/Downloads/Scan_1.pdf");
 
 		workitem = testSuite.processWorkitem(workitem, "admin");
 
@@ -64,9 +66,10 @@ public class DMSImportTest {
 	
 	
 	@Test
+	@Ignore
 	public void importTociTest() throws Exception {
 
-		testSuite.setHost("http://toci01.imixs.com:11182/office-rest/");
+		testSuite.setHost("http://localhost:8080/office-rest/");
 		
 		Assert.assertNotNull(testSuite.getClient("anna"));
 		Assert.assertNull(testSuite.getClient("xxx"));
