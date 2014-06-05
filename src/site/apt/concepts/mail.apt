@@ -11,7 +11,7 @@ Mailing
  See the following example configuration:
 
 +----------------------------------------------------------+
-JNDI Name = mail/org.imixs.workflow.jee.mailsession
+JNDI Name = mail/org.imixs.workflow.mail
 Mail Host = my-mail-host.local
 Default User = Glassfish
 Default Sender Address = Glassfish
