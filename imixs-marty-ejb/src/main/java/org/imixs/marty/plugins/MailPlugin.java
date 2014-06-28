@@ -109,6 +109,13 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 					PROFILESERVICE_NOT_BOUND, "ProfileService not bound", e);
 		}
 
+		/*
+		 * NOTE:
+		 * 
+		 * Since Imixs-workflow version 3.1.8 the property service can be
+		 * accessed by a getter method. So we can remove the following lines!
+		 */
+
 		// lookup PropertyService
 		jndiName = "ejb/PropertyService";
 		try {
@@ -447,8 +454,7 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 			try {
 				if (this.isHTMLMail()) {
 					messagePart.setContent(content, this.getHtmlCharSet());
-				}
-				else {
+				} else {
 					messagePart.setContent(content, this.getTextCharSet());
 				}
 			} catch (MessagingException e) {
