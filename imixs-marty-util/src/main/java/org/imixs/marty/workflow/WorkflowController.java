@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
@@ -54,6 +55,7 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.jee.faces.util.LoginController;
 
 /**
@@ -466,15 +468,20 @@ public class WorkflowController extends
 			ProcessingErrorException {
 		String actionResult = null;
 
+		long l=System.currentTimeMillis();
+		
 		// process workItem and catch exceptions
 		try {
 			// fire event
 			events.fire(new WorkflowEvent(getWorkitem(),
 					WorkflowEvent.WORKITEM_BEFORE_PROCESS));
 
+			
+			logger.finest("[WorkflowController] fire events: ' in " + (System.currentTimeMillis()-l) + "ms") ;
+			
 			// process workitem
 			actionResult = super.process();
-
+			
 			// reset versions and editor sections
 			versions = null;
 			editorSections = null;
@@ -508,6 +515,14 @@ public class WorkflowController extends
 			// add a new FacesMessage into the FacesContext
 			ErrorHandler.handlePluginException(pe);
 		}
+		
+		if (logger.isLoggable(Level.FINEST)) {
+			String id="";
+			if (getWorkitem()!=null) 
+				id=getWorkitem().getItemValueString(WorkflowService.UNIQUEID);
+			logger.finest("[WorkflowController] process: '" + id + "' in " + (System.currentTimeMillis()-l) + "ms") ;
+		}
+		
 
 		// return action result - null in case of an exception
 		return actionResult;
