@@ -395,10 +395,10 @@ public class TeamPlugin extends AbstractPlugin {
 		// update properties
 		workItem.replaceItemValue("namSpaceTeam", vSpaceTeam);
 		workItem.replaceItemValue("namSpaceManager", vSpaceManager);
-		workItem.replaceItemValue("namSpaceAssist", vSpaceManager);
+		workItem.replaceItemValue("namSpaceAssist", vSpaceAssist);
 		workItem.replaceItemValue("namProcessTeam", vProcessTeam);
 		workItem.replaceItemValue("namProcessManager", vProcessManager);
-		workItem.replaceItemValue("namProcessAssist", vProcessManager);
+		workItem.replaceItemValue("namProcessAssist", vProcessAssist);
 
 		// removed duplicates...
 		uniqueElements(workItem, "$UniqueIdRef");
