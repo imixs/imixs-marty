@@ -59,6 +59,12 @@
 			<item name="Integration" href="build/integration.html" />
 
 		</menu>
+		
+		<menu name="Installation">
+			<item name="WildFly" href="install/wildfly.html" />
+			<item name="Import Setup Data" href="install/import_setup_data.html" />
+
+		</menu>
 
 		<menu name="Project Information">
 			<item name="Summary" href="project-summary.html" />

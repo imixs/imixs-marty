@@ -1,0 +1,298 @@
+Installation Guide WildFly
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ In the following section we explain the general stepps to install Imixs-Office-Workflow 
+ on a JBoss / WildFly Server. The installation is in general simmilar to other application 
+ servers but some details of WildFly will be explained here. 
+  
+  
+*JPA – EclipseLink
+~~~~~~~~~~~~~~~
+
+ JBoss and Wildfly use per default the JPA implementation Hibernate. 
+ To deploy your application with the EclipseLink JPA implementaion you can add 
+ the EclipseLink.jar into the folder
+
++------------------------------+
+modules/system/layers/base/org/eclipse/persistence/main
++------------------------------+
+
+ Additional you need to update the configuration in the config file: 
+
++------------------------------+
+modules/system/layers/base/org/eclipse/persistence/main/module.xml
++------------------------------+
+
+ Add the following tag into the section ‘resources'
+ 
++------------------------------+
+<resources>
+   .....
+   <resource-root path=”eclipselink.jar”/>
+ </resources> 
++------------------------------+
+ If you happen to leave the EclipseLink version number in the jar name, 
+ the module.xml should reflect that.
+
+
+ If you use the ‘org.eclipse.persistence.jpa.PersistenceProvider’ in the persistence.xml 
+ it is important to add the org.jipijapa.eclipselink.JBossArchiveFactoryImpl afterwards 
+ with the following command form the WildFly bin/ folder when WildFly is running:
+
++------------------------------+
+./jboss-cli.sh --connect '/system-property=eclipselink.archive.factory:add(value=org.jipijapa.eclipselink.JBossArchiveFactoryImpl)'
++------------------------------+
+
+ This command will change the standalone.xml configuration file and adds the following entry:
+
++------------------------------+
+<system-properties>
+ ...
+ <property name="eclipselink.archive.factory" value="org.jipijapa.eclipselink.JBossArchiveFactoryImpl"/>
+</system-properties>
++------------------------------+
+
+*Datasource Configuration (MySQL)
+~~~~~~~~~~~~~~~
+
+ To use the MySQL JDBC driver you can simply deploy the driver jar into the running Wildfly. 
+ From the web inferface  choose:
+
+ <Runtime->Server->Manage Deployments>
+
+ and add your mysql Driver jar (e.g mysql-connector-java-5.1.7-bin.jar) as a new deployment and enable the deployment unit. 
+
+ Now you can configure a new Datasource:
+
+ <Profile->Subsystem->Connector->Datasources>
+
+ Here you can choose the mysql driver directly.
+
+ This is an example how I configured a DataSorce
+
+    name: imixs_office
+    jndi: java:/jdbc/imixs_office
+    user: root
+    url: jdbc:mysql://localhost:3306/imixs-office-workflow-db
+
+ 
+*Security Realm
+~~~~~~~~~~~~~~~
+
+ To add the imixs Realm as a JDBC Security Realm into Wildfly open 
+
+ <Profile->Subsystems->Security->Security Domains>
+
+ This is an example for a Database Security configuration:
+
+ Attributes:
+
+   * Name: imixsrealm
+  
+   * CacheType: Default
+
+ Authentication:
+
+   * Code: Database
+   
+   * Flag: required
+
+ Module Options:
+
+    * dsJndiName=java:/jdbc/imixs_office
+    
+    * hashAlgorithm=SHA-256
+    
+    * hashEncoding=hex
+    
+    * principalsQuery=select PASSWORD from USERID where ID=?
+    
+    * rolesQuery=select GROUP_ID,’Roles’ from USERID_USERGROUP where ID=?
+    
+    * unauthenticatedIdentity=anonymous
+
+ The security domain configuration in the standalone.xml configuraiton file than looks like this:
+
++------------------------------+
+
+<security-domain name="imixsrealm">
+ <authentication>
+ <login-module code="Database" flag="required">
+ <module-option name="dsJndiName" value="java:/jdbc/imixs_office"/>
+ <module-option name="hashAlgorithm" value="SHA-256"/>
+ <module-option name="hashEncoding" value="hex"/>
+ <module-option name="principalsQuery" value="select PASSWORD from USERID where ID=?"/>
+ <module-option name="rolesQuery" value="select GROUP_ID,'Roles' from USERID_USERGROUP where ID=?"/>
+ <module-option name="unauthenticatedIdentity" value="anonymous"/>
+ </login-module>
+ </authentication>
+ </security-domain>
++------------------------------+
+
+ To finish the configuration, add the file jboss-web.xml in the folder WEB-INF of your web module with the following content. 
+ This file is used to define the security domain used by the application:
+
++------------------------------+
+<?xml version="1.0" encoding="UTF-8"?>
+ <jboss-web>
+     <security-domain>imixsrealm</security-domain>
+</jboss-web>
++------------------------------+
+
+
+*Role Mapping
+~~~~~~~~~~~~~~~
+
+ In different to GlassFish for WildFly there is no explicit role-group mapping necessary. So you need no special deployment descriptor 
+ like the /WEB-INF/glassfish-application.xml. The Roles defined by a application can be directly used in the security configuration for a user.
+
+ See also: http://wildfly.org/news/2014/02/06/GlassFish-to-WildFly-migration/
+
+ In case you have existing group mappings (e.g. in a database group table or in a LDAP directory) you can add the mapping by defining a 
+ file app.properties, where app is the name of the security domain, as defined above. 
+ Save this file in the folder WILDFLY_HOME/standalone/configuration or WILDFLY_HOME/domain/configuration to be taken into account.
+
+ This is an example of my file imixsrealm.properties which mapps the group names to roles defined in my application:
+
++------------------------------+
+IMIXS-WORKFLOW-Reader=org.imixs.ACCESSLEVEL.READERACCESS
+IMIXS-WORKFLOW-Author=org.imixs.ACCESSLEVEL.AUTHORACCESS
+IMIXS-WORKFLOW-Editor=org.imixs.ACCESSLEVEL.EDITORACCESS
+IMIXS-WORKFLOW-Manager=org.imixs.ACCESSLEVEL.MANAGERACCESS
++------------------------------+
+
+ Groups are listed on the left of the equal operator and roles are listed on the right. In the example above, 
+ users in the group ‘IMIXS-WORKFLOW-Reader’ fulfill the role ‘org.imixs.ACCESSLEVEL.READACCESS’.
+
+ Note: To activate this role mapping the security domain need a login-module section for the RoleMapping:
+
++------------------------------+
+ <security-domain name="imixsrealm">
+ <authentication>
+ <login-module code="Database" flag="required">
+ <module-option name="dsJndiName" value="java:/jdbc/imixs_office"/>
+ <module-option name="hashAlgorithm" value="SHA-256"/>
+ <module-option name="hashEncoding" value="hex"/>
+ <module-option name="principalsQuery" value="select PASSWORD from USERID where ID=?"/>
+ <module-option name="rolesQuery" value="select GROUP_ID,'Roles' from USERID_USERGROUP where ID=?"/>
+ <module-option name="unauthenticatedIdentity" value="anonymous"/>
+ </login-module>
+ <login-module code="RoleMapping" flag="required">
+ <module-option name="rolesProperties" value="file:${jboss.server.config.dir}/imixsrealm.properties"/>
+ <module-option name="replaceRole" value="false"/>
+ </login-module>
+ </authentication>
+ </security-domain>
++------------------------------+
+
+ 
+ 
+*WebServices – RestEasy Configuration
+~~~~~~~~~~~~~~~
+
+ Using RestServices makes it necessary to change things in the web.xml file because Jersey (used by GlassFish) 
+ and RestEasy (used by Wildfly) have different configurations.
+ In GlassFish V3 a RestService configuration for Jersey looks typically like this:
+
++------------------------------+
+<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+ <servlet>
+ <servlet-name>ImixsRestService</servlet-name>
+ <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+ <init-param>
+ <param-name>com.sun.jersey.config.property.packages</param-name>
+ <param-value>org.imixs.workflow.jaxrs</param-value>
+ </init-param>
+ <load-on-startup>1</load-on-startup>
+ </servlet>
++------------------------------+
+
+ In WildFly you need to chage the configuration like this:
+
++------------------------------+
+<context-param>
+ <param-name>resteasy.scan</param-name>
+ <param-value>true</param-value>
+ </context-param>
+ <context-param>
+ <param-name>resteasy.servlet.mapping.prefix</param-name>
+ <param-value>/rest</param-value>
+ </context-param>
+ <listener>
+ <listener-class>
+ org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap
+ </listener-class>
+ </listener>
+ <servlet>
+ <servlet-name>ImixsRestService</servlet-name>
+ <servlet-class>
+ org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher
+ </servlet-class>
+ </servlet>
++------------------------------+
+
+ 
+*Mail Configuration
+~~~~~~~~~~~~~~~
+
+ In different to GlassFish, WildFly needs a valid mail configuration if a mail resource is bound to the deployed configuration.
+  So before your can test a application with a mail resource you need to create it!.
+
+ Using mail sessions makes it necessary to know some details about JNDI Resource names. 
+ In GlassFish you can configure a jndi resource with any name you choose.
+
+ For example: mail/org.imixs.workflow.mail
+ The configuration in your ejb-jar.xml or web.xml file looks than like this:
+
++------------------------------+
+<!-- Mail Configuration -->
+<env-entry>
+<description> Mail Plugin Session name</description>
+<env-entry-name>IMIXS_MAIL_SESSION</env-entry-name>
+<env-entry-type>java.lang.String</env-entry-type>
+<env-entry-value>mail/org.imixs.workflow.mail</env-entry-value>
+</env-entry>
+<resource-ref>
+<res-ref-name>mail/org.imixs.workflow.mail</res-ref-name>
+<res-type>javax.mail.Session</res-type>
+<res-auth>Container</res-auth>
+<res-sharing-scope>Shareable</res-sharing-scope>
+</resource-ref>
++------------------------------+
+
+
+
+ In WildFly the name ‘mail/org.imixs.workflow.mail’ is not allowed to be used as a JNDI resource name. You allways have to start
+ with the prafix ‘java:/’ or ‘java:jboss:/’. This means your jndi mail resource name would be ‘java:/mail/org.imixs.workflow.mail’
+ And so you also need to change the res-ref-name tag in your ejb-jar.xml or web.xml like this:
+
++------------------------------+
+<!-- Mail Configuration -->
+<env-entry>
+<description> Mail Plugin Session name</description>
+<env-entry-name>IMIXS_MAIL_SESSION</env-entry-name>
+<env-entry-type>java.lang.String</env-entry-type>
+<env-entry-value>mail/org.imixs.workflow.mail</env-entry-value>
+</env-entry>
+<resource-ref>
+<res-ref-name>java:/mail/org.imixs.workflow.mail</res-ref-name>
+<res-type>javax.mail.Session</res-type>
+<res-auth>Container</res-auth>
+<res-sharing-scope>Shareable</res-sharing-scope>
+</resource-ref>
++------------------------------+
+
+ In general Wildfly use always the java:/ prfix in jndi names. Se be careful about this small change in the naming.
+
+ To add a mail resource to WildFly you can modify the standalone.xml file. Add the new mail resource into the tag entry ‘<subsystem xmlns=”urn:jboss:domain:mail:2.0″>’
+
++------------------------------+
+<subsystem xmlns="urn:jboss:domain:mail:2.0">
+ <mail-session name="default" jndi-name="java:jboss/mail/Default">
+ <smtp-server outbound-socket-binding-ref="mail-smtp"/>
+ </mail-session>
+ <mail-session name="java:/mail/org.imixs.workflow.mail" jndi-name="java:/mail/org.imixs.workflow.mail"/>
+</subsystem>
++------------------------------+
+
+
