@@ -468,16 +468,15 @@ public class WorkflowController extends
 			ProcessingErrorException {
 		String actionResult = null;
 
-		long l=System.currentTimeMillis();
+		long lTotal=System.currentTimeMillis();
 		
 		// process workItem and catch exceptions
 		try {
 			// fire event
+			long l1=System.currentTimeMillis();
 			events.fire(new WorkflowEvent(getWorkitem(),
 					WorkflowEvent.WORKITEM_BEFORE_PROCESS));
-
-			
-			logger.finest("[WorkflowController] fire events: ' in " + (System.currentTimeMillis()-l) + "ms") ;
+			logger.finest("[WorkflowController] fire WORKITEM_BEFORE_PROCESS event: ' in " + (System.currentTimeMillis()-l1) + "ms") ;
 			
 			// process workitem
 			actionResult = super.process();
@@ -489,8 +488,11 @@ public class WorkflowController extends
 			// WORKITEM_CHANGED event !
 
 			// fire event
+			long l2=System.currentTimeMillis();
 			events.fire(new WorkflowEvent(getWorkitem(),
 					WorkflowEvent.WORKITEM_AFTER_PROCESS));
+			logger.finest("[WorkflowController] fire WORKITEM_AFTER_PROCESS event: ' in " + (System.currentTimeMillis()-l2) + "ms") ;
+			
 
 			// if a action was set by the workflowController, then this
 			// action will be the action result String
@@ -520,7 +522,7 @@ public class WorkflowController extends
 			String id="";
 			if (getWorkitem()!=null) 
 				id=getWorkitem().getItemValueString(WorkflowService.UNIQUEID);
-			logger.finest("[WorkflowController] process: '" + id + "' in " + (System.currentTimeMillis()-l) + "ms") ;
+			logger.finest("[WorkflowController] process: '" + id + "' in " + (System.currentTimeMillis()-lTotal) + "ms") ;
 		}
 		
 

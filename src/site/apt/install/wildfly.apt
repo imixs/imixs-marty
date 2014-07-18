@@ -52,6 +52,8 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
 </system-properties>
 +------------------------------+
 
+ Additional information can be found {{{https://docs.jboss.org/author/display/WFLY8/JPA+Reference+Guide#JPAReferenceGuide-UsingEclipseLink}here}}.
+
 *Datasource Configuration (MySQL)
 ~~~~~~~~~~~~~~~
 
@@ -70,10 +72,13 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
 
  This is an example how I configured a DataSorce
 
-    name: imixs_office
-    jndi: java:/jdbc/imixs_office
-    user: root
-    url: jdbc:mysql://localhost:3306/imixs-office-workflow-db
+   * name: imixs_office
+   
+   * jndi: java:/jdbc/imixs_office
+   
+   * user: root
+   
+   * url: jdbc:mysql://localhost:3306/imixs-office-workflow
 
  
 *Security Realm
@@ -81,7 +86,7 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
 
  To add the imixs Realm as a JDBC Security Realm into Wildfly open 
 
- <Profile->Subsystems->Security->Security Domains>
+ <Configuration->Subsystems->Security->Security Domains>
 
  This is an example for a Database Security configuration:
 
@@ -107,7 +112,7 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
     
     * principalsQuery=select PASSWORD from USERID where ID=?
     
-    * rolesQuery=select GROUP_ID,’Roles’ from USERID_USERGROUP where ID=?
+    * rolesQuery=select GROUP_ID,'Roles' from USERID_USERGROUP where ID=?
     
     * unauthenticatedIdentity=anonymous
 
@@ -282,9 +287,11 @@ IMIXS-WORKFLOW-Manager=org.imixs.ACCESSLEVEL.MANAGERACCESS
 </resource-ref>
 +------------------------------+
 
- In general Wildfly use always the java:/ prfix in jndi names. Se be careful about this small change in the naming.
+ In general Wildfly use always the java:/ prfix in jndi names. Se be careful about this 
+ small change in the naming.
 
- To add a mail resource to WildFly you can modify the standalone.xml file. Add the new mail resource into the tag entry ‘<subsystem xmlns=”urn:jboss:domain:mail:2.0″>’
+ To add a mail resource to WildFly you can modify the standalone.xml file. Add the new 
+ mail resource into the tag entry ‘<subsystem xmlns=”urn:jboss:domain:mail:2.0″>’
 
 +------------------------------+
 <subsystem xmlns="urn:jboss:domain:mail:2.0">
