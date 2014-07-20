@@ -54,10 +54,10 @@ public class StressTest {
 		workitem = processWorkitem(workitem);
 		Assert.assertNotNull(workitem);
 		String uid = workitem.getItemValueString("$UniqueID");
-		WorkflowTestSuite.log(Level.INFO, "UID=" + uid);
+		
 		Assert.assertFalse(uid.isEmpty());
 
-		System.out.println("testSimpleWorkflow -> total time="
+		WorkflowTestSuite.log(Level.INFO,"testSimpleWorkflow -> total time="
 				+ (System.currentTimeMillis() - l) + " ms");
 
 	}
@@ -79,11 +79,11 @@ public class StressTest {
 			workitem = processWorkitem(workitem);
 			Assert.assertNotNull(workitem);
 			String uid = workitem.getItemValueString("$UniqueID");
-			WorkflowTestSuite.log(Level.INFO, "UID=" + uid);
+			
 			Assert.assertFalse(uid.isEmpty());
 		}
 
-		System.out.println("testSimpleWorkflow -> total time="
+		WorkflowTestSuite.log(Level.INFO,"testSimpleWorkflow -> total time="
 				+ (System.currentTimeMillis() - l) + " ms");
 
 	}
@@ -102,21 +102,25 @@ public class StressTest {
 
 		for (int i = 0; i < 10; i++) {
 
+			long li=System.currentTimeMillis();
 			ItemCollection workitem = createWorkitem();
 
 			workitem = processWorkitem(workitem);
 			Assert.assertNotNull(workitem);
 			String uid = workitem.getItemValueString("$UniqueID");
-			WorkflowTestSuite.log(Level.INFO, "UID=" + uid);
 			Assert.assertFalse(uid.isEmpty());
 			
 			for (int j = 0; j < 10; j++) {
 				workitem.replaceItemValue("$activityid", 10);
 				workitem = processWorkitem(workitem);
 			}
+			
+			WorkflowTestSuite.log(Level.INFO,"testSimpleWorkflow -> procssing 10 times in "
+					+ (System.currentTimeMillis() - li) + " ms");
+			
 		}
 
-		System.out.println("testSimpleWorkflow -> total time="
+		WorkflowTestSuite.log(Level.INFO,"testSimpleWorkflow -> total time="
 				+ (System.currentTimeMillis() - l) + " ms");
 
 	}
