@@ -116,7 +116,7 @@ public class DMSPlugin extends AbstractPlugin {
 			//
 			// Note: Because of issue #47 I decided to do not save the blob
 			// workitem in an isolated transaction!
-			logger.fine("[DMBPlugin] saveing blobWorkitem '"
+			logger.fine("[DMBPlugin] saving blobWorkitem '"
 					+ blobWorkitem.getItemValueString(EntityService.UNIQUEID)
 					+ "'...");
 			blobWorkitem = entityService.save(blobWorkitem);
