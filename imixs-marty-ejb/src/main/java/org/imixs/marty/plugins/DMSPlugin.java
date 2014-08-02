@@ -88,7 +88,7 @@ public class DMSPlugin extends AbstractPlugin {
 
 			// import files if txtDmsImport is defined.
 			if (aworkItem.hasItem(DMS_IMPORT_PROPERTY)) {
-				importFilesFromPath(workitem,blobWorkitem,
+				importFilesFromPath(workitem, blobWorkitem,
 						aworkItem.getItemValue(DMS_IMPORT_PROPERTY));
 				// remove proeprty
 				aworkItem.removeItem(DMS_IMPORT_PROPERTY);
@@ -109,11 +109,17 @@ public class DMSPlugin extends AbstractPlugin {
 			blobWorkitem.replaceItemValue("type", "workitemlob");
 
 			// Update BlobWorkitem
-			// blobWorkitem = entityService.save(blobWorkitem);
 			// new transaction....
-			blobWorkitem = this.getEjbSessionContext()
-					.getBusinessObject(WorkflowService.class)
-					.getEntityService().saveByNewTransaction(blobWorkitem);
+			// blobWorkitem = this.getEjbSessionContext()
+			// .getBusinessObject(WorkflowService.class)
+			// .getEntityService().saveByNewTransaction(blobWorkitem);
+			//
+			// Note: Because of issue #47 I decided to do not save the blob
+			// workitem in an isolated transaction!
+			logger.fine("[DMBPlugin] saveing blobWorkitem '"
+					+ blobWorkitem.getItemValueString(EntityService.UNIQUEID)
+					+ "'...");
+			blobWorkitem = entityService.save(blobWorkitem);
 
 			// update property '$BlobWorkitem'
 			workitem.replaceItemValue("$BlobWorkitem",
@@ -333,30 +339,29 @@ public class DMSPlugin extends AbstractPlugin {
 	 *            - list of files
 	 * 
 	 * */
-	private void importFilesFromPath(ItemCollection adocumentContext , ItemCollection blobWorkitem,
-			List<String> importList) {
+	private void importFilesFromPath(ItemCollection adocumentContext,
+			ItemCollection blobWorkitem, List<String> importList) {
 
 		for (String fileUri : importList) {
 
 			if (fileUri.isEmpty()) {
 				continue;
 			}
-			
-			String fullFileUri=fileUri;
-			String fileName=null;
-			
+
+			String fullFileUri = fileUri;
+			String fileName = null;
+
 			// check for a protocoll
 			if (!fullFileUri.contains("://")) {
-				fullFileUri=DEFAULT_PROTOCOLL+fullFileUri;
+				fullFileUri = DEFAULT_PROTOCOLL + fullFileUri;
 			}
-			
+
 			// extract fileame....
 			if (!fullFileUri.contains("/")) {
 				continue;
 			}
-			fileName=fullFileUri.substring(fullFileUri.lastIndexOf("/")+1);
-			
-			
+			fileName = fullFileUri.substring(fullFileUri.lastIndexOf("/") + 1);
+
 			logger.info("[DMSPlugin] importFilesFromPath: " + fullFileUri);
 
 			try {
@@ -376,7 +381,8 @@ public class DMSPlugin extends AbstractPlugin {
 						bais.write(byteChunk, 0, n);
 					}
 				} catch (IOException e) {
-					logger.severe("Failed while reading bytes from " + url.toExternalForm());
+					logger.severe("Failed while reading bytes from "
+							+ url.toExternalForm());
 					e.printStackTrace();
 					// Perform any other exception handling that's appropriate.
 				} finally {
@@ -386,7 +392,7 @@ public class DMSPlugin extends AbstractPlugin {
 				}
 
 				blobWorkitem.addFile(bais.toByteArray(), fileName, "");
-				
+
 				// add the file name (with empty data) into the
 				// parentWorkitem.
 				byte[] empty = { 0 };
