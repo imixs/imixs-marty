@@ -7,11 +7,11 @@ import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 
-import org.imixs.marty.ejb.MartyWorkflowSchedulerService;
 import org.imixs.marty.ejb.SetupService;
 import org.imixs.marty.ejb.security.UserGroupService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.jee.ejb.WorkflowSchedulerService;
 
 /**
  * This servlet checks userdb configuration and scheduler on startup. The servlet is
@@ -31,7 +31,7 @@ public class SetupServlet extends HttpServlet {
 	private static Logger logger = Logger.getLogger(SetupServlet.class.getName());
 
 	@EJB
-	MartyWorkflowSchedulerService workflowSchedulerService;
+	WorkflowSchedulerService workflowSchedulerService;
 
 	@EJB
 	UserGroupService userGroupService;
