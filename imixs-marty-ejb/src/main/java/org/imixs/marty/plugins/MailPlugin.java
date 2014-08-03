@@ -441,11 +441,7 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
 			// update mail body
 			try {
-				if (this.isHTMLMail()) {
-					messagePart.setContent(content, this.getHtmlCharSet());
-				} else {
-					messagePart.setContent(content, this.getTextCharSet());
-				}
+				messagePart.setContent(content, this.getContentType());
 			} catch (MessagingException e) {
 				logger.warning("Unable to parse tag 'attachments' !");
 				e.printStackTrace();
