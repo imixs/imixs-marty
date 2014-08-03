@@ -1,0 +1,14 @@
+
+The DMSController
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ The DMSController (org.imixs.marty.workflow.DmsController) acts a front controller
+ for the DMS feature. The Bean manages
+ additional properties for attached files and can also manage information
+ about file references to external file servers. 
+ The DmsController observes WorkflowEvents and manages the file uploads during
+ the Processing events. To update the DMS information in process instance the
+ Controller calls static methods 
+ from the DMSPlugin.
+ 
+ 
+  

@@ -41,6 +41,12 @@
 			<item name="WorkflowController" href="controller/workflowcontroller.html" />
 			<item name="ChildWorkflowController" href="controller/childworkitemcontroller.html" />
 			<item name="Worklists and Searching" href="controller/worklists.html" />
+			<item name="DMSController" href="controller/dmscontroller.html" />
+		</menu>
+		
+		<menu name="Plugins">
+			<item name="DMSPlugin" href="plugins/dmsplugin.html" />
+			<item name="DeputyPlugin" href="plugins/deputyplugin.html" />
 		</menu>
 
 		<menu name="User Interface">
