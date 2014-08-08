@@ -46,6 +46,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.ejb.ProfileService;
+import org.imixs.marty.ejb.security.UserGroupService;
 import org.imixs.marty.util.ErrorHandler;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
@@ -91,6 +92,9 @@ public class UserController implements Serializable {
 
 	@EJB
 	protected PropertyService propertyService;
+	
+	@EJB 
+	protected UserGroupService userGroupService;
 
 	@EJB
 	protected EntityService entityService;
@@ -405,14 +409,15 @@ public class UserController implements Serializable {
 		if (workflowEvent == null || workflowEvent.getWorkitem() == null) {
 			return;
 		}
+		
+		String sType=workflowEvent.getWorkitem().getItemValueString("type");
 
 		// skip if not a profile...
-		if (!workflowEvent.getWorkitem().getItemValueString("type")
-				.equals("profile"))
+		if (!sType.startsWith("profile"))
 			return;
 
 		// discared cached user profile and update locale
-		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
+		if ("profile".equals(sType) && WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
 				.getEventType()) {
 
 			// check if current user profile was processed....
@@ -426,6 +431,15 @@ public class UserController implements Serializable {
 				updateLocaleFromProfile();
 			}
 
+		}
+		
+		// check for deletion to remove the userDB entry...
+		if (WorkflowEvent.WORKITEM_AFTER_SOFTDELETE == workflowEvent
+				.getEventType()) {
+			
+			String id=workflowEvent.getWorkitem().getItemValueString("txtname");
+			userGroupService.removeUserId(id);
+			
 		}
 
 	}

@@ -131,9 +131,9 @@ public class UserGroupService {
 	
 	
 	/**
-	 * This method changes the userID of an exsiting user entry and updates the userGroup table entries.
+	 * This method changes the userID of an existing user entry and updates the userGroup table entries.
 	 * 
-	 * @param oldID - the existing userentry
+	 * @param oldID - the existing userEntry
 	 * @param newID - the name of the new id
 	 */
 	public void changeUserId(String oldID, String newID) {
@@ -163,6 +163,52 @@ public class UserGroupService {
 		
 		// remove old
 		manager.remove(user);
+	}
+
+	
+	
+	
+
+	/**
+	 * This method deletes the userID of an existing user entry and also the userGroup table entries.
+	 * 
+	 * @param userID - the existing userEntry
+	 */
+	public void removeUserId(String userID) {
+		UserId user = null;
+	
+		// test if userid  exits
+		user = manager.find(UserId.class, userID);
+		if (user == null) {
+			logger.warning("[UserGroupService] removeUserId - userId '" 
+					+userID +"' did not exist!");
+			return;
+		}
+		
+		
+		
+		// check for group entries...
+//		Set<UserGroup> groupList =user.getUserGroups();
+//		for (UserGroup aGroup : groupList) {
+//			UserGroup group = manager.find(UserGroup.class, aGroup);
+//			// if group dos not exist - create it...
+//			if (group == null) {
+//				group = new UserGroup(aGroup);
+//				manager.persist(user);
+//			}
+//
+//			groupList.add(group);
+//
+//		}
+
+		
+		
+		// remove old
+		manager.remove(user);
+		
+		
+		
+		
 	}
 
 	
