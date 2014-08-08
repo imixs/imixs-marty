@@ -66,8 +66,8 @@ public class UserGroupService {
 			.getName());
 
 	/**
-	 * This method verifies the profile data and creates or update the corresponding user
-	 * entries in the user tables.
+	 * This method verifies the profile data and creates or update the
+	 * corresponding user entries in the user tables.
 	 * 
 	 * NOTE: this method did not change a userid. To do this use the method
 	 * changeUser!
@@ -124,110 +124,67 @@ public class UserGroupService {
 			manager.merge(user);
 	}
 
-	
-	
-	
-	
-	
-	
 	/**
-	 * This method changes the userID of an existing user entry and updates the userGroup table entries.
+	 * This method changes the userID of an existing user entry and updates the
+	 * userGroup table entries.
 	 * 
-	 * @param oldID - the existing userEntry
-	 * @param newID - the name of the new id
+	 * @param oldID
+	 *            - the existing userEntry
+	 * @param newID
+	 *            - the name of the new id
 	 */
 	public void changeUserId(String oldID, String newID) {
 		UserId user = null;
-	
+
 		// test if new userid still exits
 		user = manager.find(UserId.class, newID);
 		if (user != null) {
-			logger.warning("[UserGroupService] changeUser - new userId '" 
-					+newID +"'is still in Use!");
+			logger.warning("[UserGroupService] changeUser - new userId '"
+					+ newID + "'is still in Use!");
 			return;
 		}
 
 		// find old user entry....
 		user = manager.find(UserId.class, oldID);
 		if (user == null) {
-			logger.warning("[UserGroupService] changeUser - UserID '" +  oldID + "' not found!");
+			logger.warning("[UserGroupService] changeUser - UserID '" + oldID
+					+ "' not found!");
 			return;
 		}
 
-	
 		// change id
 		UserId newUser = new UserId(newID);
 		newUser.setPassword(user.getPassword());
 		newUser.setUserGroups(user.getUserGroups());
 		manager.persist(newUser);
-		
+
 		// remove old
 		manager.remove(user);
 	}
 
-	
-	
-	
-
 	/**
-	 * This method deletes the userID of an existing user entry and also the userGroup table entries.
+	 * This method deletes the userID of an existing user entry and also the
+	 * userGroup table entries.
 	 * 
-	 * @param userID - the existing userEntry
+	 * @param userID
+	 *            - the existing userEntry
 	 */
 	public void removeUserId(String userID) {
 		UserId user = null;
-	
-		// test if userid  exits
+
+		// test if userid exits
 		user = manager.find(UserId.class, userID);
 		if (user == null) {
-			logger.warning("[UserGroupService] removeUserId - userId '" 
-					+userID +"' did not exist!");
+			logger.warning("[UserGroupService] removeUserId - userId '"
+					+ userID + "' did not exist!");
 			return;
 		}
-		
-		
-		
-		// check for group entries...
-//		Set<UserGroup> groupList =user.getUserGroups();
-//		for (UserGroup aGroup : groupList) {
-//			UserGroup group = manager.find(UserGroup.class, aGroup);
-//			// if group dos not exist - create it...
-//			if (group == null) {
-//				group = new UserGroup(aGroup);
-//				manager.persist(user);
-//			}
-//
-//			groupList.add(group);
-//
-//		}
 
-		
-		
 		// remove old
 		manager.remove(user);
-		
-		
-		
-		
+
 	}
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	/**
 	 * This method verifies if a default user id already exists. If no userID
 	 * exists the method generates a default account 'admin' with password
