@@ -64,6 +64,7 @@ mvn release:prepare
  The current development release is located in the branch 'development'. 
  If a version is stable or used in a productive environment we create a release from the 
  latest development version. A new release will be tagged in the code repository.
+ For details about the maven release process see {{{https://github.com/imixs/imixs-workflow/wiki/Releasemanagement-and-versioning}imixs releasmanagement}}
  
  [Note:] A new release may not contain any snapshot dependencies from imixs-workflow components! 
  
@@ -75,17 +76,24 @@ Create a release manually
 
  [[1]] Verify that your current development sources are up to date
  
- [[3]] Remove existing snapshot dependencies from Imixs-Workflow
+ [[3]] Remove existing snapshot dependencies. (e.g from Imixs-Workflow)
 
  [[3]] Merge the development branch into the master branch.
  
  [[4]] Run tests on the master branch. Run all the tests. If one or more fail, fix them first.
  
- [[5]] Make a tag on git with the current release version (from development branch)
+ [[5]] Release the current snaptshot release
  
- [[6]] Switch back into the development branch 
++----------+
+mvn clean
+mvn release:prepare
++----------+
  
- [[7]] Update the version number of the parent pom and the version numbers of all sub modules. 
+ [[6]] Use the git push command to push release changes into the master branch
+ 
+ [[7]] Switch back into the development branch 
+ 
+ [[8]] Merge from master branch to start working on the next snapshot release 
  
  
   []
