@@ -50,6 +50,7 @@ import javax.inject.Named;
 
 import org.imixs.marty.model.ProcessController;
 import org.imixs.marty.util.ErrorHandler;
+import org.imixs.marty.util.ValidationException;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
@@ -468,19 +469,20 @@ public class WorkflowController extends
 			ProcessingErrorException {
 		String actionResult = null;
 
-		long lTotal=System.currentTimeMillis();
-		
+		long lTotal = System.currentTimeMillis();
+
 		// process workItem and catch exceptions
 		try {
 			// fire event
-			long l1=System.currentTimeMillis();
+			long l1 = System.currentTimeMillis();
 			events.fire(new WorkflowEvent(getWorkitem(),
 					WorkflowEvent.WORKITEM_BEFORE_PROCESS));
-			logger.finest("[WorkflowController] fire WORKITEM_BEFORE_PROCESS event: ' in " + (System.currentTimeMillis()-l1) + "ms") ;
-			
+			logger.finest("[WorkflowController] fire WORKITEM_BEFORE_PROCESS event: ' in "
+					+ (System.currentTimeMillis() - l1) + "ms");
+
 			// process workitem
 			actionResult = super.process();
-			
+
 			// reset versions and editor sections
 			versions = null;
 			editorSections = null;
@@ -488,11 +490,11 @@ public class WorkflowController extends
 			// WORKITEM_CHANGED event !
 
 			// fire event
-			long l2=System.currentTimeMillis();
+			long l2 = System.currentTimeMillis();
 			events.fire(new WorkflowEvent(getWorkitem(),
 					WorkflowEvent.WORKITEM_AFTER_PROCESS));
-			logger.finest("[WorkflowController] fire WORKITEM_AFTER_PROCESS event: ' in " + (System.currentTimeMillis()-l2) + "ms") ;
-			
+			logger.finest("[WorkflowController] fire WORKITEM_AFTER_PROCESS event: ' in "
+					+ (System.currentTimeMillis() - l2) + "ms");
 
 			// if a action was set by the workflowController, then this
 			// action will be the action result String
@@ -509,22 +511,28 @@ public class WorkflowController extends
 				// add error message into current form
 				ErrorHandler.addErrorMessage((PluginException) oe.getCause());
 			} else {
-				// throw unknown exception
-				throw oe;
+				if (oe.getCause() instanceof ValidationException) {
+					// add error message into current form
+					ErrorHandler.addErrorMessage((ValidationException) oe
+							.getCause());
+				} else {
+					// throw unknown exception
+					throw oe;
+				}
 			}
 		} catch (PluginException pe) {
 			actionResult = null;
 			// add a new FacesMessage into the FacesContext
 			ErrorHandler.handlePluginException(pe);
 		}
-		
+
 		if (logger.isLoggable(Level.FINEST)) {
-			String id="";
-			if (getWorkitem()!=null) 
-				id=getWorkitem().getItemValueString(WorkflowService.UNIQUEID);
-			logger.finest("[WorkflowController] process: '" + id + "' in " + (System.currentTimeMillis()-lTotal) + "ms") ;
+			String id = "";
+			if (getWorkitem() != null)
+				id = getWorkitem().getItemValueString(WorkflowService.UNIQUEID);
+			logger.finest("[WorkflowController] process: '" + id + "' in "
+					+ (System.currentTimeMillis() - lTotal) + "ms");
 		}
-		
 
 		// return action result - null in case of an exception
 		return actionResult;

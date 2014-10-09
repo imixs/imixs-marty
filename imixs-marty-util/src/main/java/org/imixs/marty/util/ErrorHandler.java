@@ -14,7 +14,8 @@ import org.imixs.workflow.plugins.RulePlugin;
 
 public class ErrorHandler {
 
-	private static Logger logger = Logger.getLogger(ErrorHandler.class.getName());
+	private static Logger logger = Logger.getLogger(ErrorHandler.class
+			.getName());
 
 	/**
 	 * The Method expects a PluginException and adds the corresponding Faces
@@ -53,19 +54,20 @@ public class ErrorHandler {
 			pe.printStackTrace(); // Or use a logger.
 		}
 	}
+
 	
-	
+
 	/**
 	 * This helper method adds a error message to the faces context, based on
 	 * the data in a WorkflowException. This kind of error message can be
 	 * displayed in a page using:
 	 * 
 	 * <code>
-	 *          	<h:messages globalOnly="true" />
+	 *       <h:messages globalOnly="true" />
 	 * </code>
 	 * 
-	 * If the PluginException contains an optional object array the
-	 * message is parsed for params to be replaced
+	 * If a PluginException or ValidationException contains an optional object
+	 * array the message is parsed for params to be replaced
 	 * 
 	 * Example:
 	 * 
@@ -83,7 +85,7 @@ public class ErrorHandler {
 			ResourceBundle rb = ResourceBundle.getBundle("bundle.app");
 			message = rb.getString(pe.getErrorCode());
 		} catch (MissingResourceException mre) {
-			logger.warning("WorkflowController: " + mre.getMessage());
+			logger.warning("ErrorHandler: " + mre.getMessage());
 		}
 
 		// parse message for params
@@ -96,11 +98,21 @@ public class ErrorHandler {
 							p.getErrorParameters()[i].toString());
 				}
 			}
+		} else {
+			if (pe instanceof ValidationException) {
+				ValidationException p = (ValidationException) pe;
+				if (p.getErrorParameters() != null
+						&& p.getErrorParameters().length > 0) {
+					for (int i = 0; i < p.getErrorParameters().length; i++) {
+						message = message.replace("{" + i + "}",
+								p.getErrorParameters()[i].toString());
+					}
+				}
+			}
 		}
 		FacesContext.getCurrentInstance().addMessage(null,
 				new FacesMessage(FacesMessage.SEVERITY_INFO, message, null));
 
 	}
-
 
 }

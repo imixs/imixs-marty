@@ -69,7 +69,7 @@
 	</modules>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<org.imixs.workflow.version>3.1.9-SNAPSHOT</org.imixs.workflow.version>
+		<org.imixs.workflow.version>3.1.9</org.imixs.workflow.version>
 	</properties>	
 	
 	<build>

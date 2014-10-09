@@ -39,6 +39,7 @@
 		
 		<menu name="Controller">
 			<item name="WorkflowController" href="controller/workflowcontroller.html" />
+			<item name="Exception Handling" href="controller/exceptionhandling.html" />
 			<item name="ChildWorkflowController" href="controller/childworkitemcontroller.html" />
 			<item name="Worklists and Searching" href="controller/worklists.html" />
 			<item name="DMSController" href="controller/dmscontroller.html" />
