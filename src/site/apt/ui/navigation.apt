@@ -42,3 +42,13 @@ function setNavigationCookie(page) {
 +----------------+
 http://localhost:8080/office/index.jsf?workitem=[$uniqueID]
 +----------------+
+
+
+
+* Command Boxes
+~~~~~~~~~~~~~~
+
+ The right side bar contains several command boxes for general navigation and administration menus.
+ 
+ These comand boxes can be extended by a custom build by changing/adding the empty xhtml pages 'commandbox_custom.xhtml' and 
+ 'commandbox_admin_custom.xhtml'. These page elements are located in the folder /layout/
