@@ -463,6 +463,16 @@ public class WorkflowController extends
 	 * 
 	 * In case of an exception the WorkflowEvent WORKITEM_AFTER_PROCESS will not
 	 * be fired.
+	 * 
+	 * 
+	 * If the action result of the activty starts with "workitem=" followed a
+	 * uniqueid, then the controller loads that new workitem (in case of a list
+	 * the first will be taken) Example:
+	 * 
+	 * <code>
+	 * /pages/workitems/workitem?workitem=23452345-2452435234&txtworkflowgroup=Auftrag
+	 * </code>
+	 * 
 	 */
 	@Override
 	public String process() throws AccessDeniedException,
@@ -532,6 +542,60 @@ public class WorkflowController extends
 				id = getWorkitem().getItemValueString(WorkflowService.UNIQUEID);
 			logger.finest("[WorkflowController] process: '" + id + "' in "
 					+ (System.currentTimeMillis() - lTotal) + "ms");
+		}
+
+		// test if actionResult contains '?workitem='
+		if (actionResult.indexOf("?workitem=") > -1) {
+			String query = actionResult.substring(actionResult
+					.indexOf("?workitem="));
+			String filter = "";
+			actionResult = actionResult.substring(0,
+					actionResult.indexOf("?workitem="));
+
+			// test field filter "&...."
+			if (query.indexOf("&") > -1) {
+				filter = query.substring(query.indexOf("&"));
+				query = query.substring(0, query.indexOf("&"));
+			}
+
+			String ids = query.substring(query.indexOf("?workitem=") + 10);
+
+			String[] idList = ids.split(";");
+
+			// load first workitem
+			for (String uniqueidref : idList) {
+				ItemCollection refworkitem = this.getEntityService().load(
+						uniqueidref);
+				if (refworkitem != null) {
+					boolean isOK = true;
+					if (!filter.isEmpty()) {
+						String[] filterList = filter.split("&");
+						// txtname=Anna
+						for (String fieldValue : filterList) {
+							int i = fieldValue.indexOf('=');
+							if (i > -1) {
+								String field = fieldValue.substring(0,
+										fieldValue.indexOf('='));
+								String value = fieldValue.substring(fieldValue
+										.indexOf('=')+1);
+
+								// does workitem match??
+								if (!refworkitem.getItemValueString(field)
+										.equals(value)) {
+									isOK = false;
+									break;
+								}
+							}
+						}
+					}
+
+					if (isOK) {
+						this.setWorkitem(refworkitem);
+						break;
+					}
+				}
+			}
+
 		}
 
 		// return action result - null in case of an exception

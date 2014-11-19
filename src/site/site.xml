@@ -48,6 +48,7 @@
 		<menu name="Plugins">
 			<item name="DMSPlugin" href="plugins/dmsplugin.html" />
 			<item name="DeputyPlugin" href="plugins/deputyplugin.html" />
+			<item name="ResultPlugin" href="plugins/resultplugin.html" />
 		</menu>
 
 		<menu name="User Interface">
