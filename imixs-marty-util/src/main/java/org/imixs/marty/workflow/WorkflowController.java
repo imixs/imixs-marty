@@ -545,7 +545,26 @@ public class WorkflowController extends
 		}
 
 		// test if actionResult contains '?workitem='
-		if (actionResult.indexOf("?workitem=") > -1) {
+		selectWokitemFromActionResult(actionResult);
+
+		// return action result - null in case of an exception
+		return actionResult;
+	}
+
+	/**
+	 * This method tests if the action result of the activty starts with "workitem=" followed a
+	 * uniqueid, then the method tries to load that new workitem (in case of a list
+	 * the first will be taken) Example:
+	 * 
+	 * <code>
+	 * /pages/workitems/workitem?workitem=23452345-2452435234&txtworkflowgroup=Auftrag
+	 * </code>
+	 * 
+	 * This method is called from process()
+	 **/
+	private void selectWokitemFromActionResult(String actionResult) {
+		// test if actionResult contains '?workitem='
+		if (actionResult != null && actionResult.indexOf("?workitem=") > -1) {
 			String query = actionResult.substring(actionResult
 					.indexOf("?workitem="));
 			String filter = "";
@@ -577,7 +596,7 @@ public class WorkflowController extends
 								String field = fieldValue.substring(0,
 										fieldValue.indexOf('='));
 								String value = fieldValue.substring(fieldValue
-										.indexOf('=')+1);
+										.indexOf('=') + 1);
 
 								// does workitem match??
 								if (!refworkitem.getItemValueString(field)
@@ -597,9 +616,6 @@ public class WorkflowController extends
 			}
 
 		}
-
-		// return action result - null in case of an exception
-		return actionResult;
 	}
 
 	/**
