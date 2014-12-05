@@ -453,57 +453,13 @@ public class ProcessController implements Serializable {
 
 	}
 
-	/**
-	 * Returns a list of ItemCollection representing the first Start Process
-	 * defined for a specific space entity. Each ItemCollection provides at
-	 * least the properties
-	 * <ul>
-	 * <li>txtmodelVersion (model version)
-	 * <li>numprocessID (first process of a group)
-	 * <li>txtWorklfowGroup (name of group)
-	 * 
-	 * 
-	 * The worflowGroup list is used to display the start process list for a
-	 * space selection
-	 * 
-	 * @param uniqueid
-	 *            - $UniqueId of a project
-	 * @return - a collection of ProcessEntities or an empty arrayList if not
-	 *         processes are defined
-	 */
-	// public List<ItemCollection> getProcessEntitiesByCoreProcess(String
-	// uniqueid) {
-	//
-	// List<ItemCollection> result = new ArrayList<ItemCollection>();
-	// ItemCollection coreProcess = getCoreProcessByID(uniqueid);
-	//
-	// if (coreProcess == null)
-	// return result;
-	//
-	// List<String> aprocessList = null;
-	// aprocessList = coreProcess.getItemValue("txtprocesslist");
-	//
-	// // if no processList was defined return an empty array
-	// if (aprocessList == null || aprocessList.isEmpty())
-	// return result;
-	//
-	// // now add all matching Process Entities
-	// List<ItemCollection> processEntityList = modelController
-	// .getInitialProcessEntities();
-	// for (ItemCollection aProcessEntity : processEntityList) {
-	// // test if the $modelVersion matches....
-	// if (isProcessEntityInList(aProcessEntity, aprocessList))
-	// result.add(aProcessEntity);
-	// }
-	//
-	// return result;
-	//
-	// }
+
 
 	/**
 	 * WorkflowEvent listener
 	 * 
 	 * If a project WorkItem was processed the modellController will be reseted.
+	 * 
 	 * 
 	 * @param workflowEvent
 	 */
