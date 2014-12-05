@@ -310,7 +310,7 @@ public class ModelController implements Serializable {
 			String sVersion) {
 		List<ItemCollection> result = null;
 
-		if (sGroup != null && sVersion != null) {
+		if (sGroup != null && !sGroup.isEmpty() && sVersion != null && !sVersion.isEmpty()) {
 
 			setWorkflowGroup(sGroup);
 			setModelVersion(sVersion);
@@ -344,6 +344,9 @@ public class ModelController implements Serializable {
 	 *         for the specified group exists.
 	 */
 	public List<ItemCollection> getAllProcessEntitiesByGroup(String groupName) {
+		if (groupName==null || groupName.isEmpty()) {
+			return null;
+		}
 		// find the matching latest ModelVersion for this group
 		String sModelVersion = workflowGroups.get(groupName);
 		if (sModelVersion == null)
