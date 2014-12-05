@@ -15,7 +15,28 @@ public interface IQueryBuilder {
 
 	boolean isSearchMode(ItemCollection searchFilter);
 
-	String getSearchQuery(ItemCollection searchFilter);
+	/**
+	 * Returns a Lucene search query based on the define searchFilter parameter
+	 * set
+	 * 
+	 * @param searchFilter
+	 *            - ItemCollection with filter criteria
+	 * @param view
+	 *            - WorkList View type - @see WorklistController
+	 * 
+	 * @return - a lucene search query
+	 */
+	String getSearchQuery(ItemCollection searchFilter, String view);
 
-	String getJPQLStatement(ItemCollection queryFilter);
+	/**
+	 * Returns a JPQL statement based on the defined searchFilter parameter set
+	 * 
+	 * @param searchFilter
+	 *            - ItemCollection with filter criteria
+	 * @param view
+	 *            - WorkList View type - @see WorklistController
+	 * 
+	 * @return - a JQPL statement
+	 */
+	String getJPQLStatement(ItemCollection queryFilter, String view);
 }

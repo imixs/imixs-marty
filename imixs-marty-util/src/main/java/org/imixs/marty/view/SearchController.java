@@ -61,8 +61,8 @@ import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
  * The SearchController provides a inner class 'ViewAdapter' to provide the
  * result of a query. The ViewAdapter method 'findWorkitems' uses a JQPL
  * statement to return a view result. The ViewAdapter method 'searchWorkitems'
- * performs a Lucene Search to return a search result.
- * 
+ * performs a Lucene Search to return a search result. Both statements are
+ * computed by a IQuerBuilder instance which is injected
  * To adapt the view result it is not necessary to override the ViewAdapter
  * itself. To customize the result, the QueryBuilder can be customized.
  * QueryBuilder is implementing the IQueryBuilder interface.
@@ -79,7 +79,7 @@ import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
  * 
  * @See QueryBuilder, IQueryBuilder
  * @author rsoika
- * @version 1.0.0
+ * @version 2.2.0
  */
 
 @Named("searchController")
@@ -89,25 +89,11 @@ public class SearchController extends
 		Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private static Logger logger = Logger.getLogger(SearchController.class.getName());
+	private static Logger logger = Logger.getLogger(SearchController.class
+			.getName());
 
 	private String viewTitle = null;
-	private IViewAdapter viewAdapter = null;
-
-	// private ItemCollection queryFilter = null;
 	private ItemCollection searchFilter = null;
-
-	// view filter
-	public static final String QUERY_WORKLIST_BY_OWNER = "worklist.owner";
-	public static final String QUERY_WORKLIST_BY_CREATOR = "worklist.creator";
-	public static final String QUERY_WORKLIST_BY_AUTHOR = "worklist.author";
-	public static final String QUERY_WORKLIST_ALL = "worklist";
-	public static final String QUERY_WORKLIST_ARCHIVE = "archive";
-	public static final String QUERY_WORKLIST_DELETIONS = "deletions";
-	public static final int SORT_BY_CREATED = 0;
-	public static final int SORT_BY_MODIFIED = 1;
-	public static final int SORT_ORDER_DESC = 0;
-	public static final int SORT_ORDER_ASC = 1;
 
 	@Inject
 	protected UserController userController = null;
@@ -128,7 +114,7 @@ public class SearchController extends
 	 * Constructor sets the new ViewController
 	 */
 	public SearchController() {
-		super();		
+		super();
 		setViewAdapter(new ViewAdapter());
 	}
 
@@ -144,21 +130,21 @@ public class SearchController extends
 
 		super.doReset(event);
 	}
-	
+
 	/**
-	 * Resets the search filter but not the search phrase (txtSearch)
-	 * The method reset the current result.
+	 * Resets the search filter but not the search phrase (txtSearch) The method
+	 * reset the current result.
 	 * 
 	 * @param event
 	 */
 	public void doResetFilter(ActionEvent event) {
-		String searchPhrase=searchFilter.getItemValueString("txtSearch");
-		
+		String searchPhrase = searchFilter.getItemValueString("txtSearch");
+
 		searchFilter = new ItemCollection();
 		searchFilter.replaceItemValue("type", "workitem");
 
 		super.doReset(event);
-		
+
 		// restore search phrase
 		searchFilter.replaceItemValue("txtSearch", searchPhrase);
 	}
@@ -215,16 +201,6 @@ public class SearchController extends
 		this.searchFilter = searchFilter;
 	}
 
-	// public ItemCollection getQueryFilter() {
-	// if (queryFilter == null)
-	// queryFilter = new ItemCollection();
-	// return queryFilter;
-	// }
-	//
-	// public void setQueryFilter(ItemCollection queryFilter) {
-	// this.queryFilter = queryFilter;
-	// }
-
 	@Override
 	public void setView(String view) {
 		// reset view title
@@ -257,10 +233,6 @@ public class SearchController extends
 		return viewTitle;
 	}
 
-	
-
-
-
 	public IQueryBuilder getQueryBuilder() {
 		return queryBuilder;
 	}
@@ -268,10 +240,6 @@ public class SearchController extends
 	public void setQueryBuilder(IQueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
 	}
-
-
-
-
 
 	protected class ViewAdapter implements IViewAdapter {
 		/**
@@ -301,9 +269,9 @@ public class SearchController extends
 			if (searchFilter == null)
 				return result;
 
-			String sQuery = queryBuilder.getJPQLStatement(searchFilter);
+			String sQuery = queryBuilder.getJPQLStatement(searchFilter,getView());
 
-			logger.info("loadWorktiems: " + sQuery);
+			logger.fine("findWorkitems: " + sQuery);
 			Collection<ItemCollection> col = entityService.findAllEntities(
 					sQuery, controller.getRow(), controller.getMaxResult());
 
@@ -330,13 +298,13 @@ public class SearchController extends
 			if (searchFilter == null)
 				return result;
 
-			String sSearchTerm = queryBuilder.getSearchQuery(searchFilter);
+			String sSearchTerm = queryBuilder.getSearchQuery(searchFilter,getView());
 
 			// start lucene search
 			Collection<ItemCollection> col = null;
 			try {
 
-				logger.fine("SearchQuery=" + sSearchTerm);
+				logger.fine("searchWorkitems: " + sSearchTerm);
 				col = LucenePlugin.search(sSearchTerm, workflowService);
 
 			} catch (Exception e) {

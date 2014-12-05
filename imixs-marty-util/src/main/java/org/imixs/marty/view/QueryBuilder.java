@@ -32,29 +32,42 @@ public class QueryBuilder implements IQueryBuilder {
 	@EJB
 	private PropertyService propertyService;
 
-	
-	
-	
+	public static final int SORT_BY_CREATED = 0;
+	public static final int SORT_BY_MODIFIED = 1;
+	public static final int SORT_ORDER_DESC = 0;
+	public static final int SORT_ORDER_ASC = 1;
+
 	@Override
 	public boolean isSearchMode(ItemCollection searchFilter) {
-		
-		boolean bSearch=false;
-		
-		if 	(!searchFilter.getItemValueString("txtSearch").isEmpty())
-			bSearch=true;
-		if 	(!searchFilter.getItemValueString("namCreator").isEmpty())
-			bSearch=true;
-		if 	(searchFilter.getItemValueDate("datFrom")!=null)
-			bSearch=true;
-		if 	(searchFilter.getItemValueDate("datTo")!=null)
-			bSearch=true;
-		
-		
+
+		boolean bSearch = false;
+
+		if (!searchFilter.getItemValueString("txtSearch").isEmpty())
+			bSearch = true;
+		if (!searchFilter.getItemValueString("namCreator").isEmpty())
+			bSearch = true;
+		if (searchFilter.getItemValueDate("datFrom") != null)
+			bSearch = true;
+		if (searchFilter.getItemValueDate("datTo") != null)
+			bSearch = true;
+
 		return bSearch;
 	}
 
+	/**
+	 * Returns a Lucene search query based on the define searchFilter parameter
+	 * set
+	 * 
+	 * @param searchFilter
+	 *            - ItemCollection with filter criteria
+	 * @param view
+	 *            - WorkList View type - @see WorklistController
+	 * 
+	 * @return - a lucene search query
+	 */
+	@SuppressWarnings("unchecked")
 	@Override
-	public String getSearchQuery(ItemCollection searchFilter) {
+	public String getSearchQuery(ItemCollection searchFilter, String view) {
 		String sSearchTerm = "";
 
 		List<String> typeList = searchFilter.getItemValue("Type");
@@ -73,11 +86,10 @@ public class QueryBuilder implements IQueryBuilder {
 		}
 		sSearchTerm += "(" + sTypeQuery + ") AND";
 
-		
-		String sCreator=searchFilter.getItemValueString("namCreator");
-		Date datFrom=searchFilter.getItemValueDate("datFrom");
-		Date datTo=searchFilter.getItemValueDate("datTo");
-		
+		String sCreator = searchFilter.getItemValueString("namCreator");
+		Date datFrom = searchFilter.getItemValueDate("datFrom");
+		Date datTo = searchFilter.getItemValueDate("datTo");
+
 		List<String> processRefList = searchFilter
 				.getItemValue("txtProcessRef");
 		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
@@ -134,11 +146,10 @@ public class QueryBuilder implements IQueryBuilder {
 			sSearchTerm += " ) AND";
 
 		}
-		
-		
+
 		// serach date range?
-		String sDateFrom="191401070000"; // because * did not work here
-		String sDateTo="211401070000";
+		String sDateFrom = "191401070000"; // because * did not work here
+		String sDateTo = "211401070000";
 		SimpleDateFormat dateformat = new SimpleDateFormat("yyyyMMddHHmm");
 
 		if (datFrom != null) {
@@ -158,15 +169,12 @@ public class QueryBuilder implements IQueryBuilder {
 			sSearchTerm += " ($created:[" + sDateFrom + " TO " + sDateTo
 					+ "]) AND";
 		}
-		
-		
+
 		// creator
 		if (!"".equals(sCreator)) {
 			sSearchTerm += " (namcreator:\"" + sCreator.toLowerCase()
 					+ "\") AND";
 		}
-		
-		
 
 		int processID = searchFilter.getItemValueInteger("$ProcessID");
 		if (processID > 0)
@@ -177,7 +185,7 @@ public class QueryBuilder implements IQueryBuilder {
 
 		if (!"".equals(searchphrase)) {
 			// trim
-			searchphrase=searchphrase.trim();
+			searchphrase = searchphrase.trim();
 			// lower case....
 			searchphrase = searchphrase.toLowerCase();
 			// check the default operator
@@ -217,9 +225,19 @@ public class QueryBuilder implements IQueryBuilder {
 		return sSearchTerm;
 	}
 
+	/**
+	 * Returns a JPQL statement based on the defined searchFilter parameter set
+	 * 
+	 * @param searchFilter
+	 *            - ItemCollection with filter criteria
+	 * @param view
+	 *            - WorkList View type - @see WorklistController
+	 * 
+	 * @return - a JQPL statement
+	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public String getJPQLStatement(ItemCollection searchFilter) {
+	public String getJPQLStatement(ItemCollection searchFilter, String view) {
 		int processID = searchFilter.getItemValueInteger("$ProcessID");
 
 		List<String> processRefList = searchFilter
@@ -308,11 +326,11 @@ public class QueryBuilder implements IQueryBuilder {
 		int sortby = config.getItemValueInteger("Sortby");
 		int sortorder = config.getItemValueInteger("Sortorder");
 		sQuery += " ORDER BY wi.";
-		if (sortby == SearchController.SORT_BY_CREATED)
+		if (sortby == SORT_BY_CREATED)
 			sQuery += "created ";
 		else
 			sQuery += "modified ";
-		if (sortorder == SearchController.SORT_ORDER_ASC)
+		if (sortorder == SORT_ORDER_ASC)
 			sQuery += "asc";
 		else
 			sQuery += "desc";
