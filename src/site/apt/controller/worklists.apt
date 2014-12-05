@@ -2,16 +2,17 @@
 Worklists and Searching
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- The result of a worklist or a search query is controlled by the Marty WorklistController bean. 
+ The result of a worklist or a search query can be fully controlled by the Marty SearchController bean. 
  This is a session scoped backing bean providing mechanisms for performing JPQL query as also a 
- Lucene search. There for the Marty WorklistController provides two ItemCollections for a custom 
- searchfilter and a custom queryfilter. These ItemCollections can be used to provide filter 
+ Lucene search. The SearchController provides a ItemCollection 'searchfilter' to define custom filter 
  attributes.
 
- The ViewResult is computed by a custom IViewHandler implemented as a inner class of the Marty 
- WorklistController. Depending on the provided attributes the Marty WorklistController decides 
- if a JPQL or a Lucene search is triggered. The queries for both are by a IQueryBuilder included 
- in the Marty WorklistController .
+ The Marty SearchContoller extends the Imixs WorklistController CDI Bean. 
+ To compute the worklist result the SearchControler implemnts a custom IViewHandler which is delegating the 
+ construction of a search of JPQL Query to a  as a IQueryBuilder.
+ Depending on the attributes of the searchfilter the QueryBuilder provides JPQL Queries or Lucene Search Queries. 
+ The IQueryBuilder provides the method isSearchMode to give the searchController a hint wich query should be 
+ performed when the worklist is called from the client. 
 
 *Lucene
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -47,7 +48,7 @@ lucence.defaultOperator=OR
  This can be done by Administration->Configuration->additional properties. 
  Or directly in the imixs.properties file.
 
-*Example of a custo QueryBuilder
+*Example of a custom QueryBuilder
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  
  This is an example how to adapt the QueryBuilder

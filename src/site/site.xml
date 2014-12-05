@@ -19,6 +19,7 @@
 		<menu name="General concepts">
 			<item name="Quickstart" href="concepts/quickstart.html" />
 			<item name="Architecture" href="concepts/architecture.html" />
+			<item name="Layout" href="concepts/layout.html" />
 
 			<item name="Coordinates of Workitem" href="concepts/coordinatesofworkitem.html" />
 
