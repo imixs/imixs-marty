@@ -10,9 +10,12 @@ import java.util.regex.Pattern;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import org.imixs.marty.ejb.ConfigService;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.jee.faces.util.LoginController;
+import org.imixs.workflow.jee.faces.workitem.WorklistController;
 import org.imixs.workflow.jee.util.PropertyService;
 
 /**
@@ -31,6 +34,9 @@ public class QueryBuilder implements IQueryBuilder {
 
 	@EJB
 	private PropertyService propertyService;
+
+	@Inject
+	protected LoginController loginController = null;
 
 	public static final int SORT_BY_CREATED = 0;
 	public static final int SORT_BY_MODIFIED = 1;
@@ -58,6 +64,9 @@ public class QueryBuilder implements IQueryBuilder {
 	 * Returns a Lucene search query based on the define searchFilter parameter
 	 * set
 	 * 
+	 * Depending on the view type the method restricts the result set by
+	 * namcreator or namowner
+	 * 
 	 * @param searchFilter
 	 *            - ItemCollection with filter criteria
 	 * @param view
@@ -69,6 +78,8 @@ public class QueryBuilder implements IQueryBuilder {
 	@Override
 	public String getSearchQuery(ItemCollection searchFilter, String view) {
 		String sSearchTerm = "";
+		if (view == null)
+			view = "";
 
 		List<String> typeList = searchFilter.getItemValue("Type");
 		if (typeList.isEmpty() || "".equals(typeList.get(0))) {
@@ -86,7 +97,20 @@ public class QueryBuilder implements IQueryBuilder {
 		}
 		sSearchTerm += "(" + sTypeQuery + ") AND";
 
+		// test if result should be restricted to creator?
 		String sCreator = searchFilter.getItemValueString("namCreator");
+		// test if viewtype=worklist.creator
+		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_CREATOR)) {
+			sCreator = loginController.getRemoteUser();
+		}
+
+		// test if result should be restricted to owner?
+		String sOwner = searchFilter.getItemValueString("namOwner");
+		// test if viewtype=worklist.owner
+		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_OWNER)) {
+			sOwner = loginController.getRemoteUser();
+		}
+
 		Date datFrom = searchFilter.getItemValueDate("datFrom");
 		Date datTo = searchFilter.getItemValueDate("datTo");
 
@@ -176,6 +200,11 @@ public class QueryBuilder implements IQueryBuilder {
 					+ "\") AND";
 		}
 
+		// owner
+		if (!"".equals(sCreator)) {
+			sSearchTerm += " (namowner:\"" + sOwner.toLowerCase() + "\") AND";
+		}
+
 		int processID = searchFilter.getItemValueInteger("$ProcessID");
 		if (processID > 0)
 			sSearchTerm += " ($processid:" + processID + ") AND";
@@ -228,6 +257,9 @@ public class QueryBuilder implements IQueryBuilder {
 	/**
 	 * Returns a JPQL statement based on the defined searchFilter parameter set
 	 * 
+	 * Depending on the view type the method restricts the result set by
+	 * namcreator or namowner
+	 * 
 	 * @param searchFilter
 	 *            - ItemCollection with filter criteria
 	 * @param view
@@ -265,6 +297,12 @@ public class QueryBuilder implements IQueryBuilder {
 		// construct query
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
 
+		
+		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_CREATOR)) 
+			sQuery += " JOIN wi.textItems as creator ";
+		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_OWNER)) 
+			sQuery += " JOIN wi.textItems as owner ";
+		
 		if (!processRefList.isEmpty())
 			sQuery += " JOIN wi.textItems as pref ";
 		if (!spacesRefList.isEmpty())
@@ -283,6 +321,18 @@ public class QueryBuilder implements IQueryBuilder {
 
 		sQuery += " WHERE wi.type IN(" + sType + ")";
 
+		
+		// QUERY_WORKLIST_BY_CREATOR ?
+		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_CREATOR))  {
+			sQuery += " AND creator.itemName = 'namcreator'";
+			sQuery += " AND creator.itemValue = '" + loginController.getRemoteUser() + "' ";
+		}
+		// QUERY_WORKLIST_BY_OWNER ?
+		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_OWNER))  {
+			sQuery += " AND owner.itemName = 'namowner'";
+			sQuery += " AND owner.itemValue = '" + loginController.getRemoteUser() + "' ";
+		}
+			
 		// process Ref...
 		if (!processRefList.isEmpty()) {
 			sQuery += " AND pref.itemName = '$uniqueidref'";

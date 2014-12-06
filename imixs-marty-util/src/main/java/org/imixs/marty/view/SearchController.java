@@ -31,8 +31,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
@@ -42,12 +40,9 @@ import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.marty.config.SetupController;
-import org.imixs.marty.profile.UserController;
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.jee.faces.workitem.IViewAdapter;
 import org.imixs.workflow.jee.faces.workitem.ViewController;
@@ -55,17 +50,19 @@ import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
 
 /**
  * The Marty SearchController extends the Imixs WorklistController and provides
- * ItemCollection for a search filter. The search filter is used for customized
- * search results.
+ * custom filter and search queries to request a individual WorkList result. The
+ * ItemCollection search filter defines custom filter criteria for a customized
+ * search result.
  * 
- * The SearchController provides a inner class 'ViewAdapter' to provide the
- * result of a query. The ViewAdapter method 'findWorkitems' uses a JQPL
- * statement to return a view result. The ViewAdapter method 'searchWorkitems'
- * performs a Lucene Search to return a search result. Both statements are
- * computed by a IQuerBuilder instance which is injected
- * To adapt the view result it is not necessary to override the ViewAdapter
- * itself. To customize the result, the QueryBuilder can be customized.
- * QueryBuilder is implementing the IQueryBuilder interface.
+ * The SearchController provides a inner class 'ViewAdapter' to compute the
+ * WorkList result based on the search filter. The SearchController provides two
+ * modes. The JPQL mode and the search mode. The ViewAdapter method
+ * 'findWorkitems' uses a JQPL statement to return a view result. The
+ * ViewAdapter method 'searchWorkitems' performs a Lucene Search to return a
+ * search result. Both statements are computed by a IQuerBuilder instance which
+ * can be injected.
+ * 
+ * To customize the result an alternative CDI IQueryBuilder bean an be injected.
  * 
  * 
  * The SearchController has a set of predefined filter properties:
@@ -92,30 +89,21 @@ public class SearchController extends
 	private static Logger logger = Logger.getLogger(SearchController.class
 			.getName());
 
-	private String viewTitle = null;
 	private ItemCollection searchFilter = null;
 
 	@Inject
-	protected UserController userController = null;
-
-	@Inject
-	protected SetupController setupController = null;
-
-	@Inject
 	protected IQueryBuilder queryBuilder = null;
-
+	
+	
 	@EJB
 	protected WorkflowService workflowService;
-
-	@EJB
-	protected EntityService entityService;
 
 	/**
 	 * Constructor sets the new ViewController
 	 */
 	public SearchController() {
 		super();
-		setViewAdapter(new ViewAdapter());
+		setViewAdapter(new SearchController.ViewAdapter());
 	}
 
 	/**
@@ -127,7 +115,6 @@ public class SearchController extends
 	public void doReset(ActionEvent event) {
 		searchFilter = new ItemCollection();
 		searchFilter.replaceItemValue("type", "workitem");
-
 		super.doReset(event);
 	}
 
@@ -139,19 +126,17 @@ public class SearchController extends
 	 */
 	public void doResetFilter(ActionEvent event) {
 		String searchPhrase = searchFilter.getItemValueString("txtSearch");
-
 		searchFilter = new ItemCollection();
 		searchFilter.replaceItemValue("type", "workitem");
-
 		super.doReset(event);
-
 		// restore search phrase
 		searchFilter.replaceItemValue("txtSearch", searchPhrase);
 	}
 
 	/**
-	 * Searches for the a search phrase. The search phrase is stored in the
-	 * search filter property 'txtSearch' which is evaluated by the ViewAdapter.
+	 * Triggers a lucene search based on a search phrase. The search phrase is
+	 * stored in the search filter property 'txtSearch' which is evaluated by
+	 * the IQueryBuilder.
 	 * 
 	 * @param phrase
 	 *            - search phrase
@@ -159,9 +144,7 @@ public class SearchController extends
 	 *            - jsf navigation action
 	 */
 	public String search(String phrase, String action) {
-
 		searchFilter.replaceItemValue("txtSearch", phrase);
-
 		return action;
 	}
 
@@ -170,25 +153,21 @@ public class SearchController extends
 	 * list after changing a workitem.
 	 * 
 	 * @param workflowEvent
-	 * 
 	 **/
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
 		if (workflowEvent == null || workflowEvent.getWorkitem() == null) {
 			return;
 		}
-
 		// skip if not a workItem...
 		if (!workflowEvent.getWorkitem().getItemValueString("type")
 				.startsWith("workitem"))
 			return;
-
 		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
 				.getEventType()
 				|| WorkflowEvent.WORKITEM_AFTER_SOFTDELETE == workflowEvent
 						.getEventType()) {
 			doRefresh();
 		}
-
 	}
 
 	public ItemCollection getSearchFilter() {
@@ -199,38 +178,6 @@ public class SearchController extends
 
 	public void setSearchFilter(ItemCollection searchFilter) {
 		this.searchFilter = searchFilter;
-	}
-
-	@Override
-	public void setView(String view) {
-		// reset view title
-		viewTitle = null;
-		super.setView(view);
-	}
-
-	/**
-	 * This method computes a internationalized view title from the property
-	 * 'view'
-	 * 
-	 * @param viewTitle
-	 */
-	public String getViewTitle() {
-		if (viewTitle != null)
-			return viewTitle;
-		// compute view title
-		String viewName = getView();
-		try {
-			Locale locale = userController.getLocale();
-			ResourceBundle rb = null;
-			rb = ResourceBundle.getBundle("bundle.workitem", locale);
-			viewTitle = rb.getString(viewName);
-		} catch (Exception e) {
-			logger.warning("no view title defined in resource bundle for view name '"
-					+ viewName);
-
-			viewTitle = viewName + ":undefined";
-		}
-		return viewTitle;
 	}
 
 	public IQueryBuilder getQueryBuilder() {
@@ -259,66 +206,59 @@ public class SearchController extends
 		}
 
 		/**
-		 * This method computes a search result depending on the current query
-		 * filter settings.
+		 * Returns a worklist based on a JQPL statement
+		 * 
+		 * @param controller
+		 *            - the view controller
+		 * @return list of workitems
 		 */
 		private List<ItemCollection> findWorkitems(ViewController controller) {
-
 			List<ItemCollection> result = new ArrayList<ItemCollection>();
-
 			if (searchFilter == null)
 				return result;
-
-			String sQuery = queryBuilder.getJPQLStatement(searchFilter,getView());
-
+			String sQuery = queryBuilder.getJPQLStatement(searchFilter,
+					getView());
 			logger.fine("findWorkitems: " + sQuery);
-			Collection<ItemCollection> col = entityService.findAllEntities(
+			Collection<ItemCollection> col = workflowService.getEntityService().findAllEntities(
 					sQuery, controller.getRow(), controller.getMaxResult());
-
+			// clone the result list to reduce size of workitems
 			for (ItemCollection workitem : col) {
 				result.add(WorkitemHelper.clone(workitem));
 			}
-
 			return result;
-
 		}
 
 		/**
-		 * Creates a search term depending on the provided search fields.
-		 * IndexFields will be search by the keyword search. Keyword search in
-		 * lucene is case sensitive and did not allow wildcards!
+		 * Returns a worklist based on a Lucene search query. IndexFields will
+		 * be search by the keyword search. Keyword search in lucene is case
+		 * sensitive and did not allow wildcards!
 		 * 
-		 * 
-		 * @param event
+		 * @param controller
+		 *            - the view controller
+		 * @return list of workitems
 		 */
 		private List<ItemCollection> searchWorkitems(ViewController controller) {
-
 			List<ItemCollection> result = new ArrayList<ItemCollection>();
-
 			if (searchFilter == null)
 				return result;
 
-			String sSearchTerm = queryBuilder.getSearchQuery(searchFilter,getView());
-
+			String sSearchTerm = queryBuilder.getSearchQuery(searchFilter,
+					getView());
 			// start lucene search
 			Collection<ItemCollection> col = null;
 			try {
-
 				logger.fine("searchWorkitems: " + sSearchTerm);
 				col = LucenePlugin.search(sSearchTerm, workflowService);
-
 			} catch (Exception e) {
 				logger.warning("  lucene error!");
 				e.printStackTrace();
 			}
 
-			// clone result
+			// clone the result list to reduce size of workitems
 			for (ItemCollection workitem : col) {
 				result.add(WorkitemHelper.clone(workitem));
 			}
-
 			return result;
-
 		}
 
 	}

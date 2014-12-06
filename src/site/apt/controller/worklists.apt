@@ -2,17 +2,55 @@
 Worklists and Searching
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- The result of a worklist or a search query can be fully controlled by the Marty SearchController bean. 
- This is a session scoped backing bean providing mechanisms for performing JPQL query as also a 
- Lucene search. The SearchController provides a ItemCollection 'searchfilter' to define custom filter 
- attributes.
+ The result of a worklist or a search query can be fully controlled by the Marty SearchController. 
+ The Marty SearchController is a session scoped backing CDI bean providing mechanisms to performe
+ JPQL queries as also a Lucene search. The SearchController provides the ItemCollection 
+ 'searchfilter' to define custom filter attributes. The filter can be controlled by any frontend view.
 
- The Marty SearchContoller extends the Imixs WorklistController CDI Bean. 
- To compute the worklist result the SearchControler implemnts a custom IViewHandler which is delegating the 
- construction of a search of JPQL Query to a  as a IQueryBuilder.
- Depending on the attributes of the searchfilter the QueryBuilder provides JPQL Queries or Lucene Search Queries. 
- The IQueryBuilder provides the method isSearchMode to give the searchController a hint wich query should be 
- performed when the worklist is called from the client. 
+ The Marty SearchContoller extends the Imixs WorklistController CDI Bean. To compute the 
+ worklist result, the SearchControler implements a custom ViewHandler which is delegating the 
+ construction of a search- or a JPQL-query to a IQueryBuilder. Depending on the attributes of 
+ the searchfilter the QueryBuilder provides either JPQL Queries or Lucene Search Queries. 
+ The IQueryBuilder provides the method isSearchMode to give the searchController a hint which 
+ query should be performed when the worklist is called from the client. 
+ To customize the result an alternative CDI IQueryBuilder bean an be injected.
+ 
+ 
+*JSF Integration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+ The Search result list is accessable by the searchControler form a JSF page:
+ 
++-----------------------------+
+	<ui:repeat var="workitem" value="#{searchController.workitems}">
+			.....
+	</ui:repeat>
++-----------------------------+
+ 
+ The general view type can be controlled by the property 'view'
+ 
++-----------------------------+
+ <h:commandLink action="/pages/workitems/worklist" immediate="true"
+	actionListener="#{searchController.doReset}">
+	<f:setPropertyActionListener
+		target="#{searchController.view}" value="worklist.owner" />
+ </h:commandLink>
++-----------------------------+
+ 
+
+ Also additional search params can be defined form the frontend view:
+ 
++-----------------------------+
+ <h:commandLink action="/pages/workitems/worklist" immediate="true"
+	actionListener="#{searchController.doReset}">
+	<f:setPropertyActionListener
+		target="#{searchController.searchFilter.item['txtprocessRef']}"
+		value="#{workitem.item['$uniqueId']}" />
+	<f:setPropertyActionListener
+		target="#{searchController.searchFilter.item['txtsearch']}"
+		value="Hello World" />
+ </h:commandLink>
++-----------------------------+
 
 *Lucene
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
