@@ -97,7 +97,6 @@ public class ProcessService {
 	 * 
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
 	public List<ItemCollection> getProcessList() {
 
 		logger.fine("[ProcessService] getProcessList");
@@ -112,64 +111,13 @@ public class ProcessService {
 
 		// create optimized list
 		for (ItemCollection process : col) {
-
-			ItemCollection clone = WorkitemHelper.clone(process);
-			clone.replaceItemValue("isTeam", false);
-			clone.replaceItemValue("isManager", false);
-
-			// check the isTeam status for the current user
-			List<String> userNameList = entityService.getUserNameList();
-			Vector<String> vNameList = (Vector<String>) process
-					.getItemValue("namTeam");
-			// check if one entry matches....
-			for (String username : userNameList) {
-				if (vNameList.indexOf(username) > -1) {
-					clone.replaceItemValue("isTeam", true);
-					break;
-				}
-			}
-			// check the isManager status for the current user
-			vNameList = (Vector<String>) process.getItemValue("namManager");
-			// check if one entry matches....
-			for (String username : userNameList) {
-				if (vNameList.indexOf(username) > -1) {
-					clone.replaceItemValue("isManager", true);
-					break;
-				}
-			}
-
-			// check the isAssist status for the current user
-			vNameList = (Vector<String>) process.getItemValue("namAssist");
-			// check if one entry matches....
-			for (String username : userNameList) {
-				if (vNameList.indexOf(username) > -1) {
-					clone.replaceItemValue("isAssist", true);
-					break;
-				}
-			}
-
-			// check if user is member of team or manager list
-			boolean bMember = false;
-			if (clone.getItemValueBoolean("isTeam")
-					|| clone.getItemValueBoolean("isManager")
-					|| clone.getItemValueBoolean("isAssist"))
-				bMember = true;
-			clone.replaceItemValue("isMember", bMember);
-
-			// add custom fields into clone...
-			clone.replaceItemValue("txtWorkflowList",
-					process.getItemValue("txtWorkflowList"));
-			clone.replaceItemValue("txtdescription",
-					process.getItemValue("txtdescription"));
-
+			ItemCollection clone =cloneOrgItemCollection(process);
 			processList.add(clone);
-
 		}
 
 		return processList;
 	}
 
-	@SuppressWarnings("unchecked")
 	public List<ItemCollection> getSpaces() {
 
 		logger.fine("[ProcessService] getSpaces");
@@ -183,58 +131,75 @@ public class ProcessService {
 
 		// create optimized list
 		for (ItemCollection space : col) {
-
-			ItemCollection clone = WorkitemHelper.clone(space);
-			clone.replaceItemValue("isTeam", false);
-			clone.replaceItemValue("isManager", false);
-
-			// check the isTeam status for the current user
-			List<String> userNameList = entityService.getUserNameList();
-			Vector<String> vNameList = (Vector<String>) space
-					.getItemValue("namTeam");
-			// check if one entry matches....
-			for (String username : userNameList) {
-				if (vNameList.indexOf(username) > -1) {
-					clone.replaceItemValue("isTeam", true);
-					break;
-				}
-			}
-			// check the isManager status for the current user
-			vNameList = (Vector<String>) space.getItemValue("namManager");
-			// check if one entry matches....
-			for (String username : userNameList) {
-				if (vNameList.indexOf(username) > -1) {
-					clone.replaceItemValue("isManager", true);
-					break;
-				}
-			}
-
-			// check the isAssist status for the current user
-			vNameList = (Vector<String>) space.getItemValue("namAssist");
-			// check if one entry matches....
-			for (String username : userNameList) {
-				if (vNameList.indexOf(username) > -1) {
-					clone.replaceItemValue("isAssist", true);
-					break;
-				}
-			}
-
-			// check if user is member of team or manager list
-			boolean bMember = false;
-			if (clone.getItemValueBoolean("isTeam")
-					|| clone.getItemValueBoolean("isManager")
-					|| clone.getItemValueBoolean("isAssist"))
-				bMember = true;
-			clone.replaceItemValue("isMember", bMember);
-
-			// add custom fields into clone...
-			clone.replaceItemValue("txtdescription",
-					space.getItemValue("txtdescription"));
-
+			ItemCollection clone =cloneOrgItemCollection(space);
 			spaces.add(clone);
 
 		}
 		return spaces;
 	}
 
+	
+	/**
+	 * This method clones a given process or space ItemCollection.
+	 * The method also verifiies if the current user is manager, teammember or assit
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	private ItemCollection cloneOrgItemCollection(ItemCollection orgunit) {
+		ItemCollection clone = WorkitemHelper.clone(orgunit);
+		clone.replaceItemValue("isTeam", false);
+		clone.replaceItemValue("isManager", false);
+
+		// check the isTeam status for the current user
+		List<String> userNameList = entityService.getUserNameList();
+		Vector<String> vNameList = (Vector<String>) orgunit
+				.getItemValue("namTeam");
+		// check if one entry matches....
+		for (String username : userNameList) {
+			if (vNameList.indexOf(username) > -1) {
+				clone.replaceItemValue("isTeam", true);
+				break;
+			}
+		}
+		// check the isManager status for the current user
+		vNameList = (Vector<String>) orgunit.getItemValue("namManager");
+		// check if one entry matches....
+		for (String username : userNameList) {
+			if (vNameList.indexOf(username) > -1) {
+				clone.replaceItemValue("isManager", true);
+				break;
+			}
+		}
+
+		// check the isAssist status for the current user
+		vNameList = (Vector<String>) orgunit.getItemValue("namAssist");
+		// check if one entry matches....
+		for (String username : userNameList) {
+			if (vNameList.indexOf(username) > -1) {
+				clone.replaceItemValue("isAssist", true);
+				break;
+			}
+		}
+
+		// check if user is member of team or manager list
+		boolean bMember = false;
+		if (clone.getItemValueBoolean("isTeam")
+				|| clone.getItemValueBoolean("isManager")
+				|| clone.getItemValueBoolean("isAssist"))
+			bMember = true;
+		clone.replaceItemValue("isMember", bMember);
+
+		// add custom fields into clone...
+		clone.replaceItemValue("txtWorkflowList",
+				orgunit.getItemValue("txtWorkflowList"));
+		clone.replaceItemValue("txtdescription",
+				orgunit.getItemValue("txtdescription"));
+		clone.replaceItemValue("namTeam", orgunit.getItemValue("namTeam"));
+		clone.replaceItemValue("namManager",
+				orgunit.getItemValue("namManager"));
+		clone.replaceItemValue("namAssist",
+				orgunit.getItemValue("namAssist"));
+
+		return clone;
+	}
 }
