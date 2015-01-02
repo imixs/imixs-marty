@@ -217,6 +217,7 @@ public class UserGroupService {
 			profile.replaceItemValue("$processid", 210);
 
 			try {
+				updateUser(profile);
 				entityService.save(profile);
 			} catch (AccessDeniedException e) {
 				logger.warning("UserGroupService - unable to initialize default admin account");
@@ -224,7 +225,6 @@ public class UserGroupService {
 				// throw new RuntimeException(e);
 				return;
 			}
-			this.updateUser(profile);
 
 		}
 

@@ -95,7 +95,7 @@ public class SetupService {
 	 */
 	//@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void updateIndexList() throws AccessDeniedException  {
-		logger.info("[SetupService] starting System Setup...");
+		logger.info("[SetupService] update IndexList...");
 		// model
 		entityService.addIndex("numprocessid", EntityIndex.TYP_INT);
 		entityService.addIndex("numactivityid", EntityIndex.TYP_INT);
