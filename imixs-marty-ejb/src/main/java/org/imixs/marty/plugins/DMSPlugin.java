@@ -47,19 +47,19 @@ public class DMSPlugin extends AbstractPlugin {
 	public final static String DMS_IMPORT_PROPERTY = "txtDmsImport";
 	public final static String DEFAULT_PROTOCOLL = "file://";
 
-	private EntityService entityService = null;
+	private WorkflowService workflowService = null;
 	ItemCollection workitem = null;
 	private ItemCollection blobWorkitem = null;
 	private static Logger logger = Logger.getLogger(DMSPlugin.class.getName());
 
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
+
 		super.init(actx);
 		// check for an instance of WorkflowService
 		if (actx instanceof WorkflowService) {
 			// yes we are running in a WorkflowService EJB
-			WorkflowService ws = (WorkflowService) actx;
-			entityService = ws.getEntityService();
+			workflowService = (WorkflowService) actx;
 		}
 
 	}
@@ -72,9 +72,10 @@ public class DMSPlugin extends AbstractPlugin {
 	 **/
 	@SuppressWarnings("unchecked")
 	@Override
-	public int run(ItemCollection aworkItem, ItemCollection documentActivity) {
+	public int run(ItemCollection documentContext,
+			ItemCollection documentActivity) {
 
-		workitem = aworkItem;
+		workitem = documentContext;
 
 		// skip if the workitem is from a different type (for example Teams
 		// may not be processed by this plugin)
@@ -87,11 +88,11 @@ public class DMSPlugin extends AbstractPlugin {
 		if (blobWorkitem != null) {
 
 			// import files if txtDmsImport is defined.
-			if (aworkItem.hasItem(DMS_IMPORT_PROPERTY)) {
+			if (documentContext.hasItem(DMS_IMPORT_PROPERTY)) {
 				importFilesFromPath(workitem, blobWorkitem,
-						aworkItem.getItemValue(DMS_IMPORT_PROPERTY));
+						documentContext.getItemValue(DMS_IMPORT_PROPERTY));
 				// remove proeprty
-				aworkItem.removeItem(DMS_IMPORT_PROPERTY);
+				documentContext.removeItem(DMS_IMPORT_PROPERTY);
 			}
 
 			logger.fine("[BlobPlugin] updating $readaccess/$writeaccess for "
@@ -119,7 +120,9 @@ public class DMSPlugin extends AbstractPlugin {
 			logger.fine("[DMBPlugin] saving blobWorkitem '"
 					+ blobWorkitem.getItemValueString(EntityService.UNIQUEID)
 					+ "'...");
-			blobWorkitem = entityService.save(blobWorkitem);
+			// issue#59
+			// blobWorkitem = entityService.save(blobWorkitem);
+			workflowService.saveWorkitem(workitem, blobWorkitem);
 
 			// update property '$BlobWorkitem'
 			workitem.replaceItemValue("$BlobWorkitem",
@@ -262,6 +265,7 @@ public class DMSPlugin extends AbstractPlugin {
 	 * 
 	 * 
 	 */
+	@SuppressWarnings("unchecked")
 	private ItemCollection loadBlobWorkitem(ItemCollection parentWorkitem) {
 		ItemCollection blobWorkitem = null;
 
@@ -269,8 +273,21 @@ public class DMSPlugin extends AbstractPlugin {
 		if (parentWorkitem == null)
 			return null;
 
-		// try to load the blobWorkitem with the parentWorktiem reference....
 		String sUniqueID = parentWorkitem.getItemValueString("$uniqueid");
+
+		// first try to load it from the current documetn context
+		List<ItemCollection> currentlist = parentWorkitem
+				.getItemValue(WorkflowService.WORKITEMLIST);
+		for (ItemCollection entity : currentlist) {
+			if ("workitemlob".equals(entity.getItemValueString("type"))
+					&& (sUniqueID.equals(entity
+							.getItemValueString("$uniqueidref")))) {
+				return entity;
+			}
+		}
+
+		// try to load the blobWorkitem with the parentWorktiem reference....
+
 		if (!"".equals(sUniqueID)) {
 			// search entity...
 			String sQuery = " SELECT lobitem FROM Entity as lobitem"
@@ -279,8 +296,8 @@ public class DMSPlugin extends AbstractPlugin {
 					+ " AND t2.itemName = '$uniqueidref'"
 					+ " AND t2.itemValue = '" + sUniqueID + "'";
 
-			Collection<ItemCollection> itemcol = entityService.findAllEntities(
-					sQuery, 0, 1);
+			Collection<ItemCollection> itemcol = workflowService
+					.getEntityService().findAllEntities(sQuery, 0, 1);
 			// if blobWorkItem was found return...
 			if (itemcol != null && itemcol.size() > 0) {
 				blobWorkitem = itemcol.iterator().next();
