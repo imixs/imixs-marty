@@ -120,9 +120,7 @@ public class DMSPlugin extends AbstractPlugin {
 			logger.fine("[DMBPlugin] saving blobWorkitem '"
 					+ blobWorkitem.getItemValueString(EntityService.UNIQUEID)
 					+ "'...");
-			// issue#59
-			// blobWorkitem = entityService.save(blobWorkitem);
-			workflowService.saveWorkitem(workitem, blobWorkitem);
+			blobWorkitem = workflowService.getEntityService().save(blobWorkitem);
 
 			// update property '$BlobWorkitem'
 			workitem.replaceItemValue("$BlobWorkitem",
@@ -265,7 +263,6 @@ public class DMSPlugin extends AbstractPlugin {
 	 * 
 	 * 
 	 */
-	@SuppressWarnings("unchecked")
 	private ItemCollection loadBlobWorkitem(ItemCollection parentWorkitem) {
 		ItemCollection blobWorkitem = null;
 
@@ -275,19 +272,7 @@ public class DMSPlugin extends AbstractPlugin {
 
 		String sUniqueID = parentWorkitem.getItemValueString("$uniqueid");
 
-		// first try to load it from the current documetn context
-		List<ItemCollection> currentlist = parentWorkitem
-				.getItemValue(WorkflowService.WORKITEMLIST);
-		for (ItemCollection entity : currentlist) {
-			if ("workitemlob".equals(entity.getItemValueString("type"))
-					&& (sUniqueID.equals(entity
-							.getItemValueString("$uniqueidref")))) {
-				return entity;
-			}
-		}
-
 		// try to load the blobWorkitem with the parentWorktiem reference....
-
 		if (!"".equals(sUniqueID)) {
 			// search entity...
 			String sQuery = " SELECT lobitem FROM Entity as lobitem"
