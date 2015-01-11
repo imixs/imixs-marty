@@ -37,6 +37,7 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Event;
@@ -47,6 +48,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.transaction.UserTransaction;
 
 import org.imixs.marty.model.ProcessController;
 import org.imixs.marty.util.ErrorHandler;
@@ -83,6 +85,9 @@ public class WorkflowController extends
 		Serializable {
 
 	public static final String DEFAULT_EDITOR_ID = "form_panel_simple#basic";
+	public static String TRANSACTION_FAILED = "TRANSACTION_FAILED";
+	@Resource
+	UserTransaction userTransaction;
 
 	/* Services */
 	@EJB
@@ -479,82 +484,107 @@ public class WorkflowController extends
 			ProcessingErrorException {
 		String actionResult = null;
 
-		long lTotal = System.currentTimeMillis();
-
-		// process workItem and catch exceptions
 		try {
-			// fire event
-			long l1 = System.currentTimeMillis();
-			events.fire(new WorkflowEvent(getWorkitem(),
-					WorkflowEvent.WORKITEM_BEFORE_PROCESS));
-			logger.finest("[WorkflowController] fire WORKITEM_BEFORE_PROCESS event: ' in "
-					+ (System.currentTimeMillis() - l1) + "ms");
+			
+			long lTotal = System.currentTimeMillis();
 
-			// process workitem
-			actionResult = super.process();
+			// process workItem and catch exceptions
+			try {
+				// ---START TRANSACTION---
+				logger.fine("[WorkflowController] starting userTransaction....");
+				userTransaction.begin();
 
-			// reset versions and editor sections
-			versions = null;
-			editorSections = null;
-			// ! Do not call setWorkitem here because this fires a
-			// WORKITEM_CHANGED event !
+				
+				// fire event
+				long l1 = System.currentTimeMillis();
+				events.fire(new WorkflowEvent(getWorkitem(),
+						WorkflowEvent.WORKITEM_BEFORE_PROCESS));
+				logger.finest("[WorkflowController] fire WORKITEM_BEFORE_PROCESS event: ' in "
+						+ (System.currentTimeMillis() - l1) + "ms");
 
-			// fire event
-			long l2 = System.currentTimeMillis();
-			events.fire(new WorkflowEvent(getWorkitem(),
-					WorkflowEvent.WORKITEM_AFTER_PROCESS));
-			logger.finest("[WorkflowController] fire WORKITEM_AFTER_PROCESS event: ' in "
-					+ (System.currentTimeMillis() - l2) + "ms");
+				// process workitem
+				actionResult = super.process();
 
-			// if a action was set by the workflowController, then this
-			// action will be the action result String
-			if (action != null && !action.isEmpty()) {
-				actionResult = action;
-				// reset action
-				setAction(null);
-			}
+				// reset versions and editor sections
+				versions = null;
+				editorSections = null;
+				// ! Do not call setWorkitem here because this fires a
+				// WORKITEM_CHANGED event !
 
-		} catch (ObserverException oe) {
-			actionResult = null;
-			// test if we can handle the exception...
-			if (oe.getCause() instanceof PluginException) {
-				// add error message into current form
-				ErrorHandler.addErrorMessage((PluginException) oe.getCause());
-			} else {
-				if (oe.getCause() instanceof ValidationException) {
+				// fire event
+				long l2 = System.currentTimeMillis();
+				events.fire(new WorkflowEvent(getWorkitem(),
+						WorkflowEvent.WORKITEM_AFTER_PROCESS));
+				logger.finest("[WorkflowController] fire WORKITEM_AFTER_PROCESS event: ' in "
+						+ (System.currentTimeMillis() - l2) + "ms");
+
+				// if a action was set by the workflowController, then this
+				// action will be the action result String
+				if (action != null && !action.isEmpty()) {
+					actionResult = action;
+					// reset action
+					setAction(null);
+				}
+				
+				// ---END TRANSACTION---
+				userTransaction.commit();
+
+			} catch (ObserverException oe) {
+				userTransaction.rollback();
+				actionResult = null;
+				// test if we can handle the exception...
+				if (oe.getCause() instanceof PluginException) {
 					// add error message into current form
-					ErrorHandler.addErrorMessage((ValidationException) oe
+					ErrorHandler.addErrorMessage((PluginException) oe
 							.getCause());
 				} else {
-					// throw unknown exception
-					throw oe;
+
+					if (oe.getCause() instanceof ValidationException) {
+						// add error message into current form
+						ErrorHandler.addErrorMessage((ValidationException) oe
+								.getCause());
+					} else {
+						// throw unknown exception
+						throw oe;
+					}
 				}
+			} catch (PluginException pe) {
+				userTransaction.rollback();				
+				actionResult = null;
+				// add a new FacesMessage into the FacesContext
+				ErrorHandler.handlePluginException(pe);
 			}
-		} catch (PluginException pe) {
-			actionResult = null;
-			// add a new FacesMessage into the FacesContext
-			ErrorHandler.handlePluginException(pe);
-		}
 
-		if (logger.isLoggable(Level.FINEST)) {
-			String id = "";
-			if (getWorkitem() != null)
-				id = getWorkitem().getItemValueString(WorkflowService.UNIQUEID);
-			logger.finest("[WorkflowController] process: '" + id + "' in "
-					+ (System.currentTimeMillis() - lTotal) + "ms");
-		}
+			if (logger.isLoggable(Level.FINEST)) {
+				String id = "";
+				if (getWorkitem() != null)
+					id = getWorkitem().getItemValueString(
+							WorkflowService.UNIQUEID);
+				logger.finest("[WorkflowController] process: '" + id + "' in "
+						+ (System.currentTimeMillis() - lTotal) + "ms");
+			}
 
-		// test if actionResult contains '?workitem='
-		selectWokitemFromActionResult(actionResult);
+			// test if actionResult contains '?workitem='
+			selectWokitemFromActionResult(actionResult);
+
+		} catch (Exception e) {
+			PluginException pp = new PluginException(
+					WorkflowController.class.getSimpleName(),
+					TRANSACTION_FAILED,
+					"[WorkflowController] Error occured in current transaction: "+ e.getMessage() ,
+					e);
+
+			ErrorHandler.addErrorMessage(pp);
+		}
 
 		// return action result - null in case of an exception
 		return actionResult;
 	}
 
 	/**
-	 * This method tests if the action result of the activty starts with "workitem=" followed a
-	 * uniqueid, then the method tries to load that new workitem (in case of a list
-	 * the first will be taken) Example:
+	 * This method tests if the action result of the activty starts with
+	 * "workitem=" followed a uniqueid, then the method tries to load that new
+	 * workitem (in case of a list the first will be taken) Example:
 	 * 
 	 * <code>
 	 * /pages/workitems/workitem?workitem=23452345-2452435234&txtworkflowgroup=Auftrag
