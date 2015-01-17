@@ -30,6 +30,7 @@ package org.imixs.marty.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Logger;
@@ -42,6 +43,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProcessService;
+import org.imixs.marty.ejb.ProfileService;
+import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
@@ -54,8 +57,8 @@ import org.imixs.workflow.jee.faces.util.LoginController;
  * controller is session scoped and holds information depending on the current
  * user grants.
  * 
- * The ProcessController interacts with the application scoped ModelController
- * which holds information about the workflow models.
+ * The ProcessController can load a process and provide agregated information
+ * about the process like the Team or member lists
  * 
  * @author rsoika
  * 
@@ -73,14 +76,14 @@ public class ProcessController implements Serializable {
 	@Inject
 	protected LoginController loginController = null;
 
-	@Inject
-	protected ModelController modelController = null;
-
 	@EJB
 	protected EntityService entityService;
 
 	@EJB
 	protected ProcessService processService;
+
+	@EJB
+	protected ProfileService profileService;
 
 	private static Logger logger = Logger.getLogger(ProcessController.class
 			.getName());
@@ -114,6 +117,47 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
+	 * Loads a process entity by its UniqueID from the internal cache and
+	 * updates the current process entity.
+	 * 
+	 * @param uniqueid
+	 *            - of process entity
+	 * 
+	 * @return current process entity
+	 */
+	public ItemCollection loadProcess(String uniqueid) {
+		if (this.process == null
+				|| !this.process.getItemValue(EntityService.UNIQUEID).equals(
+						uniqueid)) {
+			setProcess(this.getProcessById(uniqueid));
+		}
+		return getProcess();
+	}
+
+	/**
+	 * Returns the process for a given uniqueID. The method uses the internal
+	 * cache.
+	 * 
+	 * @param uniqueId
+	 * @return itemCollection of process or null if not process with the
+	 *         specified id exists
+	 */
+	public ItemCollection getProcessById(String uniqueId) {
+
+		if (uniqueId != null && !uniqueId.isEmpty()) {
+			// iterate over all spaces and compare the $UniqueIDRef
+			List<ItemCollection> list = getProcessList();
+			for (ItemCollection process : list) {
+				if (uniqueId.equals(process
+						.getItemValueString(EntityService.UNIQUEID))) {
+					return process;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * This method returns all process entities - indepenedend if the current
 	 * user is member of.
 	 * 
@@ -141,6 +185,7 @@ public class ProcessController implements Serializable {
 	 * 
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public List<ItemCollection> getSpaces() {
 		if (spaces == null) {
 			spaces = new ArrayList<ItemCollection>();
@@ -240,28 +285,6 @@ public class ProcessController implements Serializable {
 		}
 		return null;
 
-	}
-
-	/**
-	 * Returns the process for a given uniqueID.
-	 * 
-	 * @param uniqueId
-	 * @return itemCollection of process or null if not process with the
-	 *         specified id exists
-	 */
-	public ItemCollection getProcessById(String uniqueId) {
-
-		if (uniqueId != null && !uniqueId.isEmpty()) {
-			// iterate over all spaces and compare the $UniqueIDRef
-			List<ItemCollection> list = getProcessList();
-			for (ItemCollection process : list) {
-				if (uniqueId.equals(process
-						.getItemValueString(EntityService.UNIQUEID))) {
-					return process;
-				}
-			}
-		}
-		return null;
 	}
 
 	/**
@@ -398,13 +421,115 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
+	 * Returns a unique sorted list of managers for the current project. The
+	 * returned list contains cloned user profile entities.
+	 * 
+	 *
+	 * @return list of profile entities for the current team managers
+	 */
+	public List<ItemCollection> getManagers(String aUniqueID) {
+		List<ItemCollection> resultList = getMemberListByRole(aUniqueID,"namManager");
+
+		// sort by username..
+		Collections.sort(resultList,
+				new WorkitemComparator("txtUserName", true));
+
+		return resultList;
+	}
+
+	/**
+	 * Returns a unique sorted list of team members for the current project. The
+	 * returned list contains cloned user profile entities.
+	 * 
+	 *
+	 * @return list of profile entities for the current team members
+	 */
+	public List<ItemCollection> getTeam(String aUniqueID) {
+		List<ItemCollection> resultList = getMemberListByRole(aUniqueID,"namTeam");
+
+		// sort by username..
+		Collections.sort(resultList,
+				new WorkitemComparator("txtUserName", true));
+
+		return resultList;
+	}
+
+	/**
+	 * Returns a unique sorted list of assist members for the current project.
+	 * The returned list contains cloned user profile entities.
+	 * 
+	 *
+	 * @return list of profile entities for the current team members
+	 */
+	public List<ItemCollection> getAssist(String aUniqueID) {
+		List<ItemCollection> resultList = getMemberListByRole(aUniqueID,"namAssist");
+
+		// sort by username..
+		Collections.sort(resultList,
+				new WorkitemComparator("txtUserName", true));
+
+		return resultList;
+	}
+
+	/**
+	 * Returns a unique sorted list of all members (Managers, Team, Assist) for
+	 * the current project. The returned list contains cloned user profile
+	 * entities.
+	 * 
+	 *
+	 * @return list of profile entities for the current team members
+	 */
+	public List<ItemCollection> getProcessMembers(String aUniqueID) {
+		List<ItemCollection> resultList = new ArrayList<ItemCollection>();
+		List<String> dupplicatedIds = new ArrayList<String>();
+
+		List<ItemCollection> assistList = getMemberListByRole(aUniqueID,"namAssist");
+		List<ItemCollection> teamList = getMemberListByRole(aUniqueID,"namTeam");
+		List<ItemCollection> managerList = getMemberListByRole(aUniqueID,"namManager");
+
+		for (ItemCollection profile : teamList) {
+			// avoid duplicates..
+			if (!dupplicatedIds.contains(profile
+					.getItemValueString(EntityService.UNIQUEID))) {
+				resultList.add(profile);
+			}
+			dupplicatedIds.add(profile
+					.getItemValueString(EntityService.UNIQUEID));
+		}
+		for (ItemCollection profile : managerList) {
+			// avoid duplicates..
+			if (!dupplicatedIds.contains(profile
+					.getItemValueString(EntityService.UNIQUEID))) {
+				resultList.add(profile);
+			}
+			dupplicatedIds.add(profile
+					.getItemValueString(EntityService.UNIQUEID));
+		}
+		for (ItemCollection profile : assistList) {
+			// avoid duplicates..
+			if (!dupplicatedIds.contains(profile
+					.getItemValueString(EntityService.UNIQUEID))) {
+				resultList.add(profile);
+			}
+			dupplicatedIds.add(profile
+					.getItemValueString(EntityService.UNIQUEID));
+		}
+
+		// sort by username..
+		Collections.sort(resultList,
+				new WorkitemComparator("txtUserName", true));
+
+		return resultList;
+	}
+
+	/**
 	 * Returns true if current user is manager of a given space or process
 	 * entity. Therefore the method checks the cloned field 'isManager'
 	 * 
 	 * @return
 	 */
 	public boolean isManagerOf(String aUniqueID) {
-		// find Space entity
+		// find Process/Space entity
 		ItemCollection entity = getEntityById(aUniqueID);
 		if (entity != null)
 			return entity.getItemValueBoolean("isManager");
@@ -453,8 +578,6 @@ public class ProcessController implements Serializable {
 
 	}
 
-
-
 	/**
 	 * WorkflowEvent listener
 	 * 
@@ -481,6 +604,42 @@ public class ProcessController implements Serializable {
 			}
 		}
 
+	}
+
+	/**
+	 * Returns a unique sorted list of profile itemCollections for a team list
+	 * in a project. The returned list contains cloned user profile
+	 * entities.
+	 * 
+	 * @param listType
+	 *            - the member field of the project (namTeam, namManager,
+	 *            namAssist)
+	 * @return list of team profiles
+	 */
+	@SuppressWarnings("unchecked")
+	private List<ItemCollection> getMemberListByRole(String aUniqueID,
+			String role) {
+		List<ItemCollection> resultList = new ArrayList<ItemCollection>();
+		List<String> dupplicatedIds = new ArrayList<String>();
+	
+		// find Process/Space entity
+		ItemCollection entity = getEntityById(aUniqueID);
+		if (entity == null)
+			return resultList;
+	
+		List<String> members = entity.getItemValue(role);
+		for (String member : members) {
+			// avoid duplicates..
+			if (!dupplicatedIds.contains(member)) {
+				ItemCollection profile = profileService.findProfileById(member);
+				if (profile != null) {
+					resultList.add(profile);
+				}
+				dupplicatedIds.add(member);
+			}
+		}
+	
+		return resultList;
 	}
 
 }
