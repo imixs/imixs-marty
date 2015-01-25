@@ -427,18 +427,14 @@ public class ModelController implements Serializable {
 	 * 
 	 */
 	public void doUploadModel(ActionEvent event) {
-
-		List<FileData> fileList = fileUploadController.getUploadedFiles();
+		List<FileData> fileList = fileUploadController.getUploades();
 		for (FileData file : fileList) {
 
 			logger.info("ModelController - starting xml model file upload: "
 					+ file.getName());
 			setupService.importXmlEntityData(file.getData());
-
 		}
-
-		fileUploadController.doClear(null);
-
+		fileUploadController.reset();
 		// reinitialize models
 		reset();
 	}

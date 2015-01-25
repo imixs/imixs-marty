@@ -8,9 +8,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Vector;
 import java.util.logging.Logger;
 
@@ -24,18 +25,19 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
+ * The DMS Plugin stores attached files of a workitem into a separated
+ * BlobWorkitem and stores DMS meta data into the workitem.
  * 
- * The Plugin computes the read and write access for the blobworkitem attached
- * to the processed workItem. The Plugin should run immediate after the
+ * The Plugin computes the read and write access for the BlobWorkitem based on
+ * the ACL of the processed workItem. The Plugin should run immediate after the
  * AccessPlugin.
  * 
  * The Plugin only runs in workItems type=workitem or type=workitemarchive
  * 
- * The plugin provides additional static methods to set and get the 'dms'
- * property for a workitem. This property stores meta information for uploaded
- * filed.
+ * The plugin provides additional static methods to set and get the DMS metadata
+ * for a workitem. The DMS meta data is stored in the property $dms.
  * 
- * 
+ * The DMS Plugin also provides a mechanism to import files from the filesystem.
  * If the workitem contains the property 'txtDmsImport" all files from the given
  * path will be added into the blobWorkitem
  * 
@@ -46,6 +48,7 @@ public class DMSPlugin extends AbstractPlugin {
 
 	public final static String DMS_IMPORT_PROPERTY = "txtDmsImport";
 	public final static String DEFAULT_PROTOCOLL = "file://";
+	public final static String BLOBWORKITEMID = "$BlobWorkitem";
 
 	private WorkflowService workflowService = null;
 	ItemCollection workitem = null;
@@ -69,6 +72,10 @@ public class DMSPlugin extends AbstractPlugin {
 	 * 
 	 * If the workitem contains the property 'txtDmsImport" all files from the
 	 * given path will be added into the blobWorkitem
+	 * 
+	 * If a file contained in the property '$file' is not part of the property
+	 * 'dms' the method will automatically create a new dms entry by calling the
+	 * method updateDmsList.
 	 **/
 	@SuppressWarnings("unchecked")
 	@Override
@@ -85,50 +92,50 @@ public class DMSPlugin extends AbstractPlugin {
 
 		// load the blobWorkitem and update read- and write access
 		blobWorkitem = loadBlobWorkitem(workitem);
-		if (blobWorkitem != null) {
 
-			// import files if txtDmsImport is defined.
-			if (documentContext.hasItem(DMS_IMPORT_PROPERTY)) {
-				importFilesFromPath(workitem, blobWorkitem,
-						documentContext.getItemValue(DMS_IMPORT_PROPERTY));
-				// remove proeprty
-				documentContext.removeItem(DMS_IMPORT_PROPERTY);
-			}
-
-			logger.fine("[BlobPlugin] updating $readaccess/$writeaccess for "
-					+ workitem.getItemValueString(EntityService.UNIQUEID));
-
-			// Update Read and write access list from parent workitem
-			List<?> vAccess = workitem.getItemValue("$ReadAccess");
-			blobWorkitem.replaceItemValue("$ReadAccess", vAccess);
-
-			vAccess = workitem.getItemValue("$WriteAccess");
-			blobWorkitem.replaceItemValue("$WriteAccess", vAccess);
-
-			blobWorkitem.replaceItemValue("$uniqueidRef",
-					workitem.getItemValueString(EntityService.UNIQUEID));
-			blobWorkitem.replaceItemValue("type", "workitemlob");
-
-			// Update BlobWorkitem
-			// new transaction....
-			// blobWorkitem = this.getEjbSessionContext()
-			// .getBusinessObject(WorkflowService.class)
-			// .getEntityService().saveByNewTransaction(blobWorkitem);
-			//
-			// Note: Because of issue #47 I decided to do not save the blob
-			// workitem in an isolated transaction!
-			logger.fine("[DMBPlugin] saving blobWorkitem '"
-					+ blobWorkitem.getItemValueString(EntityService.UNIQUEID)
-					+ "'...");
-			blobWorkitem = workflowService.getEntityService().save(blobWorkitem);
-
-			// update property '$BlobWorkitem'
-			workitem.replaceItemValue("$BlobWorkitem",
-					blobWorkitem.getItemValueString(EntityService.UNIQUEID));
+		if (blobWorkitem == null) {
+			logger.warning("[DMSPlugin] can't access blobworkitem for '"
+					+ workitem.getItemValueString(WorkflowService.UNIQUEID)
+					+ "'");
+			return Plugin.PLUGIN_WARNING;
 		}
 
+		// import files if txtDmsImport is defined.
+		if (documentContext.hasItem(DMS_IMPORT_PROPERTY)) {
+			importFilesFromPath(workitem, blobWorkitem,
+					documentContext.getItemValue(DMS_IMPORT_PROPERTY));
+			// remove proeprty
+			documentContext.removeItem(DMS_IMPORT_PROPERTY);
+		}
+
+		logger.fine("[DMSPlugin] updating $readaccess/$writeaccess for "
+				+ workitem.getItemValueString(WorkflowService.UNIQUEID));
+
+		// Update Read and write access list from parent workitem
+		List<?> vAccess = workitem.getItemValue("$ReadAccess");
+		blobWorkitem.replaceItemValue("$ReadAccess", vAccess);
+
+		vAccess = workitem.getItemValue("$WriteAccess");
+		blobWorkitem.replaceItemValue("$WriteAccess", vAccess);
+
+		blobWorkitem.replaceItemValue("$uniqueidRef",
+				workitem.getItemValueString(WorkflowService.UNIQUEID));
+		blobWorkitem.replaceItemValue("type", "workitemlob");
+
+		logger.fine("[DMBPlugin] saving blobWorkitem '"
+				+ blobWorkitem.getItemValueString(EntityService.UNIQUEID)
+				+ "'...");
+
+		// update file content and save BlobWorkitem...
+		updateFileContent(workitem, blobWorkitem);
+		blobWorkitem = workflowService.getEntityService().save(blobWorkitem);
+
+		// update property '$BlobWorkitem'
+		workitem.replaceItemValue(BLOBWORKITEMID,
+				blobWorkitem.getItemValueString(EntityService.UNIQUEID));
+
 		// update the dms list - e.g. if another plugin had added a file....
-		updateDMSList(workitem);
+		updateDmsList(workitem, this.getUserName());
 
 		return Plugin.PLUGIN_OK;
 	}
@@ -139,14 +146,11 @@ public class DMSPlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * This method creates a new dmsList and reads all existing dms meta data
-	 * from the current workItem. The meta data is read from the property 'dms'.
+	 * This method returns a list of ItemCollections for all DMS elements
+	 * attached to the current workitem. The DMS meta data is read from the
+	 * property 'dms'.
 	 * 
-	 * If a file contained in the property '$file' is not part of the property
-	 * 'dms' the method will automatically create a new dms entry by calling the
-	 * method updateDmsList.
-	 * 
-	 * The dms property is saved during processing the workiItem.
+	 * The dms property is updated in the run() method of this Plugin.
 	 * 
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -167,100 +171,163 @@ public class DMSPlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * Stores a given List of Meta information stored in ItemCollections into a
-	 * List of Map Entries
+	 * This method adds a new entry into the dms property. The method returns
+	 * the updated DMS List
 	 * 
-	 * This method also adds empty dms entries for new uploaded files or
-	 * filesnames which are still not contained in the dms list.
+	 */
+	@SuppressWarnings("rawtypes")
+	public static List<ItemCollection> addDMSEntry(ItemCollection aworkitem,
+			ItemCollection dmsEntity) {
+
+		List<ItemCollection> dmsList = DMSPlugin.getDmsList(aworkitem);
+		String sNewName = dmsEntity.getItemValueString("txtName");
+		String sNewUrl = dmsEntity.getItemValueString("url");
+
+		// test if the entry already exists - than overwrite it....
+		for (Iterator<ItemCollection> iterator = dmsList.iterator(); iterator
+				.hasNext();) {
+			ItemCollection admsEntry = iterator.next();
+			String sName = admsEntry.getItemValueString("txtName");
+			String sURL = admsEntry.getItemValueString("url");
+			if (sURL.endsWith(sNewUrl) && sName.equals(sNewName)) {
+				// Remove the current element from the iterator and the list.
+				iterator.remove();
+				logger.fine("[DMSPlugin] remove dms entry '" + sName + "'");
+			}
+		}
+
+		dmsList.add(dmsEntity);
+
+		// finally we reconvert the List<ItemCollection> into a List<Map>
+		List<Map> vDMSnew = new ArrayList<Map>();
+		for (ItemCollection dmsEntry : dmsList) {
+			vDMSnew.add(dmsEntry.getAllItems());
+		}
+		aworkitem.replaceItemValue("dms", vDMSnew);
+
+		return dmsList;
+
+	}
+
+	/**
+	 * This method updates the property 'dms' with the meta data of attached
+	 * files or links.
+	 * 
+	 * This method creates new empty DMS entries for new uploaded files which
+	 * are still not contained in the dms list.
 	 * 
 	 * 
 	 * @param aWorkitem
 	 * @param dmsList
 	 *            - map with meta information for each file entry
-	 * @param username
-	 *            - optional username for new file entries
-	 * @param comment
-	 *            - optional comment for new file entries
+	 * @param defaultUsername
+	 *            - default username for new dms entries
 	 * 
 	 * */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static void setDmsList(ItemCollection aWorkitem,
-			List<ItemCollection> dmsList, String username, String comment) {
-		Vector<Map> vDMSnew = new Vector<Map>();
-		for (ItemCollection aEntry : dmsList) {
-			vDMSnew.add(aEntry.getAllItems());
+	@SuppressWarnings({ "rawtypes" })
+	private void updateDmsList(ItemCollection aWorkitem, String defaultUsername) {
+
+		List<ItemCollection> currentDmsList = getDmsList(aWorkitem);
+		List<String> currentFileList = aWorkitem.getFileNames();
+		String blobWorkitemId = aWorkitem.getItemValueString(BLOBWORKITEMID);
+
+		// first we remove all DMS entries which did not have a matching
+		// $File-Entry and are not from type link
+		for (Iterator<ItemCollection> iterator = currentDmsList.iterator(); iterator
+				.hasNext();) {
+			ItemCollection dmsEntry = iterator.next();
+			String sName = dmsEntry.getItemValueString("txtName");
+			String sURL = dmsEntry.getItemValueString("url");
+			if (sURL.isEmpty() && !currentFileList.contains(sName)) {
+				// Remove the current element from the iterator and the list.
+				iterator.remove();
+				logger.fine("[DMSPlugin] remove dms entry '" + sName + "'");
+			}
 		}
 
-		// check if some files are missing.....
-		List<String> files = aWorkitem.getFileNames();
-
-		String blobWorkitemId = aWorkitem.getItemValueString("$BlobWorkitem");
-		if (blobWorkitemId.isEmpty()) {
-			// WARNING we have no $BlobWorkitem - link can not be computed
-			logger.warning("[DMSPlugin] Workitem '"
-					+ aWorkitem.getItemValueString(EntityService.UNIQUEID)
-					+ "' $BlobWorkitem in is empty. File URL can not be computed!");
-		}
-
-		// now we test for each file entry if a dms meta data entry still
+		// now we test for each file entry if a dms meta data entry
 		// exists. If not we create a new one...
-		for (String aFilename : files) {
+		for (String aFilename : currentFileList) {
 
-			// test filename already exists
-			Map itemCol = findMetadata(aFilename, vDMSnew);
-			if (itemCol == null) {
+			if (findDMSEntry(aFilename, currentDmsList) == null) {
 				// no meta data exists.... create a new meta object
-				Map dmsEntry = new HashMap();
-				dmsEntry.put("txtname", aFilename);
-				dmsEntry.put("$uniqueidRef", blobWorkitemId);
-				dmsEntry.put("$created", new Date());
-				dmsEntry.put("namCreator", username);
-				dmsEntry.put("txtcomment", comment);
-				vDMSnew.add(dmsEntry);
+				ItemCollection dmsEntry = new ItemCollection();
+				dmsEntry.replaceItemValue("txtname", aFilename);
+				dmsEntry.replaceItemValue("$uniqueidRef", blobWorkitemId);
+				dmsEntry.replaceItemValue("$created", new Date());
+				dmsEntry.replaceItemValue("namCreator", defaultUsername);
+				dmsEntry.replaceItemValue("txtcomment", "");
+				currentDmsList.add(dmsEntry);
 			}
 
 		}
 
+		// finally we reconvert the List<ItemCollection> into a List<Map>
+		List<Map> vDMSnew = new ArrayList<Map>();
+		for (ItemCollection dmsEntry : currentDmsList) {
+			vDMSnew.add(dmsEntry.getAllItems());
+		}
 		aWorkitem.replaceItemValue("dms", vDMSnew);
 	}
 
 	/**
-	 * Stores a given List of Meta information stored in ItemCollections into a
-	 * List of Map Entries
-	 * 
-	 * This method also adds empty dms entries for new uploaded files or
-	 * filesnames which are still not contained in the dms list. Username and
-	 * comment will be empty for these entries. see optional method
-	 * 
+	 * This method transfers the File content of the workitem into the blob
+	 * workitem. The workitem will only hold a empty byte array for files
 	 * 
 	 * @param aWorkitem
-	 * @param dmsList
-	 *            - map with meta information for each file entry
-	 * 
-	 * */
-	public static void setDmsList(ItemCollection aWorkitem,
-			List<ItemCollection> dmsList) {
-		setDmsList(aWorkitem, dmsList, null, null);
-	}
-
-	/**
-	 * This Method updates the DMS entry. The method verifies if a new file was
-	 * added (e.g. from the ReportPlugin). If the $files contains a filename not
-	 * listed in the current DMS entry the method updates this prperty.
-	 * 
+	 * @param aBlobWorkitem
 	 */
-	private void updateDMSList(ItemCollection aWorkitem) {
-		List<ItemCollection> dmsList = getDmsList(aWorkitem);
-		setDmsList(aWorkitem, dmsList);
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private void updateFileContent(ItemCollection aWorkitem,
+			ItemCollection aBlobWorkitem) {
+		// check files from master workitem
+		Map<String, Vector<?>> files = aWorkitem.getFiles();
+		if (files==null) {
+			aBlobWorkitem.removeItem("$file");
+			return;
+		}
+		
+		
+		for (Entry<String, Vector< ?>> entry : files.entrySet()) {
+			String sFileName = entry.getKey();
+			Vector file = entry.getValue();
+
+			// if data size >0 transfer file into blob
+			if (file.size()>=2) {	
+				String contentType=(String) file.get(0);
+				byte[]  data= (byte[]) file.get(1);
+				if (data!=null && data.length>1) {
+					// move...
+					aBlobWorkitem.addFile(data, sFileName, contentType);
+					// empty data...
+					byte[] empty = { 0 };
+					// add the file name (with empty data) into the
+					// parentWorkitem.
+					aWorkitem.addFile(empty, sFileName, "");
+				}
+			}
+		}
+		// now we remove all files form the blobWorkitem which are not part of the workitem
+		List<String> currentFileNames=aWorkitem.getFileNames();
+		List<String> blobFileNames=aBlobWorkitem.getFileNames();
+		List<String> removeList=new ArrayList<String>();
+		for (String aname:blobFileNames ) {
+			if (!currentFileNames.contains(aname)) {
+				removeList.add(aname);
+			}
+		}
+		for (String aname:removeList ) {
+			aBlobWorkitem.removeFile(aname);
+		}
+
 	}
 
 	/**
 	 * This method loads the BlobWorkitem for a given parent WorkItem. The
-	 * BlobWorkitem is identified by the $unqiueidRef. If no BlobWorkitem still
-	 * exists the method creates a new empty BlobWorkitem which can be saved
-	 * later.
+	 * BlobWorkitem is identified by the $unqiueidRef.
 	 * 
-	 * 
+	 * If no BlobWorkitem still exists the method creates a new empty
+	 * BlobWorkitem which can be saved later.
 	 * 
 	 */
 	private ItemCollection loadBlobWorkitem(ItemCollection parentWorkitem) {
@@ -270,7 +337,8 @@ public class DMSPlugin extends AbstractPlugin {
 		if (parentWorkitem == null)
 			return null;
 
-		String sUniqueID = parentWorkitem.getItemValueString("$uniqueid");
+		String sUniqueID = parentWorkitem
+				.getItemValueString(WorkflowService.UNIQUEID);
 
 		// try to load the blobWorkitem with the parentWorktiem reference....
 		if (!"".equals(sUniqueID)) {
@@ -317,18 +385,15 @@ public class DMSPlugin extends AbstractPlugin {
 	 * 
 	 * @return
 	 */
-	@SuppressWarnings("rawtypes")
-	private static Map findMetadata(String aFilename, List<Map> dmsList) {
+	private static ItemCollection findDMSEntry(String aFilename,
+			List<ItemCollection> dmsList) {
 
-		for (Map mapEntry : dmsList) {
+		for (ItemCollection dmsEntry : dmsList) {
 			// test if filename matches...
-			ItemCollection itemCol = new ItemCollection(mapEntry);
-			String sName = itemCol.getItemValueString("txtname");
+			String sName = dmsEntry.getItemValueString("txtname");
 			if (sName.equals(aFilename))
-				return mapEntry;
-
+				return dmsEntry;
 		}
-
 		// no matching meta data found!
 		return null;
 	}

@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
 import javax.faces.context.ExternalContext;
@@ -44,7 +43,6 @@ import javax.inject.Named;
 import org.imixs.marty.plugins.DMSPlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
 import org.imixs.workflow.jee.faces.util.LoginController;
 
@@ -82,19 +80,19 @@ public class DmsController implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private List<ItemCollection> dmsList = null;
-	private ItemCollection blobWorkitem = null;
+	// private ItemCollection blobWorkitem = null;
 	private String link = null;
 
-	@PostConstruct
-	public void init() {
-
-		FacesContext ctx = FacesContext.getCurrentInstance();
-		String path = ctx.getExternalContext().getRequestContextPath();
-
-		fileUploadController.setRestServiceURI(path
-				+ "/rest-service/workflow/workitem/");
-
-	}
+	// @PostConstruct
+	// public void init() {
+	//
+	// FacesContext ctx = FacesContext.getCurrentInstance();
+	// String path = ctx.getExternalContext().getRequestContextPath();
+	//
+	// // fileUploadController.setRestServiceURI(path
+	// // + "/rest-service/workflow/workitem/");
+	//
+	// }
 
 	public String getLink() {
 		return link;
@@ -104,11 +102,12 @@ public class DmsController implements Serializable {
 		this.link = link;
 	}
 
-	public void setFileUploadController(FileUploadController fleUploadController) {
-		this.fileUploadController = fleUploadController;
-
-		init();
-	}
+	// public void setFileUploadController(FileUploadController
+	// fleUploadController) {
+	// this.fileUploadController = fleUploadController;
+	//
+	// init();
+	// }
 
 	/**
 	 * WorkflowEvent listener to update the DMS property if a WorkItem has
@@ -146,28 +145,32 @@ public class DmsController implements Serializable {
 				|| WorkflowEvent.WORKITEM_BEFORE_SAVE == eventType) {
 
 			// load/create the blobWorkitem.....
-			blobWorkitem = workflowController.loadBlobWorkitem(workflowEvent
-					.getWorkitem());
+			// blobWorkitem = workflowController.loadBlobWorkitem(workflowEvent
+			// .getWorkitem());
+			//
+			// // if the BlobWorkitem was just created than we did not have yet
+			// set
+			// // the field $BlobWorkitem
+			// // so we update this property here
+			// workflowEvent.getWorkitem().replaceItemValue("$BlobWorkitem",
+			// blobWorkitem.getItemValueString(EntityService.UNIQUEID));
+			//
+			// // add new attachmetns
+			// fileUploadController.updateWorkitem(blobWorkitem, false);
+			// // save blob workitem for further processing through plugins
+			// blobWorkitem = workflowController.saveBlobWorkitem(blobWorkitem,
+			// workflowEvent.getWorkitem());
+			//
+			// // update the file info for the current workitem
+			// fileUploadController.updateWorkitem(workflowEvent.getWorkitem(),
+			// true);
 
-			// if the BlobWorkitem was just created than we did not have yet set
-			// the field $BlobWorkitem
-			// so we update this property here
-			workflowEvent.getWorkitem().replaceItemValue("$BlobWorkitem",
-					blobWorkitem.getItemValueString(EntityService.UNIQUEID));
-
-			// add new attachmetns
-			fileUploadController.updateWorkitem(blobWorkitem, false);
-			// save blob workitem for further processing through plugins
-			blobWorkitem = workflowController.saveBlobWorkitem(blobWorkitem,
-					workflowEvent.getWorkitem());
-
-			// update the file info for the current workitem
-			fileUploadController.updateWorkitem(workflowEvent.getWorkitem(),
-					true);
+			// add files
+			fileUploadController.updateWorkitem(workflowEvent.getWorkitem());
 
 			// store the dms list
-			DMSPlugin.setDmsList(workflowEvent.getWorkitem(), dmsList,
-					loginController.getUserPrincipal(), "");
+			// DMSPlugin.setDmsList(workflowEvent.getWorkitem(), dmsList,
+			// loginController.getUserPrincipal(), "");
 
 		}
 
@@ -175,16 +178,8 @@ public class DmsController implements Serializable {
 		if (WorkflowEvent.WORKITEM_CHANGED == eventType
 				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == eventType
 				|| WorkflowEvent.WORKITEM_AFTER_SAVE == eventType) {
-			fileUploadController.doClear(null);
-			if (workflowEvent.getWorkitem() != null) {
-				fileUploadController.setWorkitemID(workflowEvent.getWorkitem()
-						.getItemValueString("$BlobWorkitem"));
-				fileUploadController.setAttachedFiles(workflowEvent
-						.getWorkitem().getFileNames());
-			}
-			// reset blobWorkitem
-			blobWorkitem = null;
-			// load dms list
+
+			fileUploadController.reset();
 
 			dmsList = DMSPlugin.getDmsList(workflowEvent.getWorkitem());
 		}
@@ -221,8 +216,10 @@ public class DmsController implements Serializable {
 		}
 
 		// now remove the entry also from the $file property
-		fileUploadController.removeAttachmentAction(aFile);
-		workflowController.getWorkitem().removeFile(aFile);
+		fileUploadController.removeAttachedFile(
+				workflowController.getWorkitem(), aFile);
+		// .removeAttachmentAction(aFile);
+		// workflowController.getWorkitem().removeFile(aFile);
 
 	}
 
@@ -244,16 +241,16 @@ public class DmsController implements Serializable {
 			ExternalContext externalContext = context.getExternalContext();
 			String remoteUser = externalContext.getRemoteUser();
 
-			ItemCollection itemCol = new ItemCollection();
-			itemCol.replaceItemValue("url", sLink);
+			ItemCollection dmsEntry = new ItemCollection();
+			dmsEntry.replaceItemValue("url", sLink);
 
-			itemCol.replaceItemValue("$created", new Date());
-			itemCol.replaceItemValue("$modified", new Date());
-			itemCol.replaceItemValue("namCreator", remoteUser);
-			itemCol.replaceItemValue("txtName", sLink);
-			dmsList.add(itemCol);
+			dmsEntry.replaceItemValue("$created", new Date());
+			dmsEntry.replaceItemValue("$modified", new Date());
+			dmsEntry.replaceItemValue("namCreator", remoteUser);
+			dmsEntry.replaceItemValue("txtName", sLink);
 
-			DMSPlugin.setDmsList(workflowController.getWorkitem(), dmsList);
+			dmsList = DMSPlugin.addDMSEntry(workflowController.getWorkitem(),
+					dmsEntry);
 
 			// clear link
 			setLink("");
