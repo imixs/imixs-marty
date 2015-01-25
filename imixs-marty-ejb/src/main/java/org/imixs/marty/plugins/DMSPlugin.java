@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Map.Entry;
 import java.util.Vector;
 import java.util.logging.Logger;
 
+import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
@@ -167,6 +169,9 @@ public class DMSPlugin extends AbstractPlugin {
 			dmsList.add(new ItemCollection(aMetadata));
 		}
 
+		// sort list by name
+		Collections.sort(dmsList, new WorkitemComparator("txtname", true));
+		
 		return dmsList;
 	}
 
