@@ -27,11 +27,22 @@ public class WorkitemComparator implements Comparator<ItemCollection> {
 		itemName = aItemName;
 	}
 
+	/**
+	 * This method tries to get the locale form the current Faces Context. If no
+	 * faces Context exists, then the method get the default locale form the JVM.
+	 * 
+	 * @param aItemName
+	 * @param ascending
+	 */
 	public WorkitemComparator(String aItemName, boolean ascending) {
-		// get user locale...
-		Locale locale = FacesContext.getCurrentInstance().getViewRoot()
-				.getLocale();
-
+		Locale locale = null;
+		// try to get user locale...
+		if (FacesContext.getCurrentInstance() != null) {
+			locale = FacesContext.getCurrentInstance().getViewRoot()
+					.getLocale();
+		} else {
+			locale = Locale.getDefault();
+		}
 		this.collator = Collator.getInstance(locale);
 		this.ascending = ascending;
 		itemName = aItemName;
@@ -55,7 +66,8 @@ public class WorkitemComparator implements Comparator<ItemCollection> {
 
 		// integer compare?
 		if (a.isItemValueInteger(itemName)) {
-			int result = a.getItemValueInteger(itemName)-b.getItemValueInteger(itemName);
+			int result = a.getItemValueInteger(itemName)
+					- b.getItemValueInteger(itemName);
 			if (!this.ascending) {
 				result = -result;
 			}
