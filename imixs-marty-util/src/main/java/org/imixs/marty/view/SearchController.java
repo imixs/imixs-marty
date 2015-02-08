@@ -117,6 +117,14 @@ public class SearchController extends
 		searchFilter.replaceItemValue("type", "workitem");
 		super.doReset(event);
 	}
+	@Override
+	public void doReset() {
+		searchFilter = new ItemCollection();
+		searchFilter.replaceItemValue("type", "workitem");
+		super.doReset();
+	}
+	
+	
 
 	/**
 	 * Resets the search filter but not the search phrase (txtSearch) The method
