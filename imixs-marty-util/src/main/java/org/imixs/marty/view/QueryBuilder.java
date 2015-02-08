@@ -205,10 +205,19 @@ public class QueryBuilder implements IQueryBuilder {
 			sSearchTerm += " (namowner:\"" + sOwner.toLowerCase() + "\") AND";
 		}
 
-		int processID = searchFilter.getItemValueInteger("$ProcessID");
-		if (processID > 0)
-			sSearchTerm += " ($processid:" + processID + ") AND";
-
+		List<Integer> processIDs = searchFilter.getItemValue("$ProcessID");
+		if (!processIDs.isEmpty()) {
+			sSearchTerm += " (";
+			Iterator<Integer> iteratorID = processIDs.iterator();
+			while (iteratorID.hasNext()) {
+				sSearchTerm += "$processid:\"" + iteratorID.next() + "\"";
+				if (iteratorID.hasNext())
+					sSearchTerm += " OR ";
+			}
+			sSearchTerm += " ) AND";
+		}		
+		
+		
 		// Search phrase....
 		String searchphrase = searchFilter.getItemValueString("txtSearch");
 
@@ -270,7 +279,7 @@ public class QueryBuilder implements IQueryBuilder {
 	@Override
 	@SuppressWarnings("unchecked")
 	public String getJPQLStatement(ItemCollection searchFilter, String view) {
-		int processID = searchFilter.getItemValueInteger("$ProcessID");
+		List<Integer> processIDs = searchFilter.getItemValue("$ProcessID");
 
 		List<String> processRefList = searchFilter
 				.getItemValue("txtProcessRef");
@@ -309,7 +318,7 @@ public class QueryBuilder implements IQueryBuilder {
 			sQuery += " JOIN wi.textItems as sref ";
 		if (!workflowGroups.isEmpty())
 			sQuery += " JOIN wi.textItems as groups ";
-		if (processID > 0)
+		if (!processIDs.isEmpty())
 			sQuery += " JOIN wi.integerItems as processid ";
 
 		// convert type list into comma separated list
@@ -365,10 +374,14 @@ public class QueryBuilder implements IQueryBuilder {
 
 		}
 
-		if (processID > 0)
-			sQuery += " AND processid.itemName = '$processid' AND processid.itemValue ='"
-					+ processID + "'";
-
+		if (!processIDs.isEmpty()) {
+			sQuery += " AND processid.itemName = '$processid' AND processid.itemValue IN (";
+			for (int aid : processIDs) {
+				sQuery += "'" + aid + "',";
+			}
+			sQuery = sQuery.substring(0, sQuery.length() - 1);
+			sQuery += " )";	
+		}
 		// add ORDER BY phrase
 
 		// read configuration for the sort order
