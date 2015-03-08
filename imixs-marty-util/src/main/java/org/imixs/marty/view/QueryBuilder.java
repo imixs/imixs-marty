@@ -280,7 +280,10 @@ public class QueryBuilder implements IQueryBuilder {
 	@SuppressWarnings("unchecked")
 	public String getJPQLStatement(ItemCollection searchFilter, String view) {
 		List<Integer> processIDs = searchFilter.getItemValue("$ProcessID");
-
+		// trim processIDs
+		while (processIDs.contains(""))
+			processIDs.remove("");
+		
 		List<String> processRefList = searchFilter
 				.getItemValue("txtProcessRef");
 		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
@@ -376,7 +379,7 @@ public class QueryBuilder implements IQueryBuilder {
 
 		if (!processIDs.isEmpty()) {
 			sQuery += " AND processid.itemName = '$processid' AND processid.itemValue IN (";
-			for (int aid : processIDs) {
+			for (Object aid : processIDs) {
 				sQuery += "'" + aid + "',";
 			}
 			sQuery = sQuery.substring(0, sQuery.length() - 1);
