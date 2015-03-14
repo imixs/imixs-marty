@@ -19,14 +19,14 @@
 		<!-- Input Field -->
 		<h:panelGroup id="input_box" layout="block"
 			class="marty-userlistinput-inputbox" rendered="#{cc.attrs.editmode}">
-			<h:inputText value="#{userInputController.input}">
+			<h:inputText value="#{userInputController.input}" >
 				<f:ajax event="keyup" render="suggest_box"
 					listener="#{userInputController.search}" />
 				<f:ajax event="blur" render="suggest_box"
 					listener="#{userInputController.reset}" />
 			</h:inputText>
 
-			<h:commandLink id="input_add" style="margin-left:5px;"
+			<h:commandLink id="input_add" style="margin-left:5px;" styleClass="imixs-no-print" 
 				actionListener="#{userInputController.add(userInputController.input,cc.attrs.value)}"
 				value="[#{message.add}]">
 				<f:ajax render="suggest_box datalist input_add" />
@@ -37,8 +37,6 @@
 					style="width:100%;margin-top:15px;"
 					class="marty-userlistinput-suggestresultlist"
 					rendered="#{! empty userInputController.searchResult}">
-
-
 					<c:forEach var="suggest"
 						items="#{userInputController.searchResult}">
 						<div class="marty-userlistinput-suggestresultlist-entry"
@@ -79,7 +77,8 @@
 				</h:column>
 				<!-- Delete member -->
 				<h:column>
-					<h:commandLink value="[#{message.remove}]" id="remove_owner_link_id" style="margin-left:5px;"
+					<h:commandLink value="[#{message.remove}]" id="remove_owner_link_id" 
+						styleClass="imixs-no-print" style="margin-left:5px;"
 						actionListener="#{userInputController.remove(record.item['txtName'],cc.attrs.value)}">
 						<f:ajax render=":#{component.parent.parent.parent.clientId}" />
 					</h:commandLink>
