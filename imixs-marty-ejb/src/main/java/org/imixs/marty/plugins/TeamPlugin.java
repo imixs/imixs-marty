@@ -286,13 +286,13 @@ public class TeamPlugin extends AbstractPlugin {
 		 * 
 		 * '<item name="process">...</item>' '<item name="space">...</item>'
 		 */
-		String sRef = fetchRefFromActivity("process", documentActivity);
+		String sRef = fetchRefFromActivity("process", workItem,documentActivity);
 		if (sRef != null && !sRef.isEmpty()) {
 			logger.fine("[TeamPlugin] Updating process reference based on model information: "
 					+ sRef);
 			workItem.replaceItemValue("txtProcessRef", sRef);
 		}
-		sRef = fetchRefFromActivity("space", documentActivity);
+		sRef = fetchRefFromActivity("space",workItem, documentActivity);
 		if (sRef != null && !sRef.isEmpty()) {
 			logger.fine("[TeamPlugin] Updating space reference based on model information: "
 					+ sRef);
@@ -458,13 +458,15 @@ public class TeamPlugin extends AbstractPlugin {
 
 	}
 
-	private String fetchRefFromActivity(String type,
+	private String fetchRefFromActivity(String type,ItemCollection workitem,
 			ItemCollection documentActivity) throws PluginException {
 
 		String sRef = null;
 		// Read workflow result directly from the activity definition
 		String sResult = documentActivity
 				.getItemValueString("txtActivityResult");
+		// replace dynamic values
+		sResult= replaceDynamicValues(sResult,workitem);
 
 		ItemCollection evalItemCollection = new ItemCollection();
 		ResultPlugin.evaluate(sResult, evalItemCollection);
@@ -473,8 +475,15 @@ public class TeamPlugin extends AbstractPlugin {
 		// 1.) check if a new space reference is defined in the current
 		// activity. This will overwrite the current value!!
 		if (!"".equals(aActivityRefName)) {
-			// load space entity
-			ItemCollection entity = findRefByName(aActivityRefName, type);
+			
+			ItemCollection entity = entityService.load(aActivityRefName);
+			if (entity!=null && !type.equals(entity.getItemValueString("type"))) {
+				entity=null;
+			}			
+			if (entity==null) {
+				// load space entity
+				entity = findRefByName(aActivityRefName, type);
+			}
 			if (entity != null) {
 				sRef = entity.getItemValueString(EntityService.UNIQUEID);
 				logger.fine("[TeamPlugin] found ref from Activity for: "

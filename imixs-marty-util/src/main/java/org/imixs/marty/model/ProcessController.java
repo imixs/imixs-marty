@@ -412,7 +412,11 @@ public class ProcessController implements Serializable {
 			// iterate over all spaces and compare the $UniqueIDRef
 			List<ItemCollection> list = getSpaces();
 			for (ItemCollection space : list) {
-				if (uniqueId.equals(space.getItemValueString("$UnqiueIDRef"))) {
+				logger.fine("Spacename= " + space.getItemValueString("txtName")
+						+ " uniquidref= "
+						+ space.getItemValueString(EntityService.UNIQUEIDREF));
+				if (uniqueId.equals(space
+						.getItemValueString(EntityService.UNIQUEIDREF))) {
 					result.add(space);
 				}
 			}
@@ -428,7 +432,8 @@ public class ProcessController implements Serializable {
 	 * @return list of profile entities for the current team managers
 	 */
 	public List<ItemCollection> getManagers(String aUniqueID) {
-		List<ItemCollection> resultList = getMemberListByRole(aUniqueID,"namManager");
+		List<ItemCollection> resultList = getMemberListByRole(aUniqueID,
+				"namManager");
 
 		// sort by username..
 		Collections.sort(resultList,
@@ -445,7 +450,8 @@ public class ProcessController implements Serializable {
 	 * @return list of profile entities for the current team members
 	 */
 	public List<ItemCollection> getTeam(String aUniqueID) {
-		List<ItemCollection> resultList = getMemberListByRole(aUniqueID,"namTeam");
+		List<ItemCollection> resultList = getMemberListByRole(aUniqueID,
+				"namTeam");
 
 		// sort by username..
 		Collections.sort(resultList,
@@ -462,7 +468,8 @@ public class ProcessController implements Serializable {
 	 * @return list of profile entities for the current team members
 	 */
 	public List<ItemCollection> getAssist(String aUniqueID) {
-		List<ItemCollection> resultList = getMemberListByRole(aUniqueID,"namAssist");
+		List<ItemCollection> resultList = getMemberListByRole(aUniqueID,
+				"namAssist");
 
 		// sort by username..
 		Collections.sort(resultList,
@@ -483,9 +490,12 @@ public class ProcessController implements Serializable {
 		List<ItemCollection> resultList = new ArrayList<ItemCollection>();
 		List<String> dupplicatedIds = new ArrayList<String>();
 
-		List<ItemCollection> assistList = getMemberListByRole(aUniqueID,"namAssist");
-		List<ItemCollection> teamList = getMemberListByRole(aUniqueID,"namTeam");
-		List<ItemCollection> managerList = getMemberListByRole(aUniqueID,"namManager");
+		List<ItemCollection> assistList = getMemberListByRole(aUniqueID,
+				"namAssist");
+		List<ItemCollection> teamList = getMemberListByRole(aUniqueID,
+				"namTeam");
+		List<ItemCollection> managerList = getMemberListByRole(aUniqueID,
+				"namManager");
 
 		for (ItemCollection profile : teamList) {
 			// avoid duplicates..
@@ -608,8 +618,7 @@ public class ProcessController implements Serializable {
 
 	/**
 	 * Returns a unique sorted list of profile itemCollections for a team list
-	 * in a project. The returned list contains cloned user profile
-	 * entities.
+	 * in a project. The returned list contains cloned user profile entities.
 	 * 
 	 * @param listType
 	 *            - the member field of the project (namTeam, namManager,
@@ -621,12 +630,12 @@ public class ProcessController implements Serializable {
 			String role) {
 		List<ItemCollection> resultList = new ArrayList<ItemCollection>();
 		List<String> dupplicatedIds = new ArrayList<String>();
-	
+
 		// find Process/Space entity
 		ItemCollection entity = getEntityById(aUniqueID);
 		if (entity == null)
 			return resultList;
-	
+
 		List<String> members = entity.getItemValue(role);
 		for (String member : members) {
 			// avoid duplicates..
@@ -638,7 +647,7 @@ public class ProcessController implements Serializable {
 				dupplicatedIds.add(member);
 			}
 		}
-	
+
 		return resultList;
 	}
 
