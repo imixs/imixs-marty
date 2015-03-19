@@ -63,6 +63,21 @@ The Marty Mail Plugin
 +----------------------------------------------------------+
  
  In this case only the attachment 'oder.pdf' will be attached to the email.
+ 
+** Regular Expressions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+ It is also possible to define a Attachment name based on a regulare expression. 
+ 
++----------------------------------------------------------+
+ <attachments>order.pdf</attachments>
++----------------------------------------------------------+
+
+ For example see the following expression to validate file formats for .gif or .jpg
+
++----------------------------------------------------------+
+ <attachments>([^\s]+(\.(?i)(jpg|png|gif|bmp))$)</attachments>
++----------------------------------------------------------+
+ 
 
 *Default Sender Address
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
