@@ -798,7 +798,8 @@ public class WorkflowController extends
 		String sRefID = getWorkitem().getItemValueString("$workitemId");
 		String refQuery = "SELECT entity FROM Entity entity "
 				+ " JOIN entity.textItems AS t"
-				+ "  WHERE t.itemName = '$workitemid'"
+				+ "  WHERE entity.type IN ('workitem', 'workitemarchive', 'workitemversion') "
+				+ "  AND t.itemName = '$workitemid'"
 				+ "  AND t.itemValue = '" + sRefID + "' "
 				+ " ORDER BY entity.modified ASC";
 
