@@ -103,7 +103,7 @@ public class WorkitemService {
 			String sProcessModelVersion, int aProcessID) throws Exception {
 
 		// lookup ProcessEntiy from the model
-		ItemCollection processEntity = modelService.getProcessEntityByVersion(
+		ItemCollection processEntity = modelService.getProcessEntity(
 				aProcessID, sProcessModelVersion);
 		if (processEntity == null)
 			throw new Exception(

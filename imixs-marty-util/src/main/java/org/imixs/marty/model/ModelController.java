@@ -45,7 +45,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.ejb.SetupService;
-import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.jee.ejb.EntityService;
@@ -113,6 +112,7 @@ public class ModelController implements Serializable {
 	 * 
 	 * 
 	 **/
+	@SuppressWarnings("unused")
 	@PostConstruct
 	public void reset() {
 		systemModelVersion = null;
@@ -320,7 +320,7 @@ public class ModelController implements Serializable {
 			if (result == null) {
 				logger.fine("ModelControler getProcessEntities for '" + sGroup
 						+ "|" + sVersion + "'");
-				result = modelService.getAllProcessEntitiesByGroupByVersion(
+				result = modelService.getAllProcessEntitiesByGroup(
 						getWorkflowGroup(), getModelVersion());
 				// cache result
 				processEntityCache.put(sGroup + "|" + sVersion, result);
@@ -377,7 +377,7 @@ public class ModelController implements Serializable {
 	/**
 	 * Returns a List with all available model versions. The list contains the
 	 * latest version of each model group.
-	 * 
+	 *  
 	 * @return list of model versions
 	 */
 	public List<String> getModelVersions() {
@@ -393,16 +393,7 @@ public class ModelController implements Serializable {
 	 * @return list of ItemCollections
 	 */
 	public List<ItemCollection> getAllProfileEntities() {
-		List<ItemCollection> result = new ArrayList<ItemCollection>();
-		List<ItemCollection> colEntities = modelService
-				.getEnvironmentEntityList();
-		for (ItemCollection aworkitem : colEntities) {
-			String sName = aworkitem.getItemValueString("txtName");
-			if ("environment.profile".equals(sName)) {
-				result.add(aworkitem);
-			}
-		}
-		return result;
+		return modelService.getAllModelProfiles();
 	}
 
 	/**
@@ -478,115 +469,7 @@ public class ModelController implements Serializable {
 	 * @return an instance of the matching process entity
 	 */
 	public ItemCollection getProcessEntity(int processid, String modelversion) {
-		return modelService.getProcessEntityByVersion(processid, modelversion);
-	}
-
-	/**
-	 * Returns the processEntities for a given WorkflowGroup (txtWorkflowGorup)
-	 * The method computes the modelVersion from the first matching process
-	 * entity for the given group
-	 * 
-	 * @param sGroup
-	 *            - name of a workflowGroup
-	 * @return list of ProcessEntities for the given group
-	 */
-	@Deprecated
-	public List<ItemCollection> xxxgetProcessEntitiesByGroup(String sGroup) {
-		if (sGroup == null || sGroup.isEmpty())
-			return null;
-
-		// find Modelversion..
-		// List<ItemCollection> aprocessList = getInitialProcessEntities();
-		// for (ItemCollection aprocess : aprocessList) {
-		// if (sGroup.equals(aprocess.getItemValueString("txtWorkflowGroup"))) {
-		// return getProcessEntitiesByGroupVersion(sGroup,
-		// aprocess.getItemValueString("$modelVersion"));
-		// }
-		//
-		// }
-
-		return null;
-	}
-
-	/**
-	 * Returns a list of ItemCollection representing the first ProcessEntity for
-	 * each available WorkflowGroup. Each ItemCollection provides at least the
-	 * properties
-	 * <ul>
-	 * <li>txtmodelVersion (model version)
-	 * <li>numprocessID (first process of a group)
-	 * <li>txtWorklfowGroup (name of group)
-	 * 
-	 * A workflowGroup with a '~' in its name will be skipped. This indicates a
-	 * child process.
-	 * 
-	 * The worflowGroup list is used to display the process navigation bar and
-	 * the filter options for the workList view.
-	 * 
-	 * @return
-	 */
-	@Deprecated
-	public List<ItemCollection> xxxxgetInitialProcessEntities() {
-		List initialProcessEntityList = null;
-		if (initialProcessEntityList == null) {
-			// build new groupSelection
-			initialProcessEntityList = new ArrayList<ItemCollection>();
-			for (String modelVersion : modelVersionCache) {
-
-				List<ItemCollection> startProcessList = modelService
-						.getAllStartProcessEntitiesByVersion(modelVersion);
-
-				for (ItemCollection process : startProcessList) {
-					String sGroupName = process
-							.getItemValueString("txtWorkflowGroup");
-					if (sGroupName.contains("~"))
-						continue; // childProcess is skipped
-
-					initialProcessEntityList.add(process);
-				}
-
-			}
-
-			Collections.sort(initialProcessEntityList, new WorkitemComparator(
-					"txtWorkflowGroup", true));
-		}
-
-		return initialProcessEntityList;
-
-	}
-
-	/**
-	 * This method compares a list of $modelversion|numprocessid with a given
-	 * startProcesEntity. If modelversion an processID matches the method
-	 * returns true.
-	 * 
-	 * @param ProcessEntity
-	 *            - itemCollection of start process
-	 * @param processlist
-	 *            - $modelversion|numprocessid
-	 * @return
-	 */
-	@Deprecated
-	private boolean xxxxisProcessEntityInList(
-			ItemCollection startProcessEntity, List<String> aprocesslist) {
-
-		String startGroupVersion = startProcessEntity
-				.getItemValueString("$ModelVersion");
-		String startProcessID = ""
-				+ startProcessEntity.getItemValueInteger("numProcessID");
-		for (String processid : aprocesslist) {
-			String sModelVersion = null;
-			String sProcessID = null;
-			if (processid.indexOf('|') > -1) {
-				sModelVersion = processid.substring(0, processid.indexOf('|'));
-				sProcessID = processid.substring(processid.indexOf('|') + 1);
-				if (startGroupVersion.equals(sModelVersion)
-						&& startProcessID.equals(sProcessID))
-					return true;
-			}
-		}
-		return false;
-
+		return modelService.getProcessEntity(processid, modelversion);
 	}
 
 }

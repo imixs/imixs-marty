@@ -255,7 +255,7 @@ public class SetupService {
 				for (String aModelVersion : vModelVersions) {
 					logger.info("[SetupService] removing existing configuration for model version '"
 							+ aModelVersion + "'");
-					modelService.removeModelVersion(aModelVersion);
+					modelService.removeModel(aModelVersion);
 				}
 				// save new entities into database and update modelversion.....
 				for (int i = 0; i < ecol.getEntity().length; i++) {
