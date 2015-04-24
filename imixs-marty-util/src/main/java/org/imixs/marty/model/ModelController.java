@@ -27,7 +27,9 @@
 
 package org.imixs.marty.model;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,14 +45,19 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.imixs.marty.ejb.SetupService;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.bpmn.BPMNModel;
+import org.imixs.workflow.bpmn.BPMNParser;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.ModelService;
 import org.imixs.workflow.jee.faces.fileupload.FileData;
 import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
+import org.xml.sax.SAXException;
 
 /**
  * The ModelController provides informations about workflow models.
@@ -310,7 +317,8 @@ public class ModelController implements Serializable {
 			String sVersion) {
 		List<ItemCollection> result = null;
 
-		if (sGroup != null && !sGroup.isEmpty() && sVersion != null && !sVersion.isEmpty()) {
+		if (sGroup != null && !sGroup.isEmpty() && sVersion != null
+				&& !sVersion.isEmpty()) {
 
 			setWorkflowGroup(sGroup);
 			setModelVersion(sVersion);
@@ -344,7 +352,7 @@ public class ModelController implements Serializable {
 	 *         for the specified group exists.
 	 */
 	public List<ItemCollection> getAllProcessEntitiesByGroup(String groupName) {
-		if (groupName==null || groupName.isEmpty()) {
+		if (groupName == null || groupName.isEmpty()) {
 			return null;
 		}
 		// find the matching latest ModelVersion for this group
@@ -359,7 +367,7 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * Returns the first ProcessEntity in a specified workflow group. 
+	 * Returns the first ProcessEntity in a specified workflow group.
 	 * 
 	 * 
 	 * @param group
@@ -377,7 +385,7 @@ public class ModelController implements Serializable {
 	/**
 	 * Returns a List with all available model versions. The list contains the
 	 * latest version of each model group.
-	 *  
+	 * 
 	 * @return list of model versions
 	 */
 	public List<String> getModelVersions() {
@@ -412,18 +420,39 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * adds all uploaded files.
+	 * This method adds all uploaded model files. The method tests the model
+	 * type (.bmpm, .ixm). BPMN Model will be handled by the ImixsBPMNParser. A
+	 * .ixm file will be imported using the default import mechanism.
 	 * 
 	 * @param event
+	 * @throws IOException 
+	 * @throws SAXException 
+	 * @throws ParserConfigurationException 
+	 * @throws ParseException 
+	 * @throws ModelException 
 	 * 
 	 */
-	public void doUploadModel(ActionEvent event) {
+	public void doUploadModel(ActionEvent event) throws ModelException, ParseException, ParserConfigurationException, SAXException, IOException {
 		List<FileData> fileList = fileUploadController.getUploades();
 		for (FileData file : fileList) {
+			logger.info("Model Upload started: " + file.getName());
 
-			logger.info("ModelController - starting xml model file upload: "
-					+ file.getName());
-			setupService.importXmlEntityData(file.getData());
+			// test if bpmn model?
+			if (file.getName().endsWith(".bpmn")) {
+				BPMNModel model = BPMNParser
+						.parseModel(file.getData(), "UTF-8");
+				modelService.importBPMNModel(model);
+				continue;
+			}
+
+			if (file.getName().endsWith(".bpmn")) {
+				setupService.importXmlEntityData(file.getData());
+				continue;
+			}
+
+			// model type not supported!
+			logger.warning("Invalid Model Type. Model can't be imported!");
+
 		}
 		fileUploadController.reset();
 		// reinitialize models
@@ -458,8 +487,8 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * This method returns a process entity for a given ModelVersion.
-	 * The method did not use a cache.
+	 * This method returns a process entity for a given ModelVersion. The method
+	 * did not use a cache.
 	 * 
 	 * 
 	 * @param modelVersion
