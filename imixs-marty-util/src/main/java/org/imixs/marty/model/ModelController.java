@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -103,6 +102,16 @@ public class ModelController implements Serializable {
 
 	private static Logger logger = Logger.getLogger(ModelController.class
 			.getName());
+
+	/**
+	 * returns a list of all ProcessEntities which are the first one in each
+	 * ProcessGroup.
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getAllStartProcessEntities(String version) {
+		return modelService.getAllStartProcessEntities(version);
+	}
 
 	/**
 	 * The method loads all model versions and store the latest version of a
@@ -425,14 +434,16 @@ public class ModelController implements Serializable {
 	 * .ixm file will be imported using the default import mechanism.
 	 * 
 	 * @param event
-	 * @throws IOException 
-	 * @throws SAXException 
-	 * @throws ParserConfigurationException 
-	 * @throws ParseException 
-	 * @throws ModelException 
+	 * @throws IOException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
+	 * @throws ParseException
+	 * @throws ModelException
 	 * 
 	 */
-	public void doUploadModel(ActionEvent event) throws ModelException, ParseException, ParserConfigurationException, SAXException, IOException {
+	public void doUploadModel(ActionEvent event) throws ModelException,
+			ParseException, ParserConfigurationException, SAXException,
+			IOException {
 		List<FileData> fileList = fileUploadController.getUploades();
 		for (FileData file : fileList) {
 			logger.info("Model Upload started: " + file.getName());
@@ -445,7 +456,7 @@ public class ModelController implements Serializable {
 				continue;
 			}
 
-			if (file.getName().endsWith(".bpmn")) {
+			if (file.getName().endsWith(".ixm")) {
 				setupService.importXmlEntityData(file.getData());
 				continue;
 			}
@@ -463,27 +474,31 @@ public class ModelController implements Serializable {
 	 * This Method deletes the given model
 	 * 
 	 * @throws AccessDeniedException
+	 * @throws ModelException
 	 */
-	public void deleteModel(String currentModelVersion)
-			throws AccessDeniedException {
-
-		String sQuery;
-		sQuery = "SELECT process FROM Entity AS process "
-				+ "	 JOIN process.textItems as t"
-				+ "	 JOIN process.textItems as v"
-				+ "	 WHERE t.itemName = 'type' AND t.itemValue IN('ProcessEntity', 'ActivityEntity', 'WorkflowEnvironmentEntity')"
-				+ " 	 AND v.itemName = '$modelversion' AND v.itemValue = '"
-				+ currentModelVersion + "'";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, -1);
-
-		for (ItemCollection aworkitem : col) {
-			entityService.remove(aworkitem);
-		}
-
+	public void deleteModel(String modelversion) throws AccessDeniedException,
+			ModelException {
+		modelService.removeModel(modelversion);
 		// reset model info
 		reset();
+		logger.info("Model Version" + modelversion + " deleted!");
+
+	}
+
+	/**
+	 * This Method deletes the given workflowGroup
+	 * 
+	 * @throws AccessDeniedException
+	 * @throws ModelException
+	 */
+	public void deleteWorkflowGroup(String workflowgroup, String modelversion)
+			throws AccessDeniedException, ModelException {
+
+		modelService.removeModelGroup(workflowgroup, modelversion);
+		// reset model info
+		reset();
+		logger.info("WorkflowGroup '" + workflowgroup + " (" + modelversion
+				+ ") deleted!");
 	}
 
 	/**
