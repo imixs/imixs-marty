@@ -174,7 +174,21 @@ public class DMSPlugin extends AbstractPlugin {
 		
 		return dmsList;
 	}
-
+	
+	/**
+	 * This method set a new DMS list for a workitem
+	 */
+	@SuppressWarnings({ "rawtypes"})
+	public static void setDmsList(ItemCollection workitem,List<ItemCollection> dmslist) {
+		// re-convert the List<ItemCollection> into a List<Map>
+		List<Map> vDMSnew = new ArrayList<Map>();
+		for (ItemCollection dmsEntry : dmslist) {
+			vDMSnew.add(dmsEntry.getAllItems());
+		}
+		workitem.replaceItemValue("dms", vDMSnew);
+	}
+	
+	
 	/**
 	 * This method adds a new entry into the dms property. The method returns
 	 * the updated DMS List

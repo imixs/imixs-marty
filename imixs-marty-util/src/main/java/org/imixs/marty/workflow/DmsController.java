@@ -143,34 +143,10 @@ public class DmsController implements Serializable {
 
 		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == eventType
 				|| WorkflowEvent.WORKITEM_BEFORE_SAVE == eventType) {
-
-			// load/create the blobWorkitem.....
-			// blobWorkitem = workflowController.loadBlobWorkitem(workflowEvent
-			// .getWorkitem());
-			//
-			// // if the BlobWorkitem was just created than we did not have yet
-			// set
-			// // the field $BlobWorkitem
-			// // so we update this property here
-			// workflowEvent.getWorkitem().replaceItemValue("$BlobWorkitem",
-			// blobWorkitem.getItemValueString(EntityService.UNIQUEID));
-			//
-			// // add new attachmetns
-			// fileUploadController.updateWorkitem(blobWorkitem, false);
-			// // save blob workitem for further processing through plugins
-			// blobWorkitem = workflowController.saveBlobWorkitem(blobWorkitem,
-			// workflowEvent.getWorkitem());
-			//
-			// // update the file info for the current workitem
-			// fileUploadController.updateWorkitem(workflowEvent.getWorkitem(),
-			// true);
-
-			// add files
+			// add new files
 			fileUploadController.updateWorkitem(workflowEvent.getWorkitem());
-
 			// store the dms list
-			// DMSPlugin.setDmsList(workflowEvent.getWorkitem(), dmsList,
-			// loginController.getUserPrincipal(), "");
+			DMSPlugin.setDmsList(workflowEvent.getWorkitem(), dmsList);
 
 		}
 
@@ -178,9 +154,7 @@ public class DmsController implements Serializable {
 		if (WorkflowEvent.WORKITEM_CHANGED == eventType
 				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == eventType
 				|| WorkflowEvent.WORKITEM_AFTER_SAVE == eventType) {
-
 			fileUploadController.reset();
-
 			dmsList = DMSPlugin.getDmsList(workflowEvent.getWorkitem());
 		}
 
