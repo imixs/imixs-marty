@@ -25,6 +25,7 @@ import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.plugins.jee.AbstractPlugin;
+import org.imixs.workflow.plugins.jee.VersionPlugin;
 
 /**
  * The DMS Plugin stores attached files of a workitem into a separated
@@ -70,9 +71,9 @@ public class DMSPlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * Update the read and writeaccess of the blobworkitem
+	 * Update the read and writeAccess of the blobWorkitem
 	 * 
-	 * If the workitem contains the property 'txtDmsImport" all files from the
+	 * If the workItem contains the property 'txtDmsImport" all files from the
 	 * given path will be added into the blobWorkitem
 	 * 
 	 * If a file contained in the property '$file' is not part of the property
@@ -86,11 +87,18 @@ public class DMSPlugin extends AbstractPlugin {
 
 		workitem = documentContext;
 
-		// skip if the workitem is from a different type (for example Teams
-		// may not be processed by this plugin)
+		// skip if the workItem is from a different type (for example Teams
+		// may not be processed by this plug-in)
 		String type = workitem.getItemValueString("type");
 		if (!type.startsWith("workitem") && !type.startsWith("workitemarchive"))
 			return Plugin.PLUGIN_OK;
+
+		// Skip if plugin this processing a new version created by the version
+		// plugin - in this case no changes to the version are needed
+		if (VersionPlugin.isProcssingVersion(workitem)) {
+			return Plugin.PLUGIN_OK;
+
+		}
 
 		// load the blobWorkitem and update read- and write access
 		blobWorkitem = loadBlobWorkitem(workitem);
@@ -106,14 +114,14 @@ public class DMSPlugin extends AbstractPlugin {
 		if (documentContext.hasItem(DMS_IMPORT_PROPERTY)) {
 			importFilesFromPath(workitem, blobWorkitem,
 					documentContext.getItemValue(DMS_IMPORT_PROPERTY));
-			// remove proeprty
+			// remove property
 			documentContext.removeItem(DMS_IMPORT_PROPERTY);
 		}
 
 		logger.fine("[DMSPlugin] updating $readaccess/$writeaccess for "
 				+ workitem.getItemValueString(WorkflowService.UNIQUEID));
 
-		// Update Read and write access list from parent workitem
+		// Update Read and write access list from parent workItem
 		List<?> vAccess = workitem.getItemValue("$ReadAccess");
 		blobWorkitem.replaceItemValue("$ReadAccess", vAccess);
 
@@ -171,7 +179,7 @@ public class DMSPlugin extends AbstractPlugin {
 
 		// sort list by name
 		Collections.sort(dmsList, new WorkitemComparator("txtname", true));
-		
+
 		return dmsList;
 	}
 
@@ -287,21 +295,20 @@ public class DMSPlugin extends AbstractPlugin {
 			ItemCollection aBlobWorkitem) {
 		// check files from master workitem
 		Map<String, Vector<?>> files = aWorkitem.getFiles();
-		if (files==null) {
+		if (files == null) {
 			aBlobWorkitem.removeItem("$file");
 			return;
 		}
-		
-		
-		for (Entry<String, Vector< ?>> entry : files.entrySet()) {
+
+		for (Entry<String, Vector<?>> entry : files.entrySet()) {
 			String sFileName = entry.getKey();
 			Vector file = entry.getValue();
 
 			// if data size >0 transfer file into blob
-			if (file.size()>=2) {	
-				String contentType=(String) file.get(0);
-				byte[]  data= (byte[]) file.get(1);
-				if (data!=null && data.length>1) {
+			if (file.size() >= 2) {
+				String contentType = (String) file.get(0);
+				byte[] data = (byte[]) file.get(1);
+				if (data != null && data.length > 1) {
 					// move...
 					aBlobWorkitem.addFile(data, sFileName, contentType);
 					// empty data...
@@ -312,16 +319,17 @@ public class DMSPlugin extends AbstractPlugin {
 				}
 			}
 		}
-		// now we remove all files form the blobWorkitem which are not part of the workitem
-		List<String> currentFileNames=aWorkitem.getFileNames();
-		List<String> blobFileNames=aBlobWorkitem.getFileNames();
-		List<String> removeList=new ArrayList<String>();
-		for (String aname:blobFileNames ) {
+		// now we remove all files form the blobWorkitem which are not part of
+		// the workitem
+		List<String> currentFileNames = aWorkitem.getFileNames();
+		List<String> blobFileNames = aBlobWorkitem.getFileNames();
+		List<String> removeList = new ArrayList<String>();
+		for (String aname : blobFileNames) {
 			if (!currentFileNames.contains(aname)) {
 				removeList.add(aname);
 			}
 		}
-		for (String aname:removeList ) {
+		for (String aname : removeList) {
 			aBlobWorkitem.removeFile(aname);
 		}
 
