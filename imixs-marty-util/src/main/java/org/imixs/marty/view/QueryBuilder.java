@@ -380,11 +380,14 @@ public class QueryBuilder implements IQueryBuilder {
 		if (!processIDs.isEmpty()) {
 			sQuery += " AND processid.itemName = '$processid' AND processid.itemValue IN (";
 			for (Object aid : processIDs) {
-				sQuery += "'" + aid + "',";
+				// see issue #65
+				sQuery += "" + aid + ",";
 			}
 			sQuery = sQuery.substring(0, sQuery.length() - 1);
-			sQuery += " )";	
-		}
+			sQuery += ")";	
+		}		
+		
+		
 		// add ORDER BY phrase
 
 		// read configuration for the sort order
