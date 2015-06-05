@@ -77,15 +77,47 @@ public class QueryBuilder implements IQueryBuilder {
 	@SuppressWarnings("unchecked")
 	@Override
 	public String getSearchQuery(ItemCollection searchFilter, String view) {
-		String sSearchTerm = "";
-		if (view == null)
-			view = "";
+		
+		// read the filter parameters and removes duplicates
+		// and empty entries
+
+		List<Integer> processIDs = searchFilter.getItemValue("$ProcessID");
+		List<String> processRefList = searchFilter
+				.getItemValue("txtProcessRef");
+		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
+		List<String> workflowGroups = searchFilter
+				.getItemValue("txtWorkflowGroup");
+
+		// trim lists
+		while (processIDs.contains(""))
+			processIDs.remove("");
+		while (processRefList.contains(""))
+			processRefList.remove("");
+		while (spacesRefList.contains(""))
+			spacesRefList.remove("");
+		while (workflowGroups.contains(""))
+			workflowGroups.remove("");
+		while (processRefList.contains("-"))
+			processRefList.remove("-");
+		while (spacesRefList.contains("-"))
+			spacesRefList.remove("-");
+
 
 		List<String> typeList = searchFilter.getItemValue("Type");
 		if (typeList.isEmpty() || "".equals(typeList.get(0))) {
 			typeList = Arrays.asList(new String[] { "workitem",
 					"workitemarchive" });
 		}
+		
+		
+		
+		
+		
+		
+		String sSearchTerm = "";
+		if (view == null)
+			view = "";
+
 
 		// convert type list into comma separated list
 		String sTypeQuery = "";
@@ -114,20 +146,6 @@ public class QueryBuilder implements IQueryBuilder {
 		Date datFrom = searchFilter.getItemValueDate("datFrom");
 		Date datTo = searchFilter.getItemValueDate("datTo");
 
-		List<String> processRefList = searchFilter
-				.getItemValue("txtProcessRef");
-		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
-
-		// trim process and space list
-		while (processRefList.contains(""))
-			processRefList.remove("");
-		while (spacesRefList.contains(""))
-			spacesRefList.remove("");
-		while (processRefList.contains("-"))
-			processRefList.remove("-");
-		while (spacesRefList.contains("-"))
-			spacesRefList.remove("-");
-
 		// process ref
 		if (!processRefList.isEmpty()) {
 			sSearchTerm += " (";
@@ -153,12 +171,6 @@ public class QueryBuilder implements IQueryBuilder {
 		}
 
 		// Workflow Group...
-		List<String> workflowGroups = searchFilter
-				.getItemValue("txtWorkflowGroup");
-		// trim workflowGroups
-		while (workflowGroups.contains(""))
-			workflowGroups.remove("");
-
 		if (!workflowGroups.isEmpty()) {
 			sSearchTerm += " (";
 			iterator = workflowGroups.iterator();
@@ -205,7 +217,6 @@ public class QueryBuilder implements IQueryBuilder {
 			sSearchTerm += " (namowner:\"" + sOwner.toLowerCase() + "\") AND";
 		}
 
-		List<Integer> processIDs = searchFilter.getItemValue("$ProcessID");
 		if (!processIDs.isEmpty()) {
 			sSearchTerm += " (";
 			Iterator<Integer> iteratorID = processIDs.iterator();
@@ -215,9 +226,8 @@ public class QueryBuilder implements IQueryBuilder {
 					sSearchTerm += " OR ";
 			}
 			sSearchTerm += " ) AND";
-		}		
-		
-		
+		}
+
 		// Search phrase....
 		String searchphrase = searchFilter.getItemValueString("txtSearch");
 
@@ -279,42 +289,49 @@ public class QueryBuilder implements IQueryBuilder {
 	@Override
 	@SuppressWarnings("unchecked")
 	public String getJPQLStatement(ItemCollection searchFilter, String view) {
+
+		// read the filter parameters and removes duplicates
+		// and empty entries
+
 		List<Integer> processIDs = searchFilter.getItemValue("$ProcessID");
-		// trim processIDs
-		while (processIDs.contains(""))
-			processIDs.remove("");
-		
 		List<String> processRefList = searchFilter
 				.getItemValue("txtProcessRef");
 		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
+		List<String> workflowGroups = searchFilter
+				.getItemValue("txtWorkflowGroup");
 
-		// trim projectlist
+		// trim lists
+		while (processIDs.contains(""))
+			processIDs.remove("");
 		while (processRefList.contains(""))
 			processRefList.remove("");
 		while (spacesRefList.contains(""))
 			spacesRefList.remove("");
-
-		List<String> workflowGroups = searchFilter
-				.getItemValue("txtWorkflowGroup");
-		// trim workflowGroups
 		while (workflowGroups.contains(""))
 			workflowGroups.remove("");
+		while (processRefList.contains("-"))
+			processRefList.remove("-");
+		while (spacesRefList.contains("-"))
+			spacesRefList.remove("-");
+
 
 		List<String> typeList = searchFilter.getItemValue("Type");
 		if (typeList.isEmpty() || "".equals(typeList.get(0))) {
 			typeList = Arrays.asList(new String[] { "workitem",
 					"workitemarchive" });
 		}
-
+		
+		
+		
+		
 		// construct query
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
 
-		
-		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_CREATOR)) 
+		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_CREATOR))
 			sQuery += " JOIN wi.textItems as creator ";
-		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_OWNER)) 
+		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_OWNER))
 			sQuery += " JOIN wi.textItems as owner ";
-		
+
 		if (!processRefList.isEmpty())
 			sQuery += " JOIN wi.textItems as pref ";
 		if (!spacesRefList.isEmpty())
@@ -333,18 +350,19 @@ public class QueryBuilder implements IQueryBuilder {
 
 		sQuery += " WHERE wi.type IN(" + sType + ")";
 
-		
 		// QUERY_WORKLIST_BY_CREATOR ?
-		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_CREATOR))  {
+		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_CREATOR)) {
 			sQuery += " AND creator.itemName = 'namcreator'";
-			sQuery += " AND creator.itemValue = '" + loginController.getRemoteUser() + "' ";
+			sQuery += " AND creator.itemValue = '"
+					+ loginController.getRemoteUser() + "' ";
 		}
 		// QUERY_WORKLIST_BY_OWNER ?
-		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_OWNER))  {
+		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_OWNER)) {
 			sQuery += " AND owner.itemName = 'namowner'";
-			sQuery += " AND owner.itemValue = '" + loginController.getRemoteUser() + "' ";
+			sQuery += " AND owner.itemValue = '"
+					+ loginController.getRemoteUser() + "' ";
 		}
-			
+
 		// process Ref...
 		if (!processRefList.isEmpty()) {
 			sQuery += " AND pref.itemName = '$uniqueidref'";
@@ -384,10 +402,9 @@ public class QueryBuilder implements IQueryBuilder {
 				sQuery += "" + aid + ",";
 			}
 			sQuery = sQuery.substring(0, sQuery.length() - 1);
-			sQuery += ")";	
-		}		
-		
-		
+			sQuery += ")";
+		}
+
 		// add ORDER BY phrase
 
 		// read configuration for the sort order
