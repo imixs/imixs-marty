@@ -31,6 +31,7 @@ import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
 import javax.faces.event.ActionEvent;
@@ -66,6 +67,14 @@ public class SetupController extends ConfigController {
 
 	private boolean setupOk = false;
 
+	@Resource(lookup="java:module/ModuleName")
+	private String moduleName;
+	    
+	@Resource(lookup="java:app/AppName")
+	private String appName;
+	
+
+	
 	@Inject
 	protected ModelController modelController;
 
@@ -90,6 +99,24 @@ public class SetupController extends ConfigController {
 		this.setName(CONFIGURATION_NAME);
 	}
 
+	
+	/**
+	 * Returns the EAR application name. Useful for JNDI lookups
+	 * @return
+	 */
+	public String getAppName() {
+		return appName;
+	}
+
+	/**
+	 * Returns the Web module name. Useful for JNDI lookups
+	 * @return
+	 */
+	public String getModuleName() {
+		return moduleName;
+	}
+
+	
 	/**
 	 * This method loads the config entity.
 	 * 
