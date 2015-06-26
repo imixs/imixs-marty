@@ -178,7 +178,14 @@ public class SetupController extends ConfigController {
 
 		// reset processController
 		processController.reset();
-
+	
 	}
 
+
+	public PropertyService getPropertyService() {
+		return propertyService;
+	}
+
+	
+	
 }
