@@ -82,7 +82,7 @@ public class ProfilePlugin extends AbstractPlugin {
 	public static String EMAIL_ALREADY_TAKEN = "EMAIL_ALREADY_TAKEN";
 	public static String INVALID_EMAIL = "INVALID_EMAIL";
 
-	public static String NO_PROFILE_SERVICE_FOUND = "NO_SEQUENCE_SERVICE_FOUND";
+	public static String NO_PROFILE_SERVICE_FOUND = "NO_PROFILE_SERVICE_FOUND";
 
 	public static String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
 			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
@@ -380,6 +380,7 @@ public class ProfilePlugin extends AbstractPlugin {
 	 * 
 	 * 
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public String replaceUsernames(String aString,
 			ItemCollection documentContext) {
 		int iTagStartPos;

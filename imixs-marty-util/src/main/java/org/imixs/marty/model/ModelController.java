@@ -47,13 +47,16 @@ import javax.inject.Named;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.imixs.marty.ejb.SetupService;
+import org.imixs.marty.plugins.ApplicationPlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.bpmn.BPMNModel;
 import org.imixs.workflow.bpmn.BPMNParser;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
+import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.ModelService;
+import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.jee.faces.fileupload.FileData;
 import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
 import org.xml.sax.SAXException;
@@ -96,6 +99,9 @@ public class ModelController implements Serializable {
 
 	@EJB
 	protected ModelService modelService;
+
+	@EJB
+	protected WorkflowService workflowService;
 
 	@EJB
 	protected SetupService setupService;
@@ -516,4 +522,32 @@ public class ModelController implements Serializable {
 		return modelService.getProcessEntity(processid, modelversion);
 	}
 
+	/**
+	 * This method return the 'rtfdescription' of a processentity and applies
+	 * the dynamic Text replacement function from the jee plugin
+	 * 
+	 * @param processid
+	 * @param modelversion
+	 * @return
+	 */
+	public String getProcessDescription(int processid, String modelversion,
+			ItemCollection documentContext) {
+		ItemCollection pe = modelService.getProcessEntity(processid,
+				modelversion);
+		if (pe == null) {
+			return "";
+		}
+		String desc = pe.getItemValueString("rtfdescription");
+		ApplicationPlugin pp = new ApplicationPlugin();
+		try {
+			pp.init(workflowService);
+			desc = pp.replaceDynamicValues(desc, documentContext);
+		} catch (PluginException e) {
+			logger.warning("Unable to update processDescription: "
+					+ e.getMessage());
+		}
+
+		return desc;
+
+	}
 }
