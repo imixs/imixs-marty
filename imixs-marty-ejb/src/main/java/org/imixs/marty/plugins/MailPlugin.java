@@ -31,15 +31,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
-import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.internet.AddressException;
@@ -57,7 +54,6 @@ import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.jee.util.PropertyService;
 
 /**
  * This Plugin extends the Imixs Workflow Plugin.
@@ -75,7 +71,6 @@ import org.imixs.workflow.jee.util.PropertyService;
 public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
 	private ProfileService profileService = null;
-	private PropertyService propertyService = null;
 	private WorkflowService workflowService = null;
 
 	public static String PROFILESERVICE_NOT_BOUND = "PROFILESERVICE_NOT_BOUND";
@@ -109,24 +104,6 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 					PROFILESERVICE_NOT_BOUND, "ProfileService not bound", e);
 		}
 
-		/*
-		 * NOTE:
-		 * 
-		 * Since Imixs-workflow version 3.1.8 the property service can be
-		 * accessed by a getter method. So we can remove the following lines!
-		 */
-
-		// lookup PropertyService
-		jndiName = "ejb/PropertyService";
-		try {
-
-			ictx = new InitialContext();
-			Context ctx = (Context) ictx.lookup("java:comp/env");
-			propertyService = (PropertyService) ctx.lookup(jndiName);
-		} catch (NamingException e) {
-			throw new PluginException(MailPlugin.class.getSimpleName(),
-					PROPERTYSERVICE_NOT_BOUND, "PropertyService not bound", e);
-		}
 	}
 
 	/**
@@ -158,87 +135,6 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		return Plugin.PLUGIN_OK;
 	}
 
-	/**
-	 * The method checks if a defaultSenderAddress was configured in the BASIC
-	 * configuration entity. Only in this case the plugin changes the 'from'
-	 * property of the current Message object.
-	 */
-	@Override
-	public void close(int arg0) throws PluginException {
-
-		MimeMessage mailMessage = (MimeMessage) super.getMailMessage();
-		if (mailMessage != null) {
-
-			// Test if a default From address was configured - if then
-			// change
-			// from property now!
-			if (propertyService != null) {
-				String sFrom = (String) propertyService.getProperties().get(
-						"mail.defaultSender");
-				String sTestRecipients = (String) propertyService
-						.getProperties().get("mail.testRecipients");
-
-				// test default from address...
-				if (sFrom != null && !"".equals(sFrom)) {
-
-					try {
-						logger.fine("[MartyMailPlugin] set from address: "
-								+ sFrom);
-						mailMessage.setFrom(getInternetAddress(sFrom));
-					} catch (AddressException e) {
-						logger.warning("[MartyMailPlugin] unable to set default From address into MailSession - error: "
-								+ e.getMessage());
-						if (logger.isLoggable(Level.FINE))
-							e.printStackTrace();
-					} catch (MessagingException e) {
-						logger.warning("[MartyMailPlugin] unable to set default From address into MailSession - error: "
-								+ e.getMessage());
-						if (logger.isLoggable(Level.FINE))
-							e.printStackTrace();
-					}
-
-				}
-
-				// test if TestReceipiens are defined...
-				if (sTestRecipients != null && !"".equals(sTestRecipients)) {
-					List<String> vRecipients = new Vector<String>();
-					// split multivalues
-					StringTokenizer st = new StringTokenizer(sTestRecipients,
-							",", false);
-					while (st.hasMoreElements()) {
-						vRecipients.add(st.nextToken().trim());
-					}
-
-					logger.info("[MailPlugin] - TestMode - forward to:");
-					for (String adr : vRecipients) {
-						logger.info("[MailPlugin]    " + adr);
-					}
-					try {
-						getMailMessage().setRecipients(
-								Message.RecipientType.CC, null);
-						getMailMessage().setRecipients(
-								Message.RecipientType.BCC, null);
-						getMailMessage().setRecipients(
-								Message.RecipientType.TO,
-								getInternetAddressArray(vRecipients));
-						// change subject
-						String sSubject = getMailMessage().getSubject();
-						getMailMessage().setSubject("[TEST]: " + sSubject);
-
-					} catch (MessagingException e) {
-						throw new PluginException(
-								ProfilePlugin.class.getSimpleName(),
-								INVALID_EMAIL,
-								"[MailPlugin] unable to set mail recipient: ",
-								e);
-					}
-				}
-
-			}
-			super.close(arg0);
-
-		}
-	}
 
 	/**
 	 * this helper method creates an internet address from a string if the
@@ -519,31 +415,6 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 
 	}
 
-	/**
-	 * this method transforms a vector of emails into a InternetAddress Array.
-	 * 
-	 * @param aList
-	 * @return
-	 */
-	@SuppressWarnings("rawtypes")
-	private InternetAddress[] getInternetAddressArray(List aList) {
-
-		// rebuild new InternetAddress array from TempVector...
-		InternetAddress[] receipsAdrs = new InternetAddress[aList.size()];
-		try {
-			for (int i = 0; i < aList.size(); i++) {
-				InternetAddress inetAddr;
-
-				inetAddr = new InternetAddress((String) aList.get(i));
-
-				receipsAdrs[i] = inetAddr;
-			}
-		} catch (AddressException e) {
-
-			e.printStackTrace();
-		}
-		return receipsAdrs;
-	}
 
 	/**
 	 * Cache implementation to hold userData objects
