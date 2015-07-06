@@ -65,7 +65,7 @@ import org.imixs.workflow.jee.util.PropertyService;
 @Singleton
 public class ProfileService {
 
-	int DEFAULT_CACHE_SIZE = 30;
+	final int DEFAULT_CACHE_SIZE = 100;
 
 	final int MAX_SEARCH_COUNT = 1;
 	private Cache cache;
@@ -75,8 +75,8 @@ public class ProfileService {
 
 	@EJB
 	private org.imixs.workflow.jee.ejb.EntityService entityService;
-	
-	@EJB 
+
+	@EJB
 	private PropertyService propertyService;
 
 	@Resource
@@ -87,25 +87,44 @@ public class ProfileService {
 	 */
 	@PostConstruct
 	void init() {
-		// initialize cache
-		cache = new Cache(DEFAULT_CACHE_SIZE);
+		// initialize cache...
+		reset();
 	}
-
 	
 	/**
-	 * This method returns the property 'profile.lowerCaseUserID'. 
-	 * The default value is 'true'
+	 * resets the profile cache..
+	 */
+	public void reset() {
+		// try to lookup cache size...
+		String sCacheSize = propertyService.getProperties().getProperty(
+				"profileservice.cachesize", DEFAULT_CACHE_SIZE + "");
+
+		int iCacheSize = DEFAULT_CACHE_SIZE;
+		try {
+			iCacheSize = Integer.parseInt(sCacheSize);
+		} catch (NumberFormatException nfe) {
+			logger.warning("ProfileService unable to determine property: profileservice.cachesize - check imixs.properties!");
+			iCacheSize = DEFAULT_CACHE_SIZE;
+		}
+		// initialize cache
+		cache = new Cache(iCacheSize);
+	}
+
+	/**
+	 * This method returns the property 'profile.lowerCaseUserID'. The default
+	 * value is 'true'
+	 * 
 	 * @return
 	 */
-	public boolean useLowerCaseUserID() {		
-		String value=propertyService.getProperties().getProperty("profile.lowerCaseUserID", "true");
+	public boolean useLowerCaseUserID() {
+		String value = propertyService.getProperties().getProperty(
+				"profile.lowerCaseUserID", "true");
 		if ("false".equals(value))
 			return false;
 		else
 			return true;
 	}
-	
-	
+
 	/**
 	 * This method returns a profile by its id. The method uses an internal
 	 * cache. The method returns null if no Profile for this name was found

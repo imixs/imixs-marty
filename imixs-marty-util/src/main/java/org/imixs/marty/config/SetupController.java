@@ -38,6 +38,7 @@ import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.model.ModelController;
 import org.imixs.marty.model.ProcessController;
 import org.imixs.workflow.jee.ejb.EntityService;
@@ -89,6 +90,9 @@ public class SetupController extends ConfigController {
 
 	@EJB
 	protected PropertyService propertyService;
+	
+	@EJB
+	protected ProfileService profileService;
 
 	private static Logger logger = Logger.getLogger(SetupController.class
 			.getName());
@@ -170,8 +174,9 @@ public class SetupController extends ConfigController {
 	 */
 	public void doSetup(ActionEvent event) throws Exception {
 		// reset propertyService
-		logger.info("[SetupController] reset property service");
+		logger.info("[SetupController] reset application cache...");
 		propertyService.reset();
+		profileService.reset();
 
 		// reset modelController
 		modelController.reset();
