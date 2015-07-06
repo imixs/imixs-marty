@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -56,8 +57,8 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 		     editmode="true" />
  * </code>
  * 
- *  
- * @author rsoika 
+ * 
+ * @author rsoika
  * @version 1.0
  */
 
@@ -197,21 +198,31 @@ public class UserInputController implements Serializable {
 	 * 
 	 */
 	public void add(String aName, List<Object> aList) {
-		if (aList == null)
+		if (aList == null || aName == null || aName.isEmpty())
 			return;
+		// trim
+		aName = aName.trim();
 
 		if (!aList.contains(aName)) {
 			logger.fine("userInputController add '" + aName + "' from list.");
 			aList.add(aName);
 		}
+
+		// remove empty entries.....
+		Iterator<Object> i = aList.iterator();
+		while (i.hasNext()) {
+			Object oentry = i.next();
+			if (oentry == null || oentry.toString().isEmpty()) {
+				i.remove();
+			}
+		}
 	}
 
-	
 	/**
 	 * This methods removes a name from the userid list
 	 */
 	public void remove(String aName, List<Object> aList) {
-		if (aList == null || aName==null)
+		if (aList == null || aName == null)
 			return;
 		logger.fine("userInputController remove '" + aName + "' from list.");
 
@@ -221,11 +232,12 @@ public class UserInputController implements Serializable {
 			aList.remove(aName);
 		} else {
 			// here we try to find the entry ignoring upper/lower case ....
-			for (Object aEntry: aList) {
-				if (aEntry!=null) {
-					String aValue=aEntry.toString().toLowerCase();
+			for (Object aEntry : aList) {
+				if (aEntry != null) {
+					String aValue = aEntry.toString().toLowerCase();
 					if (aValue.equals(aName.toLowerCase())) {
-						logger.warning("userInputController remove '" + aName + "' from list ignoring upper/lower case!");
+						logger.warning("userInputController remove '" + aName
+								+ "' from list ignoring upper/lower case!");
 						aList.remove(aEntry);
 						break;
 					}
