@@ -99,6 +99,7 @@ public class ProfileService {
 		int iCacheSize = DEFAULT_CACHE_SIZE;
 		
 		// early initialization did not work in Wildfly because of security problem
+		// see issue-#59
 //		try {
 //		String sCacheSize = propertyService.getProperties().getProperty(
 //				"profileservice.cachesize", DEFAULT_CACHE_SIZE + "");
