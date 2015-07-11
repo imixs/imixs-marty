@@ -96,16 +96,20 @@ public class ProfileService {
 	 */
 	public void reset() {
 		// try to lookup cache size...
-		String sCacheSize = propertyService.getProperties().getProperty(
-				"profileservice.cachesize", DEFAULT_CACHE_SIZE + "");
-
 		int iCacheSize = DEFAULT_CACHE_SIZE;
-		try {
-			iCacheSize = Integer.parseInt(sCacheSize);
-		} catch (NumberFormatException nfe) {
-			logger.warning("ProfileService unable to determine property: profileservice.cachesize - check imixs.properties!");
-			iCacheSize = DEFAULT_CACHE_SIZE;
-		}
+		
+		// early initialization did not work in Wildfly because of security problem
+//		try {
+//		String sCacheSize = propertyService.getProperties().getProperty(
+//				"profileservice.cachesize", DEFAULT_CACHE_SIZE + "");
+//
+//		
+//		
+//			iCacheSize = Integer.parseInt(sCacheSize);
+//		} catch (NumberFormatException nfe) {
+//			logger.warning("ProfileService unable to determine property: profileservice.cachesize - check imixs.properties!");
+//			iCacheSize = DEFAULT_CACHE_SIZE;
+//		}
 		// initialize cache
 		cache = new Cache(iCacheSize);
 	}
