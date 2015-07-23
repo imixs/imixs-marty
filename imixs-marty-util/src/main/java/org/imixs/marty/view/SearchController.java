@@ -37,6 +37,7 @@ import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
 import javax.faces.event.ActionEvent;
+import javax.faces.event.AjaxBehaviorEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -141,6 +142,22 @@ public class SearchController extends
 		searchFilter.replaceItemValue("txtSearch", searchPhrase);
 	}
 
+	
+
+	/**
+	 * Refresh the result and reset the filter "$processid".
+	 * 
+	 * This method is called by the SelectBox for WorkflowGroup to reset old $processID
+	 * 
+	 * @param event
+	 */
+	public void doRefreshWorkflowGroup(AjaxBehaviorEvent event) {
+		getSearchFilter().removeItem("$processid");
+		super.doRefresh();
+	}
+
+	
+	
 	/**
 	 * Triggers a lucene search based on a search phrase. The search phrase is
 	 * stored in the search filter property 'txtSearch' which is evaluated by
