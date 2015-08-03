@@ -25,7 +25,7 @@ public class TestRegex {
 		Assert.assertTrue( matcher.matches());
 	
 	}
-	
+	 
 	
 	
 	
@@ -50,4 +50,27 @@ public class TestRegex {
 		Assert.assertTrue( matcher.matches());
 	}
 
+	
+	
+	
+	@Test
+	public void testLucenel() throws PluginException {
+		
+		
+		String typePattern = "workitem|workitemarchive|workitemdeleted";
+		String processIDPattern = "";
+
+		String type = "workitem";
+		String sPid = "3120";
+
+		// test type pattern
+		Assert.assertFalse(typePattern != null && !"".equals(typePattern)
+				&& !type.matches(typePattern));
+
+		// test $processid pattern
+		Assert.assertFalse (processIDPattern != null && !"".equals(processIDPattern)
+				&& !sPid.matches(processIDPattern));
+
+	
+	}
 }
