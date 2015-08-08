@@ -99,6 +99,7 @@ mvn release:prepare
  
  [[6]] remove the maven release prepare and backup pom files
  
+ [[7]] switch into the new tag version and build the new released artefacts.
  
   []
  
