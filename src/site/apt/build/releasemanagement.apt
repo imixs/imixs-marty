@@ -68,6 +68,8 @@ mvn release:prepare
  
  [Note:] A new release may not contain any snapshot dependencies from imixs-workflow components! 
  
+
+
  Patches of an already release version are managed in a release branch with the major and 
  minor version number.
  For example
