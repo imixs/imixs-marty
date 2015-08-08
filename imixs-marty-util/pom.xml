@@ -40,5 +40,6 @@
 			<scope>provided</scope>
 			<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
 		</dependency>
+		
 	</dependencies>
 </project>

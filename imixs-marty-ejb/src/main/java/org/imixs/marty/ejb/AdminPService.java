@@ -429,7 +429,7 @@ public class AdminPService {
 		int colSize=col.size();
 		// Update index
 		LucenePlugin.updateWorklist(col);
-		
+	 	  
 		iUpdates=iUpdates+colSize;
 		iProcessed=iUpdates;
 		
