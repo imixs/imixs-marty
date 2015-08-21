@@ -92,8 +92,8 @@ public class DeputyPlugin extends AbstractPlugin {
 			return Plugin.PLUGIN_OK;
 
 		// iterate over name fields
-		Map<String, Object> map = workitem.getAllItems();
-		for (String key : map.keySet()) {
+		Map<String, List<Object>> map = workitem.getAllItems();
+		for (String key : map.keySet()) { 
 			key = key.toLowerCase();
 
 			if (!key.startsWith("nam"))

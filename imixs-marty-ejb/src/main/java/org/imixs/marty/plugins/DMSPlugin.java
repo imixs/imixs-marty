@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import org.imixs.marty.util.WorkitemComparator;
@@ -290,19 +289,18 @@ public class DMSPlugin extends AbstractPlugin {
 	 * @param aWorkitem
 	 * @param aBlobWorkitem
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void updateFileContent(ItemCollection aWorkitem,
 			ItemCollection aBlobWorkitem) {
 		// check files from master workitem
-		Map<String, Vector<?>> files = aWorkitem.getFiles();
+		Map<String, List<Object>> files = aWorkitem.getFiles();
 		if (files == null) {
 			aBlobWorkitem.removeItem("$file");
 			return;
 		}
 
-		for (Entry<String, Vector<?>> entry : files.entrySet()) {
+		for (Entry<String,List<Object>> entry : files.entrySet()) {
 			String sFileName = entry.getKey();
-			Vector file = entry.getValue();
+			List<?> file = entry.getValue();
 
 			// if data size >0 transfer file into blob
 			if (file.size() >= 2) {
