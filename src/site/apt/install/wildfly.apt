@@ -58,29 +58,9 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
 ~~~~~~~~~~~~~~~
 
  To use the MySQL JDBC driver you can simply deploy the driver jar into the running Wildfly. 
- From the web inferface  choose:
-
- <Runtime->Server->Manage Deployments>
-
- and add your mysql Driver jar (e.g mysql-connector-java-5.1.7-bin.jar) as a new deployment and enable the deployment unit. 
-
- Now you can configure a new Datasource:
-
- <Profile->Subsystem->Connector->Datasources>
-
- Here you can choose the mysql driver directly.
-
- This is an example how I configured a DataSorce
-
-   * name: imixs_office
-   
-   * jndi: java:/jdbc/imixs_office
-   
-   * user: root
-   
-   * url: jdbc:mysql://localhost:3306/imixs-office-workflow
-
-the database configuration in standalone.xml file for postgree looks like this:
+ A new datasource configuration can be directly added into the standalone.xml file after
+ the server was stopped.
+ For postgree a database connection looks like this:
 
 +------------+
  <datasource jta="true" jndi-name="java:/jdbc/imixs_office" pool-name="imixs_office" enabled="true" use-ccm="false">
@@ -101,9 +81,9 @@ the database configuration in standalone.xml file for postgree looks like this:
                 </datasource>
 +------------+
 
-Its recommended to set jta to true.
+ Its recommended to set jta to true.
 
-For MySQL it could look like this:
+ For MySQL it could look like this:
 
 +------------+
  <datasource jta="true" jndi-name="java:/jdbc/imixs_office" pool-name="imixs_office" enabled="true" use-ccm="true" statistics-enabled="false">
