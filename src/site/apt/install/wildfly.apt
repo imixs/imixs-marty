@@ -80,6 +80,59 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
    
    * url: jdbc:mysql://localhost:3306/imixs-office-workflow
 
+the database configuration in standalone.xml file for postgree looks like this:
+
++------------+
+ <datasource jta="true" jndi-name="java:/jdbc/imixs_office" pool-name="imixs_office" enabled="true" use-ccm="false">
+                    <connection-url>jdbc:postgresql://localhost/office</connection-url>
+                    <driver-class>org.postgresql.Driver</driver-class>
+                    <driver>postgresql-9.3-1102.jdbc41.jar</driver>
+                    <security>
+                        <user-name>postgres</user-name>
+                        <password>xxxx</password>
+                    </security>
+                    <validation>
+                        <validate-on-match>false</validate-on-match>
+                        <background-validation>false</background-validation>
+                    </validation>
+                    <statement>
+                        <share-prepared-statements>false</share-prepared-statements>
+                    </statement>
+                </datasource>
++------------+
+
+Its recommended to set jta to true.
+
+For MySQL it could look like this:
+
++------------+
+ <datasource jta="true" jndi-name="java:/jdbc/imixs_office" pool-name="imixs_office" enabled="true" use-ccm="true" statistics-enabled="false">
+                    <connection-url>jdbc:mysql://localhost:3306/imixs_office</connection-url>
+                    <driver-class>com.mysql.jdbc.Driver</driver-class>
+                    <driver>mysql-connector-java-5.1.7-bin.jar</driver>
+                    <security>
+                        <user-name>root</user-name>
+                        <password>xxx</password>
+                    </security>
+                    <validation>
+                        <validate-on-match>false</validate-on-match>
+                        <background-validation>false</background-validation>
+                    </validation>
+                    <timeout>
+                        <set-tx-query-timeout>false</set-tx-query-timeout>
+                        <blocking-timeout-millis>0</blocking-timeout-millis>
+                        <idle-timeout-minutes>0</idle-timeout-minutes>
+                        <query-timeout>0</query-timeout>
+                        <use-try-lock>0</use-try-lock>
+                        <allocation-retry>0</allocation-retry>
+                        <allocation-retry-wait-millis>0</allocation-retry-wait-millis>
+                    </timeout>
+                    <statement>
+                        <share-prepared-statements>false</share-prepared-statements>
+                    </statement>
+                </datasource>
++------------+
+
  
 *Security Realm
 ~~~~~~~~~~~~~~~
