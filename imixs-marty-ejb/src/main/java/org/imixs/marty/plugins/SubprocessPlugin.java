@@ -27,20 +27,22 @@
 
 package org.imixs.marty.plugins;
 
-import java.util.Set;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.plugins.ResultPlugin;
 import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
- * The SubprozessPlugin evaluates the Result Attribute of the ActivityEntity for
- * the tag subprocess to create new subprocess:
+ * The SubprocessPlugin evaluates the Result Attribute of the ActivityEntity for
+ * the tag subprocess to create a new subprocess:
  * 
  * <code>
  * <item name="subprocess">100200.10</item> 
@@ -48,7 +50,7 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * </code>
  * 
  * @author rsoika
- * @version 3.0
+ * @version 1.0
  * 
  */
 public class SubprocessPlugin extends AbstractPlugin {
@@ -78,19 +80,33 @@ public class SubprocessPlugin extends AbstractPlugin {
 
 		documentContext = adocumentContext;
 		// check if a subprocess should be started now....
-		createSubProcess(adocumentContext, documentActivity);
+		logger.fine("[SubprozessPlugin] createSubProcess....");
+		// find: <item name="subprocess">100200.10</item>
+		String sResult = documentActivity
+				.getItemValueString("txtActivityResult");
 
+		ItemCollection evalItemCollection = new ItemCollection();
+		ResultPlugin.evaluate(sResult, evalItemCollection);
+
+		if (evalItemCollection.hasItem(SUBPROCESS_ITEM)) {
+			// create subprocess for each entry in the subprocess_item.
+			@SuppressWarnings("unchecked")
+			List<String> subprocessList = evalItemCollection
+					.getItemValue(SUBPROCESS_ITEM);
+			for (String subprocess : subprocessList) {
+				createSubProcess(subprocess);
+			}
+		}
 		return Plugin.PLUGIN_OK;
 	}
 
 	@Override
 	public void close(int arg0) throws PluginException {
-
+		// no op
 	}
 
 	/**
-	 * This plugin creates a subprocess depending on the activity result
-	 * settings
+	 * This plugin creates a subprocess depending on subprocess description
 	 * 
 	 * Example:
 	 * 
@@ -111,81 +127,52 @@ public class SubprocessPlugin extends AbstractPlugin {
 	 * @param documentActivity
 	 * @throws PluginException
 	 */
-	@SuppressWarnings({ "unused" })
-	void createSubProcess(ItemCollection adocumentContext,
-			ItemCollection documentActivity) throws PluginException {
-		int iMainProcessId = adocumentContext
-				.getItemValueInteger(WorkflowService.PROCESSID);
+	private void createSubProcess(String sSubprocessItem)
+			throws AccessDeniedException, ProcessingErrorException,
+			PluginException {
 		String modelVersion = null;
+		logger.fine("[SubprozessPlugin] start new subprocess "
+				+ sSubprocessItem);
 
-		logger.fine("[SubprozessPlugin] createSubProcess....");
-		// find: <item name="subprocess">100200.10</item>
-		String sResult = documentActivity
-				.getItemValueString("txtActivityResult");
-
-		ItemCollection evalItemCollection = new ItemCollection();
-		ResultPlugin.evaluate(sResult, evalItemCollection);
-
-		if (evalItemCollection.hasItem(SUBPROCESS_ITEM)) {
-			// Subprozess erzeugen....
-			String sSubprocessItem = evalItemCollection
-					.getItemValueString(SUBPROCESS_ITEM);
-			logger.fine("[SubprozessPlugin] start subprocess " + sSubprocessItem);
-
-			// test for modelversion
-			if (sSubprocessItem.indexOf('|') > -1) {
-				modelVersion = sSubprocessItem.substring(0,
-						sSubprocessItem.indexOf('|'));
-				sSubprocessItem = sSubprocessItem.substring(sSubprocessItem
-						.indexOf('|') + 1);
-			} else {
-				// take the model version from the main process
-				modelVersion = adocumentContext
-						.getItemValueString(WorkflowService.MODELVERSION);
-			}
-
-			// now split processid and activityid
-			int pos = sSubprocessItem.indexOf('.');
-			if (pos == -1)
-				throw new PluginException(this.getClass().getSimpleName(),
-						"WRONG SUBPROCESS FORMAT", "Subprocess '"
-								+ sSubprocessItem + "' has invalid format ");
-			int iProcessId = new Integer(sSubprocessItem.substring(0, pos));
-			int iActivityId = new Integer(sSubprocessItem.substring(pos + 1));
-
-			// create Workitem
-			ItemCollection subprocess = new ItemCollection();
-			subprocess.replaceItemValue("type", "workitem");
-			subprocess.replaceItemValue(WorkflowService.MODELVERSION,
-					modelVersion);
-			subprocess.replaceItemValue(WorkflowService.UNIQUEIDREF,
-					adocumentContext
-							.getItemValueString(WorkflowService.UNIQUEID));
-			subprocess.replaceItemValue(WorkflowService.PROCESSID, iProcessId);
-			subprocess
-					.replaceItemValue(WorkflowService.ACTIVITYID, iActivityId);
-
-			// copy processRef
-			subprocess.replaceItemValue("txtProcessRef",
-					adocumentContext.getItemValueString("txtProcessRef"));
-
-			// set txtWorkitemRef....
-			subprocess.replaceItemValue(LINK_PROPERTY, adocumentContext
-					.getItemValueString(WorkflowService.UNIQUEID));
-
-			// Copy all items starting with fz_
-			Set<String> fieldNames = adocumentContext.getAllItems().keySet();
-			for (String sFieldName : fieldNames) {
-				if (sFieldName.startsWith("fz_")) {
-					subprocess.replaceItemValue(sFieldName,
-							adocumentContext.getItemValue(sFieldName));
-				}
-			}
-
-			subprocess = this.workflowService.processWorkItem(subprocess);
-			logger.fine("[SubprozessPlugin] successful processed subprocess.");
+		// test for modelversion
+		if (sSubprocessItem.indexOf('|') > -1) {
+			modelVersion = sSubprocessItem.substring(0,
+					sSubprocessItem.indexOf('|'));
+			sSubprocessItem = sSubprocessItem.substring(sSubprocessItem
+					.indexOf('|') + 1);
+		} else {
+			// take the model version from the main process
+			modelVersion = documentContext
+					.getItemValueString(WorkflowService.MODELVERSION);
 		}
 
-	}
+		// now split processid and activityid
+		int pos = sSubprocessItem.indexOf('.');
+		if (pos == -1)
+			throw new PluginException(this.getClass().getSimpleName(),
+					"WRONG SUBPROCESS FORMAT", "Subprocess '" + sSubprocessItem
+							+ "' has invalid format ");
+		int iProcessId = new Integer(sSubprocessItem.substring(0, pos));
+		int iActivityId = new Integer(sSubprocessItem.substring(pos + 1));
 
+		// create Workitem
+		ItemCollection subprocess = new ItemCollection();
+		subprocess.replaceItemValue("type", "workitem");
+		subprocess.replaceItemValue(WorkflowService.MODELVERSION, modelVersion);
+		subprocess.replaceItemValue(WorkflowService.UNIQUEIDREF,
+				documentContext.getItemValueString(WorkflowService.UNIQUEID));
+		subprocess.replaceItemValue(WorkflowService.PROCESSID, iProcessId);
+		subprocess.replaceItemValue(WorkflowService.ACTIVITYID, iActivityId);
+
+		// copy processRef
+		subprocess.replaceItemValue("txtProcessRef",
+				documentContext.getItemValueString("txtProcessRef"));
+
+		// set txtWorkitemRef....
+		subprocess.replaceItemValue(LINK_PROPERTY,
+				documentContext.getItemValueString(WorkflowService.UNIQUEID));
+
+		subprocess = this.workflowService.processWorkItem(subprocess);
+		logger.fine("[SubprozessPlugin] successful processed subprocess.");
+	}
 }
