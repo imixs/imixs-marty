@@ -29,10 +29,19 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
 <resources>
    .....
    <resource-root path=”eclipselink.jar”/>
- </resources> 
+</resources> 
 +------------------------------+
  If you happen to leave the EclipseLink version number in the jar name, 
  the module.xml should reflect that.
+ 
+ Since wildfly 9 the resource-root have to look like this:
++------------------------------+
+<resource-root path="eclipselink.jar">
+        <filter>
+                <exclude path="javax/**" />
+        </filter>
+</resource-root>
++------------------------------+
 
 
  If you use the ‘org.eclipse.persistence.jpa.PersistenceProvider’ in the persistence.xml 
@@ -43,7 +52,15 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
 ./jboss-cli.sh --connect '/system-property=eclipselink.archive.factory:add(value=org.jipijapa.eclipselink.JBossArchiveFactoryImpl)'
 +------------------------------+
 
- This command will change the standalone.xml configuration file and adds the following entry:
+Note: If you run WildFly with a different portrange you need to add the ‘controller’ param to the jboss-cli script. See the following example accessing the admin console with port 9991:
+
++------------------------------+
+./jboss-cli.sh --connect controller=127.0.0.1:9991 '/system-property=eclipselink.archive.factory:add(value=org.jipijapa.eclipselink.JBossArchiveFactoryImpl)'
++------------------------------+
+
+ You may need to also change the ip address to the configured management inet-address!
+ 
+ The command will finally change the standalone.xml configuration file and adds the following entry:
 
 +------------------------------+
 <system-properties>
@@ -54,7 +71,7 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
 
  Additional information can be found {{{https://docs.jboss.org/author/display/WFLY8/JPA+Reference+Guide#JPAReferenceGuide-UsingEclipseLink}here}}.
 
-*Datasource Configuration (MySQL)
+*Datasource Configuration
 ~~~~~~~~~~~~~~~
 
  To use the MySQL JDBC driver you can simply deploy the driver jar into the running Wildfly. 

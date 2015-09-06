@@ -1,0 +1,16 @@
+
+The ApplicationPlugin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ The marty ApplicationPlugin overwrites the Application Plugin and updates marty specific
+ information like the subject and the workflowgroup name.
+ 
++--------------+ 
+ org.imixs.marty.plugins.ApplicationPlugin
++--------------+  
+ 
+ In addition the plugin suports a extended commment feature. Comments are
+ stored in the list property 'txtCommentList' which contains a map for each
+ comment. The map stores the username, the timestamp and the comment.
+ The plugin also stores the last comment in the field 'txtLastComment'.
+ 

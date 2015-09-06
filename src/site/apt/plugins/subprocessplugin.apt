@@ -1,0 +1,20 @@
+
+The SubprocessPlugin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ The Marty SubprocessPlugin starts a new subprocess.
+
++--------------+ 
+ org.imixs.marty.plugins.SubprocessPlugin
++--------------+ 
+ 
+ The created subprocess depends on the item configuration provided by the activity result
+ 
++--------------+ 
+<item name="subprocess">10400.10</item>
++--------------+ 
+
+ optional a model version can be provided
+
++--------------+ 
+<item name="subprocess">mode-de-1.0.0|10400.10</item>
++--------------+ 

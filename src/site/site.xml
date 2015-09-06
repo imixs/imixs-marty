@@ -48,9 +48,11 @@
 		</menu>
 		
 		<menu name="Plugins">
+			<item name="ApplicationPlugin" href="plugins/applicationplugin.html" />
 			<item name="DMSPlugin" href="plugins/dmsplugin.html" />
 			<item name="DeputyPlugin" href="plugins/deputyplugin.html" />
 			<item name="ResultPlugin" href="plugins/resultplugin.html" />
+			<item name="SubprocessPlugin" href="plugins/subprocessplugin.html" />
 		</menu>
 
 		<menu name="User Interface">
