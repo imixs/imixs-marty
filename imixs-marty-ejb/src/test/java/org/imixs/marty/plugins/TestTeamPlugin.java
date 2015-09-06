@@ -9,7 +9,6 @@ import java.util.Vector;
 
 import junit.framework.Assert;
 
-import org.imixs.marty.ejb.security.LDAPLookupService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.exceptions.PluginException;
@@ -116,6 +115,7 @@ public class TestTeamPlugin {
 	 * @throws PluginException
 	 * 
 	 * */
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testProcessRefInit() throws PluginException {
 
@@ -141,6 +141,7 @@ public class TestTeamPlugin {
 	 * @throws PluginException
 	 * 
 	 * */
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testProcessRefInitNoProcessRef() throws PluginException {
 
@@ -191,6 +192,7 @@ public class TestTeamPlugin {
 	 * @throws PluginException
 	 * 
 	 * */
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testProcessRefInitEmptyProcessRef() throws PluginException {
 		// case-1
@@ -235,6 +237,7 @@ public class TestTeamPlugin {
 	 * @throws PluginException
 	 * 
 	 * */
+	@SuppressWarnings("unchecked")
 	// @Ignore
 	@Test
 	public void testProcessRefUpdate() throws PluginException {
@@ -290,6 +293,7 @@ public class TestTeamPlugin {
 	 * @throws PluginException
 	 * 
 	 * */
+	@SuppressWarnings("unchecked")
 	// @Ignore
 	@Test
 	public void testInvalidProcessRef() throws PluginException {
@@ -358,6 +362,7 @@ public class TestTeamPlugin {
 	 * @throws PluginException
 	 * 
 	 * */
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testInvalidSpaceRef() throws PluginException {
 
