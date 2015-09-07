@@ -149,20 +149,35 @@ public class SubprocessPlugin extends AbstractPlugin {
 		// now split processid and activityid
 		int pos = sSubprocessItem.indexOf('.');
 		if (pos == -1)
-			throw new PluginException(this.getClass().getSimpleName(),
-					"WRONG SUBPROCESS FORMAT", "Subprocess '" + sSubprocessItem
-							+ "' has invalid format ");
+			throw new PluginException(
+					this.getClass().getSimpleName(),
+					"WRONG SUBPROCESS FORMAT",
+					"Subprocess '"
+							+ sSubprocessItem
+							+ "' has invalid format - expected '[modelversion]|processid.activityid'");
 		int iProcessId = new Integer(sSubprocessItem.substring(0, pos));
 		int iActivityId = new Integer(sSubprocessItem.substring(pos + 1));
 
+		// lookup ProcessEntiy from the model
+		ItemCollection processEntity = this.workflowService.getModelService()
+				.getProcessEntity(iProcessId, modelVersion);
+		if (processEntity == null)
+			throw new PluginException(this.getClass().getSimpleName(),
+					"WRONG SUBPROCESS FORMAT",
+					"error create Subprocess: Process Entity can not be found ("
+							+ modelVersion + "|" + iProcessId + ")");
+		String sWorkflowGroup = processEntity
+				.getItemValueString("txtworkflowgroup");
 		// create Workitem
 		ItemCollection subprocess = new ItemCollection();
+
 		subprocess.replaceItemValue("type", "workitem");
 		subprocess.replaceItemValue(WorkflowService.MODELVERSION, modelVersion);
 		subprocess.replaceItemValue(WorkflowService.UNIQUEIDREF,
 				documentContext.getItemValueString(WorkflowService.UNIQUEID));
 		subprocess.replaceItemValue(WorkflowService.PROCESSID, iProcessId);
 		subprocess.replaceItemValue(WorkflowService.ACTIVITYID, iActivityId);
+		subprocess.replaceItemValue("txtworkflowgroup", sWorkflowGroup);
 
 		// copy processRef
 		subprocess.replaceItemValue("txtProcessRef",
