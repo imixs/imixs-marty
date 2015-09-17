@@ -487,8 +487,6 @@ public class ModelController implements Serializable {
 		modelService.removeModel(modelversion);
 		// reset model info
 		reset();
-		logger.info("Model Version" + modelversion + " deleted!");
-
 	}
 
 	/**
@@ -499,12 +497,9 @@ public class ModelController implements Serializable {
 	 */
 	public void deleteWorkflowGroup(String workflowgroup, String modelversion)
 			throws AccessDeniedException, ModelException {
-
 		modelService.removeModelGroup(workflowgroup, modelversion);
 		// reset model info
 		reset();
-		logger.info("WorkflowGroup '" + workflowgroup + " (" + modelversion
-				+ ") deleted!");
 	}
 
 	/**
