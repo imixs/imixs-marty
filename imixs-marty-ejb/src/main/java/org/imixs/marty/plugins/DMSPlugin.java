@@ -15,8 +15,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
-import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.WorkflowKernel;
@@ -177,7 +177,7 @@ public class DMSPlugin extends AbstractPlugin {
 		}
 
 		// sort list by name
-		Collections.sort(dmsList, new WorkitemComparator("txtname", true));
+		Collections.sort(dmsList, new ItemCollectionComparator("txtname", true));
 
 		return dmsList;
 	}

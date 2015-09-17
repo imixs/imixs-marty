@@ -39,10 +39,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProfileService;
-import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 
@@ -182,7 +182,7 @@ public class UserInputController implements Serializable {
 		}
 
 		// sort by username..
-		Collections.sort(searchResult, new WorkitemComparator("txtUserName",
+		Collections.sort(searchResult, new ItemCollectionComparator("txtUserName",
 				true));
 
 		return searchResult;
@@ -277,7 +277,7 @@ public class UserInputController implements Serializable {
 		}
 
 		// sort by username..
-		Collections.sort(profiles, new WorkitemComparator("txtUserName", true));
+		Collections.sort(profiles, new ItemCollectionComparator("txtUserName", true));
 
 		return profiles;
 	}

@@ -44,10 +44,10 @@ import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProcessService;
 import org.imixs.marty.ejb.ProfileService;
-import org.imixs.marty.util.WorkitemComparator;
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.faces.util.LoginController;
 
@@ -437,7 +437,7 @@ public class ProcessController implements Serializable {
 
 		// sort by username..
 		Collections.sort(resultList,
-				new WorkitemComparator("txtUserName", true));
+				new ItemCollectionComparator("txtUserName", true));
 
 		return resultList;
 	}
@@ -455,7 +455,7 @@ public class ProcessController implements Serializable {
 
 		// sort by username..
 		Collections.sort(resultList,
-				new WorkitemComparator("txtUserName", true));
+				new ItemCollectionComparator("txtUserName", true));
 
 		return resultList;
 	}
@@ -473,7 +473,7 @@ public class ProcessController implements Serializable {
 
 		// sort by username..
 		Collections.sort(resultList,
-				new WorkitemComparator("txtUserName", true));
+				new ItemCollectionComparator("txtUserName", true));
 
 		return resultList;
 	}
@@ -527,7 +527,7 @@ public class ProcessController implements Serializable {
 
 		// sort by username..
 		Collections.sort(resultList,
-				new WorkitemComparator("txtUserName", true));
+				new ItemCollectionComparator("txtUserName", true));
 
 		return resultList;
 	}
