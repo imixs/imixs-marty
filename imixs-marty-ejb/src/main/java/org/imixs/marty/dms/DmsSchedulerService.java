@@ -52,6 +52,8 @@ import javax.ejb.Timer;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.xml.XMLItemCollection;
+import org.imixs.workflow.xml.XMLItemCollectionAdapter;
 
 /**
  * This EJB implements a TimerService which scans a configured file path for new
@@ -83,7 +85,8 @@ public class DmsSchedulerService {
 	final static public String DROP_FOLDER = "imixs_dms";
 	final static public long MAX_FILE_SIZE = 10485760; // 10 MB
 
-	private static Logger logger = Logger.getLogger(DmsSchedulerService.class.getName());
+	private static Logger logger = Logger.getLogger(DmsSchedulerService.class
+			.getName());
 
 	@EJB
 	private EntityService entityService;
@@ -230,8 +233,16 @@ public class DmsSchedulerService {
 		String msg = "started at " + dateFormatDE.format(calNow.getTime())
 				+ " by " + ctx.getCallerPrincipal().getName();
 		configItemCollection.replaceItemValue("statusmessage", msg);
-		timer = timerService.createTimer(startDate, interval,
-				configItemCollection);
+		XMLItemCollection xmlConfigItem = null;
+		try {
+			xmlConfigItem = XMLItemCollectionAdapter
+					.putItemCollection(configItemCollection);
+		} catch (Exception e) {
+			logger.severe("Unable to serialize confitItemCollection into a XML object");
+			e.printStackTrace();
+			return null;
+		}
+		timer = timerService.createTimer(startDate, interval, xmlConfigItem);
 
 		logger.info("[DmsSchedulerService] "
 				+ configItemCollection.getItemValueString("txtName")
@@ -280,11 +291,11 @@ public class DmsSchedulerService {
 			ItemCollection configItemCollection = findConfiguration();
 			if (configItemCollection == null)
 				return false;
-	
+
 			return (findTimer(configItemCollection
 					.getItemValueString("$uniqueid")) != null);
 		} catch (Exception e) {
-	
+
 			e.printStackTrace();
 			return false;
 		}
@@ -333,13 +344,13 @@ public class DmsSchedulerService {
 	 * @throws Exception
 	 */
 	public void scan() {
-	
+
 		logger.info("[DmsSchedulerService] scanning directories...");
-	
+
 		ItemCollection configItemCollection = findConfiguration();
-	
+
 		// get all import paths....
-		List vList = configItemCollection.getItemValue("_filepath");
+		List<?> vList = configItemCollection.getItemValue("_filepath");
 		for (Object aPath : vList) {
 			// test if
 			if (!aPath.toString().contains(DROP_FOLDER)) {
@@ -347,12 +358,12 @@ public class DmsSchedulerService {
 						+ aPath.toString());
 				logger.warning("[DmsSchedulerService] make sure path contains "
 						+ DROP_FOLDER);
-	
+
 			} else
 				scanPath(aPath.toString());
-	
+
 		}
-	
+
 	}
 
 	/**
@@ -366,8 +377,11 @@ public class DmsSchedulerService {
 	private Timer findTimer(String id) throws Exception {
 		for (Object obj : timerService.getTimers()) {
 			Timer timer = (javax.ejb.Timer) obj;
-			if (timer.getInfo() instanceof ItemCollection) {
-				ItemCollection adescription = (ItemCollection) timer.getInfo();
+			if (timer.getInfo() instanceof XMLItemCollection) {
+				XMLItemCollection xmlItemCollection = (XMLItemCollection) timer
+						.getInfo();
+				ItemCollection adescription = XMLItemCollectionAdapter
+						.getItemCollection(xmlItemCollection);
 				if (id.equals(adescription.getItemValueString("$uniqueid"))) {
 					return timer;
 				}
@@ -445,6 +459,7 @@ public class DmsSchedulerService {
 			if (length > MAX_FILE_SIZE) {
 				logger.warning("[DmsSchedulerService] file is to large - maximum size alowed = "
 						+ MAX_FILE_SIZE);
+				is.close();
 				return;
 			}
 
@@ -461,6 +476,7 @@ public class DmsSchedulerService {
 
 			// Ensure all the bytes have been read in
 			if (offset < bytes.length) {
+				is.close();
 				throw new IOException("Could not completely read file "
 						+ importFile.getName());
 			}
@@ -478,16 +494,15 @@ public class DmsSchedulerService {
 					"org.imixs.ACCESSLEVEL.MANAGERACCESS");
 			dmsItemCollection.replaceItemValue("$readAccess",
 					"org.imixs.ACCESSLEVEL.MANAGERACCESS");
-			
+
 			// add an empty reference
-			dmsItemCollection.replaceItemValue("$uniqueidRef",
-					"");
+			dmsItemCollection.replaceItemValue("$uniqueidRef", "");
 
 			// save item collection
 			entityService.save(dmsItemCollection);
 
 			// delete the file
-			 importFile.delete();
+			importFile.delete();
 		} catch (Exception e) {
 			logger.warning("[DmsSchedulerService] error importing file "
 					+ importFile.getAbsoluteFile());
