@@ -31,10 +31,12 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
    <resource-root path=”eclipselink.jar”/>
 </resources> 
 +------------------------------+
+
  If you happen to leave the EclipseLink version number in the jar name, 
  the module.xml should reflect that.
  
  Since wildfly 9 the resource-root have to look like this:
+ 
 +------------------------------+
 <resource-root path="eclipselink.jar">
         <filter>
@@ -52,7 +54,7 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
 ./jboss-cli.sh --connect '/system-property=eclipselink.archive.factory:add(value=org.jipijapa.eclipselink.JBossArchiveFactoryImpl)'
 +------------------------------+
 
-Note: If you run WildFly with a different portrange you need to add the ‘controller’ param to the jboss-cli script. See the following example accessing the admin console with port 9991:
+ Note: If you run WildFly with a different portrange you need to add the ‘controller’ param to the jboss-cli script. See the following example accessing the admin console with port 9991:
 
 +------------------------------+
 ./jboss-cli.sh --connect controller=127.0.0.1:9991 '/system-property=eclipselink.archive.factory:add(value=org.jipijapa.eclipselink.JBossArchiveFactoryImpl)'
@@ -337,8 +339,28 @@ IMIXS-WORKFLOW-Manager=org.imixs.ACCESSLEVEL.MANAGERACCESS
 </resource-ref>
 +------------------------------+
 
- In general Wildfly use always the java:/ prfix in jndi names. Se be careful about this 
+ In general Wildfly use always the java:/ prafix in jndi names. Se be careful about this 
  small change in the naming.
+
+
+**beans.xml
+~~~~~~~~~~~~~~~
+
+ If you extend the EJB Module with custom EJBs you need to take care adding the beans.xml file
+ into the /src/main/resources/META-INF/ folder. The file can be an empty xml file:
+
++------------+ 
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+      http://java.sun.com/xml/ns/javaee 
+      http://java.sun.com/xml/ns/javaee/beans_1_0.xsd">
+</beans>
++------------+
+
+
+**Set Mail-Session in standalone.xml
+~~~~~~~~~~~~~~~
 
  To add a mail resource to WildFly you can modify the standalone.xml file. Add the new 
  mail resource into the tag entry ‘<subsystem xmlns=”urn:jboss:domain:mail:2.0″>’
@@ -352,4 +374,11 @@ IMIXS-WORKFLOW-Manager=org.imixs.ACCESSLEVEL.MANAGERACCESS
 </subsystem>
 +------------------------------+
 
+ The outgoing mail server is configured in the socket-binding-group section:
 
++------------------------------+
+ <outbound-socket-binding name="mail-smtp">
+ <remote-destination host="localhost" port="25"/>
+ </outbound-socket-binding>
++------------------------------+
+ 
