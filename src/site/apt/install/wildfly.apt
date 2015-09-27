@@ -76,36 +76,33 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
 *Datasource Configuration
 ~~~~~~~~~~~~~~~
 
- To use the MySQL JDBC driver you can simply deploy the driver jar into the running Wildfly. 
+ To use a JDBC driver you can simply deploy the driver jar into the running Wildfly. 
  A new datasource configuration can be directly added into the standalone.xml file after
  the server was stopped.
- For postgree a database connection looks like this:
+ 
+ For PostgreSQL a database connection looks like this:
 
 +------------+
  <datasource jta="true" jndi-name="java:/jdbc/imixs_office" pool-name="imixs_office" enabled="true" use-ccm="false">
-                    <connection-url>jdbc:postgresql://localhost/office?autoReconnect=true</connection-url>
+                    <connection-url>jdbc:postgresql://localhost/office</connection-url>
                     <driver-class>org.postgresql.Driver</driver-class>
                     <driver>postgresql-9.3-1102.jdbc41.jar</driver>
                     <security>
                         <user-name>postgres</user-name>
                         <password>xxxx</password>
                     </security>
-                    <validation>
-                        <validate-on-match>false</validate-on-match>
-                        <background-validation>false</background-validation>
-                    </validation>
+                    <validation>  
+                        <valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker"></valid-connection-checker>
+                        <validate-on-match>true</validate-on-match>  
+                        <background-validation>false</background-validation>  
+                    </validation>                          
                     <statement>
                         <share-prepared-statements>false</share-prepared-statements>
                     </statement>
                 </datasource>
 +------------+
 
- Note: It is recommended to add the query param  ‘?autoReconnect=true’ which 
- avoids connection failures when the database server is restarted.
- 
- Its also recommended to set jta to true.
-
- For MySQL it could look like this:
+ For MySQL the datasource configuration should look like this:
 
 +------------+
  <datasource jta="true" jndi-name="java:/jdbc/imixs_office" pool-name="imixs_office" enabled="true" use-ccm="true" statistics-enabled="false">
@@ -116,10 +113,11 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
                         <user-name>root</user-name>
                         <password>xxx</password>
                     </security>
-                    <validation>
-                        <validate-on-match>false</validate-on-match>
-                        <background-validation>false</background-validation>
-                    </validation>
+                    <validation>  
+                        <valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker"></valid-connection-checker>
+                        <validate-on-match>true</validate-on-match>  
+                        <background-validation>false</background-validation>  
+                    </validation>                      
                     <timeout>
                         <set-tx-query-timeout>false</set-tx-query-timeout>
                         <blocking-timeout-millis>0</blocking-timeout-millis>
@@ -135,7 +133,24 @@ modules/system/layers/base/org/eclipse/persistence/main/module.xml
                 </datasource>
 +------------+
 
+ Note: The valid-connection-checker class is the recommended way to avoid connection 
+ failures when the MySQL Server is restarted. 
+ 
+ For MySQL the valid-connection-checker class is 
+ 
++------------+
+org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker
++------------+
 
+ for PostgreSQL the class is
+
++------------+
+org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker
++------------+
+
+ An alternative is adding  the query param  ‘?autoReconnect=true’ to the JDBC url. 
+ 
+ Its also recommended to set jta to true.
  
 *Security Realm
 ~~~~~~~~~~~~~~~
