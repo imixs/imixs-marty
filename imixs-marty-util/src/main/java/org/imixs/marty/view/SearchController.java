@@ -125,6 +125,13 @@ public class SearchController extends
 		super.doReset();
 	}
 	
+	
+	public void doResetSearchResult() {
+		super.doReset();
+	}
+	
+	
+	
 
 	/**
 	 * Refresh the result and reset the filter "$processid".
