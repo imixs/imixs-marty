@@ -94,8 +94,7 @@ public class SearchController extends
 
 	@Inject
 	protected IQueryBuilder queryBuilder = null;
-	
-	
+
 	@EJB
 	protected WorkflowService workflowService;
 
@@ -118,25 +117,29 @@ public class SearchController extends
 		searchFilter.replaceItemValue("type", "workitem");
 		super.doReset(event);
 	}
+
 	@Override
 	public void doReset() {
 		searchFilter = new ItemCollection();
 		searchFilter.replaceItemValue("type", "workitem");
 		super.doReset();
 	}
-	
-	
+
+	/**
+	 * resets the current result and set the page pointer to 0. The searchFilter
+	 * will not be reset.
+	 * 
+	 * @return
+	 */
 	public void doResetSearchResult() {
 		super.doReset();
 	}
-	
-	
-	
 
 	/**
 	 * Refresh the result and reset the filter "$processid".
 	 * 
-	 * This method is called by the SelectBox for WorkflowGroup to reset old $processID
+	 * This method is called by the SelectBox for WorkflowGroup to reset old
+	 * $processID
 	 * 
 	 * @param event
 	 */
@@ -144,8 +147,6 @@ public class SearchController extends
 		getSearchFilter().removeItem("$processid");
 		super.doRefresh();
 	}
-
-	
 
 	/**
 	 * Resets the search filter but not the search phrase (txtSearch) The method
@@ -248,8 +249,9 @@ public class SearchController extends
 			String sQuery = queryBuilder.getJPQLStatement(searchFilter,
 					getView());
 			logger.fine("findWorkitems: " + sQuery);
-			Collection<ItemCollection> col = workflowService.getEntityService().findAllEntities(
-					sQuery, controller.getRow(), controller.getMaxResult());
+			Collection<ItemCollection> col = workflowService.getEntityService()
+					.findAllEntities(sQuery, controller.getRow(),
+							controller.getMaxResult());
 			// clone the result list to reduce size of workitems
 			for (ItemCollection workitem : col) {
 				result.add(WorkitemHelper.clone(workitem));
