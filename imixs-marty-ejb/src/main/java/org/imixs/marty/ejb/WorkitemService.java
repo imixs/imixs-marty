@@ -200,6 +200,7 @@ public class WorkitemService {
 			}
 			workitem.replaceItemValue("type",
 					workitem.getItemValueString("type") + "deleted");
+			workitem.replaceItemValue("namcurrenteditor",workflowService.getUserName());
 			workitem = entityService.save(workitem);
 			
 			// update search index
@@ -254,6 +255,7 @@ public class WorkitemService {
 					archiveWorkitem(achildworkitem, recursive);
 				}
 			}
+			workitem.replaceItemValue("namcurrenteditor",workflowService.getUserName());
 			workitem.replaceItemValue("type",
 					workitem.getItemValueString("type") + "archive");
 
@@ -302,6 +304,7 @@ public class WorkitemService {
 			if (sType.endsWith("archive")) {
 				String sTypeNew = sType.substring(0, sType.indexOf("archive"));
 				workitem.replaceItemValue("type", sTypeNew);
+				workitem.replaceItemValue("namcurrenteditor",workflowService.getUserName());				
 			}
 
 			workitem = entityService.save(workitem);
@@ -349,6 +352,7 @@ public class WorkitemService {
 			if (sType.endsWith("deleted")) {
 				String sTypeNew = sType.substring(0, sType.indexOf("deleted"));
 				workitem.replaceItemValue("type", sTypeNew);
+				workitem.replaceItemValue("namcurrenteditor",workflowService.getUserName());				
 			}
 
 			workitem = entityService.save(workitem);
