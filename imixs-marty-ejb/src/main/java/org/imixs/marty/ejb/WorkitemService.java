@@ -145,11 +145,12 @@ public class WorkitemService {
 	 * 
 	 * @throws ProcessingErrorException
 	 * @throws AccessDeniedException
-	 * @throws PluginException 
+	 * @throws PluginException
 	 * 
 	 */
 	public ItemCollection processWorkItem(ItemCollection aworkitem)
-			throws AccessDeniedException, ProcessingErrorException, PluginException {
+			throws AccessDeniedException, ProcessingErrorException,
+			PluginException {
 
 		// Process workitem...
 		workItem = workflowService.processWorkItem(aworkitem);
@@ -164,6 +165,9 @@ public class WorkitemService {
 	 * The method can be called on all types of workitems. Also process or space
 	 * entities can be deleted. The param 'recursive' indicates if also
 	 * references to this workitem should be deleted recursively.
+	 * 
+	 * The method also updates the attribute namcurrenteditor with the current
+	 * user name.
 	 * 
 	 * The method did not change a workitem if the type property still ends with
 	 * the sufix 'deleted'
@@ -182,9 +186,9 @@ public class WorkitemService {
 		if (workitem == null)
 			return null;
 		logger.fine("[WorkitemService] softDeleteWorkitem: '"
-				+ workitem.getItemValueString(EntityService.UNIQUEID) + "' recursive="+recursive);
+				+ workitem.getItemValueString(EntityService.UNIQUEID)
+				+ "' recursive=" + recursive);
 
-		
 		String sType = workitem.getItemValueString("type");
 
 		if (!sType.endsWith("deleted")) {
@@ -200,9 +204,10 @@ public class WorkitemService {
 			}
 			workitem.replaceItemValue("type",
 					workitem.getItemValueString("type") + "deleted");
-			workitem.replaceItemValue("namcurrenteditor",workflowService.getUserName());
+			workitem.replaceItemValue("namcurrenteditor",
+					workflowService.getUserName());
 			workitem = entityService.save(workitem);
-			
+
 			// update search index
 			try {
 				LucenePlugin.updateWorkitem(workitem);
@@ -223,6 +228,9 @@ public class WorkitemService {
 	 * entities can be deleted. The param 'recursive' indicates if also
 	 * references to this workitem should be deleted recursively.
 	 * 
+	 * The method also updates the attribute namcurrenteditor with the current
+	 * user name.
+	 * 
 	 * The method did not change a workitem if the type property still ends with
 	 * the sufix 'archive'
 	 * 
@@ -239,11 +247,11 @@ public class WorkitemService {
 			boolean recursive) throws AccessDeniedException {
 		if (workitem == null)
 			return null;
-		
-		logger.fine("[WorkitemService] archiveWorkitem: '"
-				+ workitem.getItemValueString(EntityService.UNIQUEID) + "' recursive="+recursive);
 
-		
+		logger.fine("[WorkitemService] archiveWorkitem: '"
+				+ workitem.getItemValueString(EntityService.UNIQUEID)
+				+ "' recursive=" + recursive);
+
 		String sType = workitem.getItemValueString("type");
 		if (!sType.endsWith("archive")) {
 			if (recursive) {
@@ -255,12 +263,13 @@ public class WorkitemService {
 					archiveWorkitem(achildworkitem, recursive);
 				}
 			}
-			workitem.replaceItemValue("namcurrenteditor",workflowService.getUserName());
+			workitem.replaceItemValue("namcurrenteditor",
+					workflowService.getUserName());
 			workitem.replaceItemValue("type",
 					workitem.getItemValueString("type") + "archive");
 
 			workitem = entityService.save(workitem);
-			
+
 			// update search index
 			try {
 				LucenePlugin.updateWorkitem(workitem);
@@ -275,6 +284,9 @@ public class WorkitemService {
 	/**
 	 * THie method restores a workitem from the archive by changing the type
 	 * property. Also references to this workitem will be updated recursively.
+	 * 
+	 * The method also updates the attribute namcurrenteditor with the current
+	 * user name.
 	 * 
 	 * @param workitem
 	 *            - to be restored from the archive
@@ -304,7 +316,8 @@ public class WorkitemService {
 			if (sType.endsWith("archive")) {
 				String sTypeNew = sType.substring(0, sType.indexOf("archive"));
 				workitem.replaceItemValue("type", sTypeNew);
-				workitem.replaceItemValue("namcurrenteditor",workflowService.getUserName());				
+				workitem.replaceItemValue("namcurrenteditor",
+						workflowService.getUserName());
 			}
 
 			workitem = entityService.save(workitem);
@@ -323,6 +336,9 @@ public class WorkitemService {
 	 * This method restores a soft deleted workitem by changing the type
 	 * property. Also references to this workitem will be updated recursively.
 	 * 
+	 * The method also updates the attribute namcurrenteditor with the current
+	 * user name.
+	 * 
 	 * @param workitem
 	 *            to be deleted
 	 * @return restored workitem
@@ -337,7 +353,6 @@ public class WorkitemService {
 		logger.fine("[WorkitemService] restoreFromDeletions: '"
 				+ workitem.getItemValueString(EntityService.UNIQUEID) + "'");
 
-		
 		if (sType.endsWith("deleted")) {
 
 			String id = workitem.getItemValueString("$uniqueid");
@@ -352,7 +367,8 @@ public class WorkitemService {
 			if (sType.endsWith("deleted")) {
 				String sTypeNew = sType.substring(0, sType.indexOf("deleted"));
 				workitem.replaceItemValue("type", sTypeNew);
-				workitem.replaceItemValue("namcurrenteditor",workflowService.getUserName());				
+				workitem.replaceItemValue("namcurrenteditor",
+						workflowService.getUserName());
 			}
 
 			workitem = entityService.save(workitem);
@@ -389,7 +405,8 @@ public class WorkitemService {
 			return;
 
 		logger.fine("[WorkitemService] deleteWorkItem: '"
-				+ workitem.getItemValueString(EntityService.UNIQUEID) + "' recursive="+recursive);
+				+ workitem.getItemValueString(EntityService.UNIQUEID)
+				+ "' recursive=" + recursive);
 
 		if (recursive) {
 			String id = workitem.getItemValueString("$uniqueid");
