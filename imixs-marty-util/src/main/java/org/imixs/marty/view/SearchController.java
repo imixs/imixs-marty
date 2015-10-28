@@ -141,11 +141,13 @@ public class SearchController extends
 	 * This method is called by the SelectBox for WorkflowGroup to reset old
 	 * $processID
 	 * 
+	 * Reset paging to 0
+	 * 
 	 * @param event
 	 */
 	public void doRefreshWorkflowGroup(AjaxBehaviorEvent event) {
 		getSearchFilter().removeItem("$processid");
-		super.doRefresh();
+		doResetSearchResult();
 	}
 
 	/**
