@@ -331,6 +331,7 @@ public class ProfileService {
 				aWorkitem.getItemValue("txtUserName"));
 		clone.replaceItemValue("txtEmail", aWorkitem.getItemValue("txtEmail"));
 		clone.replaceItemValue("namdeputy", aWorkitem.getItemValue("namdeputy"));
+		clone.replaceItemValue("txtusericon", aWorkitem.getItemValue("txtusericon"));
 
 		return clone;
 	}

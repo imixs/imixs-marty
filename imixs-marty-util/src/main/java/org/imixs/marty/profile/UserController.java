@@ -47,7 +47,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.security.UserGroupService;
-import org.imixs.marty.util.ErrorHandler;
+import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
@@ -55,6 +55,8 @@ import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
+import org.imixs.workflow.jee.faces.fileupload.FileData;
+import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
 import org.imixs.workflow.jee.faces.util.LoginController;
 import org.imixs.workflow.jee.util.PropertyService;
 
@@ -92,8 +94,8 @@ public class UserController implements Serializable {
 
 	@EJB
 	protected PropertyService propertyService;
-	
-	@EJB 
+
+	@EJB
 	protected UserGroupService userGroupService;
 
 	@EJB
@@ -105,13 +107,18 @@ public class UserController implements Serializable {
 	@Inject
 	protected LoginController loginController;
 
+	@Inject
+	protected WorkflowController workflowController;
+
+	@Inject
+	protected FileUploadController fileUploadController;
+
 	private static final long serialVersionUID = 1L;
 	private ItemCollection workitem = null;
 	private boolean profileLoaded = false;
 	private Locale locale;
 
-	private static Logger logger = Logger.getLogger(UserController.class
-			.getName());
+	private static Logger logger = Logger.getLogger(UserController.class.getName());
 
 	public UserController() {
 		super();
@@ -140,8 +147,7 @@ public class UserController implements Serializable {
 			// the selected user locale
 			String sModelVersion = "system-" + getLocale().getLanguage();
 			// try to load the profile for the current user
-			ItemCollection profile = profileService
-					.lookupProfileById(loginController.getUserPrincipal());
+			ItemCollection profile = profileService.lookupProfileById(loginController.getUserPrincipal());
 			if (profile == null) {
 				// create new Profile for current user
 				profile = new ItemCollection();
@@ -152,48 +158,41 @@ public class UserController implements Serializable {
 				// set default group
 				profile.replaceItemValue("txtgroups", "IMIXS-WORKFLOW-Author");
 				// process new profile...
-				profile.replaceItemValue("$ActivityID",
-						CREATE_PROFILE_ACTIVITY_ID);
+				profile.replaceItemValue("$ActivityID", CREATE_PROFILE_ACTIVITY_ID);
 				try {
 					profile = workflowService.processWorkItem(profile);
 				} catch (PluginException e) {
 					logger.severe("[UserController] unable to process new profile entity!");
-					throw new ProcessingErrorException(
-							UserController.class.getName(),
-							ProcessingErrorException.INVALID_WORKITEM,
-							" unable to process new profile entity!", e);
+					throw new ProcessingErrorException(UserController.class.getName(),
+							ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!", e);
 				}
 				logger.info("New Profile created ");
 
 			} else {
 				// check if profile.autoProcessOnLogin is defined
 
-				String sAutoProcessID = propertyService.getProperties()
-						.getProperty("profile.autoProcessOnLogin");
+				String sAutoProcessID = propertyService.getProperties().getProperty("profile.autoProcessOnLogin");
 
-				logger.fine("[UserController] profile.autoProcessOnLogin="
-						+ sAutoProcessID);
+				logger.fine("[UserController] profile.autoProcessOnLogin=" + sAutoProcessID);
 
 				try {
 					if (sAutoProcessID != null) {
 						int iActiviyID = Integer.valueOf(sAutoProcessID);
 						profile.replaceItemValue("$ActivityID", iActiviyID);
-						logger.fine("[UserController] autoprocess profile with autoProcessOnLogin="
-								+ iActiviyID);
+						logger.fine("[UserController] autoprocess profile with autoProcessOnLogin=" + iActiviyID);
 						try {
 							profile = workflowService.processWorkItem(profile);
 						} catch (PluginException e) {
 							logger.severe("[UserController] unable to process new profile entity!");
-							throw new ProcessingErrorException(
-									UserController.class.getName(),
-									ProcessingErrorException.INVALID_WORKITEM,
-									" unable to process new profile entity!", e);
+							throw new ProcessingErrorException(UserController.class.getName(),
+									ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!",
+									e);
 						}
 
 					}
 				} catch (NumberFormatException nfe) {
-					logger.warning("[UserController] unable to autoprocess profile with autoProcessOnLogin="
-							+ sAutoProcessID);
+					logger.warning(
+							"[UserController] unable to autoprocess profile with autoProcessOnLogin=" + sAutoProcessID);
 				}
 
 			}
@@ -218,8 +217,7 @@ public class UserController implements Serializable {
 	 * @throws ProcessingErrorException
 	 * @throws AccessDeniedException
 	 */
-	public ItemCollection getWorkitem() throws AccessDeniedException,
-			ProcessingErrorException {
+	public ItemCollection getWorkitem() throws AccessDeniedException, ProcessingErrorException {
 		// test if current users profile was loaded
 		if (!profileLoaded)
 			init();
@@ -243,13 +241,12 @@ public class UserController implements Serializable {
 		// if no locale is set try to get it from cookie or set default
 		if (locale == null) {
 			FacesContext facesContext = FacesContext.getCurrentInstance();
-			HttpServletRequest request = (HttpServletRequest) FacesContext
-					.getCurrentInstance().getExternalContext().getRequest();
+			HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
+					.getRequest();
 
 			String cookieName = null;
 
-			Cookie cookie[] = ((HttpServletRequest) facesContext
-					.getExternalContext().getRequest()).getCookies();
+			Cookie cookie[] = ((HttpServletRequest) facesContext.getExternalContext().getRequest()).getCookies();
 			if (cookie != null && cookie.length > 0) {
 				for (int i = 0; i < cookie.length; i++) {
 					cookieName = cookie[i].getName();
@@ -258,8 +255,7 @@ public class UserController implements Serializable {
 						if (sLocale != null && !"".equals(sLocale)) {
 
 							// split locale
-							StringTokenizer stLocale = new StringTokenizer(
-									sLocale, "_");
+							StringTokenizer stLocale = new StringTokenizer(sLocale, "_");
 							if (stLocale.countTokens() == 1) {
 								// only language variant
 								String sLang = stLocale.nextToken();
@@ -300,10 +296,10 @@ public class UserController implements Serializable {
 			this.locale = alocale;
 
 		// update cookie
-		HttpServletResponse response = (HttpServletResponse) FacesContext
-				.getCurrentInstance().getExternalContext().getResponse();
-		HttpServletRequest request = (HttpServletRequest) FacesContext
-				.getCurrentInstance().getExternalContext().getRequest();
+		HttpServletResponse response = (HttpServletResponse) FacesContext.getCurrentInstance().getExternalContext()
+				.getResponse();
+		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
+				.getRequest();
 		Cookie cookieLocale = new Cookie(COOKIE_LOCALE, locale.toString());
 		cookieLocale.setPath(request.getContextPath());
 
@@ -334,8 +330,8 @@ public class UserController implements Serializable {
 	}
 
 	/**
-	 * This method returns the username (displayname) for a useraccount.
-	 * If no Username is set in the profile then we return the useraccount.
+	 * This method returns the username (displayname) for a useraccount. If no
+	 * Username is set in the profile then we return the useraccount.
 	 * 
 	 * @param aName
 	 * @return
@@ -356,6 +352,29 @@ public class UserController implements Serializable {
 	}
 
 	/**
+	 * Computes the middle initals of a username
+	 * 
+	 * @param aAccount
+	 * @return
+	 */
+	public String getMiddleInitial(String aAccount) {
+		String username = getUserName(aAccount);
+		String sInitials = "NO";
+		if (!username.isEmpty() && username.length() > 2) {
+			int iPos = username.indexOf(' ');
+			if (iPos > -1) {
+				sInitials = username.substring(0, 1);
+				sInitials = sInitials + username.substring(iPos + 1, iPos + 2);
+			} else {
+				sInitials = username.substring(0, 2);
+			}
+		} else {
+			sInitials = username;
+		}
+		return sInitials;
+	}
+
+	/**
 	 * This method returns the email for a useraccount
 	 * 
 	 * @param aName
@@ -370,31 +389,17 @@ public class UserController implements Serializable {
 	}
 
 	/**
-	 * This method processes the current userprofile and returns an action
-	 * result. The method expects that the current workItem provides a valid
-	 * $ActiviytID.
+	 * remmoves the current user icon
 	 * 
-	 * The method evaluates the default property 'txtworkflowResultmessage' from
-	 * the model as an action result.
-	 * 
-	 * @return action result
+	 * @param event
 	 * @throws AccessDeniedException
-	 * @throws
+	 * @throws ProcessingErrorException
 	 */
-	public String process() throws AccessDeniedException,
-			ProcessingErrorException {
+	public void removeUserIcon() {
 
-		// process workItem now...
-		try {
-			workitem = this.workflowService.processWorkItem(workitem);
-		} catch (PluginException e) {
-			// add a new FacesMessage into the FacesContext
-			ErrorHandler.handlePluginException(e);
-		}
-
-		// get default workflowResult message
-		String action = workitem.getItemValueString("txtworkflowresultmessage");
-		return ("".equals(action) ? null : action);
+		String file = workflowController.getWorkitem().getItemValueString("txtusericon");
+		workflowController.getWorkitem().removeFile(file);
+		workflowController.getWorkitem().replaceItemValue("txtusericon", "");
 
 	}
 
@@ -409,20 +414,51 @@ public class UserController implements Serializable {
 		if (workflowEvent == null || workflowEvent.getWorkitem() == null) {
 			return;
 		}
-		
-		String sType=workflowEvent.getWorkitem().getItemValueString("type");
+
+		String sType = workflowEvent.getWorkitem().getItemValueString("type");
 
 		// skip if not a profile...
 		if (!sType.startsWith("profile"))
 			return;
 
+		if ("profile".equals(sType) && WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
+			fileUploadController.reset();
+		}
+
+		// Update usericon and initials
+		// test icon upload
+		if ("profile".equals(sType) && WorkflowEvent.WORKITEM_BEFORE_PROCESS == workflowEvent.getEventType()) {
+
+			if (fileUploadController != null) {
+				List<FileData> fileList = fileUploadController.getUploades();
+
+				if (fileList != null && fileList.size() > 0) {
+					while (fileList.size() > 1) {
+						fileList.remove(0);
+					}
+					// we take the first element
+					FileData file = fileList.get(0);
+
+					String filenametest = file.getName().toLowerCase();
+					if (filenametest.endsWith(".png") || filenametest.endsWith(".gif")
+							|| filenametest.endsWith(".jpg")) {
+						logger.info("UserController Icon Upload started: " + file.getName());
+						workflowEvent.getWorkitem().replaceItemValue("txtusericon", file.getName());
+					} else {
+						fileList.remove(0);
+						logger.info("UserController Icon Upload not supported for: " + file.getName());
+					}
+				}
+				fileUploadController.updateWorkitem(workflowEvent.getWorkitem());
+			}
+
+		}
+
 		// discared cached user profile and update locale
-		if ("profile".equals(sType) && WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
-				.getEventType()) {
+		if ("profile".equals(sType) && WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
 
 			// check if current user profile was processed....
-			String sName = workflowEvent.getWorkitem().getItemValueString(
-					"txtName");
+			String sName = workflowEvent.getWorkitem().getItemValueString("txtName");
 			if (sName.equals(this.getWorkitem().getItemValueString("txtName"))) {
 				logger.info("[UserController] reload current user profile");
 				setWorkitem(workflowEvent.getWorkitem());
@@ -432,14 +468,13 @@ public class UserController implements Serializable {
 			}
 
 		}
-		
+
 		// check for deletion to remove the userDB entry...
-		if (WorkflowEvent.WORKITEM_AFTER_SOFTDELETE == workflowEvent
-				.getEventType()) {
-			
-			String id=workflowEvent.getWorkitem().getItemValueString("txtname");
+		if (WorkflowEvent.WORKITEM_AFTER_SOFTDELETE == workflowEvent.getEventType()) {
+
+			String id = workflowEvent.getWorkitem().getItemValueString("txtname");
 			userGroupService.removeUserId(id);
-			
+
 		}
 
 	}
@@ -498,7 +533,8 @@ public class UserController implements Serializable {
 	 * This method returns all workitems sotred in the users profile
 	 * txtWorkitemRef
 	 * 
-	 * @param refId - a UnqiueIdRef as optional filter criterium
+	 * @param refId
+	 *            - a UnqiueIdRef as optional filter criterium
 	 * @return
 	 */
 	public List<ItemCollection> getFavorites(String refId) {
@@ -508,13 +544,12 @@ public class UserController implements Serializable {
 			return new ArrayList<ItemCollection>();
 
 		// verify optional refId param
-		if (refId!=null && ("-".equals(refId) || refId.isEmpty()) ) {
-			refId=null;
+		if (refId != null && ("-".equals(refId) || refId.isEmpty())) {
+			refId = null;
 		}
 
 		// create a JPQL statement....
-		
-		
+
 		// create IN list
 		String inStatement = "";
 		for (String aID : favorites) {
@@ -524,31 +559,27 @@ public class UserController implements Serializable {
 		inStatement = inStatement.substring(0, inStatement.length() - 1);
 
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-		
-		if (refId!=null) {
-			sQuery+= "	 JOIN wi.textItems as ref ";
-		}
-		
-		sQuery += " WHERE wi.type IN ('workitem','workitemarchive')";
-		
 
-		if (refId!=null) {
-			sQuery+= "	AND ref.itemName = '$uniqueidref' AND ref.itemValue = '"
-						+ refId + "'";
+		if (refId != null) {
+			sQuery += "	 JOIN wi.textItems as ref ";
 		}
-		
-		
+
+		sQuery += " WHERE wi.type IN ('workitem','workitemarchive')";
+
+		if (refId != null) {
+			sQuery += "	AND ref.itemName = '$uniqueidref' AND ref.itemValue = '" + refId + "'";
+		}
+
 		sQuery += " AND wi.id IN (" + inStatement + ")";
 		sQuery += " ORDER BY wi.modified DESC";
 
-		return workflowService.getEntityService()
-				.findAllEntities(sQuery, 0, -1);
+		return workflowService.getEntityService().findAllEntities(sQuery, 0, -1);
 
 	}
 
 	public List<ItemCollection> getFavorites() {
 		return getFavorites(null);
-		
+
 	}
 	/*
 	 * HELPER METHODS
@@ -562,8 +593,7 @@ public class UserController implements Serializable {
 	 * @throws AccessDeniedException
 	 * 
 	 */
-	private void updateLocaleFromProfile() throws AccessDeniedException,
-			ProcessingErrorException {
+	private void updateLocaleFromProfile() throws AccessDeniedException, ProcessingErrorException {
 
 		Locale profileLocale = null;
 
@@ -572,8 +602,7 @@ public class UserController implements Serializable {
 		if ("".equals(sLocale)) {
 			// get default value
 			profileLocale = getLocale();
-			getWorkitem().replaceItemValue("txtLocale",
-					profileLocale.toString());
+			getWorkitem().replaceItemValue("txtLocale", profileLocale.toString());
 		} else {
 
 			if (sLocale.indexOf('_') > -1) {
@@ -589,8 +618,7 @@ public class UserController implements Serializable {
 		// reset locale to update cookie
 		setLocale(profileLocale);
 		// set locale for context
-		FacesContext.getCurrentInstance().getViewRoot()
-				.setLocale(profileLocale);
+		FacesContext.getCurrentInstance().getViewRoot().setLocale(profileLocale);
 
 	}
 
