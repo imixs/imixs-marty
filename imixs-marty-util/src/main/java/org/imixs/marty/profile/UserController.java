@@ -115,6 +115,7 @@ public class UserController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private ItemCollection workitem = null;
+	private ItemCollection currentProfile = null;
 	private boolean profileLoaded = false;
 	private Locale locale;
 
@@ -320,13 +321,16 @@ public class UserController implements Serializable {
 
 	/**
 	 * This method returns a cached cloned version of a user profile for a given
-	 * useraccount
+	 * useraccount. The profile is cached in the current user session
 	 * 
 	 * @param aName
 	 * @return
 	 */
 	public ItemCollection getProfile(String aAccount) {
-		return profileService.findProfileById(aAccount);
+		if (currentProfile == null || !currentProfile.getItemValueString("txtname").equals(aAccount)) {
+			currentProfile = profileService.findProfileById(aAccount);
+		}
+		return currentProfile;
 	}
 
 	/**
@@ -337,41 +341,13 @@ public class UserController implements Serializable {
 	 * @return
 	 */
 	public String getUserName(String aAccount) {
-
-		ItemCollection userProfile = profileService.findProfileById(aAccount);
-		if (userProfile != null) {
-			String value = userProfile.getItemValueString("txtuserName");
-			if (!value.isEmpty())
-				return value;
-			else
-				return aAccount;
-
+		// use internal cache
+		currentProfile = getProfile(aAccount);
+		if (currentProfile == null) {
+			return null;
 		} else {
-			return aAccount;
+			return currentProfile.getItemValueString("txtuserName");
 		}
-	}
-
-	/**
-	 * Computes the middle initals of a username
-	 * 
-	 * @param aAccount
-	 * @return
-	 */
-	public String getMiddleInitial(String aAccount) {
-		String username = getUserName(aAccount);
-		String sInitials = "NO";
-		if (!username.isEmpty() && username.length() > 2) {
-			int iPos = username.indexOf(' ');
-			if (iPos > -1) {
-				sInitials = username.substring(0, 1);
-				sInitials = sInitials + username.substring(iPos + 1, iPos + 2);
-			} else {
-				sInitials = username.substring(0, 2);
-			}
-		} else {
-			sInitials = username;
-		}
-		return sInitials;
 	}
 
 	/**
@@ -381,11 +357,13 @@ public class UserController implements Serializable {
 	 * @return
 	 */
 	public String getEmail(String aAccount) {
-		ItemCollection userProfile = profileService.findProfileById(aAccount);
-		if (userProfile != null)
-			return userProfile.getItemValueString("txtemail");
-		else
+		// use internal cache
+		currentProfile = getProfile(aAccount);
+		if (currentProfile == null) {
 			return null;
+		} else {
+			return currentProfile.getItemValueString("txtemail");
+		}
 	}
 
 	/**
@@ -396,7 +374,6 @@ public class UserController implements Serializable {
 	 * @throws ProcessingErrorException
 	 */
 	public void removeUserIcon() {
-
 		String file = workflowController.getWorkitem().getItemValueString("txtusericon");
 		workflowController.getWorkitem().removeFile(file);
 		workflowController.getWorkitem().replaceItemValue("txtusericon", "");

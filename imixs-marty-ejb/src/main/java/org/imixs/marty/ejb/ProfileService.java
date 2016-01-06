@@ -52,15 +52,11 @@ import org.imixs.workflow.jee.util.PropertyService;
  * @author rsoika
  */
 
-@DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
-		"org.imixs.ACCESSLEVEL.READERACCESS",
-		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
-		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+@DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS", "org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
-@RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS",
-		"org.imixs.ACCESSLEVEL.READERACCESS",
-		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
-		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+@RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS", "org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Singleton
 public class ProfileService {
@@ -70,8 +66,7 @@ public class ProfileService {
 	final int MAX_SEARCH_COUNT = 1;
 	private Cache cache;
 
-	private static Logger logger = Logger.getLogger(ProfileService.class
-			.getName());
+	private static Logger logger = Logger.getLogger(ProfileService.class.getName());
 
 	@EJB
 	private org.imixs.workflow.jee.ejb.EntityService entityService;
@@ -90,27 +85,29 @@ public class ProfileService {
 		// initialize cache...
 		reset();
 	}
-	
+
 	/**
 	 * resets the profile cache..
 	 */
 	public void reset() {
 		// try to lookup cache size...
 		int iCacheSize = DEFAULT_CACHE_SIZE;
-		
-		// early initialization did not work in Wildfly because of security problem
+
+		// early initialization did not work in Wildfly because of security
+		// problem
 		// see issue-#59
-//		try {
-//		String sCacheSize = propertyService.getProperties().getProperty(
-//				"profileservice.cachesize", DEFAULT_CACHE_SIZE + "");
-//
-//		
-//		
-//			iCacheSize = Integer.parseInt(sCacheSize);
-//		} catch (NumberFormatException nfe) {
-//			logger.warning("ProfileService unable to determine property: profileservice.cachesize - check imixs.properties!");
-//			iCacheSize = DEFAULT_CACHE_SIZE;
-//		}
+		// try {
+		// String sCacheSize = propertyService.getProperties().getProperty(
+		// "profileservice.cachesize", DEFAULT_CACHE_SIZE + "");
+		//
+		//
+		//
+		// iCacheSize = Integer.parseInt(sCacheSize);
+		// } catch (NumberFormatException nfe) {
+		// logger.warning("ProfileService unable to determine property:
+		// profileservice.cachesize - check imixs.properties!");
+		// iCacheSize = DEFAULT_CACHE_SIZE;
+		// }
 		// initialize cache
 		cache = new Cache(iCacheSize);
 	}
@@ -122,8 +119,7 @@ public class ProfileService {
 	 * @return
 	 */
 	public boolean useLowerCaseUserID() {
-		String value = propertyService.getProperties().getProperty(
-				"profile.lowerCaseUserID", "true");
+		String value = propertyService.getProperties().getProperty("profile.lowerCaseUserID", "true");
 		if ("false".equals(value))
 			return false;
 		else
@@ -192,14 +188,12 @@ public class ProfileService {
 				cache.put(userid, userProfile);
 				logger.fine("[ProfileService] profile '" + userid + "' cached");
 			} else {
-				logger.fine("[ProfileService] profile '" + userid
-						+ "' not found");
+				logger.fine("[ProfileService] profile '" + userid + "' not found");
 				// put null entry into cache to avoid next lookup!
 				cache.put(userid, null);
 			}
 		} else {
-			logger.fine("[ProfileService] get profile '" + userid
-					+ "' from cache");
+			logger.fine("[ProfileService] get profile '" + userid + "' from cache");
 		}
 		return userProfile;
 
@@ -235,22 +229,18 @@ public class ProfileService {
 
 		logger.fine("[ProfileService] lookupProfileById '" + userid + "'");
 		// lookup user profile....
-		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-				+ " JOIN profile.textItems AS t2"
-				+ " WHERE  profile.type= 'profile' "
-				+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
+		String sQuery = "SELECT DISTINCT profile FROM Entity as profile " + " JOIN profile.textItems AS t2"
+				+ " WHERE  profile.type= 'profile' " + " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
 				+ userid + "' ";
 
 		logger.finest("searchprofile: " + sQuery);
 
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, MAX_SEARCH_COUNT);
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery, 0, MAX_SEARCH_COUNT);
 
 		if (col.size() > 0) {
 			userProfile = col.iterator().next();
 		} else {
-			logger.fine("[ProfileService] lookup profile '" + userid
-					+ "' failed");
+			logger.fine("[ProfileService] lookup profile '" + userid + "' failed");
 		}
 		return userProfile;
 	}
@@ -277,25 +267,19 @@ public class ProfileService {
 
 		logger.fine("[ProfileService] lookup profile '" + search + "'");
 		// lookup user profile....
-		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-				+ " JOIN profile.textItems AS t1"
-				+ " JOIN profile.textItems AS t2"
-				+ " WHERE  profile.type= 'profile' "
-				+ " AND (  (t1.itemName = 'txtusername' AND t1.itemValue = '"
-				+ search + "') "
-				+ "      OR(t2.itemName = 'txtemail' AND t2.itemValue = '"
-				+ search + "')) ";
+		String sQuery = "SELECT DISTINCT profile FROM Entity as profile " + " JOIN profile.textItems AS t1"
+				+ " JOIN profile.textItems AS t2" + " WHERE  profile.type= 'profile' "
+				+ " AND (  (t1.itemName = 'txtusername' AND t1.itemValue = '" + search + "') "
+				+ "      OR(t2.itemName = 'txtemail' AND t2.itemValue = '" + search + "')) ";
 
 		logger.finest("searchprofile: " + sQuery);
 
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, MAX_SEARCH_COUNT);
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery, 0, MAX_SEARCH_COUNT);
 
 		if (col.size() > 0) {
 			userProfile = col.iterator().next();
 		} else {
-			logger.fine("[ProfileService] lookup profile '" + search
-					+ "' failed");
+			logger.fine("[ProfileService] lookup profile '" + search + "' failed");
 		}
 		return userProfile;
 	}
@@ -309,30 +293,61 @@ public class ProfileService {
 		cache.remove(userid);
 	}
 
+	/**
+	 * This method closes a profile entity and computes the attributes
+	 * txtUsername and txtInitials
+	 * 
+	 * @param aWorkitem
+	 * @return
+	 */
 	public static ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
 		ItemCollection clone = new ItemCollection();
 
 		// clone the standard WorkItem properties
 		clone.replaceItemValue("Type", aWorkitem.getItemValue("Type"));
 		clone.replaceItemValue("$UniqueID", aWorkitem.getItemValue("$UniqueID"));
-		clone.replaceItemValue("$ModelVersion",
-				aWorkitem.getItemValue("$ModelVersion"));
-		clone.replaceItemValue("$ProcessID",
-				aWorkitem.getItemValue("$ProcessID"));
+		clone.replaceItemValue("$ModelVersion", aWorkitem.getItemValue("$ModelVersion"));
+		clone.replaceItemValue("$ProcessID", aWorkitem.getItemValue("$ProcessID"));
 		clone.replaceItemValue("$Created", aWorkitem.getItemValue("$Created"));
 		clone.replaceItemValue("$Modified", aWorkitem.getItemValue("$Modified"));
 		clone.replaceItemValue("$isAuthor", aWorkitem.getItemValue("$isAuthor"));
 
-		clone.replaceItemValue("txtWorkflowStatus",
-				aWorkitem.getItemValue("txtWorkflowStatus"));
-
-		clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
-		clone.replaceItemValue("txtUserName",
-				aWorkitem.getItemValue("txtUserName"));
+		clone.replaceItemValue("txtWorkflowStatus", aWorkitem.getItemValue("txtWorkflowStatus"));
 		clone.replaceItemValue("txtEmail", aWorkitem.getItemValue("txtEmail"));
 		clone.replaceItemValue("namdeputy", aWorkitem.getItemValue("namdeputy"));
 		clone.replaceItemValue("txtusericon", aWorkitem.getItemValue("txtusericon"));
 
+		// get accountName
+		String sAccountName = aWorkitem.getItemValueString("txtName");
+		clone.replaceItemValue("txtName", sAccountName);
+
+		// test txtuserName
+		String sUserName = aWorkitem.getItemValueString("txtUserName");
+		if (!sUserName.isEmpty()) {
+			clone.replaceItemValue("txtUserName", sUserName);
+		} else {
+			// use account name
+			clone.replaceItemValue("txtUserName", sAccountName);
+		}
+
+		// construct initials (2 digits)
+		String sInitials = aWorkitem.getItemValueString("txtinitials");
+		if (sInitials.isEmpty()) {
+			// default
+			sInitials = "NO";
+			if (!sUserName.isEmpty() && sUserName.length() > 2) {
+				int iPos = sUserName.indexOf(' ');
+				if (iPos > -1) {
+					sInitials = sUserName.substring(0, 1);
+					sInitials = sInitials + sUserName.substring(iPos + 1, iPos + 2);
+				} else {
+					sInitials = sUserName.substring(0, 2);
+				}
+			} else {
+				sInitials = sAccountName;
+			}
+			clone.replaceItemValue("txtinitials", sInitials);
+		}
 		return clone;
 	}
 
@@ -342,8 +357,7 @@ public class ProfileService {
 	 * @author rsoika
 	 * 
 	 */
-	class Cache extends LinkedHashMap<String, ItemCollection> implements
-			Serializable {
+	class Cache extends LinkedHashMap<String, ItemCollection> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private final int capacity;
 
