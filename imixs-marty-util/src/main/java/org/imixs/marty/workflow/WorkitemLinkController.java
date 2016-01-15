@@ -225,7 +225,7 @@ public class WorkitemLinkController implements Serializable {
 	}
 
 	/**
-	 * This method returns a list of ItemCollections refered by the current
+	 * This method returns a list of ItemCollections referred by the current
 	 * workItem (txtWorkitemRef).
 	 * 
 	 * The filter will be applied to the result list. So each WorkItem will be
@@ -235,6 +235,7 @@ public class WorkitemLinkController implements Serializable {
 	 * 
 	 * @return - list of ItemCollection with matches the current filter
 	 */
+	@SuppressWarnings("unchecked")
 	public List<ItemCollection> getReferences(String filter) {
 		List<ItemCollection> filterResult = null;
 
@@ -246,6 +247,10 @@ public class WorkitemLinkController implements Serializable {
 		if (filterResult == null) {
 			// build a new workitem list for that filter....
 			filterResult = new ArrayList<ItemCollection>();
+			
+			if ( workflowController.getWorkitem()==null) {
+				return filterResult;
+			}
 
 			logger.fine("lookup references for: " + filter);
 
