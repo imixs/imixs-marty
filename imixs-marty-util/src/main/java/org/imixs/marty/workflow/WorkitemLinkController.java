@@ -44,6 +44,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
+import org.imixs.workflow.plugins.jee.extended.LuceneSearchService;
 
 /**
  * The WorkitemLinkController provides suggest-box behavior based on the JSF 2.0
@@ -72,6 +73,9 @@ public class WorkitemLinkController implements Serializable {
 
 	@EJB
 	protected WorkflowService workflowService;
+
+	@EJB
+	protected LuceneSearchService luceneSearchService;
 
 	private static final long serialVersionUID = 1L;
 	private List<ItemCollection> searchResult = null;
@@ -154,7 +158,7 @@ public class WorkitemLinkController implements Serializable {
 				sSearchTerm += " (*" + input.toLowerCase() + "*)";
 			}
 
-			searchResult = LucenePlugin.search(sSearchTerm, workflowService);
+			searchResult = luceneSearchService.search(sSearchTerm, workflowService);
 			// clone result list
 			for (int i = 0; i < searchResult.size(); i++) {
 				searchResult.set(i, WorkitemHelper.clone(searchResult.get(i)));
