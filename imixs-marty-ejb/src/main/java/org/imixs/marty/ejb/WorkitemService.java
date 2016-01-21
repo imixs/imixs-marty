@@ -41,7 +41,7 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.plugins.jee.extended.LucenePlugin;
+import org.imixs.workflow.plugins.jee.extended.LuceneUpdateService;
 
 /**
  * The WorkitemService provides methods to create, process, update and remove a
@@ -73,6 +73,9 @@ public class WorkitemService {
 	@EJB
 	org.imixs.workflow.jee.ejb.ModelService modelService;
 
+	@EJB 
+	LuceneUpdateService luceneService;
+	
 	ItemCollection workItem = null;
 
 	private static Logger logger = Logger.getLogger(WorkitemService.class
@@ -210,7 +213,7 @@ public class WorkitemService {
 
 			// update search index
 			try {
-				LucenePlugin.updateWorkitem(workitem);
+				luceneService.updateWorkitem(workitem);
 			} catch (Exception e) {
 				// no op
 				logger.finest("[WorkitemService] moveIntoDeletesions: unable to update lucene index");
@@ -272,7 +275,7 @@ public class WorkitemService {
 
 			// update search index
 			try {
-				LucenePlugin.updateWorkitem(workitem);
+				luceneService.updateWorkitem(workitem);
 			} catch (Exception e) {
 				// no op
 			}
@@ -324,7 +327,7 @@ public class WorkitemService {
 
 			// update search index
 			try {
-				LucenePlugin.updateWorkitem(workitem);
+				luceneService.updateWorkitem(workitem);
 			} catch (Exception e) {
 				// no op
 			}
@@ -375,7 +378,7 @@ public class WorkitemService {
 
 			// update search index
 			try {
-				LucenePlugin.updateWorkitem(workitem);
+				luceneService.updateWorkitem(workitem);
 			} catch (Exception e) {
 				// no op
 
