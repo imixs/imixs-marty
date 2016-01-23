@@ -45,7 +45,7 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.jee.ejb.EntityService;
 import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.plugins.jee.extended.LuceneUpdateService;
+import org.imixs.workflow.lucene.LuceneUpdateService;
 
 /**
  * The AmdinPService provides a mechanim to start long runing jobs to update
@@ -100,6 +100,9 @@ public class AdminPService {
 	@EJB 
 	LuceneUpdateService luceneUpdateService;
 
+	@EJB
+	LuceneUpdateService luceneService;
+	
 	private String lastUnqiueID = null;
 	private static int MAX_COUNT = 300;
 	private static Logger logger = Logger.getLogger(AdminPService.class

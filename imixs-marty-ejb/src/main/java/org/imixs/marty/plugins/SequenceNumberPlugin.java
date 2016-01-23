@@ -100,11 +100,8 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 			Context ctx = (Context) ictx.lookup("java:comp/env");
 			sequenceService = (SequenceService) ctx.lookup(jndiName);
 		} catch (NamingException e) {
-			throw new PluginException(
-					SequenceNumberPlugin.class.getSimpleName(),
-					NO_SEQUENCE_SERVICE_FOUND,
-					"[SequenceNumberPlugin] unable to lookup sequenceService: ",
-					e);
+			throw new PluginException(SequenceNumberPlugin.class.getSimpleName(), NO_SEQUENCE_SERVICE_FOUND,
+					"[SequenceNumberPlugin] unable to lookup sequenceService: ", e);
 		}
 	}
 
@@ -119,8 +116,7 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 	 * @throws AddressException
 	 */
 	@Override
-	public int run(ItemCollection documentContext,
-			ItemCollection documentActivity) throws PluginException {
+	public int run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
 
 		workitem = documentContext;
 
@@ -140,22 +136,20 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 
 		/* check if worktitem still have a sequence number? */
 		if (workitem.getItemValueInteger("numsequencenumber") == 0) {
+			logger.fine(
+					"SequenceNumberPlugin calculating next sequencenumber: '" + documentContext.getUniqueID() + "'");
 			try {
 				// load next Number based on the type of workitem
 				if (sType.startsWith("workitem"))
-					sequenceNumber = sequenceService
-							.getNextSequenceNumberByGroup(documentContext);
+					sequenceNumber = sequenceService.getNextSequenceNumberByGroup(documentContext);
 				else
-					sequenceNumber = sequenceService
-							.getNextSequenceNumberByParent(documentContext);
+					sequenceNumber = sequenceService.getNextSequenceNumberByParent(documentContext);
 
 			} catch (AccessDeniedException e) {
-				throw new PluginException(e.getErrorContext(),
-						e.getErrorCode(), "[SequenceNumberPlugin] error ", e);
+				throw new PluginException(e.getErrorContext(), e.getErrorCode(), "[SequenceNumberPlugin] error ", e);
 			}
 			if (sequenceNumber > 0)
-				workitem.replaceItemValue("numsequencenumber", new Integer(
-						sequenceNumber));
+				workitem.replaceItemValue("numsequencenumber", new Integer(sequenceNumber));
 			else {
 				// to avoid problems with incorrect data values we remove the
 				// property numsequencenumber in this case

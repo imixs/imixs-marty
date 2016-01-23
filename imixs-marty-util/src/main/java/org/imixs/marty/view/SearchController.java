@@ -47,7 +47,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.jee.faces.workitem.IViewAdapter;
 import org.imixs.workflow.jee.faces.workitem.ViewController;
-import org.imixs.workflow.plugins.jee.extended.LuceneSearchService;
+import org.imixs.workflow.lucene.LuceneSearchService;
 
 /**
  * The Marty SearchController extends the Imixs WorklistController and provides
@@ -100,7 +100,7 @@ public class SearchController extends
 	
 	@EJB
 	protected LuceneSearchService luceneSearchService;
-
+	
 	/**
 	 * Constructor sets the new ViewController
 	 */

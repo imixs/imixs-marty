@@ -150,13 +150,13 @@ public class SetupService {
 			List<String> colModelVersions = modelService.getAllModelVersions();
 			
 			if (!colModelVersions.isEmpty()) {
-				logger.info("[SetupService] system model - ok");
+				logger.info("[SetupService] model - ok");
 				return;
 			}
 
 			logger.info("[SetupService] check system model...");
 			String sDefaultModelList=propertyService.getProperties().getProperty("setup.defaultModel");
-			if (sDefaultModelList== null) {
+			if (sDefaultModelList== null || sDefaultModelList.isEmpty()) {
 				logger.warning("[SetupService] setup.defaultModel key is not defined in 'imixs.properties' - no default model imported!");
 				return;
 			}

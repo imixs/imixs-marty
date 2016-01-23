@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.imixs.marty</groupId>
 	<artifactId>imixs-marty</artifactId>
@@ -44,15 +45,15 @@
 	<issueManagement>
 		<url>https://github.com/imixs/imixs-marty/issues</url>
 	</issueManagement>
-	
-	
+
+
 	<scm>
 		<connection>scm:git:https://github.com/imixs/imixs-marty.git</connection>
 		<developerConnection>scm:git:https://github.com/imixs/imixs-marty.git</developerConnection>
 		<url>https://github.com/imixs/imixs-marty/</url>
 	</scm>
-	
-	
+
+
 	<licenses>
 		<license>
 			<name>GNU General Public License</name>
@@ -61,7 +62,7 @@
 			<comments>All the results of the imixs workflow project are subject to the GPL licensing model. </comments>
 		</license>
 	</licenses>
-	
+
 	<modules>
 		<module>imixs-marty-ejb</module>
 		<module>imixs-marty-util</module>
@@ -69,8 +70,9 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<org.imixs.workflow.version>3.6.0-SNAPSHOT</org.imixs.workflow.version>
-	</properties>	
-	
+		<org.imixs.adapters.version>1.4.0</org.imixs.adapters.version>
+	</properties>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -81,7 +83,7 @@
 					<target>1.7</target>
 				</configuration>
 			</plugin>
-			
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
@@ -93,20 +95,11 @@
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-project-info-reports-plugin</artifactId>
 							<version>2.4</version>
-							<!--  
-							<reports>
-								<report>index</report>
-								<report>project-team</report>
-								<report>license</report>
-								<report>mailing-list</report>
-								<report>dependencies</report>
-								<report>dependency-convergence</report>
-								<report>plugin-management</report>
-								<report>issue-tracking</report>
-								<report>summary</report>
-							</reports>
-							-->
-							
+							<!-- <reports> <report>index</report> <report>project-team</report> 
+								<report>license</report> <report>mailing-list</report> <report>dependencies</report> 
+								<report>dependency-convergence</report> <report>plugin-management</report> 
+								<report>issue-tracking</report> <report>summary</report> </reports> -->
+
 						</plugin>
 
 						<plugin>
@@ -133,7 +126,7 @@
 					</reportPlugins>
 				</configuration>
 			</plugin>
-			
+
 			<!-- relase management -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -168,6 +161,14 @@
 				<scope>provided</scope>
 			</dependency>
 
+
+			<dependency>
+				<groupId>org.imixs.workflow</groupId>
+				<artifactId>imixs-adapters-lucene-ejb</artifactId>
+				<version>${org.imixs.adapters.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
@@ -188,5 +189,5 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	
+
 </project>

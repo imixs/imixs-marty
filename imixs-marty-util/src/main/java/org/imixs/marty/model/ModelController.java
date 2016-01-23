@@ -35,7 +35,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -88,7 +87,6 @@ public class ModelController implements Serializable {
 	private String workflowGroup = null;
 	private String modelVersion = null;
 
-	private List<String> modelVersionCache = null;
 	private HashMap<String, List<ItemCollection>> processEntityCache = null;
 
 	@Inject
@@ -106,8 +104,7 @@ public class ModelController implements Serializable {
 	@EJB
 	protected SetupService setupService;
 
-	private static Logger logger = Logger.getLogger(ModelController.class
-			.getName());
+	private static Logger logger = Logger.getLogger(ModelController.class.getName());
 
 	/**
 	 * returns a list of all ProcessEntities which are the first one in each
@@ -134,85 +131,52 @@ public class ModelController implements Serializable {
 	 * 
 	 * 
 	 **/
-	@SuppressWarnings("unused")
 	@PostConstruct
 	public void reset() {
 		systemModelVersion = null;
 		workflowGroups = null;
 		subWorkflowGroups = null;
-		modelVersionCache = new ArrayList<String>();
 		processEntityCache = new HashMap<String, List<ItemCollection>>();
 
+		// now compute all workflow groups..
+		workflowGroups = new HashMap<String, String>();
+		subWorkflowGroups = new HashMap<String, String>();
+
+		
 		List<String> col;
 
 		col = modelService.getAllModelVersions();
 
 		for (String aModelVersion : col) {
-
-			// Test if the ModelVersion has the expected format
-			// DOMAIN-LANG-VERSION
-			StringTokenizer stFormat = new StringTokenizer(aModelVersion, "-");
-			if (stFormat.countTokens() < 2) {
-				// skip invalid format
-				logger.warning("[WARNING] Invalid ModelFormat : "
-						+ aModelVersion + " can not be used!");
-
-				continue;
-			}
-
-			// now we parse the model version (e.g. office-de-0.0.1)
-			String sDomain = stFormat.nextToken();
-			String sLanguage = stFormat.nextToken();
-			String sVersion = stFormat.nextToken();
-
+			
 			// Check if modelVersion is a System Model - latest version will
 			// be stored
-			if ("system".equals(sDomain)) {
+			if (aModelVersion.startsWith("system-")) {
 				// test version
-				if (systemModelVersion == null
-						|| systemModelVersion.compareTo(aModelVersion) < 0) {
+				if (systemModelVersion == null || systemModelVersion.compareTo(aModelVersion) < 0) {
 					// update latest System model version
 					systemModelVersion = aModelVersion;
 				}
 				continue;
 			}
 
-			/*
-			 * Now we have a general Model. So we test here if the current model
-			 * version is higher then the last stored version with the same
-			 * domain in the modelVersionCache....
-			 */
-			boolean bModelCached = false;
-			for (String aStoredModel : modelVersionCache) {
-				// has a stored model version the same domain and is it older?
-				if ((aStoredModel.startsWith(sDomain))
-						&& (aStoredModel.compareTo(aModelVersion) < 0)) {
-					modelVersionCache.remove(aStoredModel);
-					modelVersionCache.add(aModelVersion);
-					bModelCached = true;
-					// leave the block now
-					break;
-				}
-			}
-			if (!bModelCached)
-				modelVersionCache.add(aModelVersion);
-
-		}
-		// sort model versions
-		Collections.sort(modelVersionCache);
-
-		// now compute all workflow groups..
-		workflowGroups = new HashMap<String, String>();
-		subWorkflowGroups = new HashMap<String, String>();
-
-		for (String aModelVersion : modelVersionCache) {
-			List<String> groupList = modelService
-					.getAllWorkflowGroupsByVersion(aModelVersion);
+			List<String> groupList = modelService.getAllWorkflowGroups(aModelVersion);
 			for (String sGroupName : groupList) {
-				if (sGroupName.contains("~"))
-					subWorkflowGroups.put(sGroupName, aModelVersion);
-				else
-					workflowGroups.put(sGroupName, aModelVersion);
+				if (sGroupName.contains("~")) {
+					// test if the current version is higer than the last stored
+					// version for this group
+					String lastVersion = subWorkflowGroups.get(sGroupName);
+					if (lastVersion == null || (lastVersion.compareTo(aModelVersion) < 0)) {
+						subWorkflowGroups.put(sGroupName, aModelVersion);
+					}
+				} else {
+					// test if the current version is higer than the last stored
+					// version for this group
+					String lastVersion = workflowGroups.get(sGroupName);
+					if (lastVersion == null || (lastVersion.compareTo(aModelVersion) < 0)) {
+						workflowGroups.put(sGroupName, aModelVersion);
+					}
+				}
 			}
 		}
 
@@ -328,12 +292,10 @@ public class ModelController implements Serializable {
 	 * @return list of process entities for the specified workflowGroup and
 	 *         modelVersion (cached)
 	 */
-	public List<ItemCollection> getAllProcessEntitiesByGroup(String sGroup,
-			String sVersion) {
+	public List<ItemCollection> getAllProcessEntitiesByGroup(String sGroup, String sVersion) {
 		List<ItemCollection> result = null;
 
-		if (sGroup != null && !sGroup.isEmpty() && sVersion != null
-				&& !sVersion.isEmpty()) {
+		if (sGroup != null && !sGroup.isEmpty() && sVersion != null && !sVersion.isEmpty()) {
 
 			setWorkflowGroup(sGroup);
 			setModelVersion(sVersion);
@@ -341,10 +303,8 @@ public class ModelController implements Serializable {
 			// test if list is already cached?
 			result = processEntityCache.get(sGroup + "|" + sVersion);
 			if (result == null) {
-				logger.fine("ModelControler getProcessEntities for '" + sGroup
-						+ "|" + sVersion + "'");
-				result = modelService.getAllProcessEntitiesByGroup(
-						getWorkflowGroup(), getModelVersion());
+				logger.fine("ModelControler getProcessEntities for '" + sGroup + "|" + sVersion + "'");
+				result = modelService.getAllProcessEntitiesByGroup(getWorkflowGroup(), getModelVersion());
 				// cache result
 				processEntityCache.put(sGroup + "|" + sVersion, result);
 			}
@@ -376,8 +336,7 @@ public class ModelController implements Serializable {
 			// check sub workflow groups
 			sModelVersion = subWorkflowGroups.get(groupName);
 		if (sModelVersion == null)
-			logger.warning("[ModelController] WorkflowGroup '" + groupName
-					+ "' not defined in latest model version!");
+			logger.warning("[ModelController] WorkflowGroup '" + groupName + "' not defined in latest model version!");
 		return getAllProcessEntitiesByGroup(groupName, sModelVersion);
 	}
 
@@ -397,15 +356,7 @@ public class ModelController implements Serializable {
 			return null;
 	}
 
-	/**
-	 * Returns a List with all available model versions. The list contains the
-	 * latest version of each model group.
-	 * 
-	 * @return list of model versions
-	 */
-	public List<String> getModelVersions() {
-		return modelVersionCache;
-	}
+
 
 	/**
 	 * Returns a list of all uploaded model profile entities. This list is used
@@ -447,17 +398,15 @@ public class ModelController implements Serializable {
 	 * @throws ModelException
 	 * 
 	 */
-	public void doUploadModel(ActionEvent event) throws ModelException,
-			ParseException, ParserConfigurationException, SAXException,
-			IOException {
+	public void doUploadModel(ActionEvent event)
+			throws ModelException, ParseException, ParserConfigurationException, SAXException, IOException {
 		List<FileData> fileList = fileUploadController.getUploades();
 		for (FileData file : fileList) {
 			logger.info("Model Upload started: " + file.getName());
 
 			// test if bpmn model?
 			if (file.getName().endsWith(".bpmn")) {
-				BPMNModel model = BPMNParser
-						.parseModel(file.getData(), "UTF-8");
+				BPMNModel model = BPMNParser.parseModel(file.getData(), "UTF-8");
 				modelService.importBPMNModel(model);
 				continue;
 			}
@@ -482,8 +431,7 @@ public class ModelController implements Serializable {
 	 * @throws AccessDeniedException
 	 * @throws ModelException
 	 */
-	public void deleteModel(String modelversion) throws AccessDeniedException,
-			ModelException {
+	public void deleteModel(String modelversion) throws AccessDeniedException, ModelException {
 		modelService.removeModel(modelversion);
 		// reset model info
 		reset();
@@ -525,10 +473,8 @@ public class ModelController implements Serializable {
 	 * @param modelversion
 	 * @return
 	 */
-	public String getProcessDescription(int processid, String modelversion,
-			ItemCollection documentContext) {
-		ItemCollection pe = modelService.getProcessEntity(processid,
-				modelversion);
+	public String getProcessDescription(int processid, String modelversion, ItemCollection documentContext) {
+		ItemCollection pe = modelService.getProcessEntity(processid, modelversion);
 		if (pe == null) {
 			return "";
 		}
@@ -538,8 +484,7 @@ public class ModelController implements Serializable {
 			pp.init(workflowService);
 			desc = pp.replaceDynamicValues(desc, documentContext);
 		} catch (PluginException e) {
-			logger.warning("Unable to update processDescription: "
-					+ e.getMessage());
+			logger.warning("Unable to update processDescription: " + e.getMessage());
 		}
 
 		return desc;

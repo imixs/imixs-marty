@@ -41,7 +41,7 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.plugins.jee.extended.LuceneUpdateService;
+import org.imixs.workflow.lucene.LuceneUpdateService;
 
 /**
  * The WorkitemService provides methods to create, process, update and remove a
@@ -76,6 +76,7 @@ public class WorkitemService {
 	@EJB 
 	LuceneUpdateService luceneUpdateService;
 
+	
 	ItemCollection workItem = null;
 
 	private static Logger logger = Logger.getLogger(WorkitemService.class

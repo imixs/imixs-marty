@@ -210,6 +210,7 @@ public class UserGroupService {
 			profile.replaceItemValue("type", "profile");
 			profile.replaceItemValue("txtName", "admin");
 			profile.replaceItemValue("txtPassword", "adminadmin");
+			profile.replaceItemValue("txtWorkflowGroup", "Profile");
 			profile.replaceItemValue("txtGroups", "IMIXS-WORKFLOW-Manager");
 
 			// hard coded version nummer!
