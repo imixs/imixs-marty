@@ -43,7 +43,7 @@ import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.plugins.jee.extended.LuceneSearchService;
+import org.imixs.workflow.lucene.LuceneSearchService;
 
 /**
  * The WorkitemLinkController provides suggest-box behavior based on the JSF 2.0
