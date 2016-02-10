@@ -214,7 +214,7 @@ public class UserGroupService {
 			profile.replaceItemValue("txtGroups", "IMIXS-WORKFLOW-Manager");
 
 			// hard coded version nummer!
-			profile.replaceItemValue("$modelversion", "system-en-0.0.1");
+			profile.replaceItemValue("$modelversion", "system-de-0.0.1");
 			profile.replaceItemValue("$processid", 210);
 
 			try {
