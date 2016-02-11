@@ -23,31 +23,32 @@
  *******************************************************************************/
 package org.imixs.marty.config;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
-import javax.faces.event.ActionEvent;
-import javax.inject.Named;
+import javax.ejb.EJB;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.jee.faces.workitem.DataController;
 import org.imixs.workflow.jee.faces.workitem.IViewAdapter;
 import org.imixs.workflow.jee.faces.workitem.ViewController;
 
 /**
- * This backing bean provides different custom configuration documents.
- * The type of the configuration is defined by the property 'type'. 
- * The key of a single configuration entity is stored in the property 'txtName'
+ * This backing bean provides different custom configuration documents. The type
+ * of the configuration is defined by the property 'type'. The key of a single
+ * configuration entity is stored in the property 'txtName'
  * 
  * The property $WriteAccess is set to 'org.imixs.ACCESSLEVEL.MANAGERACCESS'.
  * 
  * An instance of this bean is defined via faces-config.xml
  * 
- *  
- *  txtName is the primary key
  * 
- *  faces-config example:
- *  <code>
+ * txtName is the primary key
+ * 
+ * faces-config example: <code>
  *  <managed-bean>
 		<managed-bean-name>carcompanyMB</managed-bean-name>
 		<managed-bean-class>org.imixs.marty.web.util.ConfigMultiMB</managed-bean-class>
@@ -58,18 +59,27 @@ import org.imixs.workflow.jee.faces.workitem.ViewController;
 		</managed-property>
 	</managed-bean>
  *  </code>
- *  
+ * 
  *
  * 
  * @author rsoika
  * 
  */
-@Named("configMultiController")
+//@Named("configMultiController")
 public class ConfigMultiController extends DataController implements IViewAdapter {
- 
-	
+
 	private static final long serialVersionUID = 1L;
-	ViewController viewController=null;
+	private static Logger logger = Logger.getLogger(ConfigMultiController.class.getName());
+
+	
+	@EJB
+	private org.imixs.workflow.jee.ejb.EntityService entityService;
+	
+	ViewController viewController = null;
+
+	public ConfigMultiController() {
+		super();
+	}
 	
 	/**
 	 * The init method is used to add necessary indices to the entity index list
@@ -77,7 +87,7 @@ public class ConfigMultiController extends DataController implements IViewAdapte
 	 */
 	@PostConstruct
 	public void init() {
-		viewController=new ViewController();
+		viewController = new ViewController();
 		viewController.setType(this.getType());
 		viewController.setView("worklist.modified.desc");
 	}
@@ -87,28 +97,45 @@ public class ConfigMultiController extends DataController implements IViewAdapte
 	 * will create the entity the first time
 	 * 
 	 * @return
-	 * @throws Exception
 	 */
-	public void doSave(ActionEvent event) throws Exception {
+	@Override
+	public void save() throws AccessDeniedException {
 		// update write and read access
-		
-		this.getWorkitem().replaceItemValue("$writeAccess",
-				"org.imixs.ACCESSLEVEL.MANAGERACCESS");
+		this.getWorkitem().replaceItemValue("$writeAccess", "org.imixs.ACCESSLEVEL.MANAGERACCESS");
 		this.getWorkitem().replaceItemValue("$readAccess", "");
 		// save entity
 		super.save();
-		
-		
+
 	}
 
 	@Override
 	public List<ItemCollection> getViewEntries(ViewController controller) {
-		
 		return viewController.getWorkitems();
 	}
 
-	
+	/**
+	 * Selects a singel config ItemCollection by Name
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public ItemCollection getEntityByName(String name) {
+		ItemCollection configItemCollection = null;
 
+		// load / create config entity....
+		String sQuery = "SELECT config FROM Entity AS config " + " JOIN config.textItems AS t2"
+				+ " WHERE config.type = '" + getType() + "'" + " AND t2.itemName = 'txtname'" + " AND t2.itemValue = '"
+				+ name + "'" + " ORDER BY t2.itemValue asc";
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery, 0, 1);
 
+		if (col.size() > 0) {
+			configItemCollection = col.iterator().next();
+		} else {
+			logger.fine("MultiConfigItem '" + name + "' not found");
+		}
+
+		return configItemCollection;
+
+	}
 
 }
