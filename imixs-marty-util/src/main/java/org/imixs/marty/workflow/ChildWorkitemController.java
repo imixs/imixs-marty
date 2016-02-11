@@ -41,7 +41,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.model.ModelController;
-import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
@@ -49,9 +48,9 @@ import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
- * This Bean acts as a front controller for child workitems. A child workitem
- * references another workitem. Each workitem can have a list of child
- * workitems.
+ * This Bean acts as a front controller for child workitems to be controlled by
+ * the imxis-workflow engine. A child workitem references another workitem. Each
+ * workitem can have a list of child workitems.
  * 
  * The default type of a new child worktiem is 'workitemchild'. The type can be
  * changed and controlled by the workflow model
@@ -61,9 +60,8 @@ import org.imixs.workflow.jee.ejb.EntityService;
  */
 @Named("childWorkitemController")
 @SessionScoped
-public class ChildWorkitemController extends
-		org.imixs.workflow.jee.faces.workitem.WorkflowController implements
-		Serializable {
+public class ChildWorkitemController extends org.imixs.workflow.jee.faces.workitem.WorkflowController
+		implements Serializable {
 
 	/* Services */
 	@EJB
@@ -78,8 +76,7 @@ public class ChildWorkitemController extends
 	@Inject
 	protected Event<WorkflowEvent> events;
 
-	public static Logger logger = Logger
-			.getLogger(ChildWorkitemController.class.getName());
+	public static Logger logger = Logger.getLogger(ChildWorkitemController.class.getName());
 
 	private static final long serialVersionUID = 1L;
 
@@ -137,18 +134,15 @@ public class ChildWorkitemController extends
 	 * Override process to reset the child list
 	 */
 	@Override
-	public String process() throws AccessDeniedException,
-			ProcessingErrorException, PluginException {
+	public String process() throws AccessDeniedException, ProcessingErrorException, PluginException {
 
 		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.CHILDWORKITEM_BEFORE_PROCESS));
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_BEFORE_PROCESS));
 
 		String result = super.process();
 
 		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.CHILDWORKITEM_AFTER_PROCESS));
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_AFTER_PROCESS));
 		this.reset();
 		return result;
 	}
@@ -161,22 +155,19 @@ public class ChildWorkitemController extends
 	 * @param workflowEvent
 	 * @throws AccessDeniedException
 	 */
-	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent)
-			throws AccessDeniedException {
+	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) throws AccessDeniedException {
 		if (workflowEvent == null)
 			return;
 
 		// skip if not a workItem...
 		if (workflowEvent.getWorkitem() != null
-				&& !workflowEvent.getWorkitem().getItemValueString("type")
-						.startsWith("workitem"))
+				&& !workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
 			return;
 
 		// if workItem has changed or was processed, then reset the child list
 		// and update the UniqeIDRef
 		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()
-				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
-						.getEventType()) {
+				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
 			// clear current child workitem
 			reset(null);
 			// check if parent workitem is available
@@ -184,8 +175,7 @@ public class ChildWorkitemController extends
 				uniqueIdRef = null;
 				parentWorkitem = null;
 			} else {
-				uniqueIdRef = workflowEvent.getWorkitem().getItemValueString(
-						EntityService.UNIQUEID);
+				uniqueIdRef = workflowEvent.getWorkitem().getItemValueString(EntityService.UNIQUEID);
 				parentWorkitem = workflowEvent.getWorkitem();
 			}
 		}
@@ -206,8 +196,7 @@ public class ChildWorkitemController extends
 		childList = new ArrayList<ItemCollection>();
 
 		if (uniqueIdRef != null) {
-			List<ItemCollection> result = workflowService.getWorkListByRef(
-					uniqueIdRef, 0, -1, null, getSortOrder());
+			List<ItemCollection> result = workflowService.getWorkListByRef(uniqueIdRef, 0, -1, null, getSortOrder());
 			for (ItemCollection aWorkitem : result) {
 				childList.add(cloneWorkitem(aWorkitem));
 			}
@@ -233,10 +222,8 @@ public class ChildWorkitemController extends
 	public void create(ActionEvent event) {
 		super.create(event);
 		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.CHILDWORKITEM_CREATED));
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_CREATED));
 	}
-
 
 	/**
 	 * Method to create a new workitem with inital values. The method fires a
@@ -257,15 +244,11 @@ public class ChildWorkitemController extends
 		getWorkitem().replaceItemValue("$ProcessID", processID);
 		getWorkitem().replaceItemValue("$UniqueIDRef", parentRef);
 
-
 		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.CHILDWORKITEM_CREATED));
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_CREATED));
 
 	}
-	
-	
-	
+
 	/**
 	 * This method overwrites the default init() and fires a WorkflowEvent.
 	 * 
@@ -275,20 +258,11 @@ public class ChildWorkitemController extends
 		String actionResult = super.init(action);
 
 		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.CHILDWORKITEM_INITIALIZED));
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_INITIALIZED));
 
 		return actionResult;
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
 	/**
 	 * Deletes a childWorkitem
 	 * 
@@ -300,14 +274,12 @@ public class ChildWorkitemController extends
 		this.load(uniqueID);
 
 		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.CHILDWORKITEM_BEFORE_SOFTDELETE));
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_BEFORE_SOFTDELETE));
 
 		workitemService.softDeleteWorkitem(getWorkitem(), true);
 
 		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.CHILDWORKITEM_AFTER_SOFTDELETE));
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_AFTER_SOFTDELETE));
 
 		logger.fine("ItemCollection '" + uniqueID + "' deleted");
 		reset();
