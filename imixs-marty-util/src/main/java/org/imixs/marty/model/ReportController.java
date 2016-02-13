@@ -1,6 +1,5 @@
 package org.imixs.marty.model;
 
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;

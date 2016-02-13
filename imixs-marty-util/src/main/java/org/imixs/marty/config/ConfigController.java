@@ -30,7 +30,6 @@ package org.imixs.marty.config;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
