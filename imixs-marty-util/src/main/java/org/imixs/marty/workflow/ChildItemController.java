@@ -91,10 +91,15 @@ public class ChildItemController implements Serializable {
 		childItems = new ArrayList<ItemCollection>();
 
 		List<Object> mapOrderItems = workitem.getItemValue(CHILD_ITEM_PROPERTY);
+		int pos=1;
 		for (Object mapOderItem : mapOrderItems) {
 
-			if (mapOderItem instanceof Map)
-				childItems.add(new ItemCollection((Map) mapOderItem));
+			if (mapOderItem instanceof Map) {
+				ItemCollection itemCol=new ItemCollection((Map) mapOderItem);
+				itemCol.replaceItemValue("numPos",pos);
+				childItems.add(itemCol);
+				pos++;
+			}
 		}
 	}
 
@@ -157,8 +162,18 @@ public class ChildItemController implements Serializable {
 	 */
 	public void add() {
 		if (childItems != null) {
-			childItems.add(new ItemCollection());
+			ItemCollection itemCol=new ItemCollection();
+			itemCol.replaceItemValue("numPos", childItems.size()+1);
+			childItems.add(itemCol);
 		}
+	}
+	
+	public void remove(int pos) {
+		if (childItems != null) {
+			childItems.remove(pos-1);
+		}
+		
+		
 	}
 
 	/**
