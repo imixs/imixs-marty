@@ -298,11 +298,11 @@ public class ProcessController implements Serializable {
 
 		if (uniqueId != null && !uniqueId.isEmpty()) {
 			// iterate over all spaces and compare the $UniqueIDRef
-			List<ItemCollection> list = getProcessList();
-			for (ItemCollection process : list) {
-				if (uniqueId.equals(process
+			List<ItemCollection> list = getSpaces();
+			for (ItemCollection space : list) {
+				if (uniqueId.equals(space
 						.getItemValueString(EntityService.UNIQUEID))) {
-					return process;
+					return space;
 				}
 			}
 		}
