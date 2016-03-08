@@ -102,10 +102,19 @@ public class ConfigController implements Serializable {
 	 * This method load the config entity after postContstruct. If no Entity
 	 * exists than the ConfigService EJB creates a new config entity.
 	 * 
-	 * */
+	 */
 	@PostConstruct
 	public void init() {
 		configItemCollection = configService.loadConfiguration(getName());
+	}
+
+	/**
+	 * Refresh the configItemCollection. The method can be called by a client to get
+	 * an updated version of the config entity. The method discards the internal
+	 * cache!
+	 */
+	public void loadConfiguration() {
+		configItemCollection = configService.loadConfiguration(getName(), true);
 	}
 
 	/**

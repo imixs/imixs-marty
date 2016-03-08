@@ -135,9 +135,8 @@ public class SetupController extends ConfigController {
 
 		super.init();
 
-		// if the BASIC configuration was not yet saved before we neet to
-		// initalize it with a
-		// default setup
+		// if the BASIC configuration was not yet saved before we need to
+		// Initialize it with a default setup
 		if (!getWorkitem().hasItem(EntityService.UNIQUEID)) {
 			Vector<String> v=new Vector<String>();
 			v.add("IMIXS-WORKFLOW-Manager");

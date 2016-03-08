@@ -59,15 +59,11 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
  * @author rsoika
  */
 
-@DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
-		"org.imixs.ACCESSLEVEL.READERACCESS",
-		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
-		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+@DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS", "org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
-@RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS",
-		"org.imixs.ACCESSLEVEL.READERACCESS",
-		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
-		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+@RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS", "org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Singleton
 public class ConfigService {
@@ -99,8 +95,7 @@ public class ConfigService {
 		ItemCollection configItemCollection = new ItemCollection();
 		configItemCollection.replaceItemValue("type", TYPE);
 		configItemCollection.replaceItemValue("txtname", name);
-		configItemCollection.replaceItemValue("$writeAccess",
-				"org.imixs.ACCESSLEVEL.MANAGERACCESS");
+		configItemCollection.replaceItemValue("$writeAccess", "org.imixs.ACCESSLEVEL.MANAGERACCESS");
 		configItemCollection.replaceItemValue("$readAccess", "");
 
 		cache.put(name, configItemCollection);
@@ -114,8 +109,7 @@ public class ConfigService {
 	 * @param aconfig
 	 * @throws AccessDeniedException
 	 */
-	public void deleteConfiguration(ItemCollection aconfig)
-			throws AccessDeniedException {
+	public void deleteConfiguration(ItemCollection aconfig) throws AccessDeniedException {
 		cache.remove(aconfig.getItemValueString("txtName"));
 		entityService.remove(aconfig);
 	}
@@ -123,25 +117,39 @@ public class ConfigService {
 	/**
 	 * This method returns a config ItemCollection for a specified name. If no
 	 * configuration is found for this name the Method creates an empty
-	 * configuration object.
+	 * configuration object. The config entity is cached internally and read
+	 * from the cache
 	 * 
 	 * @param name
 	 *            in attribute txtname
+	 * 
 	 */
 	public ItemCollection loadConfiguration(String name) {
+		return this.loadConfiguration(name, false);
+	}
+
+	/**
+	 * This method returns a config ItemCollection for a specified name. If no
+	 * configuration is found for this name the Method creates an empty
+	 * configuration object. The config entity is cached internally. 
+	 * 
+	 * @param name
+	 *            in attribute txtname
+	 * 
+	 * @param discardCache
+	 *            - indicates if the internal cache should be discarded.
+	 */
+	public ItemCollection loadConfiguration(String name, boolean discardCache) {
 		ItemCollection configItemCollection = null;
 
 		// check cache...
 		configItemCollection = cache.get(name);
-		if (configItemCollection == null) {
+		if (configItemCollection == null || discardCache) {
 			// load / create config entity....
-			String sQuery = "SELECT config FROM Entity AS config "
-					+ " JOIN config.textItems AS t2" + " WHERE config.type = '"
-					+ TYPE + "'" + " AND t2.itemName = 'txtname'"
-					+ " AND t2.itemValue = '" + name + "'"
-					+ " ORDER BY t2.itemValue asc";
-			Collection<ItemCollection> col = entityService.findAllEntities(
-					sQuery, 0, 1);
+			String sQuery = "SELECT config FROM Entity AS config " + " JOIN config.textItems AS t2"
+					+ " WHERE config.type = '" + TYPE + "'" + " AND t2.itemName = 'txtname'" + " AND t2.itemValue = '"
+					+ name + "'" + " ORDER BY t2.itemValue asc";
+			Collection<ItemCollection> col = entityService.findAllEntities(sQuery, 0, 1);
 
 			if (col.size() > 0) {
 				configItemCollection = col.iterator().next();
@@ -164,16 +172,14 @@ public class ConfigService {
 	 * @return
 	 * @throws AccessDeniedException
 	 */
-	public ItemCollection save(ItemCollection configItemCollection)
-			throws AccessDeniedException {
+	public ItemCollection save(ItemCollection configItemCollection) throws AccessDeniedException {
 		// update write and read access
 		configItemCollection.replaceItemValue("type", TYPE);
 
 		// save entity
 		configItemCollection = entityService.save(configItemCollection);
 
-		cache.put(configItemCollection.getItemValueString("txtName"),
-				configItemCollection);
+		cache.put(configItemCollection.getItemValueString("txtName"), configItemCollection);
 
 		return configItemCollection;
 	}
@@ -185,12 +191,10 @@ public class ConfigService {
 	 */
 	public List<ItemCollection> findAllConfigurations() {
 		ArrayList<ItemCollection> configList = new ArrayList<ItemCollection>();
-		String sQuery = "SELECT orgunit FROM Entity AS orgunit "
-				+ " JOIN orgunit.textItems AS t2" + " WHERE orgunit.type = '"
-				+ TYPE + "'" + " AND t2.itemName = 'txtname'"
+		String sQuery = "SELECT orgunit FROM Entity AS orgunit " + " JOIN orgunit.textItems AS t2"
+				+ " WHERE orgunit.type = '" + TYPE + "'" + " AND t2.itemName = 'txtname'"
 				+ " ORDER BY t2.itemValue asc";
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, -1);
+		Collection<ItemCollection> col = entityService.findAllEntities(sQuery, 0, -1);
 
 		for (ItemCollection aworkitem : col) {
 			configList.add(aworkitem);
@@ -204,8 +208,7 @@ public class ConfigService {
 	 * @author rsoika
 	 * 
 	 */
-	class Cache extends LinkedHashMap<String, ItemCollection> implements
-			Serializable {
+	class Cache extends LinkedHashMap<String, ItemCollection> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private final int capacity;
 
