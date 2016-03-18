@@ -105,6 +105,7 @@ public class SequenceService {
 	 * @throws AccessDeniedException
 	 * 
 	 */
+	@SuppressWarnings("unchecked")
 	public int getNextSequenceNumberByGroup(ItemCollection aworkitem)
 			throws AccessDeniedException {
 
@@ -142,6 +143,10 @@ public class SequenceService {
 					vNumbers.set(i, sWorkflowGroup + "=" + newSequenceNumber);
 					configItemCollection.replaceItemValue("sequencenumbers",
 							vNumbers);
+					
+					// issue #101
+					configItemCollection.replaceItemValue("type","configuration");
+					configItemCollection.replaceItemValue("txtname","BASIC");
 					entityService.save(configItemCollection);
 					// return the new number
 					return currentSequenceNumber;
