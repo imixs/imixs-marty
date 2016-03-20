@@ -34,8 +34,7 @@ public class SetupServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
-	private static Logger logger = Logger.getLogger(SetupServlet.class
-			.getName());
+	private static Logger logger = Logger.getLogger(SetupServlet.class.getName());
 
 	boolean initMode = false;
 
@@ -48,24 +47,39 @@ public class SetupServlet extends HttpServlet {
 	@EJB
 	SetupService setupService;
 
+	/**
+	 * This method is called on startup. The method verifies if the entity
+	 * indices are up to date and if the default users are initialized and if
+	 * the. This 'auto'-setup can be controlled by the imixs property
+	 * 'setup.mode=auto'
+	 * 
+	 * Finally the method start the workflowScheduler.
+	 */
 	@Override
 	public void init() throws ServletException {
 
 		super.init();
 
 		Properties properties = loadProperties();
-		if (properties.containsKey("setup.mode")
-				&& "auto".equals(properties.getProperty("setup.mode", "auto"))) {
+		if (properties.containsKey("setup.mode") && "auto".equals(properties.getProperty("setup.mode", "auto"))) {
 			// avoid calling twice
 			initMode = true;
 			setup();
 			initMode = false;
 		}
+
+		// try to start the scheduler service
+		try {
+			ItemCollection configItemCollection = workflowSchedulerService.loadConfiguration();
+			if (configItemCollection!=null && configItemCollection.getItemValueBoolean("_enabled"))
+				workflowSchedulerService.start();
+		} catch (Exception e) {
+			logger.warning("SetupServlet - unable to start scheduler service " + e.getMessage());
+		}
 	}
 
 	@Override
-	public void service(ServletRequest req, ServletResponse res)
-			throws IOException, ServletException {
+	public void service(ServletRequest req, ServletResponse res) throws IOException, ServletException {
 
 		// avoid calling twice
 		if (!initMode)
@@ -83,8 +97,8 @@ public class SetupServlet extends HttpServlet {
 	private Properties loadProperties() {
 		Properties properties = new Properties();
 		try {
-			properties.load(Thread.currentThread().getContextClassLoader()
-					.getResource("imixs.properties").openStream());
+			properties
+					.load(Thread.currentThread().getContextClassLoader().getResource("imixs.properties").openStream());
 		} catch (Exception e) {
 			logger.warning("PropertyService unable to find imixs.properties in current classpath");
 			if (logger.isLoggable(Level.FINE)) {
@@ -95,6 +109,11 @@ public class SetupServlet extends HttpServlet {
 		return properties;
 	}
 
+	/**
+	 * This method processes the inital setup
+	 * 
+	 * - init default UserIDs - create indices
+	 */
 	private void setup() {
 		logger.info("Imixs-Office-Workflow - setup...");
 
@@ -105,30 +124,28 @@ public class SetupServlet extends HttpServlet {
 			}
 
 		} catch (Exception e) {
-			logger.warning("SetupServlet - unable to initUserIds "
-					+ e.getMessage());
+			logger.warning("SetupServlet - unable to initUserIds " + e.getMessage());
 		}
 
 		// try to init system indizies and load default models
 		try {
 			setupService.init();
 		} catch (AccessDeniedException e1) {
-			logger.severe("SetupServlet - unable to init system "
-					+ e1.getMessage());
+			logger.severe("SetupServlet - unable to init system " + e1.getMessage());
 			e1.printStackTrace();
 		}
 
 		// try to start the scheduler service
 		try {
-			ItemCollection configItemCollection = workflowSchedulerService
-					.loadConfiguration();
+			ItemCollection configItemCollection = workflowSchedulerService.loadConfiguration();
 
 			if (configItemCollection.getItemValueBoolean("_enabled"))
 				workflowSchedulerService.start();
 		} catch (Exception e) {
-			logger.warning("SetupServlet - unable to start scheduler service "
-					+ e.getMessage());
+			logger.warning("SetupServlet - unable to start scheduler service " + e.getMessage());
 		}
 
 	}
+
+	
 }

@@ -74,8 +74,8 @@
 		</menu>
 		
 		<menu name="Installation">
+			<item name="Initial Setup" href="install/setup.html" />
 			<item name="WildFly" href="install/wildfly.html" />
-			<item name="Import Setup Data" href="install/import_setup_data.html" />
 
 		</menu>
 
