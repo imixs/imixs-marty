@@ -31,7 +31,7 @@ public class StressTest {
 		testSuite = WorkflowTestSuite.getInstance();
 		testSuite.setHost("http://localhost:8080/office-rest/");
 		testSuite.joinParty("anna", "anna");
-		testSuite.joinParty("rsoika", "ne-pt-un");
+		testSuite.joinParty("admin", "adminadmin");
 		testSuite.joinParty("Anonymous", null);
 	}
 
@@ -47,7 +47,7 @@ public class StressTest {
 	public void testSimpleWorkflow() throws PluginException {
 		long l = System.currentTimeMillis();
   
-		Assert.assertNotNull(testSuite.getClient("rsoika"));
+		Assert.assertNotNull(testSuite.getClient("admin"));
  
 		ItemCollection workitem = createWorkitem();
   
@@ -70,7 +70,7 @@ public class StressTest {
 	public void stressTest1() throws PluginException {
 		long l = System.currentTimeMillis();
 
-		Assert.assertNotNull(testSuite.getClient("rsoika"));
+		Assert.assertNotNull(testSuite.getClient("admin"));
 
 		for (int i = 0; i < 10; i++) {
 
@@ -98,7 +98,7 @@ public class StressTest {
 	public void stressTest2() throws PluginException {
 		long l = System.currentTimeMillis();
  
-		Assert.assertNotNull(testSuite.getClient("rsoika"));
+		Assert.assertNotNull(testSuite.getClient("admin"));
 
 		for (int i = 0; i < 10; i++) {
 
@@ -142,7 +142,7 @@ public class StressTest {
 	private ItemCollection processWorkitem(ItemCollection workitem)
 			throws PluginException {
 
-		workitem = testSuite.processWorkitem(workitem, "rsoika");
+		workitem = testSuite.processWorkitem(workitem, "admin");
 
 		return workitem;
 	}
