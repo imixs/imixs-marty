@@ -86,12 +86,6 @@ public class DMSPlugin extends AbstractPlugin {
 
 		workitem = documentContext;
 
-		// skip if the workItem is from a different type (for example Teams
-		// may not be processed by this plug-in)
-		String type = workitem.getItemValueString("type");
-		if (!type.startsWith("workitem") && !type.startsWith("workitemarchive"))
-			return Plugin.PLUGIN_OK;
-
 		// Skip if plugin this processing a new version created by the version
 		// plugin - in this case no changes to the version are needed
 		if (VersionPlugin.isProcssingVersion(workitem)) {
