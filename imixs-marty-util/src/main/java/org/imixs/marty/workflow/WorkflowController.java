@@ -465,7 +465,7 @@ public class WorkflowController extends
 	 * be fired.
 	 * 
 	 * 
-	 * If the action result of the activty starts with "workitem=" followed a
+	 * If the action result of the activity starts with "workitem=" followed a
 	 * uniqueid, then the controller loads that new workitem (in case of a list
 	 * the first will be taken) Example:
 	 * 
