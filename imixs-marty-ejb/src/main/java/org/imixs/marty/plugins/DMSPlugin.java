@@ -27,19 +27,22 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
 import org.imixs.workflow.plugins.jee.VersionPlugin;
 
 /**
- * The DMS Plugin stores attached files of a workitem into a separated
+ * The DMS Plug-in stores attached files of a workitem into a separated
  * BlobWorkitem and stores DMS meta data into the workitem.
  * 
- * The Plugin computes the read and write access for the BlobWorkitem based on
- * the ACL of the processed workItem. The Plugin should run immediate after the
+ * The Plug-in computes the read and write access for the BlobWorkitem based on
+ * the ACL of the processed workItem. The Plug-in should run immediate after the
  * AccessPlugin.
  * 
- * The Plugin only runs in workItems type=workitem or type=workitemarchive
+ * The Plug-in only runs in workItems type=workitem or type=workitemarchive
  * 
- * The plugin provides additional static methods to set and get the DMS metadata
- * for a workitem. The DMS meta data is stored in the property $dms.
+ * The plug-in provides additional static methods to set and get the DMS metadata
+ * for a workitem. The DMS meta data is stored in the property "dms". This
+ * property provides a list of Map objects containing the dms meta data. The
+ * method getDMSList can be used to convert this list into a List of
+ * ItemCollection elements.
  * 
- * The DMS Plugin also provides a mechanism to import files from the filesystem.
+ * The DMS Plug-in also provides a mechanism to import files from the file system.
  * If the workitem contains the property 'txtDmsImport" all files from the given
  * path will be added into the blobWorkitem
  * 
@@ -81,8 +84,7 @@ public class DMSPlugin extends AbstractPlugin {
 	 **/
 	@SuppressWarnings("unchecked")
 	@Override
-	public int run(ItemCollection documentContext,
-			ItemCollection documentActivity) {
+	public int run(ItemCollection documentContext, ItemCollection documentActivity) {
 
 		workitem = documentContext;
 
@@ -98,15 +100,13 @@ public class DMSPlugin extends AbstractPlugin {
 
 		if (blobWorkitem == null) {
 			logger.warning("[DMSPlugin] can't access blobworkitem for '"
-					+ workitem.getItemValueString(WorkflowService.UNIQUEID)
-					+ "'");
+					+ workitem.getItemValueString(WorkflowService.UNIQUEID) + "'");
 			return Plugin.PLUGIN_WARNING;
 		}
 
 		// import files if txtDmsImport is defined.
 		if (documentContext.hasItem(DMS_IMPORT_PROPERTY)) {
-			importFilesFromPath(workitem, blobWorkitem,
-					documentContext.getItemValue(DMS_IMPORT_PROPERTY));
+			importFilesFromPath(workitem, blobWorkitem, documentContext.getItemValue(DMS_IMPORT_PROPERTY));
 			// remove property
 			documentContext.removeItem(DMS_IMPORT_PROPERTY);
 		}
@@ -121,21 +121,18 @@ public class DMSPlugin extends AbstractPlugin {
 		vAccess = workitem.getItemValue("$WriteAccess");
 		blobWorkitem.replaceItemValue("$WriteAccess", vAccess);
 
-		blobWorkitem.replaceItemValue("$uniqueidRef",
-				workitem.getItemValueString(WorkflowService.UNIQUEID));
+		blobWorkitem.replaceItemValue("$uniqueidRef", workitem.getItemValueString(WorkflowService.UNIQUEID));
 		blobWorkitem.replaceItemValue("type", "workitemlob");
 
-		logger.fine("[DMBPlugin] saving blobWorkitem '"
-				+ blobWorkitem.getItemValueString(EntityService.UNIQUEID)
-				+ "'...");
+		logger.fine(
+				"[DMBPlugin] saving blobWorkitem '" + blobWorkitem.getItemValueString(EntityService.UNIQUEID) + "'...");
 
 		// update file content and save BlobWorkitem...
 		updateFileContent(workitem, blobWorkitem);
 		blobWorkitem = workflowService.getEntityService().save(blobWorkitem);
 
 		// update property '$BlobWorkitem'
-		workitem.replaceItemValue(BLOBWORKITEMID,
-				blobWorkitem.getItemValueString(EntityService.UNIQUEID));
+		workitem.replaceItemValue(BLOBWORKITEMID, blobWorkitem.getItemValueString(EntityService.UNIQUEID));
 
 		// update the dms list - e.g. if another plugin had added a file....
 		updateDmsList(workitem, this.getUserName());
@@ -182,16 +179,14 @@ public class DMSPlugin extends AbstractPlugin {
 	 * 
 	 */
 	@SuppressWarnings("rawtypes")
-	public static List<ItemCollection> addDMSEntry(ItemCollection aworkitem,
-			ItemCollection dmsEntity) {
+	public static List<ItemCollection> addDMSEntry(ItemCollection aworkitem, ItemCollection dmsEntity) {
 
 		List<ItemCollection> dmsList = DMSPlugin.getDmsList(aworkitem);
 		String sNewName = dmsEntity.getItemValueString("txtName");
 		String sNewUrl = dmsEntity.getItemValueString("url");
 
 		// test if the entry already exists - than overwrite it....
-		for (Iterator<ItemCollection> iterator = dmsList.iterator(); iterator
-				.hasNext();) {
+		for (Iterator<ItemCollection> iterator = dmsList.iterator(); iterator.hasNext();) {
 			ItemCollection admsEntry = iterator.next();
 			String sName = admsEntry.getItemValueString("txtName");
 			String sURL = admsEntry.getItemValueString("url");
@@ -229,18 +224,18 @@ public class DMSPlugin extends AbstractPlugin {
 	 * @param defaultUsername
 	 *            - default username for new dms entries
 	 * 
-	 * */
+	 */
 	@SuppressWarnings({ "rawtypes" })
 	private void updateDmsList(ItemCollection aWorkitem, String defaultUsername) {
 
 		List<ItemCollection> currentDmsList = getDmsList(aWorkitem);
+
 		List<String> currentFileList = aWorkitem.getFileNames();
 		String blobWorkitemId = aWorkitem.getItemValueString(BLOBWORKITEMID);
 
 		// first we remove all DMS entries which did not have a matching
 		// $File-Entry and are not from type link
-		for (Iterator<ItemCollection> iterator = currentDmsList.iterator(); iterator
-				.hasNext();) {
+		for (Iterator<ItemCollection> iterator = currentDmsList.iterator(); iterator.hasNext();) {
 			ItemCollection dmsEntry = iterator.next();
 			String sName = dmsEntry.getItemValueString("txtName");
 			String sURL = dmsEntry.getItemValueString("url");
@@ -283,8 +278,7 @@ public class DMSPlugin extends AbstractPlugin {
 	 * @param aWorkitem
 	 * @param aBlobWorkitem
 	 */
-	private void updateFileContent(ItemCollection aWorkitem,
-			ItemCollection aBlobWorkitem) {
+	private void updateFileContent(ItemCollection aWorkitem, ItemCollection aBlobWorkitem) {
 		// check files from master workitem
 		Map<String, List<Object>> files = aWorkitem.getFiles();
 		if (files == null) {
@@ -292,7 +286,7 @@ public class DMSPlugin extends AbstractPlugin {
 			return;
 		}
 
-		for (Entry<String,List<Object>> entry : files.entrySet()) {
+		for (Entry<String, List<Object>> entry : files.entrySet()) {
 			String sFileName = entry.getKey();
 			List<?> file = entry.getValue();
 
@@ -342,20 +336,16 @@ public class DMSPlugin extends AbstractPlugin {
 		if (parentWorkitem == null)
 			return null;
 
-		String sUniqueID = parentWorkitem
-				.getItemValueString(WorkflowService.UNIQUEID);
+		String sUniqueID = parentWorkitem.getItemValueString(WorkflowService.UNIQUEID);
 
 		// try to load the blobWorkitem with the parentWorktiem reference....
 		if (!"".equals(sUniqueID)) {
 			// search entity...
-			String sQuery = " SELECT lobitem FROM Entity as lobitem"
-					+ " join lobitem.textItems as t2"
-					+ " WHERE lobitem.type = 'workitemlob'"
-					+ " AND t2.itemName = '$uniqueidref'"
+			String sQuery = " SELECT lobitem FROM Entity as lobitem" + " join lobitem.textItems as t2"
+					+ " WHERE lobitem.type = 'workitemlob'" + " AND t2.itemName = '$uniqueidref'"
 					+ " AND t2.itemValue = '" + sUniqueID + "'";
 
-			Collection<ItemCollection> itemcol = workflowService
-					.getEntityService().findAllEntities(sQuery, 0, 1);
+			Collection<ItemCollection> itemcol = workflowService.getEntityService().findAllEntities(sQuery, 0, 1);
 			// if blobWorkItem was found return...
 			if (itemcol != null && itemcol.size() > 0) {
 				blobWorkitem = itemcol.iterator().next();
@@ -364,8 +354,7 @@ public class DMSPlugin extends AbstractPlugin {
 
 		} else {
 			// no $uniqueId set - create a UniqueID for the parentWorkitem
-			parentWorkitem.replaceItemValue(EntityService.UNIQUEID,
-					WorkflowKernel.generateUniqueID());
+			parentWorkitem.replaceItemValue(EntityService.UNIQUEID, WorkflowKernel.generateUniqueID());
 
 		}
 		// if no blobWorkitem was found, create a empty itemCollection..
@@ -374,10 +363,8 @@ public class DMSPlugin extends AbstractPlugin {
 
 			blobWorkitem.replaceItemValue("type", "workitemlob");
 			// generate default uniqueid...
-			blobWorkitem.replaceItemValue(EntityService.UNIQUEID,
-					WorkflowKernel.generateUniqueID());
-			blobWorkitem.replaceItemValue("$UniqueidRef",
-					parentWorkitem.getItemValueString(EntityService.UNIQUEID));
+			blobWorkitem.replaceItemValue(EntityService.UNIQUEID, WorkflowKernel.generateUniqueID());
+			blobWorkitem.replaceItemValue("$UniqueidRef", parentWorkitem.getItemValueString(EntityService.UNIQUEID));
 
 		}
 		return blobWorkitem;
@@ -390,8 +377,7 @@ public class DMSPlugin extends AbstractPlugin {
 	 * 
 	 * @return
 	 */
-	private static ItemCollection findDMSEntry(String aFilename,
-			List<ItemCollection> dmsList) {
+	private static ItemCollection findDMSEntry(String aFilename, List<ItemCollection> dmsList) {
 
 		for (ItemCollection dmsEntry : dmsList) {
 			// test if filename matches...
@@ -410,9 +396,9 @@ public class DMSPlugin extends AbstractPlugin {
 	 * @param importList
 	 *            - list of files
 	 * 
-	 * */
-	private void importFilesFromPath(ItemCollection adocumentContext,
-			ItemCollection blobWorkitem, List<String> importList) {
+	 */
+	private void importFilesFromPath(ItemCollection adocumentContext, ItemCollection blobWorkitem,
+			List<String> importList) {
 
 		for (String fileUri : importList) {
 
@@ -453,8 +439,7 @@ public class DMSPlugin extends AbstractPlugin {
 						bais.write(byteChunk, 0, n);
 					}
 				} catch (IOException e) {
-					logger.severe("Failed while reading bytes from "
-							+ url.toExternalForm());
+					logger.severe("Failed while reading bytes from " + url.toExternalForm());
 					e.printStackTrace();
 					// Perform any other exception handling that's appropriate.
 				} finally {

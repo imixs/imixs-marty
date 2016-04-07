@@ -31,6 +31,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
@@ -109,6 +110,7 @@ public class DmsController implements Serializable {
 	 * @param workflowEvent
 	 * @throws AccessDeniedException
 	 */
+	@SuppressWarnings("rawtypes")
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent)
 			throws AccessDeniedException {
 		if (workflowEvent == null)
@@ -124,7 +126,15 @@ public class DmsController implements Serializable {
 
 		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == eventType
 				|| WorkflowEvent.WORKITEM_BEFORE_SAVE == eventType) {
-
+			// reconvert the List<ItemCollection> into a List<Map>
+			if (dmsList!=null) {
+				List<Map> vDMSnew = new ArrayList<Map>();
+				for (ItemCollection dmsEntry : dmsList) {
+					vDMSnew.add(dmsEntry.getAllItems());
+				}
+				workflowEvent.getWorkitem().replaceItemValue("dms", vDMSnew);
+			}
+			
 			// add files
 			fileUploadController.updateWorkitem(workflowEvent.getWorkitem());
 		}
@@ -135,7 +145,7 @@ public class DmsController implements Serializable {
 				|| WorkflowEvent.WORKITEM_AFTER_SAVE == eventType) {
 
 			fileUploadController.reset();
-
+			// convert dms property into a list of ItemCollection
 			dmsList = DMSPlugin.getDmsList(workflowEvent.getWorkitem());
 		}
 
