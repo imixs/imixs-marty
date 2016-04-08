@@ -36,15 +36,15 @@ import org.imixs.workflow.plugins.jee.VersionPlugin;
  * 
  * The Plug-in only runs in workItems type=workitem or type=workitemarchive
  * 
- * The plug-in provides additional static methods to set and get the DMS metadata
- * for a workitem. The DMS meta data is stored in the property "dms". This
- * property provides a list of Map objects containing the dms meta data. The
- * method getDMSList can be used to convert this list into a List of
+ * The plug-in provides additional static methods to set and get the DMS
+ * metadata for a workitem. The DMS meta data is stored in the property "dms".
+ * This property provides a list of Map objects containing the dms meta data.
+ * The method getDMSList can be used to convert this list into a List of
  * ItemCollection elements.
  * 
- * The DMS Plug-in also provides a mechanism to import files from the file system.
- * If the workitem contains the property 'txtDmsImport" all files from the given
- * path will be added into the blobWorkitem
+ * The DMS Plug-in also provides a mechanism to import files from the file
+ * system. If the workitem contains the property 'txtDmsImport" all files from
+ * the given path will be added into the blobWorkitem
  * 
  * @author rsoika
  * 
@@ -174,11 +174,29 @@ public class DMSPlugin extends AbstractPlugin {
 	}
 
 	/**
+	 * This method converts a list of ItemCollections for DMS elements into Map
+	 * objects and updates the workitem property 'dms'.
+	 * 
+	 * 
+	 */
+	@SuppressWarnings("rawtypes")
+	public static void putDmsList(ItemCollection workitem, List<ItemCollection> dmsList) {
+		// convert the List<ItemCollection> into a List<Map>
+		List<Map> vDMSnew = new ArrayList<Map>();
+		if (dmsList != null) {
+			for (ItemCollection dmsEntry : dmsList) {
+				vDMSnew.add(dmsEntry.getAllItems());
+			}
+		}
+		// update the workitem
+		workitem.replaceItemValue("dms", vDMSnew);
+	}
+
+	/**
 	 * This method adds a new entry into the dms property. The method returns
 	 * the updated DMS List
 	 * 
 	 */
-	@SuppressWarnings("rawtypes")
 	public static List<ItemCollection> addDMSEntry(ItemCollection aworkitem, ItemCollection dmsEntity) {
 
 		List<ItemCollection> dmsList = DMSPlugin.getDmsList(aworkitem);
@@ -199,13 +217,8 @@ public class DMSPlugin extends AbstractPlugin {
 
 		dmsList.add(dmsEntity);
 
-		// finally we reconvert the List<ItemCollection> into a List<Map>
-		List<Map> vDMSnew = new ArrayList<Map>();
-		for (ItemCollection dmsEntry : dmsList) {
-			vDMSnew.add(dmsEntry.getAllItems());
-		}
-		aworkitem.replaceItemValue("dms", vDMSnew);
-
+		putDmsList(aworkitem,dmsList);
+		
 		return dmsList;
 
 	}
@@ -225,7 +238,6 @@ public class DMSPlugin extends AbstractPlugin {
 	 *            - default username for new dms entries
 	 * 
 	 */
-	@SuppressWarnings({ "rawtypes" })
 	private void updateDmsList(ItemCollection aWorkitem, String defaultUsername) {
 
 		List<ItemCollection> currentDmsList = getDmsList(aWorkitem);
@@ -263,12 +275,7 @@ public class DMSPlugin extends AbstractPlugin {
 
 		}
 
-		// finally we reconvert the List<ItemCollection> into a List<Map>
-		List<Map> vDMSnew = new ArrayList<Map>();
-		for (ItemCollection dmsEntry : currentDmsList) {
-			vDMSnew.add(dmsEntry.getAllItems());
-		}
-		aWorkitem.replaceItemValue("dms", vDMSnew);
+		putDmsList(aWorkitem,currentDmsList);
 	}
 
 	/**
