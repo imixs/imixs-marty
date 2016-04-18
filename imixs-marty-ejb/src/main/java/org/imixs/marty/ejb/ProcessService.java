@@ -192,6 +192,8 @@ public class ProcessService {
 		// add custom fields into clone...
 		clone.replaceItemValue("txtWorkflowList",
 				orgunit.getItemValue("txtWorkflowList"));
+		clone.replaceItemValue("txtReportList",
+				orgunit.getItemValue("txtReportList"));
 		clone.replaceItemValue("txtdescription",
 				orgunit.getItemValue("txtdescription"));
 		clone.replaceItemValue("namTeam", orgunit.getItemValue("namTeam"));
