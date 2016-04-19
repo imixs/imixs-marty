@@ -1,5 +1,6 @@
 package org.imixs.marty.plugins;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -88,7 +89,10 @@ public class AppoverPlugin extends AbstractPlugin {
 			List<String> groups = evalItemCollection.getItemValue(APPROVEDBY);
 			for (String aGroup : groups) {
 				if (!workitem.hasItem("nam" + aGroup + "Approvers")) {
-					List<String> approvers = workitem.getItemValue("nam" + aGroup);
+					List<String> nameList = workitem.getItemValue("nam" + aGroup);
+					// create a new instance of a Vector to avoid setting the same vector as reference!
+					List<String> approvers = new ArrayList<String>();
+					approvers.addAll(nameList);
 					logger.fine("creating approver list: " + aGroup + "=" + approvers);
 					workitem.replaceItemValue("nam" + aGroup + "Approvers", approvers);
 				}
