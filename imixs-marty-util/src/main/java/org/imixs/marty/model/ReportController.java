@@ -1,6 +1,7 @@
 package org.imixs.marty.model;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -25,16 +26,24 @@ public class ReportController extends DataController {
 
 	String uri = null;
 	String format = null;
-	String encoding=null;
+	String encoding = null;
 
 	private static final long serialVersionUID = 1L;
-	private static Logger logger = Logger.getLogger(ReportController.class
-			.getName());
+	private static Logger logger = Logger.getLogger(ReportController.class.getName());
 
 	public ReportController() {
 		super();
 		setType("report");
 
+	}
+
+	/**
+	 * Returns a String sorted list of all report names.
+	 * 
+	 * @return list of report names
+	 */
+	public List<ItemCollection> getReports() {
+		return reportService.getReportList();
 	}
 
 	/**
@@ -85,17 +94,15 @@ public class ReportController extends DataController {
 		String sReport = this.getWorkitem().getItemValueString("txtName");
 		// cut . char
 		if (sReport.contains(".")) {
-			sReport=sReport.substring(0,sReport.indexOf('.'));
+			sReport = sReport.substring(0, sReport.indexOf('.'));
 		}
-		
-		
-		
+
 		uri = "/rest-service/report/" + sReport + "." + getFormat() + "?count=-1";
 
-		if (encoding!=null &&  !encoding.isEmpty()) {
-			uri += "&encoding="+ encoding;
+		if (encoding != null && !encoding.isEmpty()) {
+			uri += "&encoding=" + encoding;
 		}
-		
+
 		// now parse params....
 		if (params != null) {
 			Set<Entry<String, String>> set = params.entrySet();
@@ -114,9 +121,9 @@ public class ReportController extends DataController {
 	}
 
 	public String getFormat() {
-		if (format==null || format.isEmpty())
-			format="html";
-		
+		if (format == null || format.isEmpty())
+			format = "html";
+
 		return format;
 	}
 
