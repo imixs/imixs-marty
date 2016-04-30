@@ -44,20 +44,20 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * The Marty TeamPlugin organizes the hierarchical order of a workitem between
- * processes, spaces and worktiems. A WorkItem is typically assigend to a
+ * processes, spaces and workitems. A WorkItem is typically assigned to a
  * process and a optional to one ore more space entities. These references are
  * stored in the $UniqueIDRef property of the WorkItem. In addition to the
- * $UniqueIDRef poroperty the TeamPlugin manages the properties txtProcessRef
+ * $UniqueIDRef property the TeamPlugin manages the properties txtProcessRef
  * and txtSpaceRef which containing only uniqueIDs of the corresponding entity
  * type. The properties txtProcessRef and txtSpaceRef can be modified by an
  * application to reassign the workitem.
  * 
- * This plugin supports also additional workflow properties for further
+ * This plug-in supports also additional workflow properties for further
  * processing. The method computes the team members and the name of the assigned
  * process and space.
  * 
  * <p>
- * The TeamPlugin updates the follwoing properties:
+ * The TeamPlugin updates the following properties:
  * <ul>
  * <li>namSpaceTeam
  * <li>namSpaceManager
@@ -70,17 +70,17 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * <li>txtProcessName
  * <li>txtProcessRef
  * 
- * The name properties are used in security and mail plugins.
+ * The name properties are used in security and mail plug-ins.
  * 
  * The properties 'txtProcessRef' and 'txtSpaceRef' are optional and can provide
- * the current $uniqueIDs for referenced space or process entities. The Plugin
+ * the current $uniqueIDs for referenced space or process entities. The Plug-in
  * updates the $UniqueIDRef property if these properties are filled.
  * 
  * If the workItem is a child to another workItem (ChildWorkitem) the
  * information is fetched from the parent workItem.
  * 
  * If the workflowresultmessage of the ActivityEntity contains a space or
- * process reference the plugin will update the reference in the property
+ * process reference the plug-in will update the reference in the property
  * $uniqueIdRef.
  * 
  * Example:
@@ -90,7 +90,7 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
 			<item name="process">...</item>
    </code>
  * 
- * The Plugin should run before Access-, Application- and Mail-Plguin.
+ * The Plug-in should run before Access-, Application- and Mail-Plug-in.
  * 
  * 
  * Model: default
@@ -368,25 +368,6 @@ public class TeamPlugin extends AbstractPlugin {
 					vSpaceAssist.addAll(entity.getItemValue("namAssist"));
 					sSpaceName = entity.getItemValueString("txtname");
 				}
-
-				/*
-				 * The following code is dangerous.
-				 * 
-				 * It makes no sense to overwrite the name fields if a workitem
-				 * ref exits!
-				 * 
-				 * See: https://github.com/imixs/imixs-marty/issues/43
-				 */
-				// if ("workitem".equals(parentType)) {
-				// vSpaceTeam = entity.getItemValue("namSpaceTeam");
-				// vSpaceManager = entity.getItemValue("namSpaceManager");
-				// vSpaceAssist = entity.getItemValue("namSpaceAssist");
-				// vProcessTeam = entity.getItemValue("namProcessTeam");
-				// vProcessManager = entity.getItemValue("namProcessManager");
-				// vProcessAssist = entity.getItemValue("namAssist");
-				// sSpaceName = entity.getItemValueString("txtSpaceName");
-				// sProcessName = entity.getItemValueString("txtProcessname");
-				// }
 
 			}
 		}
