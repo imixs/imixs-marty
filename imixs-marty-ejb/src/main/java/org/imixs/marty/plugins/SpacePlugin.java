@@ -28,7 +28,6 @@
 package org.imixs.marty.plugins;
 
 import java.util.List;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
@@ -40,9 +39,9 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
- * This system model plug-in supports additional business logic for space entities. The
- * plug-in updates the properties txtName and txtScopeName. It also compute
- * the parent team members and the team members of subscopes.
+ * This system model plug-in supports additional business logic for space
+ * entities. The plug-in updates the properties txtName and txtSpaceName. It
+ * also compute the parent team members and the team members of subspaces.
  * 
  * Model: system
  * 
@@ -69,18 +68,13 @@ public class SpacePlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * The Plugin verifies if the workitem is from the type 'space'. Only in
-	 * this case the plugin will update space Information and updates parent
+	 * The run method verifies if the workitem is from the type 'space'. Only in
+	 * this case the plug-in will update space Information and updates parent
 	 * and subSpaces.
 	 * 
-	 * The plugin also updates the name and access fields of a project.
-	 * 
-	 * The current user has to have sufficient access for these operations!
 	 **/
-	@SuppressWarnings("unchecked")
 	@Override
-	public int run(ItemCollection aworkItem, ItemCollection documentActivity)
-			throws PluginException {
+	public int run(ItemCollection aworkItem, ItemCollection documentActivity) throws PluginException {
 		space = null;
 
 		// verify workitem type
@@ -88,141 +82,82 @@ public class SpacePlugin extends AbstractPlugin {
 			return Plugin.PLUGIN_OK;
 
 		space = aworkItem;
+		updateParentSpaceProperties();
+		updateSubSpaces();
 
-		updateProject();
-		
-		// Verify if namTeam or namOwner is empty!
-		List<String> vTeam = space.getItemValue("namTeam");
-		List<String> vManager = space.getItemValue("namManager");
-		if (vTeam.size() == 0) {
-			vTeam.add(getUserName());
-			space.replaceItemValue("namTeam", vTeam);
-		}
-		if (vManager.size() == 0) {
-			vManager.add(getUserName());
-			space.replaceItemValue("namManager", vManager);
-		}
-
-		// set namFields for access handling (txtProjectReaders
-		// txtProjectAuthors)
-		Vector<String> vProjectReaders = new Vector<String>();
-		Vector<String> vProjectAuthors = new Vector<String>();
-
-		vProjectAuthors.addAll(space.getItemValue("namManager"));
-		vProjectAuthors.addAll(space.getItemValue("namParentManager"));
-		// if now owner is set - namcreator is owner per default
-		if (vProjectAuthors.size() == 0)
-			vProjectAuthors.add(space.getItemValueString("namCreator"));
-
-		// compute ReadAccess
-		vProjectReaders.addAll(space.getItemValue("namteam"));
-		vProjectReaders.addAll(space.getItemValue("namParentTeam"));
-		vProjectReaders.addAll(space.getItemValue("namManager"));
-		vProjectReaders.addAll(space.getItemValue("namParentManager"));
-
-		vProjectReaders.addAll(space.getItemValue("namManager"));
-		vProjectReaders.addAll(space.getItemValue("namAssist"));
-		// test if at lease one reader is defined....
-		if (vProjectReaders.size() == 0)
-			vProjectReaders.add(space.getItemValueString("namCreator"));
-
-		space.replaceItemValue("namSpaceReaders", vProjectReaders);
-		space.replaceItemValue("namSpaceAuthors", vProjectAuthors);
-		
 		return Plugin.PLUGIN_OK;
 	}
 
 	@Override
 	public void close(int arg0) throws PluginException {
-		if (space != null && arg0 != Plugin.PLUGIN_ERROR)
-			updateSubProjectInformations();
-
 	}
 
 	/**
-	 * This method updates the Project Name ('txtName') which is inherited from
-	 * a parentProject aneme. A ParenProject is referenced by the $UniqueIDRef.
-	 * 
-	 * If the project has a parentProject, then the method adds also the
-	 * properties
-	 * 
-	 * namParentTeam namParentOwner
+	 * This method updates the Space Name ('txtName') and team lists inherited
+	 * from a parent Space. A parent space is referenced by the $UniqueIDRef.
 	 * 
 	 */
-	private void updateProject() {
-		ItemCollection parentProject =null;
+	private void updateParentSpaceProperties() {
+		ItemCollection parentProject = null;
 		// test if the project has a subproject..
 		String sParentProjectID = space.getItemValueString("$uniqueidRef");
 		if (!sParentProjectID.isEmpty())
 			parentProject = entityService.load(sParentProjectID);
-		
-		
-		if (parentProject != null) {
-			logger.fine("Updating Parent Project Informations for '"
-					+ sParentProjectID + "'");
+
+		if (parentProject != null && "space".equals(parentProject.getType())) {
+			logger.fine("Updating Parent Project Informations for '" + sParentProjectID + "'");
 
 			String sName = space.getItemValueString("txtSpaceName");
 			String sParentName = parentProject.getItemValueString("txtName");
 
 			space.replaceItemValue("txtName", sParentName + "." + sName);
-			space.replaceItemValue("txtParentName", sParentName );
-		
-			space.replaceItemValue("namParentTeam",
-					parentProject.getItemValue("namTeam"));
-			space.replaceItemValue("namParentOwner",
-					parentProject.getItemValue("namOwner"));
-		}
-		else {
+			space.replaceItemValue("txtParentName", sParentName);
+
+			// update parent team lists
+			space.replaceItemValue("namParentTeam", parentProject.getItemValue("namTeam"));
+			space.replaceItemValue("namParentManager", parentProject.getItemValue("namManager"));
+			space.replaceItemValue("namParentAssist", parentProject.getItemValue("namAssist"));
+		} else {
 			// root project - update txtName
-			space.replaceItemValue("txtName",
-					space.getItemValueString("txtSpaceName"));
+			space.replaceItemValue("txtName", space.getItemValueString("txtSpaceName"));
 
 		}
 	}
 
 	/**
-	 * This method updates the parentName property for all subprojects if the
-	 * parent project name has changed
+	 * This method updates the parentName properties for all sub-spaces.
 	 * 
-	 * This is only necessary if subprojects are found.
+	 * This is only necessary if sub-spaces are found.
 	 * 
 	 * @param space
 	 */
-	private void updateSubProjectInformations() {
+	private void updateSubSpaces() {
 
-		logger.fine("Updating Sub Project Informations for '"
-				+ space.getItemValueString("$Uniqueid") + "'");
+		logger.fine("Updating Sub Space Informations for '" + space.getItemValueString("$Uniqueid") + "'");
 
-		List<ItemCollection> childProjectList = findAllSubProjects(space
-				.getItemValueString("$Uniqueid"));
-		String sProjectName = space.getItemValueString("txtName");
-		for (ItemCollection aSubProject : childProjectList) {
-			if (!sProjectName.equals(aSubProject
-					.getItemValueString("txtparentname"))) {
-				String sSubProjectName = aSubProject
-						.getItemValueString("txtSpacename");
-				aSubProject.replaceItemValue("txtparentname", sProjectName);
-				aSubProject.replaceItemValue("txtname", sProjectName + "."
-						+ sSubProjectName);
-				try {
-					this.entityService.save(aSubProject);
-				} catch (Exception sube) {
-					logger.severe("Subproject name could not be updated: "
-							+ sube);
-				}
-			}
+		List<ItemCollection> subSpaceList = findAllSubSpaces(space.getItemValueString("$Uniqueid"));
+		String sParentSpaceName = space.getItemValueString("txtName");
+		for (ItemCollection aSubSpace : subSpaceList) {
+
+			aSubSpace.replaceItemValue("txtparentname", sParentSpaceName);
+			aSubSpace.replaceItemValue("txtname",
+					sParentSpaceName + "." + aSubSpace.getItemValueString("txtSpacename"));
+
+			// update parent team lists
+			aSubSpace.replaceItemValue("namParentTeam", space.getItemValue("namTeam"));
+			aSubSpace.replaceItemValue("namParentManager", space.getItemValue("namManager"));
+			aSubSpace.replaceItemValue("namParentAssist", space.getItemValue("namAssist"));
+
+			this.entityService.save(aSubSpace);
 		}
 	}
 
-	private List<ItemCollection> findAllSubProjects(String sIDRef) {
+	private List<ItemCollection> findAllSubSpaces(String sIDRef) {
 
-		String sQuery = "SELECT project FROM Entity AS project "
-				+ " JOIN project.textItems AS r"
-				+ " JOIN project.textItems AS n"
-				+ " WHERE project.type = 'space'"
-				+ " AND n.itemName = 'txtname' "
-				+ " AND r.itemName='$uniqueidref'" + " AND r.itemValue = '"
-				+ sIDRef + "' " + " ORDER BY n.itemValue asc";
+		String sQuery = "SELECT project FROM Entity AS project " + " JOIN project.textItems AS r"
+				+ " JOIN project.textItems AS n" + " WHERE project.type = 'space'" + " AND n.itemName = 'txtname' "
+				+ " AND r.itemName='$uniqueidref'" + " AND r.itemValue = '" + sIDRef + "' "
+				+ " ORDER BY n.itemValue asc";
 
 		return entityService.findAllEntities(sQuery, 0, -1);
 	}

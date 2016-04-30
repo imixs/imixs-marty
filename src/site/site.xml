@@ -54,6 +54,7 @@
 			<item name="DeputyPlugin" href="plugins/deputyplugin.html" />
 			<item name="ResultPlugin" href="plugins/resultplugin.html" />
 			<item name="SubprocessPlugin" href="plugins/subprocessplugin.html" />
+			<item name="SpacePlugin" href="plugins/spaceplugin.html" />
 		</menu>
 
 		<menu name="User Interface">
