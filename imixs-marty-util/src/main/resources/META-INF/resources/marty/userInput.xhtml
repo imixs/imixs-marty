@@ -22,7 +22,7 @@
 		<h:panelGroup id="input_box" layout="block" rendered="#{cc.attrs.editmode}"
 			class="marty-userinput-inputbox">
 			<h:inputText value="#{userInputController.input}" id="username_input">
-				<f:ajax event="keyup" render="suggest_box"
+				<f:ajax event="keyup" render="suggest_box" delay="600"
 					listener="#{userInputController.search}" />
 				<f:ajax event="blur" render="suggest_box"
 					listener="#{userInputController.reset}" />
