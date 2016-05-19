@@ -45,6 +45,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.jee.ejb.WorkflowService;
+import org.imixs.workflow.lucene.LuceneSearchService;
 
 /**
  * The UserInputController provides suggest-box behavior based on the JSF 2.0
@@ -74,6 +75,10 @@ public class UserInputController implements Serializable {
 
 	@EJB
 	protected WorkflowService workflowService;
+	
+	@EJB
+	protected LuceneSearchService luceneSearchService;
+
 
 	private List<ItemCollection> searchResult = null;
 
@@ -157,30 +162,37 @@ public class UserInputController implements Serializable {
 		if (phrase == null || phrase.isEmpty())
 			return searchResult;
 
-		phrase = "%" + phrase.trim() + "%";
+		phrase =  phrase.trim();
 
-		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-				+ " JOIN profile.textItems AS t0"
-				+ " JOIN profile.textItems AS t1"
-				+ " JOIN profile.textItems AS t2"
-				+ " WHERE  profile.type= 'profile' " + " AND "
-				+ " ( (t1.itemName = 'txtusername' "
-				+ " AND t1.itemValue LIKE  '" + phrase + "') "
-				+ " OR (t2.itemName = 'txtemail' "
-				+ " AND t2.itemValue LIKE  '" + phrase + "') "
-				+ " OR (t0.itemName = 'txtname' " + " AND t0.itemValue LIKE  '"
-				+ phrase + "') " + " )";
+//		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+//				+ " JOIN profile.textItems AS t0"
+//				+ " JOIN profile.textItems AS t1"
+//				+ " JOIN profile.textItems AS t2"
+//				+ " WHERE  profile.type= 'profile' " + " AND "
+//				+ " ( (t1.itemName = 'txtusername' "
+//				+ " AND t1.itemValue LIKE  '" + phrase + "') "
+//				+ " OR (t2.itemName = 'txtemail' "
+//				+ " AND t2.itemValue LIKE  '" + phrase + "') "
+//				+ " OR (t0.itemName = 'txtname' " + " AND t0.itemValue LIKE  '"
+//				+ phrase + "') " + " )";
+		
+		String sQuery= "(type:\"profile\") AND ( *" + phrase + "* )";
 
 		logger.finest("searchprofile: " + sQuery);
 
-		Collection<ItemCollection> col = workflowService.getEntityService()
-				.findAllEntities(sQuery, 0, maxSearchCount);
+		// start lucene search
+		Collection<ItemCollection> col = null;
+		try {
+			logger.fine("searchWorkitems: " + sQuery);
+			col = luceneSearchService.search(sQuery, workflowService);
+		} catch (Exception e) {
+			logger.warning("  lucene error!");
+			e.printStackTrace();
+		}
 
 		for (ItemCollection profile : col) {
 			searchResult.add(ProfileService.cloneWorkitem(profile));
-
 		}
-
 		// sort by username..
 		Collections.sort(searchResult, new ItemCollectionComparator("txtUserName",
 				true));
