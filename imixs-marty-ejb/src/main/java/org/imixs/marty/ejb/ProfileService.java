@@ -313,6 +313,8 @@ public class ProfileService {
 		clone.replaceItemValue("$isAuthor", aWorkitem.getItemValue("$isAuthor"));
 
 		clone.replaceItemValue("txtWorkflowStatus", aWorkitem.getItemValue("txtWorkflowStatus"));
+		clone.replaceItemValue("txtWorkflowSummary", aWorkitem.getItemValue("txtWorkflowSummary"));
+		clone.replaceItemValue("txtWorkflowAbstract", aWorkitem.getItemValue("txtWorkflowAbstract"));
 		clone.replaceItemValue("txtEmail", aWorkitem.getItemValue("txtEmail"));
 		clone.replaceItemValue("namdeputy", aWorkitem.getItemValue("namdeputy"));
 		clone.replaceItemValue("txtusericon", aWorkitem.getItemValue("txtusericon"));
