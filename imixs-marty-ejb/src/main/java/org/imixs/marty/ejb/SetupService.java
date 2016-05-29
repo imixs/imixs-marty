@@ -36,10 +36,12 @@ import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.jee.ejb.ModelService;
 import org.imixs.workflow.jee.jpa.EntityIndex;
 import org.imixs.workflow.jee.util.PropertyService;
@@ -214,24 +216,31 @@ public class SetupService {
 		if (filestream == null)
 			return;
 		try {
+			
+			
 			EntityCollection ecol = null;
-			logger.info("[SetupService] importXmlEntityData - verifing file content....");
-			JAXBContext context = JAXBContext
-					.newInstance(EntityCollection.class);
-			Unmarshaller m = context.createUnmarshaller();
+			logger.info("[ModelService] importModel, verifing file content....");
 
+			JAXBContext context;
+			Object jaxbObject = null;
+			// unmarshall the model file
 			ByteArrayInputStream input = new ByteArrayInputStream(filestream);
-			Object jaxbObject = m.unmarshal(input);
-			if (jaxbObject == null) {
-				throw new RuntimeException(
-						"[SetupService] error - wrong xml file format - unable to import file!");
+			try {
+				context = JAXBContext.newInstance(EntityCollection.class);
+				Unmarshaller m = context.createUnmarshaller();
+				jaxbObject = m.unmarshal(input);
+			} catch (JAXBException e) {
+				throw new ModelException(ModelException.INVALID_MODEL,
+						"error - wrong xml file format - unable to import model file: ", e);
 			}
+			if (jaxbObject == null)
+				throw new ModelException(ModelException.INVALID_MODEL,
+						"error - wrong xml file format - unable to import model file!");
 
 			ecol = (EntityCollection) jaxbObject;
-
-			// import entities....
+			// import the model entities....
 			if (ecol.getEntity().length > 0) {
-
+		
 				Vector<String> vModelVersions = new Vector<String>();
 				// first iterrate over all enttity and find if model entries are
 				// included

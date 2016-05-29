@@ -27,6 +27,7 @@ public class AdminPController extends DataController {
 	}
 
 	public void createRenameUserJob() {
+		logger.fine("createRenameUserJob...");
 		String fromName = this.getWorkitem().getItemValueString("namFrom");
 		String toName = this.getWorkitem().getItemValueString("namTo");
 

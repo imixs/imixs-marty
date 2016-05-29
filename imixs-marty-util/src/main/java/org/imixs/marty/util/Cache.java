@@ -30,7 +30,9 @@ package org.imixs.marty.util;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
+@SuppressWarnings("rawtypes")
 public class Cache extends LinkedHashMap {
+	private static final long serialVersionUID = 1L;
 	private final int capacity;
 
 	public Cache(int capacity) {

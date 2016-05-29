@@ -34,7 +34,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
-import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -49,6 +48,13 @@ import org.imixs.workflow.jee.util.PropertyService;
  * data from the configuration entity 'BASIC'. This is the general configuration
  * entity.
  * 
+ * In addition the CDI bean verifies the setup of userDB and system models and
+ * calls a init method if the system is not setup and the imixs.property param
+ * 'setup.mode' is set to 'auto'.
+ * 
+ * The bean is triggered in the index.xhtml page
+ * 
+ * 
  * NOTE: A configuration entity provides a common way to manage application
  * specific complex config data. The configuration entity is database controlled
  * and more flexible as the file based imixs.properties provided by the Imixs
@@ -58,7 +64,7 @@ import org.imixs.workflow.jee.util.PropertyService;
  * @author rsoika
  * 
  */
-@Named("setupController")
+@Named
 @ApplicationScoped
 public class SetupController extends ConfigController {
 
@@ -66,16 +72,12 @@ public class SetupController extends ConfigController {
 
 	public final static String CONFIGURATION_NAME = "BASIC";
 
-	private boolean setupOk = false;
-
-	@Resource(lookup="java:module/ModuleName")
+	@Resource(lookup = "java:module/ModuleName")
 	private String moduleName;
-	    
-	@Resource(lookup="java:app/AppName")
-	private String appName;
-	
 
-	
+	@Resource(lookup = "java:app/AppName")
+	private String appName;
+
 	@Inject
 	protected ModelController modelController;
 
@@ -90,12 +92,13 @@ public class SetupController extends ConfigController {
 
 	@EJB
 	protected PropertyService propertyService;
-	
+
 	@EJB
 	protected ProfileService profileService;
 
-	private static Logger logger = Logger.getLogger(SetupController.class
-			.getName());
+	
+	
+	private static Logger logger = Logger.getLogger(SetupController.class.getName());
 
 	public SetupController() {
 		super();
@@ -103,31 +106,11 @@ public class SetupController extends ConfigController {
 		this.setName(CONFIGURATION_NAME);
 	}
 
-	
 	/**
-	 * Returns the EAR application name. Useful for JNDI lookups
-	 * @return
-	 */
-	public String getAppName() {
-		return appName;
-	}
-
-	/**
-	 * Returns the Web module name. Useful for JNDI lookups
-	 * @return
-	 */
-	public String getModuleName() {
-		return moduleName;
-	}
-
-	
-	/**
-	 * This method loads the config entity.
+	 * This method loads the config entity. If the entity did not yet exist, the
+	 * method creates one.
 	 * 
-	 * Next the method verifies if the system models are available and if the
-	 * doSetup() method was triggered once before. The method set the boolean
-	 * 'setupOk'. This Booelan indicates if the user need to start a doSetup()
-	 * method call (see layout.xhtml)
+	 *
 	 */
 	@PostConstruct
 	@Override
@@ -138,31 +121,34 @@ public class SetupController extends ConfigController {
 		// if the BASIC configuration was not yet saved before we need to
 		// Initialize it with a default setup
 		if (!getWorkitem().hasItem(EntityService.UNIQUEID)) {
-			Vector<String> v=new Vector<String>();
+			Vector<String> v = new Vector<String>();
 			v.add("IMIXS-WORKFLOW-Manager");
 			v.add("IMIXS-WORKFLOW-Author");
 			v.add("IMIXS-WORKFLOW-Reader");
 			v.add("IMIXS-WORKFLOW-Editor");
-			
+
 			getWorkitem().replaceItemValue("usergroups", v);
-			getWorkitem().replaceItemValue("keyenableuserdb",true);
+			getWorkitem().replaceItemValue("keyenableuserdb", true);
 			this.save();
-			
 		}
-
-		// now test if system model exists and if the systemSetup was
-		// successfully completed.
-		setupOk = (modelController.hasSystemModel() && getWorkitem()
-				.getItemValueBoolean("keySystemSetupCompleted") == true);
-
 	}
 
-	public boolean isSetupOk() {
-		return setupOk;
+	/**
+	 * Returns the EAR application name. Useful for JNDI lookups
+	 * 
+	 * @return
+	 */
+	public String getAppName() {
+		return appName;
 	}
 
-	public void setSetupOk(boolean systemSetupOk) {
-		this.setupOk = systemSetupOk;
+	/**
+	 * Returns the Web module name. Useful for JNDI lookups
+	 * 
+	 * @return
+	 */
+	public String getModuleName() {
+		return moduleName;
 	}
 
 	/**
@@ -171,25 +157,19 @@ public class SetupController extends ConfigController {
 	 * @param event
 	 * @throws Exception
 	 */
-	public void doSetup(ActionEvent event) throws Exception {
+	public void reset() throws Exception {
 		// reset propertyService
-		logger.info("[SetupController] reset application cache...");
+		logger.info("Reset application cache...");
 		propertyService.reset();
 		profileService.reset();
-
 		// reset modelController
 		modelController.reset();
-
 		// reset processController
 		processController.reset();
-	
 	}
-
 
 	public PropertyService getPropertyService() {
 		return propertyService;
 	}
 
-	
-	
 }
