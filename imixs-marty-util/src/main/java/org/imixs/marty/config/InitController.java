@@ -90,6 +90,7 @@ public class InitController implements Serializable {
 
 			// PHASE-1: init system indizies and load default models
 			try {
+				logger.info("running systemService.init...");
 				setupService.init();
 			} catch (AccessDeniedException e1) {
 				logger.severe("Error during init setupService: " + e1.getMessage());
@@ -99,7 +100,10 @@ public class InitController implements Serializable {
 			// PHASE-2: init userIDs for user db
 			try {
 				if (userGroupService != null) {
+					logger.info("running userGroupService.initUserIDs...");
 					userGroupService.initUserIDs();
+				} else {
+					logger.warning("userGroupService not initialized!");
 				}
 			} catch (Exception e) {
 				logger.warning("Error during initUserIds: " + e.getMessage());

@@ -144,17 +144,17 @@ public class UserController implements Serializable {
 		// exists yet
 		if (this.loginController.isAuthenticated() && !profileLoaded) {
 
-			// determine user language and set Modelversion depending on
-			// the selected user locale
-			String sModelVersion = "system-" + getLocale().getLanguage();
 			// try to load the profile for the current user
 			ItemCollection profile = profileService.lookupProfileById(loginController.getUserPrincipal());
 			if (profile == null) {
+				logger.info("Create new profile for '" + loginController.getUserPrincipal() + "'.... ");
 				// create new Profile for current user
 				profile = new ItemCollection();
 				profile.replaceItemValue("type", "profile");
 				profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
-				profile.replaceItemValue("$modelversion", sModelVersion);
+				// hard coded version nummer!
+				profile.replaceItemValue("$modelversion", "system-de-0.0.1");
+				profile.replaceItemValue("txtName",loginController.getUserPrincipal());
 				profile.replaceItemValue("txtLocale", getLocale());
 				// set default group
 				profile.replaceItemValue("txtgroups", "IMIXS-WORKFLOW-Author");
@@ -167,7 +167,7 @@ public class UserController implements Serializable {
 					throw new ProcessingErrorException(UserController.class.getName(),
 							ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!", e);
 				}
-				logger.info("New Profile created ");
+				logger.info("Profile successfull created for '" + loginController.getUserPrincipal() + "'");
 
 			} else {
 				// check if profile.autoProcessOnLogin is defined
