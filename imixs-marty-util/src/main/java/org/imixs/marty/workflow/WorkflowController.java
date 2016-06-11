@@ -480,9 +480,12 @@ public class WorkflowController extends
 		String actionResult = null;
 
 		long lTotal = System.currentTimeMillis();
-
+	
 		// process workItem and catch exceptions
 		try {
+			
+			verifyPluginConfiguration(getWorkitem());
+
 			// fire event
 			long l1 = System.currentTimeMillis();
 			events.fire(new WorkflowEvent(getWorkitem(),
@@ -551,6 +554,45 @@ public class WorkflowController extends
 		return actionResult;
 	}
 
+	
+
+	/**
+	 * Helper Method to guarantee that the new CommentPlugin is combined with the changed applicationPlugin.
+	 * 
+	 * Method can be removed latest with 2.9.0
+	 * 
+	 * https://github.com/imixs/imixs-marty/issues/112
+	 */
+	@Deprecated
+	private void verifyPluginConfiguration(ItemCollection workitem) throws PluginException {
+
+		String modelversion=workitem.getItemValueString("$modelversion");
+	
+
+		// try to get a Profile matching the provided modelversion
+		Collection<ItemCollection> col;
+		String sQuery = null;
+		sQuery = "SELECT";
+		sQuery += " environment FROM Entity AS environment" + " JOIN environment.textItems as n "
+				+ " JOIN environment.textItems as v " + " WHERE environment.type = 'WorkflowEnvironmentEntity'"
+				+ " AND n.itemName = 'txtname' AND n.itemValue = 'environment.profile'"
+				+ " AND v.itemName = '$modelversion' AND v.itemValue = '" + modelversion + "' ";
+		col = this.getEntityService().findAllEntities(sQuery, 0, 1);
+	
+		if (col.size() == 1) {
+			ItemCollection profile= col.iterator().next();
+			// testplugins...
+			List<String> vPlugins = (List<String>) profile.getItemValue("txtPlugins");
+			if (vPlugins.contains("org.imixs.marty.plugins.ApplicationPlugin") && !vPlugins.contains("org.imixs.marty.plugins.CommentPlugin")) {
+				throw new PluginException(WorkflowService.class.getSimpleName(),
+						ProcessingErrorException.INVALID_MODELVERSION,
+						"WorkflowService: error - org.imixs.marty.plugins.CommentPlugin missing!");
+			}
+		}
+		
+		
+	}
+	
 	/**
 	 * This method tests if the action result of the activty starts with "workitem=" followed a
 	 * uniqueid, then the method tries to load that new workitem (in case of a list
