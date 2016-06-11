@@ -179,8 +179,8 @@ public class CommentPlugin extends AbstractPlugin {
 			while (matcher.find()) {
 				String name=matcher.group(1);
 				String value=matcher.group(2);
-			    System.out.println(name);
-			    System.out.println(value);
+			    logger.fine(name);
+			    logger.fine(value);
 			    
 			    itemColAttributes.replaceItemValue(name, value);
 			    
@@ -193,6 +193,8 @@ public class CommentPlugin extends AbstractPlugin {
 				return itemColAttributes;
 			}
 			
+			// skipp to next tag...
+			resultString=resultString.substring(iTagEndPos);
 			
 		}
 
