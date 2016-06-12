@@ -47,9 +47,9 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * processes, spaces and workitems. A WorkItem is typically assigned to a
  * process and a optional to one ore more space entities. These references are
  * stored in the $UniqueIDRef property of the WorkItem. In addition to the
- * $UniqueIDRef property the TeamPlugin manages the properties txtProcessRef
- * and txtSpaceRef which containing only uniqueIDs of the corresponding entity
- * type. The properties txtProcessRef and txtSpaceRef can be modified by an
+ * $UniqueIDRef property the TeamPlugin manages the properties txtProcessRef and
+ * txtSpaceRef which containing only uniqueIDs of the corresponding entity type.
+ * The properties txtProcessRef and txtSpaceRef can be modified by an
  * application to reassign the workitem.
  * 
  * This plug-in supports also additional workflow properties for further
@@ -172,11 +172,10 @@ public class TeamPlugin extends AbstractPlugin {
 	 **/
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public int run(ItemCollection workItem, ItemCollection documentActivity)
-			throws PluginException {
-		
-		documentContext=workItem;
-		
+	public int run(ItemCollection workItem, ItemCollection documentActivity) throws PluginException {
+
+		documentContext = workItem;
+
 		List<String> oldUnqiueIdRefList = workItem.getItemValue("$UniqueIdRef");
 		List<String> newUnqiueIDRefList = null;
 		List<String> processRefList = null;
@@ -188,11 +187,9 @@ public class TeamPlugin extends AbstractPlugin {
 			processRefList = workItem.getItemValue("txtProcessRef");
 			for (String aUniqueID : oldUnqiueIdRefList) {
 				ItemCollection entity = findEntity(aUniqueID);
-				if (entity != null
-						&& "process".equals(entity.getItemValueString("type"))) {
+				if (entity != null && "process".equals(entity.getItemValueString("type"))) {
 					// update txtProcessRef
-					processRefList.add(entity
-							.getItemValueString(EntityService.UNIQUEID));
+					processRefList.add(entity.getItemValueString(EntityService.UNIQUEID));
 				}
 			}
 			// update txtProcessRef
@@ -209,19 +206,15 @@ public class TeamPlugin extends AbstractPlugin {
 					if (entity == null) {
 						entity = findRefByName(aUniqueID, "process");
 						if (entity != null) {
-							String aID = entity
-									.getItemValueString(EntityService.UNIQUEID);
-							logger.info("[TeamPlugin] processRefName '"
-									+ aUniqueID + "' translated into '" + aID
-									+ "'");
+							String aID = entity.getItemValueString(EntityService.UNIQUEID);
+							logger.info(
+									"[TeamPlugin] processRefName '" + aUniqueID + "' translated into '" + aID + "'");
 							// verified
 							aUniqueID = aID;
 						}
 					}
 
-					if (entity != null
-							&& "process".equals(entity
-									.getItemValueString("type"))) {
+					if (entity != null && "process".equals(entity.getItemValueString("type"))) {
 						// verified
 						verifiedRefList.add(aUniqueID);
 					}
@@ -237,11 +230,9 @@ public class TeamPlugin extends AbstractPlugin {
 			spaceRefList = workItem.getItemValue("txtSpaceRef");
 			for (String aUniqueID : oldUnqiueIdRefList) {
 				ItemCollection entity = findEntity(aUniqueID);
-				if (entity != null
-						&& "space".equals(entity.getItemValueString("type"))) {
+				if (entity != null && "space".equals(entity.getItemValueString("type"))) {
 					// update txtProcessRef
-					spaceRefList.add(entity
-							.getItemValueString(EntityService.UNIQUEID));
+					spaceRefList.add(entity.getItemValueString(EntityService.UNIQUEID));
 				}
 			}
 			// update txtProcessRef
@@ -259,19 +250,14 @@ public class TeamPlugin extends AbstractPlugin {
 
 						entity = findRefByName(aUniqueID, "space");
 						if (entity != null) {
-							String aID = entity
-									.getItemValueString(EntityService.UNIQUEID);
-							logger.info("[TeamPlugin] spaceRefName '"
-									+ aUniqueID + "' translated into '" + aID
-									+ "'");
+							String aID = entity.getItemValueString(EntityService.UNIQUEID);
+							logger.info("[TeamPlugin] spaceRefName '" + aUniqueID + "' translated into '" + aID + "'");
 							// verified
 							aUniqueID = aID;
 						}
 					}
 
-					if (entity != null
-							&& "space"
-									.equals(entity.getItemValueString("type"))) {
+					if (entity != null && "space".equals(entity.getItemValueString("type"))) {
 						// verified
 						verifiedRefList.add(aUniqueID);
 					}
@@ -289,17 +275,18 @@ public class TeamPlugin extends AbstractPlugin {
 		 * 
 		 * '<item name="process">...</item>' '<item name="space">...</item>'
 		 */
-		String sRef = fetchRefFromActivity("process", workItem,documentActivity);
-		if (sRef != null && !sRef.isEmpty()) {
-			logger.fine("[TeamPlugin] Updating process reference based on model information: "
-					+ sRef);
-			workItem.replaceItemValue("txtProcessRef", sRef);
-		}
-		sRef = fetchRefFromActivity("space",workItem, documentActivity);
-		if (sRef != null && !sRef.isEmpty()) {
-			logger.fine("[TeamPlugin] Updating space reference based on model information: "
-					+ sRef);
-			workItem.replaceItemValue("txtSpaceRef", sRef);
+		ItemCollection evalItemCollection = ResultPlugin.evaluateWorkflowResult(documentActivity, workItem);
+		if (evalItemCollection != null) {
+			String sRef = fetchRefFromActivity("process", evalItemCollection);
+			if (sRef != null && !sRef.isEmpty()) {
+				logger.fine("[TeamPlugin] Updating process reference based on model information: " + sRef);
+				workItem.replaceItemValue("txtProcessRef", sRef);
+			}
+			sRef = fetchRefFromActivity("space", evalItemCollection);
+			if (sRef != null && !sRef.isEmpty()) {
+				logger.fine("[TeamPlugin] Updating space reference based on model information: " + sRef);
+				workItem.replaceItemValue("txtSpaceRef", sRef);
+			}
 		}
 
 		// 3.) now synchronize txtProcessRef/txtSpaceRef with $UnqiueIDref
@@ -313,17 +300,13 @@ public class TeamPlugin extends AbstractPlugin {
 
 			ItemCollection entity = findEntity(aUniqueID);
 			// check if this is a deprecated process ref
-			if (entity != null
-					&& "process".equals(entity.getItemValueString("type"))
+			if (entity != null && "process".equals(entity.getItemValueString("type"))
 					&& !processRefList.contains(aUniqueID)) {
-				logger.fine("[TeamPlugin] remove deprecated processRef "
-						+ aUniqueID);
+				logger.fine("[TeamPlugin] remove deprecated processRef " + aUniqueID);
 			} else {
-				if (entity != null
-						&& "space".equals(entity.getItemValueString("type"))
+				if (entity != null && "space".equals(entity.getItemValueString("type"))
 						&& !spaceRefList.contains(aUniqueID)) {
-					logger.fine("[TeamPlugin] remove deprecated spaceRef "
-							+ aUniqueID);
+					logger.fine("[TeamPlugin] remove deprecated spaceRef " + aUniqueID);
 				} else {
 					// all other types of entities will still be contained...
 					if (!newUnqiueIDRefList.contains(aUniqueID))
@@ -444,40 +427,32 @@ public class TeamPlugin extends AbstractPlugin {
 
 	}
 
-	private String fetchRefFromActivity(String type,ItemCollection workitem,
-			ItemCollection documentActivity) throws PluginException {
+	private String fetchRefFromActivity(String type, ItemCollection evalItemCollection)
+			throws PluginException {
 
 		String sRef = null;
 		// Read workflow result directly from the activity definition
-		ItemCollection evalItemCollection = new ItemCollection();
-		ResultPlugin.evaluateWorkflowResult(documentActivity,  evalItemCollection);
 		String aActivityRefName = evalItemCollection.getItemValueString(type);
 
 		// 1.) check if a new space reference is defined in the current
 		// activity. This will overwrite the current value!!
 		if (!"".equals(aActivityRefName)) {
-			
+
 			ItemCollection entity = entityService.load(aActivityRefName);
-			if (entity!=null && !type.equals(entity.getItemValueString("type"))) {
-				entity=null;
-			}			
-			if (entity==null) {
+			if (entity != null && !type.equals(entity.getItemValueString("type"))) {
+				entity = null;
+			}
+			if (entity == null) {
 				// load space entity
 				entity = findRefByName(aActivityRefName, type);
 			}
 			if (entity != null) {
 				sRef = entity.getItemValueString(EntityService.UNIQUEID);
-				logger.fine("[TeamPlugin] found ref from Activity for: "
-						+ aActivityRefName);
+				logger.fine("[TeamPlugin] found ref from Activity for: " + aActivityRefName);
 			} else {
 				// throw a PLuginException
-				throw new PluginException(
-						TeamPlugin.class.getSimpleName(),
-						INVALID_REFERENCE_ASSIGNED_BY_MODEL,
-						type
-								+ " '"
-								+ aActivityRefName
-								+ "' defined by the current model can not be found!");
+				throw new PluginException(TeamPlugin.class.getSimpleName(), INVALID_REFERENCE_ASSIGNED_BY_MODEL,
+						type + " '" + aActivityRefName + "' defined by the current model can not be found!");
 			}
 		}
 		return sRef;
@@ -491,10 +466,9 @@ public class TeamPlugin extends AbstractPlugin {
 	 * need to be a little more tricky if we seach for spaces....
 	 */
 	private ItemCollection findRefByName(String aName, String type) {
-		String sQuery = "SELECT project FROM Entity AS project "
-				+ " JOIN project.textItems AS t2" + " WHERE  project.type = '"
-				+ type + "' " + " AND t2.itemName = 'txtname' "
-				+ " AND t2.itemValue = '" + aName + "'";
+		String sQuery = "SELECT project FROM Entity AS project " + " JOIN project.textItems AS t2"
+				+ " WHERE  project.type = '" + type + "' " + " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
+				+ aName + "'";
 
 		// because of the fact that spaces can be ordered in a hirachical order
 		// we need to be a little more tricky if we seach for spaces....
@@ -502,19 +476,15 @@ public class TeamPlugin extends AbstractPlugin {
 		List<ItemCollection> col = entityService.findAllEntities(sQuery, 0, 2);
 
 		if (col.size() == 0) {
-			logger.warning("[TeamPlugin] findRefByName '" + aName
-					+ "' not found!");
+			logger.warning("[TeamPlugin] findRefByName '" + aName + "' not found!");
 		} else {
 			if (col.size() > 1) {
-				logger.warning("[TeamPlugin] findRefByName '" + aName
-						+ "' is ambiguous!");
+				logger.warning("[TeamPlugin] findRefByName '" + aName + "' is ambiguous!");
 			} else {
 				// we found one!
 				ItemCollection entity = col.iterator().next();
 				// update cache
-				entityCache.put(
-						entity.getItemValueString(EntityService.UNIQUEID),
-						entity);
+				entityCache.put(entity.getItemValueString(EntityService.UNIQUEID), entity);
 				return entity;
 			}
 
