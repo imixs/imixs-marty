@@ -82,11 +82,8 @@ public class SubprocessPlugin extends AbstractPlugin {
 		// check if a subprocess should be started now....
 		logger.fine("[SubprozessPlugin] createSubProcess....");
 		// find: <item name="subprocess">100200.10</item>
-		String sResult = documentActivity
-				.getItemValueString("txtActivityResult");
-
 		ItemCollection evalItemCollection = new ItemCollection();
-		ResultPlugin.evaluate(sResult, evalItemCollection);
+		ResultPlugin.evaluateWorkflowResult(documentActivity, evalItemCollection);
 
 		if (evalItemCollection.hasItem(SUBPROCESS_ITEM)) {
 			// create subprocess for each entry in the subprocess_item.
@@ -188,6 +185,6 @@ public class SubprocessPlugin extends AbstractPlugin {
 				documentContext.getItemValueString(WorkflowService.UNIQUEID));
 
 		subprocess = this.workflowService.processWorkItem(subprocess);
-		logger.fine("[SubprozessPlugin] successful processed subprocess.");
+		logger.fine("successful processed subprocess.");
 	}
 }

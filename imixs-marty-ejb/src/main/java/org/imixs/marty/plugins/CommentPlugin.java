@@ -80,18 +80,13 @@ public class CommentPlugin extends AbstractPlugin {
 	public int run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
 
 		documentContext = adocumentContext;
-
-		// update the comment
-		// evaluate activity result
-		String sResult = documentActivity.getItemValueString("txtActivityResult");
-		sResult = replaceDynamicValues(sResult, adocumentContext);
-
-		ItemCollection evalItemAttributes = ResultPlugin.evaluateItemAttributes(sResult, "comment");
+	
+		ItemCollection evalItemCollection =ResultPlugin.evaluateWorkflowResult(documentActivity, adocumentContext);
 
 		// test if comment is defined in model
-		if (evalItemAttributes != null) {
+		if (evalItemCollection != null) {
 			// test ignore
-			if ("true".equals(evalItemAttributes.getItemValueString("ignore"))) {
+			if ("true".equals(evalItemCollection.getItemValueString("comment.ignore"))) {
 				logger.fine("ignore=true - skipping txtCommentLog");
 				return Plugin.PLUGIN_OK;
 			}
@@ -107,11 +102,9 @@ public class CommentPlugin extends AbstractPlugin {
 		log.put("nameditor", remoteUser);
 
 		// test for fixed comment
-		ItemCollection evalueItemValues = new ItemCollection();
-		ResultPlugin.evaluate(sResult, evalueItemValues);
 		String sComment = null;
-		if (evalueItemValues != null && evalueItemValues.hasItem("comment")) {
-			sComment = evalueItemValues.getItemValueString("comment");
+		if (evalItemCollection != null && evalItemCollection.hasItem("comment")) {
+			sComment = evalItemCollection.getItemValueString("comment");
 		} else {
 			sComment = documentContext.getItemValueString("txtComment");
 			// clear comment
@@ -129,9 +122,13 @@ public class CommentPlugin extends AbstractPlugin {
 
 	}
 
+	/**
+	 * remove comment properties
+	 */
 	@Override
 	public void close(int arg0) throws PluginException {
-
+		documentContext.removeItem("comment");
+		documentContext.removeItem("comment.ignore");
 	}
 
 }

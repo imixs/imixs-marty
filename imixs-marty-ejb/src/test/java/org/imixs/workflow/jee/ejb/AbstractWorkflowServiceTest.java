@@ -165,7 +165,7 @@ public class AbstractWorkflowServiceTest {
 			@Override
 			public List<ItemCollection> answer(InvocationOnMock invocation) throws Throwable {
 
-				List<ItemCollection> result = new ArrayList<>();
+				List<ItemCollection> result = new ArrayList<ItemCollection>();
 				Object[] args = invocation.getArguments();
 				String id = (String) args[0];
 

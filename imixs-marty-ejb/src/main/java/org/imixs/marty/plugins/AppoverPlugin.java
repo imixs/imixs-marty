@@ -80,7 +80,7 @@ public class AppoverPlugin extends AbstractPlugin {
 	@Override
 	public int run(ItemCollection workitem, ItemCollection documentActivity) throws PluginException {
 
-		ItemCollection evalItemCollection = ResultPlugin.evaluate(documentActivity, workitem);
+		ItemCollection evalItemCollection = ResultPlugin.evaluateWorkflowResult(documentActivity, workitem);
 
 		// 1.) test for items with name subprocess_create and create the
 		// defined suprocesses

@@ -103,6 +103,7 @@ public class TeamPlugin extends AbstractPlugin {
 	public static final String INVALID_REFERENCE_ASSIGNED_BY_MODEL = "INVALID_REFERENCE_ASSIGNED_BY_MODEL";
 	public static final String NO_PROCESS_ASSIGNED = "NO_PROCESS_ASSIGNED";
 
+	private ItemCollection documentContext;
 	private WorkflowService workflowService = null;
 	private EntityService entityService = null;
 	private static Logger logger = Logger.getLogger(TeamPlugin.class.getName());
@@ -173,7 +174,9 @@ public class TeamPlugin extends AbstractPlugin {
 	@Override
 	public int run(ItemCollection workItem, ItemCollection documentActivity)
 			throws PluginException {
-
+		
+		documentContext=workItem;
+		
 		List<String> oldUnqiueIdRefList = workItem.getItemValue("$UniqueIdRef");
 		List<String> newUnqiueIDRefList = null;
 		List<String> processRefList = null;
@@ -400,10 +403,13 @@ public class TeamPlugin extends AbstractPlugin {
 		return Plugin.PLUGIN_OK;
 	}
 
+	/**
+	 * Remove space and process properties
+	 */
 	@Override
 	public void close(int arg0) throws PluginException {
-		// no op
-
+		documentContext.removeItem("space");
+		documentContext.removeItem("process");
 	}
 
 	/**
@@ -443,13 +449,8 @@ public class TeamPlugin extends AbstractPlugin {
 
 		String sRef = null;
 		// Read workflow result directly from the activity definition
-		String sResult = documentActivity
-				.getItemValueString("txtActivityResult");
-		// replace dynamic values
-		sResult= replaceDynamicValues(sResult,workitem);
-
 		ItemCollection evalItemCollection = new ItemCollection();
-		ResultPlugin.evaluate(sResult, evalItemCollection);
+		ResultPlugin.evaluateWorkflowResult(documentActivity,  evalItemCollection);
 		String aActivityRefName = evalItemCollection.getItemValueString(type);
 
 		// 1.) check if a new space reference is defined in the current
