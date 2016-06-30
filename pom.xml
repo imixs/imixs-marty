@@ -73,6 +73,18 @@
 		<!-- imixs-github-repo on github - see ~/.m2/settings.xml -->
     	<github.global.server>imixs-github-repo</github.global.server>
 	</properties>
+	
+	<!-- Imixs Repo -->
+	<repositories>
+		<repository>
+	        <id>imixs-mvn-repo</id>
+	        <url>https://raw.githubusercontent.com/imixs/imixs-mvn-repo/master/</url>
+	        <snapshots>
+	            <enabled>false</enabled>
+	            <updatePolicy>always</updatePolicy>
+	        </snapshots>
+	    </repository>
+	</repositories>
 
 	<build>
 		<plugins>
