@@ -150,6 +150,8 @@ public class WorkitemLinkController implements Serializable {
 			sSearchTerm += "((type:workitem) OR (type:workitemarchive)) AND ";
 
 			if (filter != null && !"".equals(filter)) {
+				// escape filter..
+				filter=LuceneSearchService.escapeSearchTerm(filter);
 				String sNewFilter = filter;
 				sNewFilter = sNewFilter.replace(".", "?");
 				sSearchTerm = "(" + sNewFilter + ") AND ";

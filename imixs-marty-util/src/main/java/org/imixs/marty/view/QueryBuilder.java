@@ -17,6 +17,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.util.LoginController;
 import org.imixs.workflow.jee.faces.workitem.WorklistController;
 import org.imixs.workflow.jee.util.PropertyService;
+import org.imixs.workflow.lucene.LuceneSearchService;
 
 /**
  * The default implementation of a QueryBuilder. The SearchController can use
@@ -230,7 +231,9 @@ public class QueryBuilder implements IQueryBuilder {
 
 		// Search phrase....
 		String searchphrase = searchFilter.getItemValueString("txtSearch");
-
+		// escape search phrase
+		searchphrase=LuceneSearchService.escapeSearchTerm(searchphrase);
+		
 		if (!"".equals(searchphrase)) {
 			// trim
 			searchphrase = searchphrase.trim();

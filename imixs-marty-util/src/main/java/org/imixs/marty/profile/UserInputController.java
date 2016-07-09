@@ -164,19 +164,7 @@ public class UserInputController implements Serializable {
 
 		phrase =  phrase.trim();
 
-//		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-//				+ " JOIN profile.textItems AS t0"
-//				+ " JOIN profile.textItems AS t1"
-//				+ " JOIN profile.textItems AS t2"
-//				+ " WHERE  profile.type= 'profile' " + " AND "
-//				+ " ( (t1.itemName = 'txtusername' "
-//				+ " AND t1.itemValue LIKE  '" + phrase + "') "
-//				+ " OR (t2.itemName = 'txtemail' "
-//				+ " AND t2.itemValue LIKE  '" + phrase + "') "
-//				+ " OR (t0.itemName = 'txtname' " + " AND t0.itemValue LIKE  '"
-//				+ phrase + "') " + " )";
-		
-		String sQuery= "(type:\"profile\") AND ( *" + phrase + "* )";
+		String sQuery= "(type:\"profile\") AND ( *" + LuceneSearchService.escapeSearchTerm(phrase) + "* )";
 
 		logger.finest("searchprofile: " + sQuery);
 
