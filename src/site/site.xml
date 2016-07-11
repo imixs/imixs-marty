@@ -30,6 +30,7 @@
 			<item name="Mail" href="concepts/mail.html" />
 			<item name="User Profiles" href="concepts/profiles.html" />
 			<item name="User DB" href="concepts/userdb.html" />
+			<item name="Lucene" href="concepts/lucene.html" />
 			<item name="LDAP" href="concepts/ldap.html" />
 		</menu>
 		
