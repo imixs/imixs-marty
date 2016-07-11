@@ -6,7 +6,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
@@ -78,16 +77,14 @@ public class QueryBuilder implements IQueryBuilder {
 	@SuppressWarnings("unchecked")
 	@Override
 	public String getSearchQuery(ItemCollection searchFilter, String view) {
-		
+
 		// read the filter parameters and removes duplicates
 		// and empty entries
 
 		List<Integer> processIDs = searchFilter.getItemValue("$ProcessID");
-		List<String> processRefList = searchFilter
-				.getItemValue("txtProcessRef");
+		List<String> processRefList = searchFilter.getItemValue("txtProcessRef");
 		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
-		List<String> workflowGroups = searchFilter
-				.getItemValue("txtWorkflowGroup");
+		List<String> workflowGroups = searchFilter.getItemValue("txtWorkflowGroup");
 
 		// trim lists
 		while (processIDs.contains(""))
@@ -103,22 +100,14 @@ public class QueryBuilder implements IQueryBuilder {
 		while (spacesRefList.contains("-"))
 			spacesRefList.remove("-");
 
-
 		List<String> typeList = searchFilter.getItemValue("Type");
 		if (typeList.isEmpty() || "".equals(typeList.get(0))) {
-			typeList = Arrays.asList(new String[] { "workitem",
-					"workitemarchive" });
+			typeList = Arrays.asList(new String[] { "workitem", "workitemarchive" });
 		}
-		
-		
-		
-		
-		
-		
+
 		String sSearchTerm = "";
 		if (view == null)
 			view = "";
-
 
 		// convert type list into comma separated list
 		String sTypeQuery = "";
@@ -203,14 +192,12 @@ public class QueryBuilder implements IQueryBuilder {
 
 		if (datFrom != null || datTo != null) {
 			// expected format $created:[20020101 TO 20030101]
-			sSearchTerm += " ($created:[" + sDateFrom + " TO " + sDateTo
-					+ "]) AND";
+			sSearchTerm += " ($created:[" + sDateFrom + " TO " + sDateTo + "]) AND";
 		}
 
 		// creator
 		if (!"".equals(sCreator)) {
-			sSearchTerm += " (namcreator:\"" + sCreator.toLowerCase()
-					+ "\") AND";
+			sSearchTerm += " (namcreator:\"" + sCreator.toLowerCase() + "\") AND";
 		}
 
 		// owner
@@ -232,42 +219,14 @@ public class QueryBuilder implements IQueryBuilder {
 		// Search phrase....
 		String searchphrase = searchFilter.getItemValueString("txtSearch");
 		// escape search phrase
-		searchphrase=LuceneSearchService.escapeSearchTerm(searchphrase);
-		
+		searchphrase = LuceneSearchService.escapeSearchTerm(searchphrase);
+
 		if (!"".equals(searchphrase)) {
 			// trim
 			searchphrase = searchphrase.trim();
 			// lower case....
 			searchphrase = searchphrase.toLowerCase();
-			// check the default operator
-			String defaultOperator = propertyService.getProperties()
-					.getProperty("lucence.defaultOperator");
-			if (defaultOperator != null
-					&& "AND".equals(defaultOperator.toUpperCase())) {
-				String[] segs = searchphrase.split(Pattern.quote(" "));
-
-				sSearchTerm += " (";
-				for (String seg : segs) {
-					sSearchTerm += " *" + seg + "* AND";
-				}
-				if (sSearchTerm.endsWith("AND"))
-					sSearchTerm = sSearchTerm.substring(0,
-							sSearchTerm.length() - 3);
-
-				sSearchTerm += ") ";
-
-			} else {
-				// because lucene parser default to OR operator no Operator is
-				// used here
-				String[] segs = searchphrase.split(Pattern.quote(" "));
-				sSearchTerm += " (";
-				for (String seg : segs) {
-					sSearchTerm += " *" + seg + "* ";
-				}
-
-				sSearchTerm += ") ";
-
-			}
+			sSearchTerm += " (" + searchphrase + ") ";
 		} else
 		// cut last AND
 		if (sSearchTerm.endsWith("AND"))
@@ -297,11 +256,9 @@ public class QueryBuilder implements IQueryBuilder {
 		// and empty entries
 
 		List<Integer> processIDs = searchFilter.getItemValue("$ProcessID");
-		List<String> processRefList = searchFilter
-				.getItemValue("txtProcessRef");
+		List<String> processRefList = searchFilter.getItemValue("txtProcessRef");
 		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
-		List<String> workflowGroups = searchFilter
-				.getItemValue("txtWorkflowGroup");
+		List<String> workflowGroups = searchFilter.getItemValue("txtWorkflowGroup");
 
 		// trim lists
 		while (processIDs.contains(""))
@@ -317,16 +274,11 @@ public class QueryBuilder implements IQueryBuilder {
 		while (spacesRefList.contains("-"))
 			spacesRefList.remove("-");
 
-
 		List<String> typeList = searchFilter.getItemValue("Type");
 		if (typeList.isEmpty() || "".equals(typeList.get(0))) {
-			typeList = Arrays.asList(new String[] { "workitem",
-					"workitemarchive" });
+			typeList = Arrays.asList(new String[] { "workitem", "workitemarchive" });
 		}
-		
-		
-		
-		
+
 		// construct query
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
 
@@ -356,14 +308,12 @@ public class QueryBuilder implements IQueryBuilder {
 		// QUERY_WORKLIST_BY_CREATOR ?
 		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_CREATOR)) {
 			sQuery += " AND creator.itemName = 'namcreator'";
-			sQuery += " AND creator.itemValue = '"
-					+ loginController.getRemoteUser() + "' ";
+			sQuery += " AND creator.itemValue = '" + loginController.getRemoteUser() + "' ";
 		}
 		// QUERY_WORKLIST_BY_OWNER ?
 		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_OWNER)) {
 			sQuery += " AND owner.itemName = 'namowner'";
-			sQuery += " AND owner.itemValue = '"
-					+ loginController.getRemoteUser() + "' ";
+			sQuery += " AND owner.itemValue = '" + loginController.getRemoteUser() + "' ";
 		}
 
 		// process Ref...
