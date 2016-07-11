@@ -61,6 +61,18 @@
 			<comments>All the results of the imixs workflow project are subject to the GPL licensing model. </comments>
 		</license>
 	</licenses>
+	
+	<!-- Imixs Repo -->
+	<repositories>
+		<repository>
+	        <id>imixs-mvn-repo</id>
+	        <url>https://raw.githubusercontent.com/imixs/imixs-mvn-repo/master/</url>
+	        <snapshots>
+	            <enabled>false</enabled>
+	            <updatePolicy>always</updatePolicy>
+	        </snapshots>
+	    </repository>
+	</repositories>
 
 	<modules>
 		<module>imixs-marty-ejb</module>
