@@ -219,7 +219,7 @@ public class QueryBuilder implements IQueryBuilder {
 		// Search phrase....
 		String searchphrase = searchFilter.getItemValueString("txtSearch");
 		// escape search phrase
-		searchphrase = LuceneSearchService.escapeSearchTerm(searchphrase);
+		searchphrase = LuceneSearchService.normalizeSearchTerm(searchphrase);
 
 		if (!"".equals(searchphrase)) {
 			// trim
