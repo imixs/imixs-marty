@@ -21,22 +21,18 @@ public interface IQueryBuilder {
 	 * 
 	 * @param searchFilter
 	 *            - ItemCollection with filter criteria
-	 * @param view
-	 *            - WorkList View type - @see WorklistController
 	 * 
 	 * @return - a lucene search query
 	 */
-	String getSearchQuery(ItemCollection searchFilter, String view);
+	String getSearchQuery(ItemCollection searchFilter);
 
 	/**
 	 * Returns a JPQL statement based on the defined searchFilter parameter set
 	 * 
 	 * @param searchFilter
 	 *            - ItemCollection with filter criteria
-	 * @param view
-	 *            - WorkList View type - @see WorklistController
 	 * 
 	 * @return - a JQPL statement
 	 */
-	String getJPQLStatement(ItemCollection queryFilter, String view);
+	String getJPQLStatement(ItemCollection queryFilter);
 }

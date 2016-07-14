@@ -251,8 +251,7 @@ public class SearchController extends
 			List<ItemCollection> result = new ArrayList<ItemCollection>();
 			if (searchFilter == null)
 				return result;
-			String sQuery = queryBuilder.getJPQLStatement(searchFilter,
-					getView());
+			String sQuery = queryBuilder.getJPQLStatement(searchFilter);
 			logger.fine("findWorkitems: " + sQuery);
 			Collection<ItemCollection> col = workflowService.getEntityService()
 					.findAllEntities(sQuery, controller.getRow(),
@@ -278,8 +277,7 @@ public class SearchController extends
 			if (searchFilter == null)
 				return result;
 
-			String sSearchTerm = queryBuilder.getSearchQuery(searchFilter,
-					getView());
+			String sSearchTerm = queryBuilder.getSearchQuery(searchFilter);
 			// start lucene search
 			Collection<ItemCollection> col = null;
 			try {

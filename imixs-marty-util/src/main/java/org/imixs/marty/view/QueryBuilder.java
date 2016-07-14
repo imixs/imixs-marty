@@ -14,7 +14,6 @@ import javax.inject.Inject;
 import org.imixs.marty.ejb.ConfigService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.faces.util.LoginController;
-import org.imixs.workflow.jee.faces.workitem.WorklistController;
 import org.imixs.workflow.jee.util.PropertyService;
 import org.imixs.workflow.lucene.LuceneSearchService;
 
@@ -76,7 +75,7 @@ public class QueryBuilder implements IQueryBuilder {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public String getSearchQuery(ItemCollection searchFilter, String view) {
+	public String getSearchQuery(ItemCollection searchFilter) {
 
 		// read the filter parameters and removes duplicates
 		// and empty entries
@@ -106,9 +105,7 @@ public class QueryBuilder implements IQueryBuilder {
 		}
 
 		String sSearchTerm = "";
-		if (view == null)
-			view = "";
-
+	
 		// convert type list into comma separated list
 		String sTypeQuery = "";
 		Iterator<String> iterator = typeList.iterator();
@@ -121,17 +118,10 @@ public class QueryBuilder implements IQueryBuilder {
 
 		// test if result should be restricted to creator?
 		String sCreator = searchFilter.getItemValueString("namCreator");
-		// test if viewtype=worklist.creator
-		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_CREATOR)) {
-			sCreator = loginController.getRemoteUser();
-		}
-
+		
 		// test if result should be restricted to owner?
 		String sOwner = searchFilter.getItemValueString("namOwner");
-		// test if viewtype=worklist.owner
-		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_OWNER)) {
-			sOwner = loginController.getRemoteUser();
-		}
+		
 
 		Date datFrom = searchFilter.getItemValueDate("datFrom");
 		Date datTo = searchFilter.getItemValueDate("datTo");
@@ -250,7 +240,7 @@ public class QueryBuilder implements IQueryBuilder {
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public String getJPQLStatement(ItemCollection searchFilter, String view) {
+	public String getJPQLStatement(ItemCollection searchFilter) {
 
 		// read the filter parameters and removes duplicates
 		// and empty entries
@@ -282,11 +272,6 @@ public class QueryBuilder implements IQueryBuilder {
 		// construct query
 		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
 
-		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_CREATOR))
-			sQuery += " JOIN wi.textItems as creator ";
-		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_OWNER))
-			sQuery += " JOIN wi.textItems as owner ";
-
 		if (!processRefList.isEmpty())
 			sQuery += " JOIN wi.textItems as pref ";
 		if (!spacesRefList.isEmpty())
@@ -305,16 +290,7 @@ public class QueryBuilder implements IQueryBuilder {
 
 		sQuery += " WHERE wi.type IN(" + sType + ")";
 
-		// QUERY_WORKLIST_BY_CREATOR ?
-		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_CREATOR)) {
-			sQuery += " AND creator.itemName = 'namcreator'";
-			sQuery += " AND creator.itemValue = '" + loginController.getRemoteUser() + "' ";
-		}
-		// QUERY_WORKLIST_BY_OWNER ?
-		if (view.startsWith(WorklistController.QUERY_WORKLIST_BY_OWNER)) {
-			sQuery += " AND owner.itemName = 'namowner'";
-			sQuery += " AND owner.itemValue = '" + loginController.getRemoteUser() + "' ";
-		}
+		
 
 		// process Ref...
 		if (!processRefList.isEmpty()) {
