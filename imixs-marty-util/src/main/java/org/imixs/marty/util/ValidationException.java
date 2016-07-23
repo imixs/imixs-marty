@@ -18,7 +18,7 @@ public class ValidationException extends WorkflowException {
 	public ValidationException(String aErrorContext, String aErrorCode,
 			String message) {
 		super(aErrorContext, aErrorCode, message);
-	}
+	} 
 
 	public ValidationException(String aErrorContext, String aErrorCode,
 			String message, Exception e) {

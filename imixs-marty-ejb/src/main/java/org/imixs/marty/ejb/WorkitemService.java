@@ -106,8 +106,8 @@ public class WorkitemService {
 			String sProcessModelVersion, int aProcessID) throws Exception {
 
 		// lookup ProcessEntiy from the model
-		ItemCollection processEntity = modelService.getProcessEntity(
-				aProcessID, sProcessModelVersion);
+		ItemCollection processEntity = modelService.getModel(sProcessModelVersion).getTask(
+				aProcessID);
 		if (processEntity == null)
 			throw new Exception(
 					"error createWorkItem: Process Entity can not be found ("

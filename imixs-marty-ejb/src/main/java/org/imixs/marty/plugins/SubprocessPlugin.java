@@ -34,6 +34,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.WorkflowService;
@@ -156,8 +157,15 @@ public class SubprocessPlugin extends AbstractPlugin {
 		int iActivityId = new Integer(sSubprocessItem.substring(pos + 1));
 
 		// lookup ProcessEntiy from the model
-		ItemCollection processEntity = this.workflowService.getModelService()
-				.getProcessEntity(iProcessId, modelVersion);
+		ItemCollection processEntity=null;
+		try {
+			processEntity = this.workflowService.getModelManager().getModel(modelVersion).getTask(iProcessId);
+		} catch (ModelException e) {
+			throw new PluginException(
+					this.getClass().getSimpleName(),
+					"WRONG SUBPROCESS FORMAT",
+					e.getMessage());
+		}
 		if (processEntity == null)
 			throw new PluginException(this.getClass().getSimpleName(),
 					"WRONG SUBPROCESS FORMAT",

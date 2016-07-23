@@ -53,6 +53,7 @@ import org.imixs.marty.util.ErrorHandler;
 import org.imixs.marty.util.ValidationException;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
@@ -188,10 +189,11 @@ public class WorkflowController extends
 
 	/**
 	 * This method overwrites the default init() and fires a WorkflowEvent.
+	 * @throws ModelException 
 	 * 
 	 */
 	@Override
-	public String init(String action) {
+	public String init(String action) throws ModelException {
 		String actionResult = super.init(action);
 
 		// fire event
