@@ -12,8 +12,9 @@ import javax.ejb.SessionContext;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
+import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.AbstractWorkflowServiceTest;
+import org.imixs.workflow.jee.ejb.AbstractWorkflowEnvironment;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -27,12 +28,12 @@ import junit.framework.Assert;
  * 
  * @author rsoika
  */
-public class TestCommentPlugin extends AbstractWorkflowServiceTest {
+public class TestCommentPlugin extends AbstractWorkflowEnvironment {
 	private final static Logger logger = Logger.getLogger(TestCommentPlugin.class.getName());
 
 	@Spy
 	private CommentPlugin commentPlugin;
-
+ 
 	// CommentPlugin commentPlugin = null;
 	ItemCollection documentActivity;
 	protected SessionContext ctx;
@@ -80,14 +81,15 @@ public class TestCommentPlugin extends AbstractWorkflowServiceTest {
 	 * This simple test verifies the default comment feature
 	 * 
 	 * @throws PluginException
+	 * @throws ModelException 
 	 * 
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
-	public void testSimpleComment() throws PluginException {
+	public void testSimpleComment() throws PluginException, ModelException {
 
 		documentContext.replaceItemValue("txtComment", "Some Comment");
-		documentActivity = this.getActivityEntity(100, 10);
+		documentActivity = this.getModel().getEvent(100, 10);
 
 		try {
 			commentPlugin.run(documentContext, documentActivity);
@@ -110,14 +112,15 @@ public class TestCommentPlugin extends AbstractWorkflowServiceTest {
 	 * This simple test verifies the comment ignore=true flag
 	 * 
 	 * @throws PluginException
+	 * @throws ModelException 
 	 * 
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
-	public void testIgnoreComment() throws PluginException {
+	public void testIgnoreComment() throws PluginException, ModelException {
 
 		documentContext.replaceItemValue("txtComment", "Some Comment");
-		documentActivity = this.getActivityEntity(100, 10);
+		documentActivity = this.getModel().getEvent(100, 10);
 
 		// change result
 		documentActivity.replaceItemValue("txtActivityResult", "<item name=\"comment\" ignore=\"true\" />");
@@ -142,14 +145,15 @@ public class TestCommentPlugin extends AbstractWorkflowServiceTest {
 	 * This test verifies a fixed comment text
 	 * 
 	 * @throws PluginException
+	 * @throws ModelException 
 	 * 
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
-	public void testFixedComment() throws PluginException {
+	public void testFixedComment() throws PluginException, ModelException {
 
 		documentContext.replaceItemValue("txtComment", "Some Comment");
-		documentActivity = this.getActivityEntity(100, 10);
+		documentActivity = this.getModel().getEvent(100, 10);
 
 		// change result
 		documentActivity.replaceItemValue("txtActivityResult",

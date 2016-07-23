@@ -87,8 +87,6 @@ public class ModelController implements Serializable {
 	private String workflowGroup = null;
 	private String modelVersion = null;
 
-	private HashMap<String, List<ItemCollection>> processEntityCache = null;
-
 	@Inject
 	protected FileUploadController fileUploadController;
 
@@ -113,7 +111,12 @@ public class ModelController implements Serializable {
 	 * @return
 	 */
 	public List<ItemCollection> getAllStartProcessEntities(String version) {
-		return modelService.getAllStartProcessEntities(version);
+		try {
+			return modelService.getModel(version).findInitialTasks();
+		} catch (ModelException e) {
+			logger.warning("Unable to get Start Process list: " + e.getMessage());
+			return new ArrayList<ItemCollection>();
+		}
 	}
 
 	/**
@@ -129,26 +132,26 @@ public class ModelController implements Serializable {
 	 * If a Modelversion did not contains at least 3 tokens an warning will be
 	 * thrown.
 	 * 
+	 * @throws ModelException
+	 * 
 	 * 
 	 **/
 	@PostConstruct
-	public void reset() {
+	public void reset() throws ModelException {
 		systemModelVersion = null;
 		workflowGroups = null;
 		subWorkflowGroups = null;
-		processEntityCache = new HashMap<String, List<ItemCollection>>();
 
 		// now compute all workflow groups..
 		workflowGroups = new HashMap<String, String>();
 		subWorkflowGroups = new HashMap<String, String>();
 
-		
 		List<String> col;
 
 		col = modelService.getAllModelVersions();
 
 		for (String aModelVersion : col) {
-			
+
 			// Check if modelVersion is a System Model - latest version will
 			// be stored
 			if (aModelVersion.startsWith("system-")) {
@@ -160,7 +163,7 @@ public class ModelController implements Serializable {
 				continue;
 			}
 
-			List<String> groupList = modelService.getAllWorkflowGroups(aModelVersion);
+			List<String> groupList = modelService.getModel(aModelVersion).getGroups();
 			for (String sGroupName : groupList) {
 				if (sGroupName.contains("~")) {
 					// test if the current version is higer than the last stored
@@ -291,100 +294,20 @@ public class ModelController implements Serializable {
 	 *            - model version
 	 * @return list of process entities for the specified workflowGroup and
 	 *         modelVersion (cached)
+	 * @throws ModelException
 	 */
-	public List<ItemCollection> getAllProcessEntitiesByGroup(String sGroup, String sVersion) {
-		List<ItemCollection> result = null;
+	public List<ItemCollection> getAllProcessEntitiesByGroup(String sGroup, String sVersion) throws ModelException {
 
-		if (sGroup != null && !sGroup.isEmpty() && sVersion != null && !sVersion.isEmpty()) {
+		setWorkflowGroup(sGroup);
+		setModelVersion(sVersion);
 
-			setWorkflowGroup(sGroup);
-			setModelVersion(sVersion);
-
-			// test if list is already cached?
-			result = processEntityCache.get(sGroup + "|" + sVersion);
-			if (result == null) {
-				logger.fine("ModelControler getProcessEntities for '" + sGroup + "|" + sVersion + "'");
-				result = modelService.getAllProcessEntitiesByGroup(getWorkflowGroup(), getModelVersion());
-				// cache result
-				processEntityCache.put(sGroup + "|" + sVersion, result);
-			}
-		}
-		return result;
+		return modelService.getModel(sVersion).findTasksByGroup(sGroup);
 	}
 
-	/**
-	 * Returns a list of all ProcessEntities for a specified workflow group. The
-	 * list of ProcessEntities depends on the latest modelVersion where the
-	 * groupName is listed.
-	 * 
-	 * The method uses a internal cache.
-	 * 
-	 * @see getAllProcessEntitiesByGroup(groupName,modelVersion)
-	 * 
-	 * @param groupName
-	 *            - name of a workflow group
-	 * @return list of ProcessEntities or an empty list if no process entities
-	 *         for the specified group exists.
-	 */
-	public List<ItemCollection> getAllProcessEntitiesByGroup(String groupName) {
-		if (groupName == null || groupName.isEmpty()) {
-			return null;
-		}
-		// find the matching latest ModelVersion for this group
-		String sModelVersion = workflowGroups.get(groupName);
-		if (sModelVersion == null)
-			// check sub workflow groups
-			sModelVersion = subWorkflowGroups.get(groupName);
-		if (sModelVersion == null)
-			logger.warning("[ModelController] WorkflowGroup '" + groupName + "' not defined in latest model version!");
-		return getAllProcessEntitiesByGroup(groupName, sModelVersion);
-	}
+	
 
-	/**
-	 * Returns the first ProcessEntity in a specified workflow group.
-	 * 
-	 * 
-	 * @param group
-	 *            - name of group
-	 * @return initial ProcessEntity or null if group not found
-	 */
-	public ItemCollection getInitialProcessEntityByGroup(String group) {
-		List<ItemCollection> aProcessList = getAllProcessEntitiesByGroup(group);
-		if (aProcessList.size() > 0)
-			return aProcessList.get(0);
-		else
-			return null;
-	}
-
-
-
-	/**
-	 * Returns a list of all uploaded model profile entities. This list is used
-	 * to give an overview about all uploaded models. Different versions of the
-	 * same model group will be returned.
-	 * 
-	 * @see modellist.xhtml
-	 * @return list of ItemCollections
-	 */
-	public List<ItemCollection> getAllProfileEntities() {
-		return modelService.getAllModelProfiles();
-	}
-
-	/**
-	 * Returns the profile entity for a given model version.
-	 * 
-	 * @return ItemCollection
-	 */
-	public ItemCollection getProfileEntityByVersion(String sVersion) {
-		List<ItemCollection> profiles = getAllProfileEntities();
-		for (ItemCollection aworkitem : profiles) {
-			if (sVersion.equals(sVersion))
-				return aworkitem;
-
-		}
-		return null;
-	}
-
+	
+	
 	/**
 	 * This method adds all uploaded model files. The method tests the model
 	 * type (.bmpm, .ixm). BPMN Model will be handled by the ImixsBPMNParser. A
@@ -407,7 +330,7 @@ public class ModelController implements Serializable {
 			// test if bpmn model?
 			if (file.getName().endsWith(".bpmn")) {
 				BPMNModel model = BPMNParser.parseModel(file.getData(), "UTF-8");
-				modelService.importBPMNModel(model);
+				modelService.saveModelEntity(model);
 				continue;
 			}
 
@@ -437,22 +360,9 @@ public class ModelController implements Serializable {
 		reset();
 	}
 
+	
 	/**
-	 * This Method deletes the given workflowGroup
-	 * 
-	 * @throws AccessDeniedException
-	 * @throws ModelException
-	 */
-	public void deleteWorkflowGroup(String workflowgroup, String modelversion)
-			throws AccessDeniedException, ModelException {
-		modelService.removeModelGroup(workflowgroup, modelversion);
-		// reset model info
-		reset();
-	}
-
-	/**
-	 * This method returns a process entity for a given ModelVersion. The method
-	 * did not use a cache.
+	 * This method returns a process entity for a given ModelVersion. 
 	 * 
 	 * 
 	 * @param modelVersion
@@ -460,9 +370,10 @@ public class ModelController implements Serializable {
 	 * @param processid
 	 *            - id of the process entity
 	 * @return an instance of the matching process entity
+	 * @throws ModelException 
 	 */
-	public ItemCollection getProcessEntity(int processid, String modelversion) {
-		return modelService.getProcessEntity(processid, modelversion);
+	public ItemCollection getProcessEntity(int processid, String modelversion) throws ModelException {
+		return modelService.getModel(modelversion).getTask(processid);
 	}
 
 	/**
@@ -472,9 +383,10 @@ public class ModelController implements Serializable {
 	 * @param processid
 	 * @param modelversion
 	 * @return
+	 * @throws ModelException 
 	 */
-	public String getProcessDescription(int processid, String modelversion, ItemCollection documentContext) {
-		ItemCollection pe = modelService.getProcessEntity(processid, modelversion);
+	public String getProcessDescription(int processid, String modelversion, ItemCollection documentContext) throws ModelException {
+		ItemCollection pe = modelService.getModel(modelversion).getTask(processid);
 		if (pe == null) {
 			return "";
 		}

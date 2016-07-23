@@ -43,6 +43,7 @@ import javax.inject.Named;
 import org.imixs.marty.model.ModelController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.jee.ejb.EntityService;
@@ -251,10 +252,11 @@ public class ChildWorkitemController extends org.imixs.workflow.jee.faces.workit
 
 	/**
 	 * This method overwrites the default init() and fires a WorkflowEvent.
+	 * @throws ModelException 
 	 * 
 	 */
 	@Override
-	public String init(String action) {
+	public String init(String action) throws ModelException {
 		String actionResult = super.init(action);
 
 		// fire event

@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.imixs.marty</groupId>
 	<artifactId>imixs-marty</artifactId>
@@ -71,19 +72,19 @@
 		<org.imixs.workflow.version>3.9.0-SNAPSHOT</org.imixs.workflow.version>
 		<org.imixs.adapters.version>1.4.5-SNAPSHOT</org.imixs.adapters.version>
 		<!-- imixs-github-repo on github - see ~/.m2/settings.xml -->
-    	<github.global.server>imixs-github-repo</github.global.server>
+		<github.global.server>imixs-github-repo</github.global.server>
 	</properties>
-	
+
 	<!-- Imixs Repo -->
 	<repositories>
 		<repository>
-	        <id>imixs-mvn-repo</id>
-	        <url>https://raw.githubusercontent.com/imixs/imixs-mvn-repo/master/</url>
-	        <snapshots>
-	            <enabled>false</enabled>
-	            <updatePolicy>always</updatePolicy>
-	        </snapshots>
-	    </repository>
+			<id>imixs-mvn-repo</id>
+			<url>https://raw.githubusercontent.com/imixs/imixs-mvn-repo/master/</url>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
+		</repository>
 	</repositories>
 
 	<build>
@@ -140,9 +141,9 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId>
 			</plugin>
-			
-			
-			
+
+
+
 			<!-- Maven Deployment to Github -->
 			<plugin>
 				<artifactId>maven-deploy-plugin</artifactId>
@@ -185,7 +186,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 		</plugins>
 	</build>
 
@@ -233,9 +234,6 @@
 			<version>6.0</version>
 			<scope>provided</scope>
 		</dependency>
-
-
-		
 		<!-- Testing -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -249,8 +247,6 @@
 			<version>1.9.5</version>
 			<scope>test</scope>
 		</dependency>
-		
-		
 	</dependencies>
 
 </project>
