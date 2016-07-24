@@ -102,6 +102,21 @@ public class ModelController implements Serializable {
 	
 
 	/**
+	 * returns all groups for a version
+	 * @param version
+	 * @return
+	 */
+	public List<String> getGroups(String version) {
+		try {
+			return modelService.getModel(version).getGroups();
+		} catch (ModelException e) {
+			logger.warning("Unable to load groups:" + e.getMessage());
+		}
+		// return empty result
+		return new ArrayList<String>();
+	}
+
+	/**
 	 * Returns a String list of all WorkflowGroup names.
 	 * 
 	 * A workflowGroup with a '~' in its name will be skipped. This indicates a
@@ -125,7 +140,15 @@ public class ModelController implements Serializable {
 		}
 		List<String> result = new ArrayList<>();
 
-		result.addAll(set);
+		// add all groups without '~'
+		for (String agroup:set) {
+			if (result.contains(agroup))
+				continue;
+			if (agroup.contains("~"))
+				continue;
+			result.add(agroup);
+		}
+		
 		Collections.sort(result);
 		return result;
 
@@ -209,22 +232,6 @@ public class ModelController implements Serializable {
 	public ItemCollection getModelEntity(String version) {
 		return modelService.loadModelEntity(version);
 	}
-	
-	/**
-	 * return sall groups for a version
-	 * @param version
-	 * @return
-	 */
-	public List<String> getGroups(String version) {
-		try {
-			return modelService.getModel(version).getGroups();
-		} catch (ModelException e) {
-			logger.warning("Unable to load groups:" + e.getMessage());
-		}
-		// return empty result
-		return new ArrayList<String>();
-	}
-	
 	
 	/**
 	 * This method adds all uploaded model files. The method tests the model
