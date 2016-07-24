@@ -48,6 +48,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.imixs.marty.ejb.SetupService;
 import org.imixs.marty.plugins.ApplicationPlugin;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.Model;
 import org.imixs.workflow.bpmn.BPMNModel;
 import org.imixs.workflow.bpmn.BPMNParser;
 import org.imixs.workflow.exceptions.AccessDeniedException;
@@ -160,6 +161,14 @@ public class ModelController implements Serializable {
 
 		Collections.sort(aList);
 		return aList;
+	}
+	
+	public Model getModelByWorkitem(ItemCollection workitem) {
+		try {
+			return modelService.getModelByWorkitem(workitem);
+		} catch (ModelException e) {
+			return null;
+		}
 	}
 
 	/**
