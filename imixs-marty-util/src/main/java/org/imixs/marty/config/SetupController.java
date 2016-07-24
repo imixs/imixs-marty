@@ -162,8 +162,6 @@ public class SetupController extends ConfigController {
 		logger.info("Reset application cache...");
 		propertyService.reset();
 		profileService.reset();
-		// reset modelController
-		modelController.reset();
 		// reset processController
 		processController.reset();
 	}

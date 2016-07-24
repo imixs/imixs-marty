@@ -149,7 +149,7 @@ public class SetupService {
 
 		
 		try {
-			List<String> colModelVersions = modelService.getAllModelVersions();
+			List<String> colModelVersions = modelService.getVersions();
 			
 			if (!colModelVersions.isEmpty()) {
 				logger.info("[SetupService] model - ok");
