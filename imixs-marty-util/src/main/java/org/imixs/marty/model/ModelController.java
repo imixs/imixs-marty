@@ -119,6 +119,8 @@ public class ModelController implements Serializable {
 	/**
 	 * Returns a String list of all WorkflowGroup names.
 	 * 
+	 * Workflow groups of the system model will be skipped.
+	 * 
 	 * A workflowGroup with a '~' in its name will be skipped. This indicates a
 	 * child process.
 	 * 
@@ -133,6 +135,8 @@ public class ModelController implements Serializable {
 		List<String> versions = modelService.getVersions();
 		for (String version : versions) {
 			try {
+				if (version.startsWith("system-"))
+					continue;
 				set.addAll(modelService.getModel(version).getGroups());
 			} catch (ModelException e) {
 				e.printStackTrace();
@@ -193,33 +197,27 @@ public class ModelController implements Serializable {
 			return null;
 		}
 	}
-
+	
 	/**
-	 * This method returns the first task in a workflow group. The method computes the
-	 * latest model version for the group.
-	 * 
-	 * @param sGroup
-	 *            - name of a workflow group
-	 * @return task
-	 * @throws ModelException
+	 * Returns a model object for corresponding workflow group. 
+	 * @param group
+	 * @return
 	 */
-	public ItemCollection getInitialTaskByGroup(String sGroup) {
-		List<ItemCollection> tasks = null;
-		try {
-			List<String> versions = modelService.findVersionsByGroup(sGroup);
-			if (!versions.isEmpty()) {
-				String version = versions.get(0);
-				tasks = modelService.getModel(version).findTasksByGroup(sGroup);
-				if (tasks != null && tasks.size() > 0) {
-					return tasks.get(0);
-				} 
+	public Model getModelByGroup(String group) {
+		List<String> versions = modelService.findVersionsByGroup(group);
+		if (!versions.isEmpty()) {
+			String version = versions.get(0);
+			try {
+				return modelService.getModel(version);
+			} catch (ModelException e) {
+				logger.warning(e.getMessage());
+				return null;
 			}
-		} catch (ModelException e) {
-			logger.fine(e.getMessage());
 		}
-		logger.warning("no matching model version found for group '" + sGroup + "'");
 		return null;
 	}
+
+	
 	
 	/**
 	 * returns all model versions

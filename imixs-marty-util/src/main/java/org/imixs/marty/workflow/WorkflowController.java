@@ -565,6 +565,7 @@ public class WorkflowController extends
 	 * 
 	 * https://github.com/imixs/imixs-marty/issues/112
 	 */
+	@SuppressWarnings("unchecked")
 	@Deprecated
 	private void verifyPluginConfiguration(ItemCollection workitem) throws PluginException {
 
