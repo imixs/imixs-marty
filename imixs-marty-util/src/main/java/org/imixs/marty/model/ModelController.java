@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -79,8 +78,6 @@ import org.xml.sax.SAXException;
 public class ModelController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-
-	private Map<String, String> subWorkflowGroups = null;
 
 	@Inject
 	protected FileUploadController fileUploadController;
@@ -175,19 +172,32 @@ public class ModelController implements Serializable {
 	 * @return list of all sub workflow groups for the given parent group name
 	 */
 	public List<String> getSubWorkflowGroups(String parentWorkflowGroup) {
-
-		List<String> aList = new ArrayList<String>();
-		if (parentWorkflowGroup == null || parentWorkflowGroup.isEmpty())
-			return aList;
-
-		for (String aGroupName : subWorkflowGroups.keySet()) {
-			if (aGroupName.startsWith(parentWorkflowGroup + "~")) {
-				aList.add(aGroupName);
+		
+		Set<String> set = new HashSet<String>();
+		List<String> versions = modelService.getVersions();
+		for (String version : versions) {
+			try {
+				if (version.startsWith("system-"))
+					continue;
+				set.addAll(modelService.getModel(version).getGroups());
+			} catch (ModelException e) {
+				e.printStackTrace();
 			}
 		}
+		List<String> result = new ArrayList<>();
 
-		Collections.sort(aList);
-		return aList;
+		// add all groups starting with GROUP~
+		for (String agroup:set) {
+			if (result.contains(agroup))
+				continue;
+			if (!agroup.startsWith(parentWorkflowGroup+"~"))
+				continue;
+			result.add(agroup);
+		}
+		
+		Collections.sort(result);
+		return result;
+
 	}
 	
 	public Model getModelByWorkitem(ItemCollection workitem) {
