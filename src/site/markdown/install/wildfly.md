@@ -48,7 +48,7 @@ To use a JDBC driver you can simply deploy the driver jar into the running Wildf
  
 For PostgreSQL a database connection looks like this:
 
-    <datasource jta="true" jndi-name="java:/jdbc/imixs_office" pool-name="imixs_office" enabled="true" use-ccm="false">
+    <datasource jta="true" jndi-name="java:/jdbc/imixs_office" pool-name="imixs_office" enabled="true" use-ccm="true">
                     <connection-url>jdbc:postgresql://localhost/office</connection-url>
                     <driver-class>org.postgresql.Driver</driver-class>
                     <driver>postgresql-9.3-1102.jdbc41.jar</driver>
@@ -57,14 +57,17 @@ For PostgreSQL a database connection looks like this:
                         <password>xxxx</password>
                     </security>
                     <validation>  
-                        <valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker"></valid-connection-checker>
+                        <valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker"/>
                         <validate-on-match>true</validate-on-match>  
                         <background-validation>false</background-validation>  
                     </validation>                          
                     <statement>
-                        <share-prepared-statements>false</share-prepared-statements>
+                        <prepared-statement-cache-size>32</prepared-statement-cache-size>
+                        <share-prepared-statements>true</share-prepared-statements>
                     </statement>
                 </datasource>
+                
+                 
 
 For MySQL the datasource configuration should look like this:
 
