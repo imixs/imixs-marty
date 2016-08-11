@@ -198,9 +198,7 @@ public class SearchController extends
 				.startsWith("workitem"))
 			return;
 		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
-				.getEventType()
-				|| WorkflowEvent.WORKITEM_AFTER_SOFTDELETE == workflowEvent
-						.getEventType()) {
+				.getEventType()) {
 			doRefresh();
 		}
 	}

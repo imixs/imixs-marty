@@ -191,15 +191,6 @@ public class HistoryController implements Serializable {
 			}
 		}
 
-		// remove after softdelte
-		if (WorkflowEvent.WORKITEM_AFTER_SOFTDELETE == workflowEvent
-				.getEventType()) {
-			removeWorkitem(workflowEvent.getWorkitem().getItemValueString(
-					EntityService.UNIQUEID));
-			setCurrentId("");
-
-		}
-
 	}
 
 	/**

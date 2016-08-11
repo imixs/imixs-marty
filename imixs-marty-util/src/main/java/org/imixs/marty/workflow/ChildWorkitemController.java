@@ -265,29 +265,7 @@ public class ChildWorkitemController extends org.imixs.workflow.jee.faces.workit
 		return actionResult;
 	}
 
-	/**
-	 * Deletes a childWorkitem
-	 * 
-	 * @param uniqueID
-	 *            - $uniqueId of the workItem to be deleted
-	 */
-	public String softDeleteChild(String uniqueID, String action) {
-		// load workitem
-		this.load(uniqueID);
-
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_BEFORE_SOFTDELETE));
-
-		workitemService.softDeleteWorkitem(getWorkitem(), true);
-
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_AFTER_SOFTDELETE));
-
-		logger.fine("ItemCollection '" + uniqueID + "' deleted");
-		reset();
-
-		return action;
-	}
+	
 
 	/**
 	 * This method is a placeholder which can be used by a subclass to clone

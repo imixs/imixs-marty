@@ -9,14 +9,6 @@ public class WorkflowEvent {
 	public static final int WORKITEM_CHANGED = 3;
 	public static final int WORKITEM_BEFORE_PROCESS = 4;
 	public static final int WORKITEM_AFTER_PROCESS = 5;
-	public static final int WORKITEM_BEFORE_ARCHIVE = 6;
-	public static final int WORKITEM_AFTER_ARCHIVE = 7;
-	public static final int WORKITEM_BEFORE_SOFTDELETE = 8;
-	public static final int WORKITEM_AFTER_SOFTDELETE = 9;
-	public static final int WORKITEM_BEFORE_RESTOREFROMARCHIVE = 10;
-	public static final int WORKITEM_AFTER_RESTOREFROMARCHIVE = 11;
-	public static final int WORKITEM_BEFORE_RESTOREFROMSOFTDELETE = 12;
-	public static final int WORKITEM_AFTER_RESTOREFROMSOFTDELETE = 13;
 	public static final int WORKITEM_BEFORE_SAVE = 14;
 	public static final int WORKITEM_AFTER_SAVE = 15;
 

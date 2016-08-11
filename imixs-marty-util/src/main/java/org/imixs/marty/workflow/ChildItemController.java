@@ -145,8 +145,7 @@ public class ChildItemController implements Serializable {
 		}
 
 		// before the workitem is saved we update the field txtOrderItems
-		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == eventType || WorkflowEvent.WORKITEM_BEFORE_SAVE == eventType
-				|| WorkflowEvent.WORKITEM_BEFORE_ARCHIVE == eventType) {
+		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == eventType || WorkflowEvent.WORKITEM_BEFORE_SAVE == eventType) {
 			implodeChildList(workitem);
 		}
 

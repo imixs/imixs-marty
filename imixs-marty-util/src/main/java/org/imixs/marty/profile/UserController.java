@@ -446,13 +446,7 @@ public class UserController implements Serializable {
 
 		}
 
-		// check for deletion to remove the userDB entry...
-		if (WorkflowEvent.WORKITEM_AFTER_SOFTDELETE == workflowEvent.getEventType()) {
-
-			String id = workflowEvent.getWorkitem().getItemValueString("txtname");
-			userGroupService.removeUserId(id);
-
-		}
+		
 
 	}
 
