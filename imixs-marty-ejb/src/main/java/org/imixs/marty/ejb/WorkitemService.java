@@ -76,8 +76,6 @@ public class WorkitemService {
 	@EJB 
 	LuceneUpdateService luceneService;
 	
-	ItemCollection workItem = null;
-
 	private static Logger logger = Logger.getLogger(WorkitemService.class
 			.getName());
 
@@ -123,7 +121,7 @@ public class WorkitemService {
 				.getItemValueString("txtworkflowgroup");
 
 		// create empty workitem
-		workItem = new ItemCollection();
+		ItemCollection workItem = new ItemCollection();
 		workItem.replaceItemValue("type", "workitem");
 		workItem.replaceItemValue("$processID", processID);
 
@@ -154,11 +152,8 @@ public class WorkitemService {
 	public ItemCollection processWorkItem(ItemCollection aworkitem)
 			throws AccessDeniedException, ProcessingErrorException,
 			PluginException {
-
 		// Process workitem...
-		workItem = workflowService.processWorkItem(aworkitem);
-
-		return workItem;
+		return workflowService.processWorkItem(aworkitem);
 	}
 
 	/**
