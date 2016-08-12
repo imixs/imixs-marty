@@ -38,7 +38,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
-import javax.enterprise.context.SessionScoped;
+import javax.enterprise.context.Conversation;
+import javax.enterprise.context.ConversationScoped;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.ObserverException;
 import javax.faces.component.UIViewRoot;
@@ -75,15 +76,18 @@ import org.imixs.workflow.jee.faces.util.LoginController;
  * tabpanel.xhmtl)
  * 
  * @author rsoika
- * 
+ * @version 2.0
  */
-@Named("workflowController")
-@SessionScoped
-public class WorkflowController extends
-		org.imixs.workflow.jee.faces.workitem.WorkflowController implements
-		Serializable {
+@Named
+@ConversationScoped
+public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.WorkflowController
+		implements Serializable {
 
 	public static final String DEFAULT_EDITOR_ID = "form_panel_simple#basic";
+	public static final String DEFAULT_ACTION_RESULT = "/pages/workitems/workitem";
+
+	@Inject
+	private Conversation conversation;
 
 	/* Services */
 	@EJB
@@ -99,17 +103,16 @@ public class WorkflowController extends
 	protected Event<WorkflowEvent> events;
 
 	private static final long serialVersionUID = 1L;
-	private static Logger logger = Logger.getLogger(WorkflowController.class
-			.getName());
+	private static Logger logger = Logger.getLogger(WorkflowController.class.getName());
 
 	private List<ItemCollection> versions = null;
 	private List<EditorSection> editorSections = null;
 	private String action = null; // optional page result
 	private String deepLinkId = null; // deep link UniqueId
+	private String defultActionResult = null;
 
 	public WorkflowController() {
 		super();
-
 	}
 
 	/**
@@ -123,21 +126,50 @@ public class WorkflowController extends
 		this.action = action;
 	}
 
+	public String getDefultActionResult() {
+		if (defultActionResult == null) {
+			defultActionResult = DEFAULT_ACTION_RESULT;
+		}
+		return defultActionResult;
+	}
+
+	public void setDefultActionResult(String defultActionResult) {
+		this.defultActionResult = defultActionResult;
+	}
+
 	/**
-	 * ActionListener create a new empty workitem and fires a WorkfowEvent
+	 * Loads a workitem by its ID. The method starts a new conversation context.
+	 */
+	@Override
+	public void load(String uniqueID) {
+
+		if (conversation.isTransient()) {
+			conversation.begin();
+			logger.fine("start new conversation, id=" + conversation.getId());
+		}
+		super.load(uniqueID);
+
+	}
+
+	/**
+	 * ActionListener create a new empty workitem and fires a WorkfowEvent. The
+	 * method starts a new conversation context.
 	 */
 	@Override
 	public void create(ActionEvent event) {
-		super.create(event);
+		if (conversation.isTransient()) {
+			conversation.begin();
+			logger.fine("start new conversation, id=" + conversation.getId());
+		}
+		super.create();
 		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.WORKITEM_CREATED));
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_CREATED));
 
 	}
 
 	/**
 	 * Method to create a new workitem with inital values. The method fires a
-	 * WorkfowEvent
+	 * WorkfowEvent. The method starts a new conversation context.
 	 * 
 	 * This method also set an empyt $workitemID field and the namowner field to
 	 * the current user. This is used in case that a workitem is not processed
@@ -153,14 +185,17 @@ public class WorkflowController extends
 	 */
 
 	public void create(String modelVersion, int processID, String processRef) {
-		super.create(null);
+		if (conversation.isTransient()) {
+			conversation.begin();
+			logger.fine("start new conversation, id=" + conversation.getId());
+		}
+		super.create();
 
 		getWorkitem().replaceItemValue("$ModelVersion", modelVersion);
 		getWorkitem().replaceItemValue("$ProcessID", processID);
 
 		// set default owner
-		getWorkitem().replaceItemValue("namowner",
-				loginController.getUserPrincipal());
+		getWorkitem().replaceItemValue("namowner", loginController.getUserPrincipal());
 
 		// set empty $workitemid
 		getWorkitem().replaceItemValue("$workitemid", "");
@@ -168,28 +203,49 @@ public class WorkflowController extends
 		if (processRef != null) {
 			getWorkitem().replaceItemValue("$UniqueIDRef", processRef);
 			// find process
-			ItemCollection process = processController
-					.getProcessById(processRef);
+			ItemCollection process = processController.getProcessById(processRef);
 			if (process != null) {
-				getWorkitem().replaceItemValue("txtProcessName",
-						process.getItemValueString("txtName"));
-				getWorkitem().replaceItemValue("txtProcessRef",
-						process.getItemValueString(EntityService.UNIQUEID));
+				getWorkitem().replaceItemValue("txtProcessName", process.getItemValueString("txtName"));
+				getWorkitem().replaceItemValue("txtProcessRef", process.getItemValueString(EntityService.UNIQUEID));
 
 			} else {
-				logger.warning("[WorkflowController] create - unable to find process entity '"
-						+ processRef + "'!");
+				logger.warning("[WorkflowController] create - unable to find process entity '" + processRef + "'!");
 			}
 		}
 		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.WORKITEM_CREATED));
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_CREATED));
 
 	}
 
 	/**
+	 * Reset the current workitem. The method closes the existing conversation
+	 * context.
+	 */
+	@Override
+	public void reset() {
+		super.reset();
+		if (!conversation.isTransient()) {
+			logger.fine("close conversation, id=" + conversation.getId());
+			conversation.end();
+		}
+
+	}
+
+	/**
+	 * This method reset the worktiem, closes the current conversation and
+	 * navigation to the home page.
+	 * 
+	 * @return
+	 */
+	public String close() {
+		this.reset();
+		return "pages/home?faces-redirect=true";
+	}
+
+	/**
 	 * This method overwrites the default init() and fires a WorkflowEvent.
-	 * @throws ModelException 
+	 * 
+	 * @throws ModelException
 	 * 
 	 */
 	@Override
@@ -197,8 +253,7 @@ public class WorkflowController extends
 		String actionResult = super.init(action);
 
 		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.WORKITEM_INITIALIZED));
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_INITIALIZED));
 
 		return actionResult;
 	}
@@ -222,8 +277,7 @@ public class WorkflowController extends
 		if (this.getWorkitem() == null) {
 			return null;
 		} else {
-			return this.getWorkitem()
-					.getItemValueString(EntityService.UNIQUEID);
+			return this.getWorkitem().getItemValueString(EntityService.UNIQUEID);
 		}
 	}
 
@@ -240,11 +294,10 @@ public class WorkflowController extends
 	public void setDeepLinkId(String adeepLinkId) {
 		this.deepLinkId = adeepLinkId;
 		// if Id is provided try to load the corresponding workitem.
-		// (can result to null!)
 		if (deepLinkId != null && !deepLinkId.isEmpty()) {
 			this.load(deepLinkId);
 			// finally we destroy the deepLinkId to avoid a reload on the next
-			// post event
+			// postback
 			deepLinkId = null; // !
 		}
 	}
@@ -261,8 +314,7 @@ public class WorkflowController extends
 	@Override
 	public void setWorkitem(ItemCollection newWorkitem) {
 
-		events.fire(new WorkflowEvent(newWorkitem,
-				WorkflowEvent.WORKITEM_CHANGED));
+		events.fire(new WorkflowEvent(newWorkitem, WorkflowEvent.WORKITEM_CHANGED));
 
 		super.setWorkitem(newWorkitem);
 
@@ -287,12 +339,10 @@ public class WorkflowController extends
 	 * @return
 	 */
 	public String getEditor() {
-
 		String sEditor = DEFAULT_EDITOR_ID;
 
 		if (getWorkitem() != null) {
-			String currentEditor = getWorkitem().getItemValueString(
-					"txtWorkflowEditorid");
+			String currentEditor = getWorkitem().getItemValueString("txtWorkflowEditorid");
 			if (!currentEditor.isEmpty())
 				sEditor = currentEditor;
 		}
@@ -343,15 +393,13 @@ public class WorkflowController extends
 			// compute editorSections
 			editorSections = new ArrayList<EditorSection>();
 
-			UIViewRoot viewRoot = FacesContext.getCurrentInstance()
-					.getViewRoot();
+			UIViewRoot viewRoot = FacesContext.getCurrentInstance().getViewRoot();
 			Locale locale = viewRoot.getLocale();
 
 			String sEditor = DEFAULT_EDITOR_ID;
 
 			if (getWorkitem() != null) {
-				String currentEditor = getWorkitem().getItemValueString(
-						"txtWorkflowEditorid");
+				String currentEditor = getWorkitem().getItemValueString("txtWorkflowEditorid");
 				if (!currentEditor.isEmpty())
 					sEditor = currentEditor;
 			}
@@ -370,36 +418,29 @@ public class WorkflowController extends
 						if (sURL.indexOf('[') > -1 || sURL.indexOf(']') > -1) {
 							boolean bPermissionGranted = false;
 							// yes - cut the permissions
-							String sPermissions = sURL.substring(
-									sURL.indexOf('[') + 1, sURL.indexOf(']'));
+							String sPermissions = sURL.substring(sURL.indexOf('[') + 1, sURL.indexOf(']'));
 
 							// cut the permissions from the URL
 							sURL = sURL.substring(0, sURL.indexOf('['));
-							StringTokenizer stPermission = new StringTokenizer(
-									sPermissions, ",");
+							StringTokenizer stPermission = new StringTokenizer(sPermissions, ",");
 							while (stPermission.hasMoreTokens()) {
 								String aPermission = stPermission.nextToken();
 								// test for user role
-								ExternalContext ectx = FacesContext
-										.getCurrentInstance()
-										.getExternalContext();
+								ExternalContext ectx = FacesContext.getCurrentInstance().getExternalContext();
 								if (ectx.isUserInRole(aPermission)) {
 									bPermissionGranted = true;
 									break;
 								}
 								// test if user is project member
-								String sProjectUniqueID = this.getWorkitem()
-										.getItemValueString("$UniqueIDRef");
+								String sProjectUniqueID = this.getWorkitem().getItemValueString("$UniqueIDRef");
 
 								if ("manager".equalsIgnoreCase(aPermission)
-										&& processController
-												.isManagerOf(sProjectUniqueID)) {
+										&& processController.isManagerOf(sProjectUniqueID)) {
 									bPermissionGranted = true;
 									break;
 								}
 								if ("team".equalsIgnoreCase(aPermission)
-										&& this.processController
-												.isTeamMemberOf(sProjectUniqueID)) {
+										&& this.processController.isTeamMemberOf(sProjectUniqueID)) {
 									bPermissionGranted = true;
 									break;
 								}
@@ -417,8 +458,7 @@ public class WorkflowController extends
 						try {
 							ResourceBundle rb = null;
 							if (locale != null)
-								rb = ResourceBundle.getBundle("bundle.app",
-										locale);
+								rb = ResourceBundle.getBundle("bundle.app", locale);
 							else
 								rb = ResourceBundle.getBundle("bundle.app");
 
@@ -433,8 +473,7 @@ public class WorkflowController extends
 						editorSections.add(aSection);
 
 					} catch (Exception est) {
-						logger.severe("[WorkitemController] can not parse EditorSections : '"
-								+ sEditor + "'");
+						logger.severe("[WorkitemController] can not parse EditorSections : '" + sEditor + "'");
 						logger.severe(est.getMessage());
 					}
 				}
@@ -458,40 +497,35 @@ public class WorkflowController extends
 
 	/**
 	 * The action method processes the current workItem and fires the
-	 * WorkflowEvents WORKITEM_BEFORE_PROCESS and WORKITEM_AFTER_PROCESS.
+	 * WorkflowEvents WORKITEM_BEFORE_PROCESS and WORKITEM_AFTER_PROCESS. The
+	 * Method also catches PluginExceptions and adds the corresponding Faces
+	 * Error Message into the FacesContext. In case of an exception the
+	 * WorkflowEvent WORKITEM_AFTER_PROCESS will not be fired. <br>
+	 * The action result returned by the workflow engine may contain a $uniqueid
+	 * to redirect the user and load that new workitem. If no action result is
+	 * defined the method redirects to the default action with the current
+	 * workitem id.
 	 * 
-	 * The Method also catches PluginExceptions and adds the corresponding Faces
-	 * Error Message into the FacesContext.
-	 * 
-	 * In case of an exception the WorkflowEvent WORKITEM_AFTER_PROCESS will not
-	 * be fired.
-	 * 
-	 * 
-	 * If the action result of the activity starts with "workitem=" followed a
-	 * uniqueid, then the controller loads that new workitem (in case of a list
-	 * the first will be taken) Example:
+	 * The method appends faces-redirect=true to the action result in case no
+	 * faces-redirect is defined.
 	 * 
 	 * <code>
-	 * /pages/workitems/workitem?workitem=23452345-2452435234&txtworkflowgroup=Auftrag
+	 *       /pages/workitems/workitem?id=23452345-2452435234&faces-redirect=true
 	 * </code>
 	 * 
 	 */
 	@Override
-	public String process() throws AccessDeniedException,
-			ProcessingErrorException {
+	public String process() throws AccessDeniedException, ProcessingErrorException {
 		String actionResult = null;
 
 		long lTotal = System.currentTimeMillis();
-	
+
 		// process workItem and catch exceptions
 		try {
-			
-			verifyPluginConfiguration(getWorkitem());
 
 			// fire event
 			long l1 = System.currentTimeMillis();
-			events.fire(new WorkflowEvent(getWorkitem(),
-					WorkflowEvent.WORKITEM_BEFORE_PROCESS));
+			events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_BEFORE_PROCESS));
 			logger.finest("[WorkflowController] fire WORKITEM_BEFORE_PROCESS event: ' in "
 					+ (System.currentTimeMillis() - l1) + "ms");
 
@@ -506,8 +540,7 @@ public class WorkflowController extends
 
 			// fire event
 			long l2 = System.currentTimeMillis();
-			events.fire(new WorkflowEvent(getWorkitem(),
-					WorkflowEvent.WORKITEM_AFTER_PROCESS));
+			events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_AFTER_PROCESS));
 			logger.finest("[WorkflowController] fire WORKITEM_AFTER_PROCESS event: ' in "
 					+ (System.currentTimeMillis() - l2) + "ms");
 
@@ -528,8 +561,7 @@ public class WorkflowController extends
 			} else {
 				if (oe.getCause() instanceof ValidationException) {
 					// add error message into current form
-					ErrorHandler.addErrorMessage((ValidationException) oe
-							.getCause());
+					ErrorHandler.addErrorMessage((ValidationException) oe.getCause());
 				} else {
 					// throw unknown exception
 					throw oe;
@@ -545,122 +577,29 @@ public class WorkflowController extends
 			String id = "";
 			if (getWorkitem() != null)
 				id = getWorkitem().getItemValueString(WorkflowService.UNIQUEID);
-			logger.finest("[WorkflowController] process: '" + id + "' in "
-					+ (System.currentTimeMillis() - lTotal) + "ms");
+			logger.finest(
+					"[WorkflowController] process: '" + id + "' in " + (System.currentTimeMillis() - lTotal) + "ms");
 		}
 
-		// test if actionResult contains '?workitem='
-		selectWokitemFromActionResult(actionResult);
+		// test if no actionResult is defined
+		if (actionResult == null || actionResult.isEmpty()) {
+			// construct default action result
+			actionResult = getDefultActionResult() + "?id=" + getWorkitem().getUniqueID() + "&faces-redirect=true";
+		}
 
-		// return action result - null in case of an exception
+		// test if faces-redirect is included in actionResult
+		if (actionResult.contains("/") && !actionResult.contains("faces-redirect=")) {
+			// append faces-redirect=true
+			if (!actionResult.contains("?")) {
+				actionResult = actionResult + "?";
+			}
+			actionResult = actionResult + "faces-redirect=true";
+		}
+
+		logger.fine("action result=" + actionResult);
+		// close conversation
+		reset();
 		return actionResult;
-	}
-
-	
-
-	/**
-	 * Helper Method to guarantee that the new CommentPlugin is combined with the changed applicationPlugin.
-	 * 
-	 * Method can be removed latest with 2.9.0
-	 * 
-	 * https://github.com/imixs/imixs-marty/issues/112
-	 */
-	@SuppressWarnings("unchecked")
-	@Deprecated
-	private void verifyPluginConfiguration(ItemCollection workitem) throws PluginException {
-
-		String modelversion=workitem.getItemValueString("$modelversion");
-	
-
-		// try to get a Profile matching the provided modelversion
-		Collection<ItemCollection> col;
-		String sQuery = null;
-		sQuery = "SELECT";
-		sQuery += " environment FROM Entity AS environment" + " JOIN environment.textItems as n "
-				+ " JOIN environment.textItems as v " + " WHERE environment.type = 'WorkflowEnvironmentEntity'"
-				+ " AND n.itemName = 'txtname' AND n.itemValue = 'environment.profile'"
-				+ " AND v.itemName = '$modelversion' AND v.itemValue = '" + modelversion + "' ";
-		col = this.getEntityService().findAllEntities(sQuery, 0, 1);
-	
-		if (col.size() == 1) {
-			ItemCollection profile= col.iterator().next();
-			// testplugins...
-			List<String> vPlugins = (List<String>) profile.getItemValue("txtPlugins");
-			if (vPlugins.contains("org.imixs.marty.plugins.ApplicationPlugin") && !vPlugins.contains("org.imixs.marty.plugins.CommentPlugin")) {
-				throw new PluginException(WorkflowService.class.getSimpleName(),
-						ProcessingErrorException.INVALID_MODELVERSION,
-						"WorkflowService: error - org.imixs.marty.plugins.CommentPlugin missing!");
-			}
-		}
-		
-		
-	}
-	
-	/**
-	 * This method tests if the action result of the activty starts with "workitem=" followed a
-	 * uniqueid, then the method tries to load that new workitem (in case of a list
-	 * the first will be taken) Example:
-	 * 
-	 * <code>
-	 * /pages/workitems/workitem?workitem=23452345-2452435234&txtworkflowgroup=Auftrag
-	 * </code>
-	 * 
-	 * This method is called from process()
-	 **/
-	private void selectWokitemFromActionResult(String actionResult) {
-		// test if actionResult contains '?workitem='
-		if (actionResult != null && actionResult.indexOf("?workitem=") > -1) {
-			String query = actionResult.substring(actionResult
-					.indexOf("?workitem="));
-			String filter = "";
-			actionResult = actionResult.substring(0,
-					actionResult.indexOf("?workitem="));
-
-			// test field filter "&...."
-			if (query.indexOf("&") > -1) {
-				filter = query.substring(query.indexOf("&"));
-				query = query.substring(0, query.indexOf("&"));
-			}
-
-			String ids = query.substring(query.indexOf("?workitem=") + 10);
-
-			String[] idList = ids.split(";");
-
-			// load first workitem
-			for (String uniqueidref : idList) {
-				ItemCollection refworkitem = this.getEntityService().load(
-						uniqueidref);
-				if (refworkitem != null) {
-					boolean isOK = true;
-					if (!filter.isEmpty()) {
-						String[] filterList = filter.split("&");
-						// txtname=Anna
-						for (String fieldValue : filterList) {
-							int i = fieldValue.indexOf('=');
-							if (i > -1) {
-								String field = fieldValue.substring(0,
-										fieldValue.indexOf('='));
-								String value = fieldValue.substring(fieldValue
-										.indexOf('=') + 1);
-
-								// does workitem match??
-								if (!refworkitem.getItemValueString(field)
-										.equals(value)) {
-									isOK = false;
-									break;
-								}
-							}
-						}
-					}
-
-					if (isOK) {
-						this.setWorkitem(refworkitem);
-						break;
-					}
-				}
-			}
-
-		}
 	}
 
 	/**
@@ -676,20 +615,13 @@ public class WorkflowController extends
 	public void save() throws AccessDeniedException {
 		logger.fine("[WorkflowController] save");
 		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.WORKITEM_BEFORE_SAVE));
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_BEFORE_SAVE));
 
 		super.save();
 
 		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(),
-				WorkflowEvent.WORKITEM_AFTER_SAVE));
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_AFTER_SAVE));
 	}
-
-	
-
-
-
 
 	/**
 	 * this method loads all versions to the current workitem. Idependent from
@@ -704,11 +636,9 @@ public class WorkflowController extends
 			return;
 		Collection<ItemCollection> col = null;
 		String sRefID = getWorkitem().getItemValueString("$workitemId");
-		String refQuery = "SELECT entity FROM Entity entity "
-				+ " JOIN entity.textItems AS t"
+		String refQuery = "SELECT entity FROM Entity entity " + " JOIN entity.textItems AS t"
 				+ "  WHERE entity.type IN ('workitem', 'workitemarchive', 'workitemversion') "
-				+ "  AND t.itemName = '$workitemid'"
-				+ "  AND t.itemValue = '" + sRefID + "' "
+				+ "  AND t.itemName = '$workitemid'" + "  AND t.itemValue = '" + sRefID + "' "
 				+ " ORDER BY entity.modified ASC";
 
 		col = this.getEntityService().findAllEntities(refQuery, 0, -1);

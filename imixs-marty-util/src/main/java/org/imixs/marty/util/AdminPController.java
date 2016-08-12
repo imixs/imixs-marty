@@ -22,9 +22,11 @@ public class AdminPController extends DataController {
 
 	public AdminPController() {
 		super();
-		setType("adminp");
+		setDefaultType("adminp");
 
 	}
+	
+	
 
 	public void createRenameUserJob() {
 		logger.fine("createRenameUserJob...");

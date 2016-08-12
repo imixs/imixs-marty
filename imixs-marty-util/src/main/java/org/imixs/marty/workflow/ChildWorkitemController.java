@@ -170,7 +170,7 @@ public class ChildWorkitemController extends org.imixs.workflow.jee.faces.workit
 		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()
 				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
 			// clear current child workitem
-			reset(null);
+			reset();
 			// check if parent workitem is available
 			if (workflowEvent.getWorkitem() == null) {
 				uniqueIdRef = null;

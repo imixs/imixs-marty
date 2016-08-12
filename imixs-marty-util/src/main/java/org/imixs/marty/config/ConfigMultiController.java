@@ -65,7 +65,6 @@ import org.imixs.workflow.jee.faces.workitem.ViewController;
  * @author rsoika
  * 
  */
-//@Named("configMultiController")
 public class ConfigMultiController extends DataController implements IViewAdapter {
 
 	private static final long serialVersionUID = 1L;
@@ -88,7 +87,7 @@ public class ConfigMultiController extends DataController implements IViewAdapte
 	@PostConstruct
 	public void init() {
 		viewController = new ViewController();
-		viewController.setType(this.getType());
+		viewController.setType(this.getDefaultType());
 		viewController.setView("worklist.modified.desc");
 	}
 
@@ -124,7 +123,7 @@ public class ConfigMultiController extends DataController implements IViewAdapte
 
 		// load / create config entity....
 		String sQuery = "SELECT config FROM Entity AS config " + " JOIN config.textItems AS t2"
-				+ " WHERE config.type = '" + getType() + "'" + " AND t2.itemName = 'txtname'" + " AND t2.itemValue = '"
+				+ " WHERE config.type = '" + getDefaultType() + "'" + " AND t2.itemName = 'txtname'" + " AND t2.itemValue = '"
 				+ name + "'" + " ORDER BY t2.itemValue asc";
 		Collection<ItemCollection> col = entityService.findAllEntities(sQuery, 0, 1);
 

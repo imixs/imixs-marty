@@ -13,7 +13,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.jee.ejb.ReportService;
 import org.imixs.workflow.jee.faces.workitem.DataController;
 
-@Named("reportController")
+@Named
 @SessionScoped
 public class ReportController extends DataController {
 
@@ -27,8 +27,10 @@ public class ReportController extends DataController {
 
 	public ReportController() {
 		super();
-		setType("report");
+		setDefaultType("report");
 	}
+	
+
 
 	/**
 	 * Returns a String sorted list of all report names.
