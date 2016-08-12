@@ -138,43 +138,87 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 	}
 
 	/**
+	 * The method loads a new wokitem by a uniqueID. If no id is provided the
+	 * method did not change the current workitem reference. If the uniqueId is
+	 * invalid the workitem will be set to null (see setUnqiueId)
+	 * 
+	 * This method is used for the DeepLink Feature used by workitem.xhml.
+	 * 
+	 * 
+	 * @param aUniqueID
+	 */
+	public void setDeepLinkId(String adeepLinkId) {
+		this.deepLinkId = adeepLinkId;
+		// if Id is provided try to load the corresponding workitem.
+		if (deepLinkId != null && !deepLinkId.isEmpty()) {
+			this.load(deepLinkId);
+			// finally we destroy the deepLinkId to avoid a reload on the next
+			// postback
+			deepLinkId = null; // !
+		}
+	}
+
+	public String getDeepLinkId() {
+		return deepLinkId;
+	}
+
+	/**
+	 * The method sets the workitem and fires a WORKITEM_CHANGED event.
+	 */
+	@Override
+	public void setWorkitem(ItemCollection newWorkitem) {
+		// we may not call reset() here, because a conversation context can
+		// still exist.
+		events.fire(new WorkflowEvent(newWorkitem, WorkflowEvent.WORKITEM_CHANGED));
+		super.setWorkitem(newWorkitem);
+		versions = null;
+		editorSections = null;
+	}
+
+	/**
 	 * Loads a workitem by its ID. The method starts a new conversation context.
 	 */
 	@Override
 	public void load(String uniqueID) {
+		super.load(uniqueID);
 
 		if (conversation.isTransient()) {
 			conversation.begin();
 			logger.fine("start new conversation, id=" + conversation.getId());
 		}
-		super.load(uniqueID);
-
 	}
 
 	/**
-	 * ActionListener create a new empty workitem and fires a WorkfowEvent. The
-	 * method starts a new conversation context.
+	 * This ActionListener method creates a new empty workitem. An existing
+	 * workitem and optional conversation context will be reset. The method
+	 * starts a new conversation context. Finally the method fires the
+	 * WorkfowEvent WORKITEM_CREATED.
 	 */
 	@Override
 	public void create(ActionEvent event) {
+		super.create();
+
 		if (conversation.isTransient()) {
 			conversation.begin();
 			logger.fine("start new conversation, id=" + conversation.getId());
 		}
-		super.create();
+
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_CREATED));
-
 	}
 
 	/**
-	 * Method to create a new workitem with inital values. The method fires a
-	 * WorkfowEvent. The method starts a new conversation context.
+	 * This method creates a new empty workitem. An existing workitem and
+	 * optional conversation context will be reset.
 	 * 
-	 * This method also set an empyt $workitemID field and the namowner field to
-	 * the current user. This is used in case that a workitem is not processed
-	 * but save (see dmsController save). In such a case the workitem is asigned
-	 * to the current user.
+	 * The method assigns the initial values '$ModelVersion', '$ProcessID' and
+	 * '$UniqueIDRef' to the new workitem. The method creates the empty field
+	 * '$workitemID' and the field 'namowner' which is assigned to the current
+	 * user. This data can be used in case that a workitem is not processed but
+	 * saved (e.g. by the dmsController).
+	 * 
+	 * The method starts a new conversation context. Finally the method fires
+	 * the WorkfowEvent WORKITEM_CREATED.
 	 * 
 	 * @param modelVersion
 	 *            - model version
@@ -185,12 +229,8 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 	 */
 
 	public void create(String modelVersion, int processID, String processRef) {
-		if (conversation.isTransient()) {
-			conversation.begin();
-			logger.fine("start new conversation, id=" + conversation.getId());
-		}
 		super.create();
-
+		// set model information..
 		getWorkitem().replaceItemValue("$ModelVersion", modelVersion);
 		getWorkitem().replaceItemValue("$ProcessID", processID);
 
@@ -200,6 +240,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		// set empty $workitemid
 		getWorkitem().replaceItemValue("$workitemid", "");
 
+		// assign process..
 		if (processRef != null) {
 			getWorkitem().replaceItemValue("$UniqueIDRef", processRef);
 			// find process
@@ -212,9 +253,158 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 				logger.warning("[WorkflowController] create - unable to find process entity '" + processRef + "'!");
 			}
 		}
+
+		// start now the new conversation
+		if (conversation.isTransient()) {
+			conversation.begin();
+			logger.fine("start new conversation, id=" + conversation.getId());
+		}
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_CREATED));
+	}
 
+	/**
+	 * This method overwrites the default init() and fires a WorkflowEvent.
+	 * 
+	 * @throws ModelException
+	 * 
+	 */
+	@Override
+	public String init(String action) throws ModelException {
+		String actionResult = super.init(action);
+
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_INITIALIZED));
+
+		return actionResult;
+	}
+
+	/**
+	 * The action method processes the current workItem and fires the
+	 * WorkflowEvents WORKITEM_BEFORE_PROCESS and WORKITEM_AFTER_PROCESS. The
+	 * Method also catches PluginExceptions and adds the corresponding Faces
+	 * Error Message into the FacesContext. In case of an exception the
+	 * WorkflowEvent WORKITEM_AFTER_PROCESS will not be fired. <br>
+	 * The action result returned by the workflow engine may contain a $uniqueid
+	 * to redirect the user and load that new workitem. If no action result is
+	 * defined the method redirects to the default action with the current
+	 * workitem id.
+	 * 
+	 * The method appends faces-redirect=true to the action result in case no
+	 * faces-redirect is defined.
+	 * 
+	 * <code>
+	 *       /pages/workitems/workitem?id=23452345-2452435234&faces-redirect=true
+	 * </code>
+	 * 
+	 */
+	@Override
+	public String process() throws AccessDeniedException, ProcessingErrorException {
+		String actionResult = null;
+
+		long lTotal = System.currentTimeMillis();
+
+		// process workItem and catch exceptions
+		try {
+
+			// fire event
+			long l1 = System.currentTimeMillis();
+			events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_BEFORE_PROCESS));
+			logger.finest("[WorkflowController] fire WORKITEM_BEFORE_PROCESS event: ' in "
+					+ (System.currentTimeMillis() - l1) + "ms");
+
+			// process workitem
+			actionResult = super.process();
+
+			// reset versions and editor sections
+			versions = null;
+			editorSections = null;
+			// ! Do not call setWorkitem here because this fires a
+			// WORKITEM_CHANGED event !
+
+			// fire event
+			long l2 = System.currentTimeMillis();
+			events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_AFTER_PROCESS));
+			logger.finest("[WorkflowController] fire WORKITEM_AFTER_PROCESS event: ' in "
+					+ (System.currentTimeMillis() - l2) + "ms");
+
+			// if a action was set by the workflowController, then this
+			// action will be the action result String
+			if (action != null && !action.isEmpty()) {
+				actionResult = action;
+				// reset action
+				setAction(null);
+			}
+
+		} catch (ObserverException oe) {
+			actionResult = null;
+			// test if we can handle the exception...
+			if (oe.getCause() instanceof PluginException) {
+				// add error message into current form
+				ErrorHandler.addErrorMessage((PluginException) oe.getCause());
+			} else {
+				if (oe.getCause() instanceof ValidationException) {
+					// add error message into current form
+					ErrorHandler.addErrorMessage((ValidationException) oe.getCause());
+				} else {
+					// throw unknown exception
+					throw oe;
+				}
+			}
+		} catch (PluginException pe) {
+			actionResult = null;
+			// add a new FacesMessage into the FacesContext
+			ErrorHandler.handlePluginException(pe);
+		}
+
+		if (logger.isLoggable(Level.FINEST)) {
+			String id = "";
+			if (getWorkitem() != null)
+				id = getWorkitem().getItemValueString(WorkflowService.UNIQUEID);
+			logger.finest(
+					"[WorkflowController] process: '" + id + "' in " + (System.currentTimeMillis() - lTotal) + "ms");
+		}
+
+		// test if no actionResult is defined
+		if (actionResult == null || actionResult.isEmpty()) {
+			// construct default action result
+			actionResult = getDefaultActionResult() + "?id=" + getWorkitem().getUniqueID() + "&faces-redirect=true";
+		}
+
+		// test if faces-redirect is included in actionResult
+		if (actionResult.contains("/") && !actionResult.contains("faces-redirect=")) {
+			// append faces-redirect=true
+			if (!actionResult.contains("?")) {
+				actionResult = actionResult + "?";
+			}
+			actionResult = actionResult + "faces-redirect=true";
+		}
+
+		logger.fine("action result=" + actionResult);
+		// close conversation
+		reset();
+		return actionResult;
+	}
+
+	/**
+	 * The method saves the current workItem and fires the WorkflowEvents
+	 * WORKITEM_BEFORE_SAVE and WORKITEM_AFTER_SAVE.
+	 * 
+	 * NOTE: the super class changes the behavior of save(action) and process a
+	 * workItem instead of saving. This may conflict in future cases. If so we
+	 * should decide if we simply add a new method here called 'saveAsDraft()'
+	 * which would more precisely describe the behavior of this method.
+	 */
+	@Override
+	public void save() throws AccessDeniedException {
+		logger.fine("[WorkflowController] save");
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_BEFORE_SAVE));
+
+		super.save();
+
+		// fire event
+		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_AFTER_SAVE));
 	}
 
 	/**
@@ -243,22 +433,6 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 	}
 
 	/**
-	 * This method overwrites the default init() and fires a WorkflowEvent.
-	 * 
-	 * @throws ModelException
-	 * 
-	 */
-	@Override
-	public String init(String action) throws ModelException {
-		String actionResult = super.init(action);
-
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_INITIALIZED));
-
-		return actionResult;
-	}
-
-	/**
 	 * Loades a new wokitem by a uniqueID
 	 * 
 	 * @param aUniqueID
@@ -279,48 +453,6 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		} else {
 			return this.getWorkitem().getItemValueString(EntityService.UNIQUEID);
 		}
-	}
-
-	/**
-	 * The method loads a new wokitem by a uniqueID. If no id is provided the
-	 * method did not change the current workitem reference. If the uniqueId is
-	 * invalid the workitem will be set to null (see setUnqiueId)
-	 * 
-	 * This method is used for the DeepLink Feature used by workitem.xhml.
-	 * 
-	 * 
-	 * @param aUniqueID
-	 */
-	public void setDeepLinkId(String adeepLinkId) {
-		this.deepLinkId = adeepLinkId;
-		// if Id is provided try to load the corresponding workitem.
-		if (deepLinkId != null && !deepLinkId.isEmpty()) {
-			this.load(deepLinkId);
-			// finally we destroy the deepLinkId to avoid a reload on the next
-			// postback
-			deepLinkId = null; // !
-		}
-	}
-
-	public String getDeepLinkId() {
-		return deepLinkId;
-	}
-
-	/**
-	 * The method fires a WORKITEM_CHANGED event if the uniqueId of the workitem
-	 * has changed. Additional the method resets the editoSection list and
-	 * version list.
-	 */
-	@Override
-	public void setWorkitem(ItemCollection newWorkitem) {
-
-		events.fire(new WorkflowEvent(newWorkitem, WorkflowEvent.WORKITEM_CHANGED));
-
-		super.setWorkitem(newWorkitem);
-
-		versions = null;
-		editorSections = null;
-
 	}
 
 	/**
@@ -493,134 +625,6 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		if (versions == null)
 			loadVersionWorkItemList();
 		return versions;
-	}
-
-	/**
-	 * The action method processes the current workItem and fires the
-	 * WorkflowEvents WORKITEM_BEFORE_PROCESS and WORKITEM_AFTER_PROCESS. The
-	 * Method also catches PluginExceptions and adds the corresponding Faces
-	 * Error Message into the FacesContext. In case of an exception the
-	 * WorkflowEvent WORKITEM_AFTER_PROCESS will not be fired. <br>
-	 * The action result returned by the workflow engine may contain a $uniqueid
-	 * to redirect the user and load that new workitem. If no action result is
-	 * defined the method redirects to the default action with the current
-	 * workitem id.
-	 * 
-	 * The method appends faces-redirect=true to the action result in case no
-	 * faces-redirect is defined.
-	 * 
-	 * <code>
-	 *       /pages/workitems/workitem?id=23452345-2452435234&faces-redirect=true
-	 * </code>
-	 * 
-	 */
-	@Override
-	public String process() throws AccessDeniedException, ProcessingErrorException {
-		String actionResult = null;
-
-		long lTotal = System.currentTimeMillis();
-
-		// process workItem and catch exceptions
-		try {
-
-			// fire event
-			long l1 = System.currentTimeMillis();
-			events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_BEFORE_PROCESS));
-			logger.finest("[WorkflowController] fire WORKITEM_BEFORE_PROCESS event: ' in "
-					+ (System.currentTimeMillis() - l1) + "ms");
-
-			// process workitem
-			actionResult = super.process();
-
-			// reset versions and editor sections
-			versions = null;
-			editorSections = null;
-			// ! Do not call setWorkitem here because this fires a
-			// WORKITEM_CHANGED event !
-
-			// fire event
-			long l2 = System.currentTimeMillis();
-			events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_AFTER_PROCESS));
-			logger.finest("[WorkflowController] fire WORKITEM_AFTER_PROCESS event: ' in "
-					+ (System.currentTimeMillis() - l2) + "ms");
-
-			// if a action was set by the workflowController, then this
-			// action will be the action result String
-			if (action != null && !action.isEmpty()) {
-				actionResult = action;
-				// reset action
-				setAction(null);
-			}
-
-		} catch (ObserverException oe) {
-			actionResult = null;
-			// test if we can handle the exception...
-			if (oe.getCause() instanceof PluginException) {
-				// add error message into current form
-				ErrorHandler.addErrorMessage((PluginException) oe.getCause());
-			} else {
-				if (oe.getCause() instanceof ValidationException) {
-					// add error message into current form
-					ErrorHandler.addErrorMessage((ValidationException) oe.getCause());
-				} else {
-					// throw unknown exception
-					throw oe;
-				}
-			}
-		} catch (PluginException pe) {
-			actionResult = null;
-			// add a new FacesMessage into the FacesContext
-			ErrorHandler.handlePluginException(pe);
-		}
-
-		if (logger.isLoggable(Level.FINEST)) {
-			String id = "";
-			if (getWorkitem() != null)
-				id = getWorkitem().getItemValueString(WorkflowService.UNIQUEID);
-			logger.finest(
-					"[WorkflowController] process: '" + id + "' in " + (System.currentTimeMillis() - lTotal) + "ms");
-		}
-
-		// test if no actionResult is defined
-		if (actionResult == null || actionResult.isEmpty()) {
-			// construct default action result
-			actionResult = getDefaultActionResult() + "?id=" + getWorkitem().getUniqueID() + "&faces-redirect=true";
-		}
-
-		// test if faces-redirect is included in actionResult
-		if (actionResult.contains("/") && !actionResult.contains("faces-redirect=")) {
-			// append faces-redirect=true
-			if (!actionResult.contains("?")) {
-				actionResult = actionResult + "?";
-			}
-			actionResult = actionResult + "faces-redirect=true";
-		}
-
-		logger.fine("action result=" + actionResult);
-		// close conversation
-		reset();
-		return actionResult;
-	}
-
-	/**
-	 * The method saves the current workItem and fires the WorkflowEvents
-	 * WORKITEM_BEFORE_SAVE and WORKITEM_AFTER_SAVE.
-	 * 
-	 * NOTE: the super class changes the behavior of save(action) and process a
-	 * workItem instead of saving. This may conflict in future cases. If so we
-	 * should decide if we simply add a new method here called 'saveAsDraft()'
-	 * which would more precisely describe the behavior of this method.
-	 */
-	@Override
-	public void save() throws AccessDeniedException {
-		logger.fine("[WorkflowController] save");
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_BEFORE_SAVE));
-
-		super.save();
-
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_AFTER_SAVE));
 	}
 
 	/**

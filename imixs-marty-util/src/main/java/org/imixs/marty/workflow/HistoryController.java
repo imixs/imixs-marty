@@ -131,8 +131,8 @@ public class HistoryController implements Serializable {
 	}
 
 	/**
-	 * This action listener removes the current WorkItem from the history nav
-	 * and set the workitem form the workflowcontroller to null
+	 * This action listener removes the current WorkItem from the history
+	 * navigation and reset the workitem form the workflowcontroller.
 	 * 
 	 * @param aWorkitem
 	 */
@@ -142,7 +142,7 @@ public class HistoryController implements Serializable {
 			workitems.remove(iPos);
 		}
 		currentId = null;
-		workflowController.setWorkitem(null);
+		workflowController.reset();
 	}
 
 	/**
@@ -167,24 +167,20 @@ public class HistoryController implements Serializable {
 		}
 
 		// skip if not a workItem...
-		if (!workflowEvent.getWorkitem().getItemValueString("type")
-				.startsWith("workitem"))
+		if (!workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
 			return;
 
 		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
 			addWorkItem(workflowEvent.getWorkitem());
 		}
 
-		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
-				.getEventType()) {
+		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
 
 			// if the property 'action' is 'home' or 'notes'
 			// then remove the WorkItem and clear the currentID
-			String result = workflowEvent.getWorkitem().getItemValueString(
-					"action");
+			String result = workflowEvent.getWorkitem().getItemValueString("action");
 			if ("home".equals(result) || "notes".equals(result)) {
-				removeWorkitem(workflowEvent.getWorkitem().getItemValueString(
-						EntityService.UNIQUEID));
+				removeWorkitem(workflowEvent.getWorkitem().getItemValueString(EntityService.UNIQUEID));
 				setCurrentId("");
 			} else {
 				addWorkItem(workflowEvent.getWorkitem());
@@ -199,8 +195,7 @@ public class HistoryController implements Serializable {
 	 */
 	private void addWorkItem(ItemCollection aWorkitem) {
 
-		if (aWorkitem == null
-				|| !aWorkitem.getItemValueString("type").startsWith("workitem")
+		if (aWorkitem == null || !aWorkitem.getItemValueString("type").startsWith("workitem")
 				|| aWorkitem.getItemValueString("$UniqueID").isEmpty()) {
 			currentId = null;
 			return;
@@ -235,8 +230,7 @@ public class HistoryController implements Serializable {
 		// try to find the woritem in the history list
 		for (int i = 0; i < workitems.size(); i++) {
 			ItemCollection historyWorkitem = workitems.get(i);
-			String sHistoryUnqiueID = historyWorkitem
-					.getItemValueString("$Uniqueid");
+			String sHistoryUnqiueID = historyWorkitem.getItemValueString("$Uniqueid");
 			if (sHistoryUnqiueID.equals(aID)) {
 				// Found! - remove it and return..
 				return i;
