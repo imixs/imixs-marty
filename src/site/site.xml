@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project name="Imixs Open Source Workflow">
 
-
-
 	<skin>
 		<groupId>org.imixs.workflow</groupId>
 		<artifactId>imixs-workflow-maven-skin</artifactId>
-		<version>1.0.0</version>
+		<version>1.2.0</version>
 	</skin>
 
 
@@ -42,6 +40,7 @@
 		
 		<menu name="Controller">
 			<item name="WorkflowController" href="controller/workflowcontroller.html" />
+			<item name="WorklistController" href="controller/worklistcontroller.html" />
 			<item name="Exception Handling" href="controller/exceptionhandling.html" />
 			<item name="ChildItemController" href="controller/childitemcontroller.html" />
 			<item name="ChildWorkitemController" href="controller/childworkitemcontroller.html" />
