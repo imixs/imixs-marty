@@ -52,6 +52,49 @@ e.g:
 
 	form_tab#basic_order|sub_agreement|sub_documentation
    
+
+
+## The Action Result
+
+The Marty WorkflowController is implementing a custom behavior to redirect the user after a workitem was processed successfully. An action result can be defined in an BPMN Event of the Imixs workflow model. The workflow result for an action has the following format:
+
+    <item name="action">NAVTGATION-RULE</item>
+
+The Marty WorkflowController redirects the user automatically to the action provided by the model. If no navigation rule is defined, the default action will be returned (/pages/workitems/workitem). The default action can also be overwritten by the property _defaultActionResult_.
+
+If the action result contains no _faces-redirect_ the process method will automatically append a faces-redirect=true to redirect the user by a so called 'post-get-request' after a workitem was processed. To avoid this default behavior a action result can set the faces-redirect to 'false'. 
+
+E.g., the action result:
+
+    /pages/worklist
+    
+will be translated in 
+
+    /pages/worklist?faces-redirect=true
+
+__Note:__ A Navigation Rule will not be changed by the  WorkflowController and need to be configured using the faces-config.xml file. 
+ 
+### Loading a new Workitem
+
+After processing a workitem, also a new workitem can be loaded by specifying the uniqueID in the action result. See the following example of a navigation rule:
+
+    /pages/workitems/workitem?id=<UNIQUEID>
+ 
+This rule will result in
+ 
+    /pages/workitems/workitem?id=<UNIQUEID>&faces-redirect=true
+ 
+To load the workitem, the corresponding JSF page need to provide the optional _deepLinkId_ viewParam, which is supported by the Marty WorkflowController:
+
+	<h:head>
+		<!-- support deep link for workitems to be loaded by the WorkflowController (optional params 'id' and 'workitem' supported) -->
+		<f:metadata>
+			<f:viewParam name="workitem" value="#{workflowController.deepLinkId}" />
+			<f:viewParam name="id" value="#{workflowController.deepLinkId}" />
+		</f:metadata>
+	</h:head>
+
+
 ## WorkflowEvents
 
 The WorkflowController fires CDI events depending on the state of the workitem which can be consumed by other CDI beans in an application. The event handling is implemented using the CDI observer pattern (JSR-299/JSR-330). To consume an event a CDI bean have to implement a method with a @Observes annotation for the WorkflowEvent.
@@ -72,6 +115,8 @@ Events are only triggered by the CDI Bean WorkflowController. If a Workitem is u
 
  * WORKITEM_AFTER_PROCESS - fired after a workitem was processed by the workflow engine
 
+
+The controller fires the WORKITEM_BEFORE_PROCESS event before processing a workitem and the  WORKITEM_AFTER_PROCESS event after a successful processing life cycle. 
 
 ## Conversation State
 The marty workflowController inherits from the 'org.imixs.workflow.jee.faces.workitem.WorkflowController' and implements a custom conversation state. 

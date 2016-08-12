@@ -109,7 +109,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 	private List<EditorSection> editorSections = null;
 	private String action = null; // optional page result
 	private String deepLinkId = null; // deep link UniqueId
-	private String defultActionResult = null;
+	private String defaultActionResult = null;
 
 	public WorkflowController() {
 		super();
@@ -126,15 +126,15 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		this.action = action;
 	}
 
-	public String getDefultActionResult() {
-		if (defultActionResult == null) {
-			defultActionResult = DEFAULT_ACTION_RESULT;
+	public String getDefaultActionResult() {
+		if (defaultActionResult == null) {
+			defaultActionResult = DEFAULT_ACTION_RESULT;
 		}
-		return defultActionResult;
+		return defaultActionResult;
 	}
 
-	public void setDefultActionResult(String defultActionResult) {
-		this.defultActionResult = defultActionResult;
+	public void setDefaultActionResult(String defultActionResult) {
+		this.defaultActionResult = defultActionResult;
 	}
 
 	/**
@@ -584,7 +584,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		// test if no actionResult is defined
 		if (actionResult == null || actionResult.isEmpty()) {
 			// construct default action result
-			actionResult = getDefultActionResult() + "?id=" + getWorkitem().getUniqueID() + "&faces-redirect=true";
+			actionResult = getDefaultActionResult() + "?id=" + getWorkitem().getUniqueID() + "&faces-redirect=true";
 		}
 
 		// test if faces-redirect is included in actionResult
