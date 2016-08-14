@@ -58,13 +58,5 @@ public class AdminPController extends DataController {
 
 	}
 
-	
-	
-	@Override
-	public void reset() {
-		super.reset();
-		// create new empty adminP entity
-		create(null);
-	}
 
 }

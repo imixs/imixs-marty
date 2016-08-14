@@ -56,6 +56,8 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  */
 public class UserGroupPlugin extends AbstractPlugin {
 	public static final String INVALID_CONTEXT = "INVALID_CONTEXT";
+	static final int EVENT_PROFILE_LOCK= 90;
+	static final int TASK_PPROFILE_ACTIVE= 210;
 	EntityService entityService = null;
 	UserGroupService userGroupService = null;;
 
@@ -120,12 +122,13 @@ public class UserGroupPlugin extends AbstractPlugin {
 		// if processid=210 and activity=20 - delete all groups
 		int iProcessID=workitem.getItemValueInteger("$ProcessID");
 		int iActivityID=documentActivity.getItemValueInteger("numActivityID");
-		if (iProcessID==210 && iActivityID==20) {
+		if (iProcessID>=TASK_PPROFILE_ACTIVE && iActivityID==EVENT_PROFILE_LOCK) {
+			logger.info("Lock profile '" + workitem.getItemValueString("txtname")+"'");
 			workitem.replaceItemValue("txtGroups", "");
 		}
 		
 		
-		logger.fine("[UserGroupPlugin] update profile....");
+		logger.fine("[UserGroupPlugin] update profile '" + workitem.getItemValueString("txtname")+"'....");
 		userGroupService.updateUser(workitem);
 
 		return Plugin.PLUGIN_OK;
