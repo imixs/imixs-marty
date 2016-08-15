@@ -250,7 +250,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 				getWorkitem().replaceItemValue("txtProcessRef", process.getItemValueString(EntityService.UNIQUEID));
 
 			} else {
-				logger.warning("[WorkflowController] create - unable to find process entity '" + processRef + "'!");
+				logger.warning("[create] - unable to find process entity '" + processRef + "'!");
 			}
 		}
 
@@ -293,24 +293,27 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 	 * The method appends faces-redirect=true to the action result in case no
 	 * faces-redirect is defined.
 	 * 
+	 * 
 	 * <code>
 	 *       /pages/workitems/workitem?id=23452345-2452435234&faces-redirect=true
 	 * </code>
+	 * 
+	 * In case the processing was successful, the current conversation will be
+	 * closed. In Case of an Exception (e.g PluginException) the conversation
+	 * will not be closed, so that the current workitem data is still available.
 	 * 
 	 */
 	@Override
 	public String process() throws AccessDeniedException, ProcessingErrorException {
 		String actionResult = null;
-
 		long lTotal = System.currentTimeMillis();
 
 		// process workItem and catch exceptions
 		try {
-
 			// fire event
 			long l1 = System.currentTimeMillis();
 			events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_BEFORE_PROCESS));
-			logger.finest("[WorkflowController] fire WORKITEM_BEFORE_PROCESS event: ' in "
+			logger.finest("[process] fire WORKITEM_BEFORE_PROCESS event: ' in "
 					+ (System.currentTimeMillis() - l1) + "ms");
 
 			// process workitem
@@ -325,7 +328,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 			// fire event
 			long l2 = System.currentTimeMillis();
 			events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_AFTER_PROCESS));
-			logger.finest("[WorkflowController] fire WORKITEM_AFTER_PROCESS event: ' in "
+			logger.finest("[process] fire WORKITEM_AFTER_PROCESS event: ' in "
 					+ (System.currentTimeMillis() - l2) + "ms");
 
 			// if a action was set by the workflowController, then this
@@ -335,6 +338,33 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 				// reset action
 				setAction(null);
 			}
+
+			// compute the Action result...
+			if (actionResult == null || actionResult.isEmpty()) {
+				// construct default action result if no actionResult was
+				// defined
+				actionResult = getDefaultActionResult() + "?id=" + getWorkitem().getUniqueID() + "&faces-redirect=true";
+			}
+
+			// test if 'faces-redirect' is included in actionResult
+			if (actionResult.contains("/") && !actionResult.contains("faces-redirect=")) {
+				// append faces-redirect=true
+				if (!actionResult.contains("?")) {
+					actionResult = actionResult + "?";
+				}
+				actionResult = actionResult + "faces-redirect=true";
+			}
+
+			logger.fine("action result=" + actionResult);
+
+			if (logger.isLoggable(Level.FINEST)) {
+				logger.finest(
+						"[process] '" + getWorkitem().getItemValueString(WorkflowService.UNIQUEID)
+								+ "' completed in " + (System.currentTimeMillis() - lTotal) + "ms");
+			}
+
+			// close conversation
+			reset();
 
 		} catch (ObserverException oe) {
 			actionResult = null;
@@ -357,32 +387,6 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 			ErrorHandler.handlePluginException(pe);
 		}
 
-		if (logger.isLoggable(Level.FINEST)) {
-			String id = "";
-			if (getWorkitem() != null)
-				id = getWorkitem().getItemValueString(WorkflowService.UNIQUEID);
-			logger.finest(
-					"[WorkflowController] process: '" + id + "' in " + (System.currentTimeMillis() - lTotal) + "ms");
-		}
-
-		// test if no actionResult is defined
-		if (actionResult == null || actionResult.isEmpty()) {
-			// construct default action result
-			actionResult = getDefaultActionResult() + "?id=" + getWorkitem().getUniqueID() + "&faces-redirect=true";
-		}
-
-		// test if faces-redirect is included in actionResult
-		if (actionResult.contains("/") && !actionResult.contains("faces-redirect=")) {
-			// append faces-redirect=true
-			if (!actionResult.contains("?")) {
-				actionResult = actionResult + "?";
-			}
-			actionResult = actionResult + "faces-redirect=true";
-		}
-
-		logger.fine("action result=" + actionResult);
-		// close conversation
-		reset();
 		return actionResult;
 	}
 
@@ -397,7 +401,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 	 */
 	@Override
 	public void save() throws AccessDeniedException {
-		logger.fine("[WorkflowController] save");
+		logger.fine("save workitem...");
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.WORKITEM_BEFORE_SAVE));
 
@@ -605,7 +609,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 						editorSections.add(aSection);
 
 					} catch (Exception est) {
-						logger.severe("[WorkitemController] can not parse EditorSections : '" + sEditor + "'");
+						logger.severe("[getEditorSections] can not parse EditorSections : '" + sEditor + "'");
 						logger.severe(est.getMessage());
 					}
 				}
