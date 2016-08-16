@@ -13,6 +13,8 @@
 	<cc:attribute name="minimumChars" type="java.lang.Integer" default="3" ></cc:attribute>
 	<cc:attribute name="hidereferences" default="false"
 		type="java.lang.Boolean"></cc:attribute>
+	<cc:attribute name="readonly" default="false"
+		type="java.lang.Boolean"></cc:attribute>
 </cc:interface>
 
 <cc:implementation>
@@ -44,7 +46,7 @@
 					</span>
 
 
-					<h:commandLink class="marty-workitemlink-entry-remove"
+					<h:commandLink class="marty-workitemlink-entry-remove" rendered="#{!cc.attrs.readonly}"
 						actionListener="#{workitemLinkController.remove(workitem.item['$uniqueid'],cc.attrs.workitem)}">
 						<h:outputText value=" [#{message.remove}]" />
 						<f:ajax render="reference_box" />
@@ -56,7 +58,7 @@
 			</c:forEach>
 		</h:panelGroup>
 		<!-- Input Field -->
-		<h:panelGroup id="input_box"
+		<h:panelGroup id="input_box" rendered="#{!cc.attrs.readonly}"
 			class="marty-workitemlink-inputbox" layout="block">
 			<h:inputText value="#{workitemLinkController.input}">
 				<f:ajax event="keyup" render="suggest_box" delay="600"
