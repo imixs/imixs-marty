@@ -29,8 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.SessionScoped;
+import javax.enterprise.context.ConversationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Named;
 
@@ -52,8 +51,8 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
  * @author rsoika
  * @version 1.0
  */
-@Named("childItemController")
-@SessionScoped
+@Named
+@ConversationScoped
 public class ChildItemController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -65,62 +64,7 @@ public class ChildItemController implements Serializable {
 
 	public static final String CHILD_ITEM_PROPERTY="_ChildItems"; 
 	
-	public ChildItemController() {
-		super();
-	}
-
-	/**
-	 * This method load the config entity after postContstruct. If no Entity
-	 * exists than the ConfigService EJB creates a new config entity.
-	 * 
-	 */
-	@PostConstruct
-	public void init() {
-
-	}
-
-
-
-
-	/**
-	 * converts the Map List of a workitem into a List of ItemCollectons
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private void explodeChildList(ItemCollection workitem) {
-		// convert current list of childItems into ItemCollection elements
-		childItems = new ArrayList<ItemCollection>();
-
-		List<Object> mapOrderItems = workitem.getItemValue(CHILD_ITEM_PROPERTY);
-		int pos=1;
-		for (Object mapOderItem : mapOrderItems) {
-
-			if (mapOderItem instanceof Map) {
-				ItemCollection itemCol=new ItemCollection((Map) mapOderItem);
-				itemCol.replaceItemValue("numPos",pos);
-				childItems.add(itemCol);
-				pos++;
-			}
-		}
-	}
-
-	/**
-	 * Convert the List of ItemCollections back into a List of Map elements
-	 * 
-	 * @param workitem
-	 */
-	@SuppressWarnings({ "rawtypes" })
-	private void implodeChildList(ItemCollection workitem) {
-		List<Map> mapOrderItems = new ArrayList<Map>();
-		// convert the child ItemCollection elements into a List of Map
-		if (childItems != null) {
-			logger.fine("Convert child items into Map...");
-			// iterate over all order items..
-			for (ItemCollection orderItem : childItems) {
-				mapOrderItems.add(orderItem.getAllItems());
-			}
-			workitem.replaceItemValue(CHILD_ITEM_PROPERTY, mapOrderItems);
-		}
-	}
+	
 
 	/**
 	 * WorkflowEvent listener to convert embeded HashMaps into ItemCollections
@@ -194,6 +138,46 @@ public class ChildItemController implements Serializable {
 			return 0;
 
 		return new Double(aValue);
+	}
+
+	/**
+	 * Convert the List of ItemCollections back into a List of Map elements
+	 * 
+	 * @param workitem
+	 */
+	@SuppressWarnings({ "rawtypes" })
+	private void implodeChildList(ItemCollection workitem) {
+		List<Map> mapOrderItems = new ArrayList<Map>();
+		// convert the child ItemCollection elements into a List of Map
+		if (childItems != null) {
+			logger.fine("Convert child items into Map...");
+			// iterate over all order items..
+			for (ItemCollection orderItem : childItems) {
+				mapOrderItems.add(orderItem.getAllItems());
+			}
+			workitem.replaceItemValue(CHILD_ITEM_PROPERTY, mapOrderItems);
+		}
+	}
+
+	/**
+	 * converts the Map List of a workitem into a List of ItemCollectons
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private void explodeChildList(ItemCollection workitem) {
+		// convert current list of childItems into ItemCollection elements
+		childItems = new ArrayList<ItemCollection>();
+	
+		List<Object> mapOrderItems = workitem.getItemValue(CHILD_ITEM_PROPERTY);
+		int pos=1;
+		for (Object mapOderItem : mapOrderItems) {
+	
+			if (mapOderItem instanceof Map) {
+				ItemCollection itemCol=new ItemCollection((Map) mapOderItem);
+				itemCol.replaceItemValue("numPos",pos);
+				childItems.add(itemCol);
+				pos++;
+			}
+		}
 	}
 
 }
