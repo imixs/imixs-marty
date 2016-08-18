@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:cc="http://java.sun.com/jsf/composite">
+
+<cc:interface>
+	<cc:attribute name="workitem"></cc:attribute>
+	<cc:attribute name="filter"></cc:attribute>
+</cc:interface>
+
+<cc:implementation>
+
+
+	<h:panelGroup id="workitemlink_box" layout="block"
+		class="marty-workitemlink">
+
+		<!-- show external references -->
+		<h:panelGroup id="reference_box" layout="block"
+			class="marty-workitemlink-referencebox">
+			<c:forEach var="workitem"
+				items="#{workitemLinkController.getExternalReferences(cc.attrs.filter)}">
+				<div class="marty-workitemlink-referencebox-entry">
+					<h:commandLink class="marty-workitemlink-entry-link"
+						action="#{workflowController.load(workitem.item['$uniqueid'],'/pages/workitems/workitem')}">
+						<h:outputText value="#{workitem.item['txtWorkflowSummary']}"
+							rendered="#{!empty workitem.item['txtWorkflowSummary']}" />
+						<h:outputText value="#{suggest.item['$created']}"
+							rendered="#{empty workitem.item['txtWorkflowSummary']}">
+							<f:convertDateTime timeZone="#{message.timeZone}"
+								pattern="#{message.dateTimePatternShort}" />
+						</h:outputText>
+					</h:commandLink>
+					<br />
+					<span class="marty-workitemlink-entry-abstract">
+						<h:outputText value="#{workitem.item['txtworkflowgroup']}: " />
+						<h:outputText value="#{workitem.item['txtworkflowstatus']}" />
+					</span>
+
+				</div>
+
+			</c:forEach>
+		</h:panelGroup>
+		
+		
+	</h:panelGroup>
+
+
+</cc:implementation>
+
+
+</html>
+
+

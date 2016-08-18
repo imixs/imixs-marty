@@ -49,8 +49,9 @@ import org.imixs.workflow.lucene.LuceneSearchService;
  * The WorkitemLinkController provides suggest-box behavior based on the JSF 2.0
  * ajax capability to add WorkItem references to the current WorkItem.
  * 
- * All WorkItem references will be stored in the property 'txtworkitemref' Note: @RequestScoped
- * did not work because the ajax request will reset the result during submit
+ * All WorkItem references will be stored in the property 'txtworkitemref'
+ * Note: @RequestScoped did not work because the ajax request will reset the
+ * result during submit
  * 
  * 
  * 
@@ -64,26 +65,24 @@ public class WorkitemLinkController implements Serializable {
 
 	public static final String LINK_PROPERTY = "txtworkitemref";
 
-	public static Logger logger = Logger.getLogger(WorkitemLinkController.class
-			.getName());
+	public static Logger logger = Logger.getLogger(WorkitemLinkController.class.getName());
 
 	@Inject
 	protected WorkflowController workflowController;
 
 	@EJB
 	protected WorkflowService workflowService;
-	
+
 	@EJB
 	protected LuceneSearchService luceneSearchService;
-	
 
 	private static final long serialVersionUID = 1L;
 	private List<ItemCollection> searchResult = null;
-	private List<ItemCollection> externalReferences = null;
+	private Map<String, List<ItemCollection>> externalReferences = null;
 	private Map<String, List<ItemCollection>> references = null;
 
 	private String input = null;
-	private int minimumChars=3; // minimum input required for a suggestion
+	private int minimumChars = 3; // minimum input required for a suggestion
 
 	public WorkitemLinkController() {
 		super();
@@ -99,8 +98,8 @@ public class WorkitemLinkController implements Serializable {
 	}
 
 	/**
-	 *  minimum input required for a suggestion
-	 *  Default is 3
+	 * minimum input required for a suggestion Default is 3
+	 * 
 	 * @return
 	 */
 	public int getMinimumChars() {
@@ -132,12 +131,14 @@ public class WorkitemLinkController implements Serializable {
 	/**
 	 * Starts a lucene search to provide searchResult for suggest list
 	 * 
-	 * @param filter - search filter
-	 * @param minchars - the minimum length for the filter string
+	 * @param filter
+	 *            - search filter
+	 * @param minchars
+	 *            - the minimum length for the filter string
 	 */
-	public void search(String filter,int minchars) {
+	public void search(String filter, int minchars) {
 
-		if (input == null || input.isEmpty() || input.length()<minchars)
+		if (input == null || input.isEmpty() || input.length() < minchars)
 			return;
 
 		logger.fine("LinkController SearchOption=" + filter);
@@ -149,14 +150,14 @@ public class WorkitemLinkController implements Serializable {
 			// search only type workitem and workitemsarchive
 			sSearchTerm += "((type:workitem) OR (type:workitemarchive)) AND ";
 
-			if (filter != null && !"".equals(filter)) {			
+			if (filter != null && !"".equals(filter)) {
 				String sNewFilter = filter;
 				sNewFilter = sNewFilter.replace(".", "?");
 				sSearchTerm = "(" + sNewFilter + ") AND ";
 			}
 			if (!"".equals(input)) {
 				// escape input..
-				input=LuceneSearchService.escapeSearchTerm(input);
+				input = LuceneSearchService.escapeSearchTerm(input);
 				sSearchTerm += " (*" + input.toLowerCase() + "*)";
 			}
 
@@ -172,14 +173,13 @@ public class WorkitemLinkController implements Serializable {
 		}
 
 	}
-	
+
 	/*
 	 * Starts a lucene search to provide searchResult for suggest list
 	 */
 	public void search(String filter) {
-		search(filter,minimumChars);
+		search(filter, minimumChars);
 	}
-	
 
 	public List<ItemCollection> getSearchResult() {
 		return searchResult;
@@ -230,6 +230,18 @@ public class WorkitemLinkController implements Serializable {
 		references = null;
 	}
 
+	
+	/**
+	 * This method returns a list of all ItemCollections referred by the current
+	 * workItem (txtWorkitemRef).
+	 * 
+	 * @return - list of ItemCollection
+	 */
+	public List<ItemCollection> getReferences() {
+	
+		return getReferences("");
+	}
+		
 	/**
 	 * This method returns a list of ItemCollections referred by the current
 	 * workItem (txtWorkitemRef).
@@ -253,8 +265,8 @@ public class WorkitemLinkController implements Serializable {
 		if (filterResult == null) {
 			// build a new workitem list for that filter....
 			filterResult = new ArrayList<ItemCollection>();
-			
-			if ( workflowController.getWorkitem()==null) {
+
+			if (workflowController.getWorkitem() == null) {
 				return filterResult;
 			}
 
@@ -262,11 +274,9 @@ public class WorkitemLinkController implements Serializable {
 
 			long lTime = System.currentTimeMillis();
 			// lookup the references...
-			List<String> list = workflowController.getWorkitem().getItemValue(
-					LINK_PROPERTY);
+			List<String> list = workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
 			// empty list?
-			if (list.size() == 0
-					|| (list.size() == 1 && "".equals(list.get(0)))) {
+			if (list.size() == 0 || (list.size() == 1 && "".equals(list.get(0)))) {
 				references.put(filter, filterResult);
 				return filterResult;
 			}
@@ -282,11 +292,9 @@ public class WorkitemLinkController implements Serializable {
 			sQuery += ")";
 			sQuery += " ORDER BY entity.created DESC";
 
-			Collection<ItemCollection> workitems = workflowService
-					.getEntityService().findAllEntities(sQuery, 0, -1);
+			Collection<ItemCollection> workitems = workflowService.getEntityService().findAllEntities(sQuery, 0, -1);
 
-			logger.fine("  WorkitemRef Lookup:  "
-					+ (System.currentTimeMillis() - lTime) + " ms");
+			logger.fine("  WorkitemRef Lookup:  " + (System.currentTimeMillis() - lTime) + " ms");
 
 			if (workitems.size() == 0) {
 				references.put(filter, filterResult);
@@ -307,58 +315,81 @@ public class WorkitemLinkController implements Serializable {
 	}
 
 	/**
-	 * returns a list of all workItems holding a reference to the current
-	 * workItem. If the filter is set the processID will be tested for the
-	 * filter regex
-	 * 
+	 * Returns a list of all workItems holding a reference to the current
+	 * workItem.
 	 * 
 	 * @return
 	 * @throws NamingException
 	 */
 	public List<ItemCollection> getExternalReferences() {
-		if (externalReferences != null)
-			return externalReferences;
+		return getExternalReferences("");
+	}
 
-		externalReferences = new ArrayList<ItemCollection>();
+	/**
+	 * returns a list of all workItems holding a reference to the current
+	 * workItem. If the filter is set the processID will be tested for the
+	 * filter regex
+	 * 
+	 * @return
+	 * @param filter
+	 * @throws NamingException
+	 */
+	public List<ItemCollection> getExternalReferences(String filter) {
+		List<ItemCollection> filterResult = null;
 
-		if (workflowController.getWorkitem() == null)
-			return externalReferences;
+		if (externalReferences == null)
+			externalReferences = new HashMap<String, List<ItemCollection>>();
 
-		String uniqueid = workflowController.getWorkitem().getItemValueString(
-				"$uniqueid");
+		// lazy loading references by filter?
+		filterResult = externalReferences.get(filter);
+		if (filterResult == null) {
 
-		// return an empty list if still no $uniqueid is defined for the current
-		// workitem
-		if ("".equals(uniqueid))
-			return externalReferences;
+			// build a new workitem list for that filter....
+			filterResult = new ArrayList<ItemCollection>();
 
-		long lTime = System.currentTimeMillis();
-		// select all references.....
-		String sQuery = "SELECT workitem FROM Entity AS workitem"
-				+ " JOIN workitem.textItems AS rnr"
-				+ " WHERE workitem.type IN ('workitem','workitemarchive') "
-				+ " AND rnr.itemName = '" + LINK_PROPERTY + "'"
-				+ " AND rnr.itemValue='" + uniqueid + "'"
-				+ " ORDER BY workitem.created DESC";
+			String uniqueid = workflowController.getWorkitem().getItemValueString("$uniqueid");
 
-		logger.fine("  Incomming Referece Lookup - query:  " + sQuery);
-		Collection<ItemCollection> col = null;
-		try {
-			col = workflowService.getEntityService().findAllEntities(sQuery, 0,
-					-1);
-			for (ItemCollection itemcol : col) {
+			// return an empty list if still no $uniqueid is defined for the
+			// current
+			// workitem
+			if ("".equals(uniqueid))
+				return filterResult;
 
-				externalReferences.add(itemcol);
+			long lTime = System.currentTimeMillis();
+			// select all references.....
+			String sQuery = "SELECT workitem FROM Entity AS workitem" + " JOIN workitem.textItems AS rnr"
+					+ " WHERE workitem.type IN ('workitem','workitemarchive') " + " AND rnr.itemName = '"
+					+ LINK_PROPERTY + "'" + " AND rnr.itemValue='" + uniqueid + "'" + " ORDER BY workitem.created DESC";
+
+			logger.fine("  Incomming Referece Lookup - query:  " + sQuery);
+			Collection<ItemCollection> workitems = null;
+			try {
+				workitems = workflowService.getEntityService().findAllEntities(sQuery, 0, -1);
+				if (workitems.size() == 0) {
+					externalReferences.put(filter, filterResult);
+					return filterResult;
+				}
+
+			} catch (Exception e) {
+
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
 
-			e.printStackTrace();
+			if (filter != null) {
+				// now test if filter matches, and clone the workItem
+				for (ItemCollection itemcol : workitems) {
+					// test
+					if (WorkitemHelper.matches(itemcol, filter)) {
+						filterResult.add(WorkitemHelper.clone(itemcol));
+					}
+				}
+			}
+
+			externalReferences.put(filter, filterResult);
+
+			logger.fine("  External Referece Lookup:  " + (System.currentTimeMillis() - lTime) + " ms");
 		}
-
-		logger.fine("  External Referece Lookup:  "
-				+ (System.currentTimeMillis() - lTime) + " ms");
-
-		return externalReferences;
+		return filterResult;
 
 	}
 
@@ -368,8 +399,7 @@ public class WorkitemLinkController implements Serializable {
 	 * @param workflowEvent
 	 * @throws AccessDeniedException
 	 */
-	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent)
-			throws AccessDeniedException {
+	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) throws AccessDeniedException {
 
 		// reset suggest list state
 		reset();
@@ -379,8 +409,7 @@ public class WorkitemLinkController implements Serializable {
 
 		// skip if not a workItem...
 		if (workflowEvent.getWorkitem() != null
-				&& !workflowEvent.getWorkitem().getItemValueString("type")
-						.startsWith("workitem"))
+				&& !workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
 			return;
 
 		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
@@ -388,8 +417,7 @@ public class WorkitemLinkController implements Serializable {
 			references = null;
 		}
 
-		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
-				.getEventType()) {
+		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
 			externalReferences = null;
 			references = null;
 
