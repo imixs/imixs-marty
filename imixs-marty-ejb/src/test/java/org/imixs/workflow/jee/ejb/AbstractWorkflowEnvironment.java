@@ -132,7 +132,7 @@ public class AbstractWorkflowEnvironment {
 		// Mock WorkflowService
 		workflowService = Mockito.mock(WorkflowService.class);
 		workflowContext = Mockito.mock(WorkflowContext.class);
-		workflowService.entityService = entityService;
+		workflowService.documentService = entityService;
 		workflowService.ctx = ctx;
 		ModelManager modelManager = Mockito.mock(ModelManager.class);
 		try {
