@@ -37,10 +37,10 @@ import javax.naming.NamingException;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
-import org.imixs.workflow.ejb.DocumentService;
-import org.imixs.workflow.ejb.WorkflowService;
+import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * This Plugin updates the userId and password for a user profile. The Update
@@ -144,7 +144,6 @@ public class UserGroupPlugin extends AbstractPlugin {
 	 */
 	private boolean isUserDBEnabled() {
 		String searchterm = "(type:\"configuration\" AND txtname:\"BASIC\")";
-
 		Collection<ItemCollection> col = documentService.find(searchterm, 0, 1);
 
 		if (col.size() > 0) {

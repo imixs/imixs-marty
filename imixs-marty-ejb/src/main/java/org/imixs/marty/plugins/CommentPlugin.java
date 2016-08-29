@@ -36,10 +36,9 @@ import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
-import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.engine.plugins.ResultPlugin;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.plugins.ResultPlugin;
-import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * This plugin suports a commment feature. Comments entered by a user into the
@@ -63,11 +62,6 @@ public class CommentPlugin extends AbstractPlugin {
 	ItemCollection documentContext;
 
 	private static Logger logger = Logger.getLogger(CommentPlugin.class.getName());
-
-	@Override
-	public void init(WorkflowContext actx) throws PluginException {
-		super.init(actx);
-	}
 
 	/**
 	 * This method updates the comment list. There for the method copies the

@@ -51,7 +51,7 @@ import javax.ejb.Timeout;
 import javax.ejb.Timer;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.xml.XMLItemCollection;
 import org.imixs.workflow.xml.XMLItemCollectionAdapter;
 
@@ -89,7 +89,7 @@ public class DmsSchedulerService {
 			.getName());
 
 	@EJB
-	private EntityService entityService;
+	private DocumentService documentService;
 
 	@Resource
 	javax.ejb.TimerService timerService;
@@ -105,14 +105,14 @@ public class DmsSchedulerService {
 	 */
 	public ItemCollection findConfiguration() {
 		ItemCollection configItemCollection = null;
-		String sQuery = "SELECT config FROM Entity AS config "
-				+ " JOIN config.textItems AS t2" + " WHERE config.type = '"
-				+ TYPE + "'" + " AND t2.itemName = 'txtname'"
-				+ " AND t2.itemValue = '" + NAME + "'"
-				+ " ORDER BY t2.itemValue asc";
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, 1);
-
+//		String sQuery = "SELECT config FROM Entity AS config "
+//				+ " JOIN config.textItems AS t2" + " WHERE config.type = '"
+//				+ TYPE + "'" + " AND t2.itemName = 'txtname'"
+//				+ " AND t2.itemValue = '" + NAME + "'"
+//				+ " ORDER BY t2.itemValue asc";
+//		
+		Collection<ItemCollection> col =  documentService.getDocumentsByType(TYPE, 0, 1);
+		
 		if (col.size() > 0) {
 			configItemCollection = col.iterator().next();
 
@@ -157,7 +157,7 @@ public class DmsSchedulerService {
 		configItemCollection.replaceItemValue("$readAccess",
 				"org.imixs.ACCESSLEVEL.MANAGERACCESS");
 		// save entity
-		configItemCollection = entityService.save(configItemCollection);
+		configItemCollection = documentService.save(configItemCollection);
 
 		updateTimerDetails(configItemCollection);
 
@@ -499,7 +499,7 @@ public class DmsSchedulerService {
 			dmsItemCollection.replaceItemValue("$uniqueidRef", "");
 
 			// save item collection
-			entityService.save(dmsItemCollection);
+			documentService.save(dmsItemCollection);
 
 			// delete the file
 			importFile.delete();

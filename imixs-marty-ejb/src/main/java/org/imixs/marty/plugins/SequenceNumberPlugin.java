@@ -38,9 +38,9 @@ import org.imixs.marty.ejb.SequenceService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * This Plugin handles a unique sequence number for all workItems. The current

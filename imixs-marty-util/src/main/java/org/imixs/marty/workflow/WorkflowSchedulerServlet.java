@@ -8,7 +8,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.ejb.WorkflowSchedulerService;
+import org.imixs.workflow.engine.WorkflowSchedulerService;
 
 /**
  * This servlet runs during deployment and verifies if a

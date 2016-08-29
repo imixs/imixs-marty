@@ -30,6 +30,7 @@ package org.imixs.marty.ejb;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -41,6 +42,8 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 
 /**
@@ -71,7 +74,7 @@ public class ConfigService {
 	int DEFAULT_CACHE_SIZE = 30;
 
 	@EJB
-	private org.imixs.workflow.jee.ejb.EntityService entityService;
+	private DocumentService documentService;
 
 	private Cache cache = null;
 
@@ -111,7 +114,7 @@ public class ConfigService {
 	 */
 	public void deleteConfiguration(ItemCollection aconfig) throws AccessDeniedException {
 		cache.remove(aconfig.getItemValueString("txtName"));
-		entityService.remove(aconfig);
+		documentService.remove(aconfig);
 	}
 
 	/**
@@ -146,10 +149,13 @@ public class ConfigService {
 		configItemCollection = cache.get(name);
 		if (configItemCollection == null || discardCache) {
 			// load / create config entity....
-			String sQuery = "SELECT config FROM Entity AS config " + " JOIN config.textItems AS t2"
-					+ " WHERE config.type = '" + TYPE + "'" + " AND t2.itemName = 'txtname'" + " AND t2.itemValue = '"
-					+ name + "'" + " ORDER BY t2.itemValue asc";
-			Collection<ItemCollection> col = entityService.findAllEntities(sQuery, 0, 1);
+//			String sQuery = "SELECT config FROM Entity AS config " + " JOIN config.textItems AS t2"
+//					+ " WHERE config.type = '" + TYPE + "'" + " AND t2.itemName = 'txtname'" + " AND t2.itemValue = '"
+//					+ name + "'" + " ORDER BY t2.itemValue asc";
+			
+			String sQuery="(type:\"" + TYPE + "\" AND txtname:\""+name + "\")";
+			
+			Collection<ItemCollection> col = documentService.find(sQuery, 0, 1);
 
 			if (col.size() > 0) {
 				configItemCollection = col.iterator().next();
@@ -177,7 +183,7 @@ public class ConfigService {
 		configItemCollection.replaceItemValue("type", TYPE);
 
 		// save entity
-		configItemCollection = entityService.save(configItemCollection);
+		configItemCollection = documentService.save(configItemCollection);
 
 		cache.put(configItemCollection.getItemValueString("txtName"), configItemCollection);
 
@@ -191,14 +197,19 @@ public class ConfigService {
 	 */
 	public List<ItemCollection> findAllConfigurations() {
 		ArrayList<ItemCollection> configList = new ArrayList<ItemCollection>();
-		String sQuery = "SELECT orgunit FROM Entity AS orgunit " + " JOIN orgunit.textItems AS t2"
-				+ " WHERE orgunit.type = '" + TYPE + "'" + " AND t2.itemName = 'txtname'"
-				+ " ORDER BY t2.itemValue asc";
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery, 0, -1);
+//		String sQuery = "SELECT orgunit FROM Entity AS orgunit " + " JOIN orgunit.textItems AS t2"
+//				+ " WHERE orgunit.type = '" + TYPE + "'" + " AND t2.itemName = 'txtname'"
+//				+ " ORDER BY t2.itemValue asc";
+		Collection<ItemCollection> col = documentService.getDocumentsByType(TYPE);
 
 		for (ItemCollection aworkitem : col) {
 			configList.add(aworkitem);
 		}
+		
+		// sort by txtname
+		Collections.sort(configList, new ItemCollectionComparator("txtname", true));
+		
+		
 		return configList;
 	}
 

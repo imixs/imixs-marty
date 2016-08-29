@@ -73,7 +73,7 @@ public class TestCommentPlugin extends AbstractWorkflowEnvironment {
 		documentContext.replaceItemValue(WorkflowKernel.MODELVERSION, "1.0.0");
 		documentContext.replaceItemValue(WorkflowKernel.PROCESSID, 100);
 		documentContext.replaceItemValue(WorkflowKernel.UNIQUEID, WorkflowKernel.generateUniqueID());
-		entityService.save(documentContext);
+		documentService.save(documentContext);
 
 	}
 

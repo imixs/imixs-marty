@@ -29,7 +29,6 @@ package org.imixs.marty.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
@@ -48,8 +47,9 @@ import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.faces.util.LoginController;
 import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.faces.util.LoginController;
 
 /**
  * The ProcessController provides informations about the process and space
@@ -77,7 +77,7 @@ public class ProcessController implements Serializable {
 	protected LoginController loginController = null;
 
 	@EJB
-	protected EntityService entityService;
+	protected DocumentService documentService;
 
 	@EJB
 	protected ProcessService processService;
@@ -190,13 +190,17 @@ public class ProcessController implements Serializable {
 		if (spaces == null) {
 			spaces = new ArrayList<ItemCollection>();
 
-			String sQuery = "SELECT space FROM Entity AS space "
-					+ " JOIN space.textItems AS t2"
-					+ " WHERE space.type = 'space'"
-					+ " AND t2.itemName = 'txtname'"
-					+ " ORDER BY t2.itemValue asc";
-			Collection<ItemCollection> col = entityService.findAllEntities(
-					sQuery, 0, -1);
+//			String sQuery = "SELECT space FROM Entity AS space "
+//					+ " JOIN space.textItems AS t2"
+//					+ " WHERE space.type = 'space'"
+//					+ " AND t2.itemName = 'txtname'"
+//					+ " ORDER BY t2.itemValue asc";
+			
+			
+			List<ItemCollection> col = documentService.getDocumentsByType("space");
+			// sort by txtname
+			Collections.sort(col, new ItemCollectionComparator("txtname", true));
+			
 
 			// create optimized list
 			for (ItemCollection space : col) {
@@ -206,7 +210,7 @@ public class ProcessController implements Serializable {
 				clone.replaceItemValue("isManager", false);
 
 				// check the isTeam status for the current user
-				List<String> userNameList = entityService.getUserNameList();
+				List<String> userNameList = documentService.getUserNameList();
 				Vector<String> vNameList = (Vector<String>) space
 						.getItemValue("namTeam");
 				// check if one entry matches....

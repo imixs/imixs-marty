@@ -6,11 +6,9 @@ import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
-import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.engine.plugins.ResultPlugin;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.plugins.ResultPlugin;
-import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * This plugin manages the approver lists of process and space managers and
@@ -54,20 +52,6 @@ public class AppoverPlugin extends AbstractPlugin {
 
 	public static String APPROVEDBY = "approvedby";
 
-	private WorkflowService workflowService = null;
-
-	/**
-	 * Fetch workflowService and entityService from WorkflowContext
-	 */
-	@Override
-	public void init(WorkflowContext actx) throws PluginException {
-		super.init(actx);
-		// check for an instance of WorkflowService
-		if (actx instanceof WorkflowService) {
-			workflowService = (WorkflowService) actx;
-		}
-
-	}
 
 	/**
 	 * computes the approvedBy and appovers name fields.
@@ -99,7 +83,7 @@ public class AppoverPlugin extends AbstractPlugin {
 			}
 
 			// check current approver
-			String currentAppover = workflowService.getUserName();
+			String currentAppover = getWorkflowService().getUserName();
 			logger.fine("approved by:  " + currentAppover);
 			for (String aGroup : groups) {
 				List<String> listApprovers = workitem.getItemValue("nam" + aGroup + "Approvers");

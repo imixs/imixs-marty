@@ -50,15 +50,14 @@ import org.imixs.marty.ejb.security.UserGroupService;
 import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.engine.PropertyService;
+import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
-import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.jee.faces.fileupload.FileData;
-import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
-import org.imixs.workflow.jee.faces.util.LoginController;
-import org.imixs.workflow.jee.util.PropertyService;
+import org.imixs.workflow.faces.fileupload.FileData;
+import org.imixs.workflow.faces.fileupload.FileUploadController;
+import org.imixs.workflow.faces.util.LoginController;
 
 /**
  * This backing beans handles the Profile entity for the current user and
@@ -98,8 +97,6 @@ public class UserController implements Serializable {
 	@EJB
 	protected UserGroupService userGroupService;
 
-	@EJB
-	protected EntityService entityService;
 
 	@EJB
 	protected WorkflowService workflowService;
@@ -482,7 +479,7 @@ public class UserController implements Serializable {
 			logger.fine("[UserController] add WorkitemRef:" + id);
 			list.add(id);
 			workitem.replaceItemValue("txtWorkitemRef", list);
-			workitem = entityService.save(workitem);
+			workitem = workflowService.getDocumentService().save(workitem);
 		}
 	}
 
@@ -496,7 +493,7 @@ public class UserController implements Serializable {
 			logger.fine("[UserController] remove WorkitemRef:" + id);
 			list.remove(id);
 			workitem.replaceItemValue("txtWorkitemRef", list);
-			workitem = entityService.save(workitem);
+			workitem = workflowService.getDocumentService().save(workitem);
 		}
 	}
 
@@ -519,32 +516,46 @@ public class UserController implements Serializable {
 			refId = null;
 		}
 
-		// create a JPQL statement....
-
+//		// create a JPQL statement....
+//
+//		// create IN list
+//		String inStatement = "";
+//		for (String aID : favorites) {
+//			inStatement = inStatement + "'" + aID + "',";
+//		}
+//		// cut last ,
+//		inStatement = inStatement.substring(0, inStatement.length() - 1);
+//
+//		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
+//
+//		if (refId != null) {
+//			sQuery += "	 JOIN wi.textItems as ref ";
+//		}
+//		sQuery += " WHERE wi.type IN ('workitem','workitemarchive')";
+//		if (refId != null) {
+//			sQuery += "	AND ref.itemName = '$uniqueidref' AND ref.itemValue = '" + refId + "'";
+//		}
+//		sQuery += " AND wi.id IN (" + inStatement + ")";
+//		sQuery += " ORDER BY wi.modified DESC";
+		
+		
+		String sQuery="(type:\"workitem\" OR type:\"workitemarchive\") ";
+		if (refId != null) {
+			sQuery+=" AND ($uniqueidref:\"" + refId + "\")";
+		}
 		// create IN list
-		String inStatement = "";
+		sQuery+=" ( ";
 		for (String aID : favorites) {
-			inStatement = inStatement + "'" + aID + "',";
+			
+			sQuery += "$uniqueid:\"" + aID + "\" OR ";
 		}
 		// cut last ,
-		inStatement = inStatement.substring(0, inStatement.length() - 1);
+		sQuery = sQuery.substring(0, sQuery.length() - 3);
+		sQuery+=" ) ";
+		
+		
 
-		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-
-		if (refId != null) {
-			sQuery += "	 JOIN wi.textItems as ref ";
-		}
-
-		sQuery += " WHERE wi.type IN ('workitem','workitemarchive')";
-
-		if (refId != null) {
-			sQuery += "	AND ref.itemName = '$uniqueidref' AND ref.itemValue = '" + refId + "'";
-		}
-
-		sQuery += " AND wi.id IN (" + inStatement + ")";
-		sQuery += " ORDER BY wi.modified DESC";
-
-		return workflowService.getEntityService().findAllEntities(sQuery, 0, -1);
+		return workflowService.getDocumentService().find(sQuery, 0, -1);
 
 	}
 

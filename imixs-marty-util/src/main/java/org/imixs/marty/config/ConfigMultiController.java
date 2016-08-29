@@ -24,17 +24,16 @@
 package org.imixs.marty.config;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.jee.faces.workitem.DataController;
-import org.imixs.workflow.jee.faces.workitem.IViewAdapter;
-import org.imixs.workflow.jee.faces.workitem.ViewController;
+import org.imixs.workflow.faces.workitem.DocumentController;
+import org.imixs.workflow.faces.workitem.ViewController;
 
 /**
  * This backing bean provides different custom configuration documents. The type
@@ -65,14 +64,14 @@ import org.imixs.workflow.jee.faces.workitem.ViewController;
  * @author rsoika
  * 
  */
-public class ConfigMultiController extends DataController implements IViewAdapter {
+public class ConfigMultiController extends DocumentController  {
 
 	private static final long serialVersionUID = 1L;
 	private static Logger logger = Logger.getLogger(ConfigMultiController.class.getName());
 
 	
 	@EJB
-	private org.imixs.workflow.jee.ejb.EntityService entityService;
+	private DocumentService documentService;
 	
 	ViewController viewController = null;
 
@@ -88,7 +87,7 @@ public class ConfigMultiController extends DataController implements IViewAdapte
 	public void init() {
 		viewController = new ViewController();
 		viewController.setType(this.getDefaultType());
-		viewController.setView("worklist.modified.desc");
+		//viewController.setView("worklist.modified.desc");
 	}
 
 	/**
@@ -107,10 +106,6 @@ public class ConfigMultiController extends DataController implements IViewAdapte
 
 	}
 
-	@Override
-	public List<ItemCollection> getViewEntries(ViewController controller) {
-		return viewController.getWorkitems();
-	}
 
 	/**
 	 * Selects a singel config ItemCollection by Name
@@ -122,10 +117,12 @@ public class ConfigMultiController extends DataController implements IViewAdapte
 		ItemCollection configItemCollection = null;
 
 		// load / create config entity....
-		String sQuery = "SELECT config FROM Entity AS config " + " JOIN config.textItems AS t2"
-				+ " WHERE config.type = '" + getDefaultType() + "'" + " AND t2.itemName = 'txtname'" + " AND t2.itemValue = '"
-				+ name + "'" + " ORDER BY t2.itemValue asc";
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery, 0, 1);
+//		String sQuery = "SELECT config FROM Entity AS config " + " JOIN config.textItems AS t2"
+//				+ " WHERE config.type = '" + getDefaultType() + "'" + " AND t2.itemName = 'txtname'" + " AND t2.itemValue = '"
+//				+ name + "'" + " ORDER BY t2.itemValue asc";
+		
+		String sQuery="(type:\"" + getDefaultType() + "\" AND txtname:\"" + name + "\")";
+		Collection<ItemCollection> col = documentService.find(sQuery, 0, 1);
 
 		if (col.size() > 0) {
 			configItemCollection = col.iterator().next();

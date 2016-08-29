@@ -53,7 +53,6 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.WorkflowService;
 
 /**
  * This Plugin extends the Imixs Workflow Plugin.
@@ -68,10 +67,9 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
  * @author rsoika
  * @version 2.0
  */
-public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
+public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 
 	private ProfileService profileService = null;
-	private WorkflowService workflowService = null;
 
 	public static String PROFILESERVICE_NOT_BOUND = "PROFILESERVICE_NOT_BOUND";
 	public static String PROPERTYSERVICE_NOT_BOUND = "PROPERTYSERVICE_NOT_BOUND";
@@ -83,12 +81,6 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 	public void init(WorkflowContext actx) throws PluginException {
 
 		super.init(actx);
-
-		// get workflow service instance
-		if (actx instanceof WorkflowService) {
-			// yes we are running in a WorkflowService EJB
-			workflowService = (WorkflowService) actx;
-		}
 
 		// lookup profile service EJB
 		String jndiName = "ejb/ProfileService";
@@ -364,16 +356,19 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		String sUniqueID = itemCol.getItemValueString("$uniqueid");
 
 		// search entity...
-		String sQuery = " SELECT lobitem FROM Entity as lobitem"
-				+ " join lobitem.textItems as t1"
-				+ " join lobitem.textItems as t2"
-				+ " WHERE t1.itemName = 'type'"
-				+ " AND t1.itemValue = 'workitemlob'"
-				+ " AND t2.itemName = '$uniqueidref'" + " AND t2.itemValue = '"
-				+ sUniqueID + "'";
+//		String sQuery = " SELECT lobitem FROM Entity as lobitem"
+//				+ " join lobitem.textItems as t1"
+//				+ " join lobitem.textItems as t2"
+//				+ " WHERE t1.itemName = 'type'"
+//				+ " AND t1.itemValue = 'workitemlob'"
+//				+ " AND t2.itemName = '$uniqueidref'" + " AND t2.itemValue = '"
+//				+ sUniqueID + "'";
 
-		Collection<ItemCollection> itemcol = workflowService.getEntityService()
-				.findAllEntities(sQuery, 0, 1);
+		String sQuery="(type:\"workitemlob\" AND $uniqueidref:\""+sUniqueID + "\")";
+		
+		
+		Collection<ItemCollection> itemcol = getWorkflowService().getDocumentService()
+				.find(sQuery, 0, 1);
 		if (itemcol != null && itemcol.size() > 0) {
 			blobWorkitem = itemcol.iterator().next();
 		}

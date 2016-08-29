@@ -42,7 +42,8 @@ import javax.ejb.SessionContext;
 import javax.ejb.Singleton;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.util.PropertyService;
+import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.engine.PropertyService;
 
 /**
  * The Marty ProfileService is a sigelton EJB providing user attributes like the
@@ -69,7 +70,7 @@ public class ProfileService {
 	private static Logger logger = Logger.getLogger(ProfileService.class.getName());
 
 	@EJB
-	private org.imixs.workflow.jee.ejb.EntityService entityService;
+	private DocumentService documentService;
 
 	@EJB
 	private PropertyService propertyService;
@@ -229,13 +230,15 @@ public class ProfileService {
 
 		logger.fine("[ProfileService] lookupProfileById '" + userid + "'");
 		// lookup user profile....
-		String sQuery = "SELECT DISTINCT profile FROM Entity as profile " + " JOIN profile.textItems AS t2"
-				+ " WHERE  profile.type= 'profile' " + " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
-				+ userid + "' ";
+//		String sQuery = "SELECT DISTINCT profile FROM Entity as profile " + " JOIN profile.textItems AS t2"
+//				+ " WHERE  profile.type= 'profile' " + " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
+//				+ userid + "' ";
 
+
+		String sQuery="(type:\"profile\" AND txtname:\""+userid + "\")";
 		logger.finest("searchprofile: " + sQuery);
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery, 0, MAX_SEARCH_COUNT);
+		
+		Collection<ItemCollection> col = documentService.find(sQuery, 0, MAX_SEARCH_COUNT);
 
 		if (col.size() > 0) {
 			userProfile = col.iterator().next();
@@ -267,14 +270,17 @@ public class ProfileService {
 
 		logger.fine("[ProfileService] lookup profile '" + search + "'");
 		// lookup user profile....
-		String sQuery = "SELECT DISTINCT profile FROM Entity as profile " + " JOIN profile.textItems AS t1"
-				+ " JOIN profile.textItems AS t2" + " WHERE  profile.type= 'profile' "
-				+ " AND (  (t1.itemName = 'txtusername' AND t1.itemValue = '" + search + "') "
-				+ "      OR(t2.itemName = 'txtemail' AND t2.itemValue = '" + search + "')) ";
+//		String sQuery = "SELECT DISTINCT profile FROM Entity as profile " + " JOIN profile.textItems AS t1"
+//				+ " JOIN profile.textItems AS t2" + " WHERE  profile.type= 'profile' "
+//				+ " AND (  (t1.itemName = 'txtusername' AND t1.itemValue = '" + search + "') "
+//				+ "      OR(t2.itemName = 'txtemail' AND t2.itemValue = '" + search + "')) ";
+
+
+		String sQuery="(type:\"profile\" AND (txtusername:\""+search + "\" OR txtemail:\"search\") )";
 
 		logger.finest("searchprofile: " + sQuery);
 
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery, 0, MAX_SEARCH_COUNT);
+		Collection<ItemCollection> col = documentService.find(sQuery, 0, MAX_SEARCH_COUNT);
 
 		if (col.size() > 0) {
 			userProfile = col.iterator().next();

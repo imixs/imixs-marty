@@ -36,11 +36,10 @@ import java.util.logging.Logger;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.WorkflowKernel;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.engine.plugins.ResultPlugin;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.plugins.ResultPlugin;
-import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * The Marty TeamPlugin organizes the hierarchical order of a workitem between
@@ -104,42 +103,17 @@ public class TeamPlugin extends AbstractPlugin {
 	public static final String NO_PROCESS_ASSIGNED = "NO_PROCESS_ASSIGNED";
 
 	private ItemCollection documentContext;
-	private WorkflowService workflowService = null;
-	private EntityService entityService = null;
 	private static Logger logger = Logger.getLogger(TeamPlugin.class.getName());
 
 	private Map<String, ItemCollection> entityCache = null;
 
-	/**
-	 * Public getter method
-	 * 
-	 * @return
-	 */
-	public WorkflowService getWorkflowService() {
-		return workflowService;
-	}
-
-	/**
-	 * Public getter method
-	 * 
-	 * @return
-	 */
-	public EntityService getEntityService() {
-		return entityService;
-	}
-
+	
 	/**
 	 * Fetch workflowService and entityService from WorkflowContext
 	 */
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
-		// check for an instance of WorkflowService
-		if (actx instanceof WorkflowService) {
-			workflowService = (WorkflowService) actx;
-			entityService = workflowService.getEntityService();
-		}
-
 		// init cache
 		entityCache = new HashMap<String, ItemCollection>();
 	}
@@ -189,7 +163,7 @@ public class TeamPlugin extends AbstractPlugin {
 				ItemCollection entity = findEntity(aUniqueID);
 				if (entity != null && "process".equals(entity.getItemValueString("type"))) {
 					// update txtProcessRef
-					processRefList.add(entity.getItemValueString(EntityService.UNIQUEID));
+					processRefList.add(entity.getItemValueString(WorkflowKernel.UNIQUEID));
 				}
 			}
 			// update txtProcessRef
@@ -206,7 +180,7 @@ public class TeamPlugin extends AbstractPlugin {
 					if (entity == null) {
 						entity = findRefByName(aUniqueID, "process");
 						if (entity != null) {
-							String aID = entity.getItemValueString(EntityService.UNIQUEID);
+							String aID = entity.getItemValueString(WorkflowKernel.UNIQUEID);
 							logger.info(
 									"[TeamPlugin] processRefName '" + aUniqueID + "' translated into '" + aID + "'");
 							// verified
@@ -232,7 +206,7 @@ public class TeamPlugin extends AbstractPlugin {
 				ItemCollection entity = findEntity(aUniqueID);
 				if (entity != null && "space".equals(entity.getItemValueString("type"))) {
 					// update txtProcessRef
-					spaceRefList.add(entity.getItemValueString(EntityService.UNIQUEID));
+					spaceRefList.add(entity.getItemValueString(WorkflowKernel.UNIQUEID));
 				}
 			}
 			// update txtProcessRef
@@ -250,7 +224,7 @@ public class TeamPlugin extends AbstractPlugin {
 
 						entity = findRefByName(aUniqueID, "space");
 						if (entity != null) {
-							String aID = entity.getItemValueString(EntityService.UNIQUEID);
+							String aID = entity.getItemValueString(WorkflowKernel.UNIQUEID);
 							logger.info("[TeamPlugin] spaceRefName '" + aUniqueID + "' translated into '" + aID + "'");
 							// verified
 							aUniqueID = aID;
@@ -407,7 +381,7 @@ public class TeamPlugin extends AbstractPlugin {
 		ItemCollection entity = entityCache.get(id);
 		if (entity == null) {
 			// load entity
-			entity = entityService.load(id);
+			entity = this.getWorkflowService().getDocumentService().load(id);
 
 			if (entity == null) {
 				// add a dummy entry....
@@ -420,7 +394,7 @@ public class TeamPlugin extends AbstractPlugin {
 		}
 
 		// if entity is dummy return null
-		if (entity.getItemValueString(EntityService.UNIQUEID).isEmpty())
+		if (entity.getItemValueString(WorkflowKernel.UNIQUEID).isEmpty())
 			return null;
 		else
 			return entity;
@@ -438,7 +412,7 @@ public class TeamPlugin extends AbstractPlugin {
 		// activity. This will overwrite the current value!!
 		if (!"".equals(aActivityRefName)) {
 
-			ItemCollection entity = entityService.load(aActivityRefName);
+			ItemCollection entity =this.getWorkflowService().getDocumentService().load(aActivityRefName);
 			if (entity != null && !type.equals(entity.getItemValueString("type"))) {
 				entity = null;
 			}
@@ -447,7 +421,7 @@ public class TeamPlugin extends AbstractPlugin {
 				entity = findRefByName(aActivityRefName, type);
 			}
 			if (entity != null) {
-				sRef = entity.getItemValueString(EntityService.UNIQUEID);
+				sRef = entity.getItemValueString(WorkflowKernel.UNIQUEID);
 				logger.fine("[TeamPlugin] found ref from Activity for: " + aActivityRefName);
 			} else {
 				// throw a PLuginException
@@ -466,25 +440,29 @@ public class TeamPlugin extends AbstractPlugin {
 	 * need to be a little more tricky if we seach for spaces....
 	 */
 	private ItemCollection findRefByName(String aName, String type) {
-		String sQuery = "SELECT project FROM Entity AS project " + " JOIN project.textItems AS t2"
-				+ " WHERE  project.type = '" + type + "' " + " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
-				+ aName + "'";
+//		String sQuery = "SELECT project FROM Entity AS project " + " JOIN project.textItems AS t2"
+//				+ " WHERE  project.type = '" + type + "' " + " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
+//				+ aName + "'";
 
+		
+		String sQuery="(type:\"" + type + "\" AND txtname:\""+aName + "\")";
+	
+		
 		// because of the fact that spaces can be ordered in a hirachical order
 		// we need to be a little more tricky if we seach for spaces....
 		// Important: to find ambigous space names we search for maxount=2!
-		List<ItemCollection> col = entityService.findAllEntities(sQuery, 0, 2);
+		List<ItemCollection> col = this.getWorkflowService().getDocumentService().find(sQuery, 0, 2);
 
 		if (col.size() == 0) {
-			logger.warning("[TeamPlugin] findRefByName '" + aName + "' not found!");
+			logger.warning("findRefByName '" + aName + "' not found!");
 		} else {
 			if (col.size() > 1) {
-				logger.warning("[TeamPlugin] findRefByName '" + aName + "' is ambiguous!");
+				logger.warning("findRefByName '" + aName + "' is ambiguous!");
 			} else {
 				// we found one!
 				ItemCollection entity = col.iterator().next();
 				// update cache
-				entityCache.put(entity.getItemValueString(EntityService.UNIQUEID), entity);
+				entityCache.put(entity.getItemValueString(WorkflowKernel.UNIQUEID), entity);
 				return entity;
 			}
 

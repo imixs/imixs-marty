@@ -27,16 +27,15 @@
 
 package org.imixs.marty.plugins;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.Plugin;
-import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * This system model plug-in supports additional business logic for space
@@ -50,22 +49,9 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  */
 public class SpacePlugin extends AbstractPlugin {
 
-	private EntityService entityService = null;
 	private static Logger logger = Logger.getLogger(SpacePlugin.class.getName());
 	private ItemCollection space = null;
 
-	@Override
-	public void init(WorkflowContext actx) throws PluginException {
-		super.init(actx);
-
-		// check for an instance of WorkflowService
-		if (actx instanceof WorkflowService) {
-			// yes we are running in a WorkflowService EJB
-			WorkflowService ws = (WorkflowService) actx;
-			entityService = ws.getEntityService();
-		}
-
-	}
 
 	/**
 	 * The run method verifies if the workitem is from the type 'space'. Only in
@@ -102,7 +88,7 @@ public class SpacePlugin extends AbstractPlugin {
 		// test if the project has a subproject..
 		String sParentProjectID = space.getItemValueString("$uniqueidRef");
 		if (!sParentProjectID.isEmpty())
-			parentProject = entityService.load(sParentProjectID);
+			parentProject = getWorkflowService().getDocumentService().load(sParentProjectID);
 
 		if (parentProject != null && "space".equals(parentProject.getType())) {
 			logger.fine("Updating Parent Project Informations for '" + sParentProjectID + "'");
@@ -148,17 +134,26 @@ public class SpacePlugin extends AbstractPlugin {
 			aSubSpace.replaceItemValue("namParentManager", space.getItemValue("namManager"));
 			aSubSpace.replaceItemValue("namParentAssist", space.getItemValue("namAssist"));
 
-			this.entityService.save(aSubSpace);
+			getWorkflowService().getDocumentService().save(aSubSpace);
 		}
 	}
 
 	private List<ItemCollection> findAllSubSpaces(String sIDRef) {
 
-		String sQuery = "SELECT project FROM Entity AS project " + " JOIN project.textItems AS r"
-				+ " JOIN project.textItems AS n" + " WHERE project.type = 'space'" + " AND n.itemName = 'txtname' "
-				+ " AND r.itemName='$uniqueidref'" + " AND r.itemValue = '" + sIDRef + "' "
-				+ " ORDER BY n.itemValue asc";
+//		String sQuery = "SELECT project FROM Entity AS project " + " JOIN project.textItems AS r"
+//				+ " JOIN project.textItems AS n" + " WHERE project.type = 'space'" + " AND n.itemName = 'txtname' "
+//				+ " AND r.itemName='$uniqueidref'" + " AND r.itemValue = '" + sIDRef + "' "
+//				+ " ORDER BY n.itemValue asc";
+		
+		String sQuery="(type:\"space\" AND $uniqueidref:\""+sIDRef + "\")";
+		
+		// sort by txtname
 
-		return entityService.findAllEntities(sQuery, 0, -1);
+		List<ItemCollection> subSpaceList = getWorkflowService().getDocumentService().find(sQuery, 0, -1);
+		
+		// sort by txtname
+		Collections.sort(subSpaceList, new ItemCollectionComparator("txtname", true));
+	
+		return subSpaceList;
 	}
 }

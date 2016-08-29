@@ -40,8 +40,10 @@ import javax.inject.Named;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.model.ModelController;
 import org.imixs.marty.model.ProcessController;
+import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.engine.ModelService; 
+import org.imixs.workflow.engine.PropertyService;
 import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.util.PropertyService;
 
 /**
  * This Marty SetupController extends the Marty ConfigController and holds the
@@ -85,10 +87,10 @@ public class SetupController extends ConfigController {
 	protected ProcessController processController;
 
 	@EJB
-	protected org.imixs.workflow.jee.ejb.EntityService entityService;
+	protected DocumentService documentService;
 
 	@EJB
-	protected org.imixs.workflow.jee.ejb.ModelService modelService;
+	protected ModelService modelService;
 
 	@EJB
 	protected PropertyService propertyService;

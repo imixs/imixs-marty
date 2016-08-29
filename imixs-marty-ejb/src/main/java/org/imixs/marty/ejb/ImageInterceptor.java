@@ -23,7 +23,7 @@ import javax.interceptor.AroundInvoke;
 import javax.interceptor.InvocationContext;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.util.PropertyService;
+import org.imixs.workflow.engine.PropertyService;
 
 /**
  * This Intercepter class provides a mechanism to resize new uploaded images
@@ -199,6 +199,7 @@ public class ImageInterceptor {
 			Vector<Object> vectorFileInfo = new Vector<Object>();
 			vectorFileInfo = (Vector) mapFiles.get(file);
 			if (vectorFileInfo != null) {
+				@SuppressWarnings("unused")
 				String sContentType = vectorFileInfo.elementAt(0).toString();
 				byte[] fileContent = (byte[]) vectorFileInfo.elementAt(1);
 

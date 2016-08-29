@@ -13,7 +13,7 @@ import javax.persistence.ManyToMany;
  * object is managed by the UserDBPlugin.
  * 
  * @author rsoika
- * 
+ *  
  */
 @javax.persistence.Entity
 public class UserId implements java.io.Serializable {

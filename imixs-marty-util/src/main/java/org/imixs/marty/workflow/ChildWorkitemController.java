@@ -61,7 +61,7 @@ import org.imixs.workflow.exceptions.ProcessingErrorException;
  */
 @Named
 @ConversationScoped
-public class ChildWorkitemController extends org.imixs.workflow.jee.faces.workitem.WorkflowController
+public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.WorkflowController
 		implements Serializable {
 
 	/* Services */
@@ -176,8 +176,8 @@ public class ChildWorkitemController extends org.imixs.workflow.jee.faces.workit
 
 		if (getParentWorkitem() != null) {
 			String uniqueIdRef = getParentWorkitem().getItemValueString(WorkflowKernel.UNIQUEID);
-			List<ItemCollection> col = workflowController.getWorkflowService().getWorkListByRef(uniqueIdRef, 0, -1,
-					null, getSortOrder());
+			//  getWorkListByRef(String aref, String type, int pageSize, int pageIndex, int sortorder) {
+			List<ItemCollection> col = workflowController.getWorkflowService().getWorkListByRef(uniqueIdRef, "workitemchild",0, -1,0);
 			for (ItemCollection aWorkitem : col) {
 				resultList.add(cloneWorkitem(aWorkitem));
 			}

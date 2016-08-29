@@ -14,10 +14,10 @@ import org.imixs.marty.ejb.SystemWorkitemService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.WorkflowContext;
-import org.imixs.workflow.ejb.WorkflowService;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.engine.plugins.VersionPlugin;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.plugins.jee.VersionPlugin;
 
 /** 
  * This Plugin extends the Version Plugin mechanism and manages child workitems

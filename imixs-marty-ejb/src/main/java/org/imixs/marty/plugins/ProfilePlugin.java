@@ -42,10 +42,10 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * This plug-in supports additional business logic for profile entities. This
@@ -70,7 +70,6 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  */
 public class ProfilePlugin extends AbstractPlugin {
 
-	private EntityService entityService = null;
 	private ProfileService profileService = null;
 
 	private static Logger logger = Logger.getLogger(ProfilePlugin.class
@@ -92,13 +91,6 @@ public class ProfilePlugin extends AbstractPlugin {
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
-
-		// check for an instance of WorkflowService
-		if (actx instanceof WorkflowService) {
-			// yes we are running in a WorkflowService EJB
-			WorkflowService ws = (WorkflowService) actx;
-			entityService = ws.getEntityService();
-		}
 
 		// lookup profile service EJB
 		String jndiName = "ejb/ProfileService";
@@ -261,25 +253,29 @@ public class ProfilePlugin extends AbstractPlugin {
 		String sQuery;
 
 		// username provided?
-		if (sUserName != null && !"".equals(sUserName))
-			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-					+ " JOIN profile.textItems AS n"
-					+ " JOIN profile.textItems AS u"
-					+ " WHERE  profile.type = 'profile' "
-					+ " AND ((n.itemName = 'txtname' " + " AND n.itemValue = '"
-					+ sName + "') OR  (u.itemName = 'txtusername' "
-					+ " AND u.itemValue = '" + sUserName + "'))"
-					+ " AND profile.id<>'" + sID + "' ";
-		else
+		if (sUserName != null && !"".equals(sUserName)) {
+//			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+//					+ " JOIN profile.textItems AS n"
+//					+ " JOIN profile.textItems AS u"
+//					+ " WHERE  profile.type = 'profile' "
+//					+ " AND ((n.itemName = 'txtname' " + " AND n.itemValue = '"
+//					+ sName + "') OR  (u.itemName = 'txtusername' "
+//					+ " AND u.itemValue = '" + sUserName + "'))"
+//					+ " AND profile.id<>'" + sID + "' ";
+			
+			sQuery="(type:\"profile\" AND (txtname:\""+sName + "\" OR txtusername:\""+sUserName + "\")) AND (NOT $uniqueid:\"" + sID + "\")";
+		}
+		else {
 			// query only txtName
-			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-					+ " JOIN profile.textItems AS n" + " WHERE profile.id<>'"
-					+ sID + "' AND  profile.type = 'profile' "
-					+ " AND n.itemName = 'txtname' " + " AND n.itemValue = '"
-					+ sName + "'";
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, 1);
+//			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+//					+ " JOIN profile.textItems AS n" + " WHERE profile.id<>'"
+//					+ sID + "' AND  profile.type = 'profile' "
+//					+ " AND n.itemName = 'txtname' " + " AND n.itemValue = '"
+//					+ sName + "'";
+			sQuery="(type:\"profile\" AND txtname:\""+sName + "\") AND (NOT $uniqueid:\"" + sID + "\")";
+		}
+		
+		Collection<ItemCollection> col = this.getWorkflowService().getDocumentService().find(sQuery,0, 1);
 
 		return (col.size() == 0);
 
@@ -306,16 +302,21 @@ public class ProfilePlugin extends AbstractPlugin {
 		String sQuery;
 
 		// username provided?
-		if (!"".equals(sEmail))
-			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-					+ " JOIN profile.textItems AS n"
-					+ " WHERE  profile.type = 'profile' "
-					+ " AND (n.itemName = 'txtemail' " + " AND n.itemValue = '"
-					+ sEmail + "') " + " AND profile.id<>'" + sID + "' ";
-		else
+		if (!"".equals(sEmail)) {
+//			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
+//					+ " JOIN profile.textItems AS n"
+//					+ " WHERE  profile.type = 'profile' "
+//					+ " AND (n.itemName = 'txtemail' " + " AND n.itemValue = '"
+//					+ sEmail + "') " + " AND profile.id<>'" + sID + "' ";
+			
+			
+			sQuery="(type:\"profile\" AND txtemail:\""+sEmail + "\") AND (NOT $uniqueid:\"" + sID + "\")";
+		
+		}
+		else {
 			return true;
-
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+		}
+		Collection<ItemCollection> col = this.getWorkflowService().getDocumentService().find(sQuery,
 				0, 1);
 
 		return (col.size() == 0);

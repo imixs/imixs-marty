@@ -1,14 +1,16 @@
 package org.imixs.marty.view;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
 
 import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.faces.workitem.ViewController;
-import org.imixs.workflow.jee.faces.workitem.WorklistController;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.faces.workitem.ViewController;
+import org.imixs.workflow.faces.workitem.WorklistController;
 
 /**
  * This CDI Controller can be used to provide different worklist views. The
@@ -53,43 +55,25 @@ public class PortletWorklistTasks extends WorklistController {
 	final String QUERY_WORKLIST_BY_CREATOR = "worklist.creator";
 	final String QUERY_WORKLIST_BY_FAVORITE = "worklist.favorite";
 
+	private static Logger logger = Logger.getLogger(PortletWorklistTasks.class
+			.getName());
+
+	
 	@EJB
-	private org.imixs.workflow.jee.ejb.WorkflowService workflowService;
+	private WorkflowService workflowService;
 
 	@Inject
 	UserController userController;
 
-	public PortletWorklistTasks() {
-		super();
-		setViewAdapter(new PortletViewAdapter());
+	@Override
+	public List<ItemCollection> getWorkitems() {
+		
+		logger.warning("View Type not supported - undefined?");
+		// TODO Auto-generated method stub
+		return workflowService.getWorkListByAuthor(null, "workitem", getPageSize(), getPageIndex(), 0);
 	}
 
-	/**
-	 * Custom implementation of a ViewAdapter to return workflow specific result
-	 * lists.
-	 * 
-	 * @author rsoika
-	 * 
-	 */
-	class PortletViewAdapter extends ViewAdapter {
-
-		public List<ItemCollection> getViewEntries(
-				final ViewController controller) {
-
-			if (QUERY_WORKLIST_BY_CREATOR.equals(getView()))
-				return workflowService.getWorkListByCreator(null,
-						controller.getRow(), controller.getMaxResult(),
-						controller.getType(), getSortOrder());
-			if (QUERY_WORKLIST_BY_OWNER.equals(getView()))
-				return workflowService.getWorkListByOwner(null,
-						controller.getRow(), controller.getMaxResult(),
-						controller.getType(), getSortOrder());
-			if (QUERY_WORKLIST_BY_FAVORITE.equals(getView())) {
-				return userController.getFavorites();
-			}
-
-			// default behaivor
-			return super.getViewEntries(controller);
-		}
-	}
+	
+	
+	
 }

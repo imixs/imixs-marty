@@ -15,8 +15,8 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * This plugin computes for each name field (prafix = 'nam') if the user has a

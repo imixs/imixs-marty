@@ -89,7 +89,7 @@ public class SystemWorkitemService extends WorkitemService {
 	public ItemCollection save(ItemCollection entity)
 			throws AccessDeniedException {
 		logger.fine("Entity saved by SystemWorkitemService running with org.imixs.ACCESSLEVEL.MANAGERACCESS");
-		return entityService.save(entity);
+		return workflowService.getDocumentService().save(entity);
 
 	}
 }

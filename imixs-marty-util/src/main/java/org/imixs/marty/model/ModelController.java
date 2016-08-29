@@ -50,14 +50,13 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Model;
 import org.imixs.workflow.bpmn.BPMNModel;
 import org.imixs.workflow.bpmn.BPMNParser;
+import org.imixs.workflow.engine.ModelService;
+import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.ModelService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.jee.faces.fileupload.FileData;
-import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
+import org.imixs.workflow.faces.fileupload.FileData;
+import org.imixs.workflow.faces.fileupload.FileUploadController;
 import org.xml.sax.SAXException;
 
 /**
@@ -82,8 +81,6 @@ public class ModelController implements Serializable {
 	@Inject
 	protected FileUploadController fileUploadController;
 
-	@EJB
-	protected EntityService entityService;
 
 	@EJB
 	protected ModelService modelService;

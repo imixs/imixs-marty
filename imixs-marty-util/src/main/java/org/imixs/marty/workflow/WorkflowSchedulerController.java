@@ -40,9 +40,8 @@ import javax.faces.event.ActionEvent;
 import javax.inject.Named;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.WorkflowSchedulerService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
+import org.imixs.workflow.engine.WorkflowSchedulerService;
+import org.imixs.workflow.engine.WorkflowService;
 
 /**
  * This Bean acts a a front controller for the WorkflowScheduler Service.
@@ -61,8 +60,7 @@ public class WorkflowSchedulerController implements Serializable {
 	/* EJBs */
 	@EJB
 	WorkflowSchedulerService workflowSchedulerService;
-	@EJB
-	EntityService entityService;
+
 	@EJB
 	WorkflowService workflowService;
 

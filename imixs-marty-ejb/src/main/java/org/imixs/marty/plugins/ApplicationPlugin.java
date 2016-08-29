@@ -30,7 +30,6 @@ package org.imixs.marty.plugins;
 import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.PluginException;
 
 /**
@@ -42,15 +41,11 @@ import org.imixs.workflow.exceptions.PluginException;
  * @version 2.0
  * 
  */
-public class ApplicationPlugin extends org.imixs.workflow.plugins.ApplicationPlugin {
+public class ApplicationPlugin extends org.imixs.workflow.engine.plugins.ApplicationPlugin {
 	ItemCollection documentContext;
 
 	private static Logger logger = Logger.getLogger(ApplicationPlugin.class.getName());
 
-	@Override
-	public void init(WorkflowContext actx) throws PluginException {
-		super.init(actx);
-	}
 
 	@Override
 	public int run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {

@@ -38,6 +38,7 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 
@@ -92,7 +93,7 @@ public class SequenceService {
 
 	// Persistence Manager
 	@EJB
-	org.imixs.workflow.jee.ejb.EntityService entityService;
+	DocumentService documentService;
 
 	/**
 	 * This method computes the sequecne number based on a configuration entity
@@ -110,12 +111,15 @@ public class SequenceService {
 
 		ItemCollection configItemCollection = null;
 
-		String sQuery = "SELECT config FROM Entity AS config "
-				+ " JOIN config.textItems AS t2"
-				+ " WHERE config.type = 'configuration'"
-				+ " AND t2.itemName = 'txtname'"
-				+ " AND t2.itemValue = 'BASIC'" + " ORDER BY t2.itemValue asc";
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
+//		String sQuery = "SELECT config FROM Entity AS config "
+//				+ " JOIN config.textItems AS t2"
+//				+ " WHERE config.type = 'configuration'"
+//				+ " AND t2.itemName = 'txtname'"
+//				+ " AND t2.itemValue = 'BASIC'" + " ORDER BY t2.itemValue asc";
+		
+		String sQuery="(type:\"configuration\" AND txtname:\"BASIC\")";
+		
+		Collection<ItemCollection> col = documentService.find(sQuery,
 				0, 1);
 
 		if (col.size() > 0) {
@@ -125,6 +129,7 @@ public class SequenceService {
 			// exists
 			String sWorkflowGroup = aworkitem
 					.getItemValueString("txtWorkflowGroup");
+			@SuppressWarnings("unchecked")
 			List<String> vNumbers = configItemCollection
 					.getItemValue("sequencenumbers");
 			for (int i = 0; i < vNumbers.size(); i++) {
@@ -142,7 +147,7 @@ public class SequenceService {
 					vNumbers.set(i, sWorkflowGroup + "=" + newSequenceNumber);
 					configItemCollection.replaceItemValue("sequencenumbers",
 							vNumbers);
-					entityService.save(configItemCollection);
+					documentService.save(configItemCollection);
 					// return the new number
 					return currentSequenceNumber;
 				}
@@ -177,7 +182,7 @@ public class SequenceService {
 		// Save new Number
 		sequenceNumberObject.replaceItemValue(SEQUENCE_NAME, new Integer(
 				sequenceNumber));
-		entityService.save(sequenceNumberObject);
+		documentService.save(sequenceNumberObject);
 		return currentSequenceNumber;
 
 	}
@@ -206,7 +211,7 @@ public class SequenceService {
 		// Save new Number
 		sequenceNumberObject.replaceItemValue(SEQUENCE_NAME,
 				new Integer(aNewID));
-		entityService.save(sequenceNumberObject);
+		documentService.save(sequenceNumberObject);
 
 	}
 
@@ -223,7 +228,7 @@ public class SequenceService {
 			throw new PluginException(SequenceService.class.getName(),SEQUENCE_ERROR,
 					"WARNING: SequenceService : No $UniqueIDRef defined");
 
-		ItemCollection parent = entityService.load(sParentID);
+		ItemCollection parent = documentService.load(sParentID);
 
 		return parent;
 	}

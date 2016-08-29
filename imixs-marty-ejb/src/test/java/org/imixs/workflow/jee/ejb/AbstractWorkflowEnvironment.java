@@ -22,12 +22,11 @@ import org.imixs.workflow.ModelManager;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.bpmn.BPMNModel;
 import org.imixs.workflow.bpmn.BPMNParser;
+import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.engine.ModelService;
+import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.AbstractWorkflowEnvironment;
-import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.ModelService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.junit.Before;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -62,7 +61,7 @@ public class AbstractWorkflowEnvironment {
 
 	Map<String, ItemCollection> database = null;
 
-	protected EntityService entityService;
+	protected DocumentService documentService;
 
 	// @Spy
 	protected WorkflowService workflowService;
@@ -96,9 +95,9 @@ public class AbstractWorkflowEnvironment {
 		when(ctx.getCallerPrincipal()).thenReturn(principal);
 
 		// mock Entity service
-		entityService = Mockito.mock(EntityService.class);
+		documentService = Mockito.mock(DocumentService.class);
 		// Simulate fineProfile("1.0.0") -> entityService.load()...
-		when(entityService.load(Mockito.anyString())).thenAnswer(new Answer<ItemCollection>() {
+		when(documentService.load(Mockito.anyString())).thenAnswer(new Answer<ItemCollection>() {
 			@Override
 			public ItemCollection answer(InvocationOnMock invocation) throws Throwable {
 				Object[] args = invocation.getArguments();
@@ -113,7 +112,7 @@ public class AbstractWorkflowEnvironment {
 		});
 
 		// simulate save() method
-		when(entityService.save(Mockito.any(ItemCollection.class))).thenAnswer(new Answer<ItemCollection>() {
+		when(documentService.save(Mockito.any(ItemCollection.class))).thenAnswer(new Answer<ItemCollection>() {
 			@Override
 			public ItemCollection answer(InvocationOnMock invocation) throws Throwable {
 				Object[] args = invocation.getArguments();
@@ -132,8 +131,8 @@ public class AbstractWorkflowEnvironment {
 		// Mock WorkflowService
 		workflowService = Mockito.mock(WorkflowService.class);
 		workflowContext = Mockito.mock(WorkflowContext.class);
-		workflowService.documentService = entityService;
-		workflowService.ctx = ctx;
+		when(workflowService.getDocumentService()).thenReturn(documentService);
+		//workflowService.ctx = ctx;
 		ModelManager modelManager = Mockito.mock(ModelManager.class);
 		try {
 			when(modelManager.getModel(Mockito.anyString())).thenReturn(this.getModel());
@@ -142,7 +141,6 @@ public class AbstractWorkflowEnvironment {
 			e.printStackTrace();
 		}
 		when(workflowContext.getModelManager()).thenReturn(modelManager);
-		workflowService.modelService = modelService;
 		/*
 		 * try {
 		 * //when(modelService.getModel(Mockito.anyString())).thenCallRealMethod

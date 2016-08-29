@@ -33,13 +33,13 @@ import java.util.logging.Logger;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.engine.plugins.ResultPlugin;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
-import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.plugins.ResultPlugin;
-import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * The SubprocessPlugin evaluates the Result Attribute of the ActivityEntity for

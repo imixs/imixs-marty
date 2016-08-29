@@ -20,9 +20,5 @@
 			<artifactId>imixs-workflow-engine</artifactId>
 			<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
 		</dependency>
-		<dependency>
-			<groupId>org.imixs.workflow</groupId>
-			<artifactId>imixs-adapters-lucene-ejb</artifactId>
-		</dependency>
 	</dependencies>
 </project>
