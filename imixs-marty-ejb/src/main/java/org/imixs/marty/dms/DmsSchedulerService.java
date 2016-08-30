@@ -111,7 +111,7 @@ public class DmsSchedulerService {
 //				+ " AND t2.itemValue = '" + NAME + "'"
 //				+ " ORDER BY t2.itemValue asc";
 //		
-		Collection<ItemCollection> col =  documentService.getDocumentsByType(TYPE, 0, 1);
+		Collection<ItemCollection> col =  documentService.getDocumentsByType(TYPE);
 		
 		if (col.size() > 0) {
 			configItemCollection = col.iterator().next();

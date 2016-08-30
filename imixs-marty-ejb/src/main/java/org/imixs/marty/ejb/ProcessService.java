@@ -111,7 +111,7 @@ public class ProcessService {
 //				+ " AND t2.itemName = 'txtname'" + " ORDER BY t2.itemValue asc";
 //		
 		
-		Collection<ItemCollection> col = documentService.getDocumentsByType("process",	0, -1);
+		Collection<ItemCollection> col = documentService.getDocumentsByType("process");
 
 		// create optimized list
 		for (ItemCollection process : col) {
@@ -136,7 +136,7 @@ public class ProcessService {
 //		Collection<ItemCollection> col = documentService.findAllEntities(sQuery,
 //				0, -1);
 		
-		Collection<ItemCollection> col = documentService.getDocumentsByType("process",	0, -1);
+		Collection<ItemCollection> col = documentService.getDocumentsByType("process");
 
 
 		// create optimized list
