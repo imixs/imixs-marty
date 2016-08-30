@@ -1,14 +1,18 @@
 package org.imixs.marty.ejb;
 
+import java.util.Collection;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.logging.Logger;
 
-import javax.ejb.EJB;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.InvocationContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.engine.jpa.Document;
 
 /**
  * This Intercepter class provides a mechanism to provide database based
@@ -39,8 +43,8 @@ public class PropertyInterceptor {
 	private static Logger logger = Logger.getLogger(PropertyInterceptor.class
 			.getName());
 
-	@EJB
-	ConfigService configService;
+	@PersistenceContext(unitName = "org.imixs.workflow.jpa")
+	private EntityManager manager;
 
 	/**
 	 * The interceptor method tests if a configuration entity with the name
@@ -68,15 +72,14 @@ public class PropertyInterceptor {
 				// check if the properties are already updated
 				if (!"true".equals(((Properties) result)
 						.getProperty(INTERCEPTOR_FLAG))) {
-					// get the BASIC configuration entity
-					ItemCollection basicConfig = configService
-							.loadConfiguration("BASIC");
+					
+					ItemCollection basicConfig = getBasicConfigurationDocument();
 					if (basicConfig != null) {
 						// read properties
 						Vector<?> v = (Vector<?>) basicConfig
 								.getItemValue("properties");
 						if (v.size() > 0) {
-							logger.info("[PropertyInterceptor] Update imixs.properties");
+							logger.info("Update imixs.properties");
 							for (Object o : v) {
 								
 								
@@ -87,7 +90,7 @@ public class PropertyInterceptor {
 									
 									String sValue=sProperty.substring(sProperty.indexOf('=')+1);
 									
-									logger.fine("[PropertyInterceptor] Overwrite property/value: "
+									logger.fine("Overwrite property/value: "
 										+ sKey + "=" + sValue);
 									((Properties) result).setProperty(sKey, sValue);
 								}
@@ -105,4 +108,37 @@ public class PropertyInterceptor {
 
 	}
 
+	
+	
+	/**
+	 * Returns the 'BASIC' configuration Document entity by using the EntityManager native.
+	 * 
+	 * @param query
+	 *            - JPQL statement
+	 * @return
+	 * 
+	 */
+	public ItemCollection getBasicConfigurationDocument() {
+		// select all documenty by type
+		String query = "SELECT document FROM Document AS document ";
+		query += " WHERE document.type = 'configuration'";
+		query += " ORDER BY document.created DESC";
+		Query q = manager.createQuery(query);
+
+		@SuppressWarnings("unchecked")
+		Collection<Document> documentList = q.getResultList();
+		if (documentList != null) {
+
+			// filter resultset by read access
+			for (Document doc : documentList) {
+				// check name = "BASIC"
+				ItemCollection configDocument=new ItemCollection(doc.getData());
+				if (configDocument.getItemValueString("txtname").equals("BASIC")) {
+					return configDocument;
+				}
+			}
+		}
+		logger.fine("BASIC configuration not found.");
+		return null;
+	}
 }

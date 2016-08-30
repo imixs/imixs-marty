@@ -45,7 +45,7 @@ import org.imixs.workflow.engine.ModelService;
 import org.imixs.workflow.engine.PropertyService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
-import org.imixs.workflow.xml.EntityCollection;
+import org.imixs.workflow.xml.DocumentCollection;
 import org.imixs.workflow.xml.XMLItemCollection;
 import org.imixs.workflow.xml.XMLItemCollectionAdapter;
 
@@ -109,18 +109,18 @@ public class SetupService {
 			List<String> colModelVersions = modelService.getVersions();
 			
 			if (!colModelVersions.isEmpty()) {
-				logger.info("[SetupService] model - ok");
+				logger.info("loadDefaultModels - model - ok");
 				return;
 			}
 
-			logger.info("[SetupService] check system model...");
+			logger.info("loadDefaultModels - check system model...");
 			String sDefaultModelList=propertyService.getProperties().getProperty("setup.defaultModel");
 			if (sDefaultModelList== null || sDefaultModelList.isEmpty()) {
 				logger.warning("[SetupService] setup.defaultModel key is not defined in 'imixs.properties' - no default model imported!");
 				return;
 			}
 			
-			logger.fine("[SetupService] setup.defaultModel=" + sDefaultModelList);
+			logger.fine("loadDefaultModels - setup.defaultModel=" + sDefaultModelList);
 			
 			StringTokenizer stModelList=new StringTokenizer(sDefaultModelList,",",false);
 		
@@ -150,7 +150,7 @@ public class SetupService {
 		} catch (Exception e) {
 			logger.severe("[SetupService] unable to load model configuration - please check imixs.properties file for key 'setup.defaultModel'");
 			throw new RuntimeException(
-					"[SetupService] unable to load model configuration - please check imixs.properties file for key 'setup.defaultModel'");
+					"loadDefaultModels - unable to load model configuration - please check imixs.properties file for key 'setup.defaultModel'");
 		}
 
 	}
@@ -175,15 +175,15 @@ public class SetupService {
 		try {
 			
 			
-			EntityCollection ecol = null;
-			logger.info("[ModelService] importModel, verifing file content....");
+			DocumentCollection ecol = null;
+			logger.fine("importXmlEntityData - importModel, verifing file content....");
 
 			JAXBContext context;
 			Object jaxbObject = null;
 			// unmarshall the model file
 			ByteArrayInputStream input = new ByteArrayInputStream(filestream);
 			try {
-				context = JAXBContext.newInstance(EntityCollection.class);
+				context = JAXBContext.newInstance(DocumentCollection.class);
 				Unmarshaller m = context.createUnmarshaller();
 				jaxbObject = m.unmarshal(input);
 			} catch (JAXBException e) {
@@ -194,14 +194,14 @@ public class SetupService {
 				throw new ModelException(ModelException.INVALID_MODEL,
 						"error - wrong xml file format - unable to import model file!");
 
-			ecol = (EntityCollection) jaxbObject;
+			ecol = (DocumentCollection) jaxbObject;
 			// import the model entities....
-			if (ecol.getEntity().length > 0) {
+			if (ecol.getDocument().length > 0) {
 		
 				Vector<String> vModelVersions = new Vector<String>();
 				// first iterrate over all enttity and find if model entries are
 				// included
-				for (XMLItemCollection aentity : ecol.getEntity()) {
+				for (XMLItemCollection aentity : ecol.getDocument()) {
 					itemCollection = XMLItemCollectionAdapter
 							.getItemCollection(aentity);
 					// test if this is a model entry
@@ -219,20 +219,20 @@ public class SetupService {
 				}
 				// now remove old model entries....
 				for (String aModelVersion : vModelVersions) {
-					logger.info("[SetupService] removing existing configuration for model version '"
+					logger.fine("importXmlEntityData - removing existing configuration for model version '"
 							+ aModelVersion + "'");
 					modelService.removeModel(aModelVersion);
 				}
 				// save new entities into database and update modelversion.....
-				for (int i = 0; i < ecol.getEntity().length; i++) {
-					entity = ecol.getEntity()[i];
+				for (int i = 0; i < ecol.getDocument().length; i++) {
+					entity = ecol.getDocument()[i];
 					itemCollection = XMLItemCollectionAdapter
 							.getItemCollection(entity);
 					// save entity
 					documentService.save(itemCollection);
 				}
 
-				logger.info("[SetupService] " + ecol.getEntity().length
+				logger.fine("importXmlEntityData - " + ecol.getDocument().length
 						+ " entries sucessfull imported");
 			}
 
