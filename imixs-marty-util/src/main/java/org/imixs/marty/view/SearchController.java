@@ -82,7 +82,7 @@ import org.imixs.workflow.engine.lucene.LuceneSearchService;
 @Named("searchController")
 @SessionScoped 
 public class SearchController extends
-		org.imixs.workflow.faces.workitem.WorklistController implements
+		org.imixs.workflow.faces.workitem.ViewController implements
 		Serializable {
 
 	private static final long serialVersionUID = 1L;

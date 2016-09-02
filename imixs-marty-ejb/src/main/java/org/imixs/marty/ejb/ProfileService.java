@@ -222,9 +222,9 @@ public class ProfileService {
 		}
 
 		// lower case userId
-		if (useLowerCaseUserID())
+		if (useLowerCaseUserID()) {
 			userid = userid.toLowerCase();
-
+		}
 		// try to get name out from cache
 		ItemCollection userProfile = null;
 
@@ -238,7 +238,7 @@ public class ProfileService {
 		String sQuery="(type:\"profile\" AND txtname:\""+userid + "\")";
 		logger.finest("searchprofile: " + sQuery);
 		
-		Collection<ItemCollection> col = documentService.find(sQuery, 0, MAX_SEARCH_COUNT);
+		Collection<ItemCollection> col = documentService.find(sQuery, 1, 0);
 
 		if (col.size() > 0) {
 			userProfile = col.iterator().next();

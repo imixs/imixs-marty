@@ -545,8 +545,7 @@ public class UserController implements Serializable {
 		}
 		// create IN list
 		sQuery+=" ( ";
-		for (String aID : favorites) {
-			
+		for (String aID : favorites) {			
 			sQuery += "$uniqueid:\"" + aID + "\" OR ";
 		}
 		// cut last ,
