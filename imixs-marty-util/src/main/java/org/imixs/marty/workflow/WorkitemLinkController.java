@@ -288,7 +288,7 @@ public class WorkitemLinkController implements Serializable {
 			// cut last ,
 			sQuery = sQuery.substring(0, sQuery.length() - 3);
 		
-			sQuery +=" ))";
+			sQuery +=" )";
 
 			List<ItemCollection> workitems = workflowService.getDocumentService().find(sQuery, 0, -1);
 			

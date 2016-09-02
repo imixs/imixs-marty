@@ -56,8 +56,8 @@ public class TestCommentPlugin extends AbstractWorkflowEnvironment {
 		ctx = Mockito.mock(SessionContext.class);
 		Principal principal = Mockito.mock(Principal.class);
 		when(principal.getName()).thenReturn("manfred");
-		when(commentPlugin.getEjbSessionContext()).thenReturn(ctx);
-		when(commentPlugin.getEjbSessionContext().getCallerPrincipal()).thenReturn(principal);
+//		when(commentPlugin.getEjbSessionContext()).thenReturn(ctx);
+//		when(commentPlugin.getEjbSessionContext().getCallerPrincipal()).thenReturn(principal);
 
 		// init plugin..
 		try {

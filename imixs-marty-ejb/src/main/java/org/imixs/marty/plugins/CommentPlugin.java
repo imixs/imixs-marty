@@ -91,7 +91,7 @@ public class CommentPlugin extends AbstractPlugin {
 		List<Map<String, Object>> vCommentList = documentContext.getItemValue("txtCommentLog");
 		Map<String, Object> log = new HashMap<String, Object>();
 		Date dt = Calendar.getInstance().getTime();
-		String remoteUser = this.getEjbSessionContext().getCallerPrincipal().getName();
+		String remoteUser = this.getWorkflowService().getUserName();
 		log.put("datcomment", dt);
 		log.put("nameditor", remoteUser);
 

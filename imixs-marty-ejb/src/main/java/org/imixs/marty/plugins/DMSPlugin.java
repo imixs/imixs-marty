@@ -122,7 +122,7 @@ public class DMSPlugin extends AbstractPlugin {
 		workitem.replaceItemValue(BLOBWORKITEMID, blobWorkitem.getItemValueString(EntityService.UNIQUEID));
 
 		// update the dms list - e.g. if another plugin had added a file....
-		updateDmsList(workitem, this.getUserName());
+		updateDmsList(workitem, this.getWorkflowService().getUserName());
 
 		return Plugin.PLUGIN_OK;
 	}

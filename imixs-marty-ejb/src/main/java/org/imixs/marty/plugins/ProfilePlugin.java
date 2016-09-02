@@ -170,7 +170,8 @@ public class ProfilePlugin extends AbstractPlugin {
 		String sUsername = profile.getItemValueString("txtName");
 		String sEmail = profile.getItemValueString("txtEmail");
 
-		if (this.getUserName() == null || this.getUserName().isEmpty()) {
+		
+		if (this.getWorkflowService().getUserName() == null || this.getWorkflowService().getUserName().isEmpty()) {
 			throw new PluginException(ProfilePlugin.class.getSimpleName(),
 					INVALID_USERNAME, "Invalid username - username is empty");
 		}
@@ -178,7 +179,7 @@ public class ProfilePlugin extends AbstractPlugin {
 		// update the txtname if not already set
 		if ("".equals(sUsername)) {
 			// trim and lower case username!
-			sUsername = this.getUserName().toLowerCase().trim();
+			sUsername = this.getWorkflowService().getUserName().toLowerCase().trim();
 			logger.fine("initialize profile with username: " + sUsername);
 			profile.replaceItemValue("txtName", sUsername);
 		}
