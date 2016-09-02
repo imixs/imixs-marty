@@ -36,7 +36,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
-import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
 import javax.faces.event.ActionEvent;
@@ -45,22 +44,13 @@ import javax.inject.Named;
 
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.lucene.LuceneSearchService;
 
 /**
- * The Marty SearchController extends the Imixs WorklistController and provides
+ * The Marty SearchController extends the Imixs ViewController and provides
  * custom filter and search queries to request a individual WorkList result. The
  * ItemCollection search filter defines custom filter criteria for a customized
  * search result.
- * 
- * The SearchController provides a inner class 'ViewAdapter' to compute the
- * WorkList result based on the search filter. The SearchController provides two
- * modes. The JPQL mode and the search mode. The ViewAdapter method
- * 'findWorkitems' uses a JQPL statement to return a view result. The
- * ViewAdapter method 'searchWorkitems' performs a Lucene Search to return a
- * search result. Both statements are computed by a IQuerBuilder instance which
- * can be injected.
  * 
  * To customize the result an alternative CDI IQueryBuilder bean an be injected.
  * 
@@ -68,10 +58,8 @@ import org.imixs.workflow.engine.lucene.LuceneSearchService;
  * The SearchController has a set of predefined filter properties:
  * 
  * <ul>
- * <li>
- * txtProcessRef = holds a reference to a core process entity</li>
- * <li>
- * txtSpaceRef = holds a list of project references</li>
+ * <li>txtProcessRef = holds a reference to a core process entity</li>
+ * <li>txtSpaceRef = holds a list of project references</li>
  * </ul>
  * 
  * @See QueryBuilder, IQueryBuilder
@@ -80,23 +68,13 @@ import org.imixs.workflow.engine.lucene.LuceneSearchService;
  */
 
 @Named("searchController")
-@SessionScoped 
-public class SearchController extends
-		org.imixs.workflow.faces.workitem.ViewController implements
-		Serializable {
+@SessionScoped
+public class SearchController extends org.imixs.workflow.faces.workitem.ViewController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private static Logger logger = Logger.getLogger(SearchController.class
-			.getName());
+	private static Logger logger = Logger.getLogger(SearchController.class.getName());
 
 	private ItemCollection searchFilter = null;
-
-
-	@EJB
-	protected WorkflowService workflowService;
-
-	
-	
 
 	/**
 	 * Resets the search filter and the current result.
@@ -183,11 +161,9 @@ public class SearchController extends
 			return;
 		}
 		// skip if not a workItem...
-		if (!workflowEvent.getWorkitem().getItemValueString("type")
-				.startsWith("workitem"))
+		if (!workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
 			return;
-		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
-				.getEventType()) {
+		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
 			doRefresh();
 		}
 	}
@@ -202,7 +178,6 @@ public class SearchController extends
 		this.searchFilter = searchFilter;
 	}
 
-	
 	/**
 	 * Returns a Lucene search query based on the define searchFilter parameter
 	 * set
@@ -221,156 +196,148 @@ public class SearchController extends
 	@Override
 	public String getQuery() {
 		// read the filter parameters and removes duplicates
-				// and empty entries
+		List<Integer> processIDs = searchFilter.getItemValue("$ProcessID");
+		List<String> processRefList = searchFilter.getItemValue("txtProcessRef");
+		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
+		List<String> workflowGroups = searchFilter.getItemValue("txtWorkflowGroup");
+		// trim lists
+		while (processIDs.contains(""))
+			processIDs.remove("");
+		while (processRefList.contains(""))
+			processRefList.remove("");
+		while (spacesRefList.contains(""))
+			spacesRefList.remove("");
+		while (workflowGroups.contains(""))
+			workflowGroups.remove("");
+		while (processRefList.contains("-"))
+			processRefList.remove("-");
+		while (spacesRefList.contains("-"))
+			spacesRefList.remove("-");
 
-				List<Integer> processIDs = searchFilter.getItemValue("$ProcessID");
-				List<String> processRefList = searchFilter.getItemValue("txtProcessRef");
-				List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
-				List<String> workflowGroups = searchFilter.getItemValue("txtWorkflowGroup");
+		List<String> typeList = searchFilter.getItemValue("Type");
+		if (typeList.isEmpty() || "".equals(typeList.get(0))) {
+			typeList = Arrays.asList(new String[] { "workitem", "workitemarchive" });
+		}
 
-				// trim lists
-				while (processIDs.contains(""))
-					processIDs.remove("");
-				while (processRefList.contains(""))
-					processRefList.remove("");
-				while (spacesRefList.contains(""))
-					spacesRefList.remove("");
-				while (workflowGroups.contains(""))
-					workflowGroups.remove("");
-				while (processRefList.contains("-"))
-					processRefList.remove("-");
-				while (spacesRefList.contains("-"))
-					spacesRefList.remove("-");
+		String sSearchTerm = "";
 
-				List<String> typeList = searchFilter.getItemValue("Type");
-				if (typeList.isEmpty() || "".equals(typeList.get(0))) {
-					typeList = Arrays.asList(new String[] { "workitem", "workitemarchive" });
-				}
+		// convert type list into comma separated list
+		String sTypeQuery = "";
+		Iterator<String> iterator = typeList.iterator();
+		while (iterator.hasNext()) {
+			sTypeQuery += "type:\"" + iterator.next() + "\"";
+			if (iterator.hasNext())
+				sTypeQuery += " OR ";
+		}
+		sSearchTerm += "(" + sTypeQuery + ") AND";
 
-				String sSearchTerm = "";
-			
-				// convert type list into comma separated list
-				String sTypeQuery = "";
-				Iterator<String> iterator = typeList.iterator();
-				while (iterator.hasNext()) {
-					sTypeQuery += "type:\"" + iterator.next() + "\"";
-					if (iterator.hasNext())
-						sTypeQuery += " OR ";
-				}
-				sSearchTerm += "(" + sTypeQuery + ") AND";
+		// test if result should be restricted to creator?
+		String sCreator = searchFilter.getItemValueString("namCreator");
 
-				// test if result should be restricted to creator?
-				String sCreator = searchFilter.getItemValueString("namCreator");
-				
-				// test if result should be restricted to owner?
-				String sOwner = searchFilter.getItemValueString("namOwner");
-				
+		// test if result should be restricted to owner?
+		String sOwner = searchFilter.getItemValueString("namOwner");
 
-				Date datFrom = searchFilter.getItemValueDate("datFrom");
-				Date datTo = searchFilter.getItemValueDate("datTo");
+		Date datFrom = searchFilter.getItemValueDate("datFrom");
+		Date datTo = searchFilter.getItemValueDate("datTo");
 
-				// process ref
-				if (!processRefList.isEmpty()) {
-					sSearchTerm += " (";
-					iterator = processRefList.iterator();
-					while (iterator.hasNext()) {
-						sSearchTerm += "$uniqueidref:\"" + iterator.next() + "\"";
-						if (iterator.hasNext())
-							sSearchTerm += " OR ";
-					}
-					sSearchTerm += " ) AND";
-				}
+		// process ref
+		if (!processRefList.isEmpty()) {
+			sSearchTerm += " (";
+			iterator = processRefList.iterator();
+			while (iterator.hasNext()) {
+				sSearchTerm += "$uniqueidref:\"" + iterator.next() + "\"";
+				if (iterator.hasNext())
+					sSearchTerm += " OR ";
+			}
+			sSearchTerm += " ) AND";
+		}
 
-				// Space ref
-				if (!spacesRefList.isEmpty()) {
-					sSearchTerm += " (";
-					iterator = spacesRefList.iterator();
-					while (iterator.hasNext()) {
-						sSearchTerm += "$uniqueidref:\"" + iterator.next() + "\"";
-						if (iterator.hasNext())
-							sSearchTerm += " OR ";
-					}
-					sSearchTerm += " ) AND";
-				}
+		// Space ref
+		if (!spacesRefList.isEmpty()) {
+			sSearchTerm += " (";
+			iterator = spacesRefList.iterator();
+			while (iterator.hasNext()) {
+				sSearchTerm += "$uniqueidref:\"" + iterator.next() + "\"";
+				if (iterator.hasNext())
+					sSearchTerm += " OR ";
+			}
+			sSearchTerm += " ) AND";
+		}
 
-				// Workflow Group...
-				if (!workflowGroups.isEmpty()) {
-					sSearchTerm += " (";
-					iterator = workflowGroups.iterator();
-					while (iterator.hasNext()) {
-						sSearchTerm += "txtworkflowgroup:\"" + iterator.next() + "\"";
-						if (iterator.hasNext())
-							sSearchTerm += " OR ";
-					}
-					sSearchTerm += " ) AND";
+		// Workflow Group...
+		if (!workflowGroups.isEmpty()) {
+			sSearchTerm += " (";
+			iterator = workflowGroups.iterator();
+			while (iterator.hasNext()) {
+				sSearchTerm += "txtworkflowgroup:\"" + iterator.next() + "\"";
+				if (iterator.hasNext())
+					sSearchTerm += " OR ";
+			}
+			sSearchTerm += " ) AND";
 
-				}
+		}
 
-				// serach date range?
-				String sDateFrom = "191401070000"; // because * did not work here
-				String sDateTo = "211401070000";
-				SimpleDateFormat dateformat = new SimpleDateFormat("yyyyMMddHHmm");
+		// serach date range?
+		String sDateFrom = "191401070000"; // because * did not work here
+		String sDateTo = "211401070000";
+		SimpleDateFormat dateformat = new SimpleDateFormat("yyyyMMddHHmm");
 
-				if (datFrom != null) {
-					Calendar cal = Calendar.getInstance();
-					cal.setTime(datFrom);
-					sDateFrom = dateformat.format(cal.getTime());
-				}
-				if (datTo != null) {
-					Calendar cal = Calendar.getInstance();
-					cal.setTime(datTo);
-					cal.add(Calendar.DATE, 1);
-					sDateTo = dateformat.format(cal.getTime());
-				}
+		if (datFrom != null) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(datFrom);
+			sDateFrom = dateformat.format(cal.getTime());
+		}
+		if (datTo != null) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(datTo);
+			cal.add(Calendar.DATE, 1);
+			sDateTo = dateformat.format(cal.getTime());
+		}
 
-				if (datFrom != null || datTo != null) {
-					// expected format $created:[20020101 TO 20030101]
-					sSearchTerm += " ($created:[" + sDateFrom + " TO " + sDateTo + "]) AND";
-				}
+		if (datFrom != null || datTo != null) {
+			// expected format $created:[20020101 TO 20030101]
+			sSearchTerm += " ($created:[" + sDateFrom + " TO " + sDateTo + "]) AND";
+		}
 
-				// creator
-				if (!"".equals(sCreator)) {
-					sSearchTerm += " (namcreator:\"" + sCreator.toLowerCase() + "\") AND";
-				}
+		// creator
+		if (!"".equals(sCreator)) {
+			sSearchTerm += " (namcreator:\"" + sCreator.toLowerCase() + "\") AND";
+		}
 
-				// owner
-				if (!"".equals(sCreator)) {
-					sSearchTerm += " (namowner:\"" + sOwner.toLowerCase() + "\") AND";
-				}
+		// owner
+		if (!"".equals(sCreator)) {
+			sSearchTerm += " (namowner:\"" + sOwner.toLowerCase() + "\") AND";
+		}
 
-				if (!processIDs.isEmpty()) {
-					sSearchTerm += " (";
-					Iterator<Integer> iteratorID = processIDs.iterator();
-					while (iteratorID.hasNext()) {
-						sSearchTerm += "$processid:\"" + iteratorID.next() + "\"";
-						if (iteratorID.hasNext())
-							sSearchTerm += " OR ";
-					}
-					sSearchTerm += " ) AND";
-				}
+		if (!processIDs.isEmpty()) {
+			sSearchTerm += " (";
+			Iterator<Integer> iteratorID = processIDs.iterator();
+			while (iteratorID.hasNext()) {
+				sSearchTerm += "$processid:\"" + iteratorID.next() + "\"";
+				if (iteratorID.hasNext())
+					sSearchTerm += " OR ";
+			}
+			sSearchTerm += " ) AND";
+		}
 
-				// Search phrase....
-				String searchphrase = searchFilter.getItemValueString("txtSearch");
-				// escape search phrase
-				searchphrase = LuceneSearchService.normalizeSearchTerm(searchphrase);
+		// Search phrase....
+		String searchphrase = searchFilter.getItemValueString("txtSearch");
+		// escape search phrase
+		searchphrase = LuceneSearchService.normalizeSearchTerm(searchphrase);
 
-				if (!"".equals(searchphrase)) {
-					// trim
-					searchphrase = searchphrase.trim();
-					// lower case....
-					searchphrase = searchphrase.toLowerCase();
-					sSearchTerm += " (" + searchphrase + ") ";
-				} else
-				// cut last AND
-				if (sSearchTerm.endsWith("AND"))
-					sSearchTerm = sSearchTerm.substring(0, sSearchTerm.length() - 3);
+		if (!"".equals(searchphrase)) {
+			// trim
+			searchphrase = searchphrase.trim();
+			// lower case....
+			searchphrase = searchphrase.toLowerCase();
+			sSearchTerm += " (" + searchphrase + ") ";
+		} else
+		// cut last AND
+		if (sSearchTerm.endsWith("AND"))
+			sSearchTerm = sSearchTerm.substring(0, sSearchTerm.length() - 3);
 
-				
-				logger.fine("Query=" + sSearchTerm);
-				return sSearchTerm;
+		logger.fine("Query=" + sSearchTerm);
+		return sSearchTerm;
 	}
-
-
-	
 
 }
