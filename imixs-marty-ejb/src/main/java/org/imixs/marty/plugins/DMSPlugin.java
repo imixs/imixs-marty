@@ -22,6 +22,7 @@ import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.engine.plugins.VersionPlugin;
+import org.imixs.workflow.exceptions.QueryException;
 import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
@@ -343,7 +344,12 @@ public class DMSPlugin extends AbstractPlugin {
 			String sQuery="(type:\"workitemlob\" AND $uniqueidref:\""+sUniqueID + "\")";
 		
 
-			Collection<ItemCollection> itemcol = getWorkflowService().getDocumentService().find(sQuery, 0, 1);
+			Collection<ItemCollection> itemcol=null;
+			try {
+				itemcol = getWorkflowService().getDocumentService().find(sQuery, 1, 0);
+			} catch (QueryException e) {
+				logger.severe("loadBlobWorkitem - invalid query: " + e.getMessage());
+			}
 			// if blobWorkItem was found return...
 			if (itemcol != null && itemcol.size() > 0) {
 				blobWorkitem = itemcol.iterator().next();

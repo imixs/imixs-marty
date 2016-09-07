@@ -60,6 +60,7 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.exceptions.QueryException;
 import org.imixs.workflow.faces.util.LoginController;
 import org.imixs.workflow.jee.ejb.EntityService;
 
@@ -652,21 +653,21 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 //				+ " ORDER BY entity.modified ASC";
 
 		String refQuery="( (type:\"workitem\" OR type:\"workitemarchive\" OR type:\"workitemversion\") AND $workitemid:\""+sRefID + "\")";
-		col = this.getWorkflowService().getDocumentService().find(refQuery, 0, -1);
-
-		// sort by $modified
-		Collections.sort(col, new ItemCollectionComparator("$modified", true));
-		
-		// Only return version list if more than one version was found!
-		if (col.size() > 1) {
-			for (ItemCollection aworkitem : col) {
-				versions.add(aworkitem);
+		try {
+			col = this.getWorkflowService().getDocumentService().find(refQuery, 999,0);
+			// sort by $modified
+			Collections.sort(col, new ItemCollectionComparator("$modified", true));
+			
+			// Only return version list if more than one version was found!
+			if (col.size() > 1) {
+				for (ItemCollection aworkitem : col) {
+					versions.add(aworkitem);
+				}
 			}
-		}
 
-		
-		
-		
+		} catch (QueryException e) {
+			logger.warning("loadVersionWorkItemList - invalid query: " + e.getMessage());
+		}
 	}
 
 }

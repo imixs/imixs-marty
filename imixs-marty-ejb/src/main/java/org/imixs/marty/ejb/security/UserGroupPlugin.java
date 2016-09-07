@@ -40,7 +40,9 @@ import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * This Plugin updates the userId and password for a user profile. The Update
@@ -144,7 +146,12 @@ public class UserGroupPlugin extends AbstractPlugin {
 	 */
 	private boolean isUserDBEnabled() {
 		String searchterm = "(type:\"configuration\" AND txtname:\"BASIC\")";
-		Collection<ItemCollection> col = documentService.find(searchterm, 0, 1);
+		Collection<ItemCollection> col;
+		try {
+			col = documentService.find(searchterm, 1, 0);
+		} catch (QueryException e) {
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+		}
 
 		if (col.size() > 0) {
 			ItemCollection config = col.iterator().next();

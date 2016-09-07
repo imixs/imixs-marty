@@ -44,6 +44,8 @@ import javax.ejb.Singleton;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.PropertyService;
+import org.imixs.workflow.exceptions.InvalidAccessException;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * The Marty ProfileService is a sigelton EJB providing user attributes like the
@@ -238,7 +240,12 @@ public class ProfileService {
 		String sQuery="(type:\"profile\" AND txtname:\""+userid + "\")";
 		logger.finest("searchprofile: " + sQuery);
 		
-		Collection<ItemCollection> col = documentService.find(sQuery, 1, 0);
+		Collection<ItemCollection> col;
+		try {
+			col = documentService.find(sQuery, 1, 0);
+		} catch (QueryException e) {
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+		}
 
 		if (col.size() > 0) {
 			userProfile = col.iterator().next();
@@ -280,7 +287,12 @@ public class ProfileService {
 
 		logger.finest("searchprofile: " + sQuery);
 
-		Collection<ItemCollection> col = documentService.find(sQuery, 0, MAX_SEARCH_COUNT);
+		Collection<ItemCollection> col;
+		try {
+			col = documentService.find(sQuery, MAX_SEARCH_COUNT,0);
+		} catch (QueryException e) {
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+		}
 
 		if (col.size() > 0) {
 			userProfile = col.iterator().next();

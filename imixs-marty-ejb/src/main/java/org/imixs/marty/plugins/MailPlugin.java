@@ -53,6 +53,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * This Plugin extends the Imixs Workflow Plugin.
@@ -367,8 +368,12 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		String sQuery="(type:\"workitemlob\" AND $uniqueidref:\""+sUniqueID + "\")";
 		
 		
-		Collection<ItemCollection> itemcol = getWorkflowService().getDocumentService()
-				.find(sQuery, 0, 1);
+		Collection<ItemCollection> itemcol=null;
+		try {
+			itemcol = getWorkflowService().getDocumentService().find(sQuery, 1, 0);
+		} catch (QueryException e) {
+			logger.severe("loadBlobWorkitem - invalid query: " + e.getMessage());
+		}
 		if (itemcol != null && itemcol.size() > 0) {
 			blobWorkitem = itemcol.iterator().next();
 		}

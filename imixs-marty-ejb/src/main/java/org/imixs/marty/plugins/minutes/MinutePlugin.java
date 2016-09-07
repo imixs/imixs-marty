@@ -18,6 +18,7 @@ import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.plugins.VersionPlugin;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.exceptions.QueryException;
 
 /** 
  * This Plugin extends the Version Plugin mechanism and manages child workitems
@@ -180,34 +181,38 @@ public class MinutePlugin extends VersionPlugin {
 		}
 
 		if (parent==null) {
-			logger.fine("[MinutePlugin] skip computeSequenceNumber - no parent workitem");
+			logger.fine("skip computeSequenceNumber - no parent workitem");
 			return;
 		}
 
-		logger.fine("[MinutePlugin] compute computeSequenceNumber for Ref:"
+		logger.fine("computeSequenceNumber for Ref:"
 				+ sUniqueIdRef + "....");
 	
 
 		
 		String searchTerm="( (type:\"workitem\" OR type:\"childworkitem\" OR type:\"workitemarchive\" OR type:\"childworkitemarchive\") AND $uniqueidref:\""+sUniqueIdRef + "\")";
 		
-		logger.fine("[MinutePlugin] searchterm=" + searchTerm);
+		logger.fine("computeSequenceNumber searchterm=" + searchTerm);
 
-		List<ItemCollection> childList = this.getWorkflowService()
-				.getDocumentService().find(searchTerm, 0, 1);
-
-		// sort by numsequencenumber
-		Collections.sort(childList, new ItemCollectionComparator("numsequencenumber", true));
+		List<ItemCollection> childList;
+		try {
+			childList = this.getWorkflowService().getDocumentService().find(searchTerm, 1, 0);
 		
-		int iNumber = 1;
-		if (childList != null && childList.size() > 0) {
-			ItemCollection child = childList.iterator().next();
-			iNumber = child.getItemValueInteger("numsequencenumber");
-			logger.fine("[MinutePlugin] last sequence number=" + iNumber);
-			iNumber++;
+	
+			// sort by numsequencenumber
+			Collections.sort(childList, new ItemCollectionComparator("numsequencenumber", true));
+			
+			int iNumber = 1;
+			if (childList != null && childList.size() > 0) {
+				ItemCollection child = childList.iterator().next();
+				iNumber = child.getItemValueInteger("numsequencenumber");
+				logger.fine("[MinutePlugin] last sequence number=" + iNumber);
+				iNumber++;
+			}
+			documentContext.replaceItemValue("numsequencenumber", iNumber);
+		} catch (QueryException e) {
+			logger.warning("computeSequenceNumber - invalid query: " + e.getMessage());
 		}
-		documentContext.replaceItemValue("numsequencenumber", iNumber);
-
 	
 
 	}

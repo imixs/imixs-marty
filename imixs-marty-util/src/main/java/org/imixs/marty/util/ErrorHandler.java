@@ -33,7 +33,7 @@ public class ErrorHandler {
 				&& pe.getErrorParameters() != null
 				&& pe.getErrorParameters().length > 0) {
 
-			// create a faces messae for each param
+			// create a faces message for each parameter
 			Object[] messages = pe.getErrorParameters();
 			for (Object aMessage : messages) {
 
@@ -43,7 +43,7 @@ public class ErrorHandler {
 								.toString(), null));
 			}
 		} else {
-			// default behaivor
+			// default behavior
 			addErrorMessage(pe);
 		}
 

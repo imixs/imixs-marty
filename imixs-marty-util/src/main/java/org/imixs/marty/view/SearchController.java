@@ -38,6 +38,8 @@ import java.util.logging.Logger;
 
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.event.AjaxBehaviorEvent;
 import javax.inject.Named;
@@ -45,6 +47,7 @@ import javax.inject.Named;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.lucene.LuceneSearchService;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * The Marty SearchController extends the Imixs ViewController and provides
@@ -323,9 +326,16 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 		// Search phrase....
 		String searchphrase = searchFilter.getItemValueString("txtSearch");
 		// escape search phrase
-		searchphrase = LuceneSearchService.normalizeSearchTerm(searchphrase);
+		try {
+			searchphrase = LuceneSearchService.normalizeSearchTerm(searchphrase);
+		} catch (QueryException e) {
+			// add a new FacesMessage into the FacesContext
+			FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_WARN, e.getLocalizedMessage(), null);
+			FacesContext.getCurrentInstance().addMessage(null,facesMessage);
+			return null;	
+		}
 
-		if (!"".equals(searchphrase)) {
+		if (searchphrase!=null && !"".equals(searchphrase)) {
 			// trim
 			searchphrase = searchphrase.trim();
 			// lower case....

@@ -40,6 +40,7 @@ import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.engine.plugins.ResultPlugin;
 import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * The Marty TeamPlugin organizes the hierarchical order of a workitem between
@@ -444,28 +445,35 @@ public class TeamPlugin extends AbstractPlugin {
 //				+ " WHERE  project.type = '" + type + "' " + " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
 //				+ aName + "'";
 
-		
+		if (type==null || aName==null) {
+			return null;
+		}
 		String sQuery="(type:\"" + type + "\" AND txtname:\""+aName + "\")";
 	
 		
 		// because of the fact that spaces can be ordered in a hirachical order
 		// we need to be a little more tricky if we seach for spaces....
 		// Important: to find ambigous space names we search for maxount=2!
-		List<ItemCollection> col = this.getWorkflowService().getDocumentService().find(sQuery, 0, 2);
-
-		if (col.size() == 0) {
-			logger.warning("findRefByName '" + aName + "' not found!");
-		} else {
-			if (col.size() > 1) {
-				logger.warning("findRefByName '" + aName + "' is ambiguous!");
+		List<ItemCollection> col;
+		try {
+			col = this.getWorkflowService().getDocumentService().find(sQuery, 2, 0);
+		
+			if (col.size() == 0) {
+				logger.warning("findRefByName '" + aName + "' not found!");
 			} else {
-				// we found one!
-				ItemCollection entity = col.iterator().next();
-				// update cache
-				entityCache.put(entity.getItemValueString(WorkflowKernel.UNIQUEID), entity);
-				return entity;
+				if (col.size() > 1) {
+					logger.warning("findRefByName '" + aName + "' is ambiguous!");
+				} else {
+					// we found one!
+					ItemCollection entity = col.iterator().next();
+					// update cache
+					entityCache.put(entity.getItemValueString(WorkflowKernel.UNIQUEID), entity);
+					return entity;
+				}
+	
 			}
-
+		} catch (QueryException e) {
+			logger.warning("findRefByName - invalid query: " + e.getMessage());
 		}
 
 		// no match

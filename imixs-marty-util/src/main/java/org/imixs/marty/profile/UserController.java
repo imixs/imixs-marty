@@ -55,6 +55,7 @@ import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.exceptions.QueryException;
 import org.imixs.workflow.faces.fileupload.FileData;
 import org.imixs.workflow.faces.fileupload.FileUploadController;
 import org.imixs.workflow.faces.util.LoginController;
@@ -554,7 +555,12 @@ public class UserController implements Serializable {
 		
 		
 
-		return workflowService.getDocumentService().find(sQuery, 0, -1);
+		try {
+			return workflowService.getDocumentService().find(sQuery,999,0);
+		} catch (QueryException e) {
+			logger.warning("getEntityByName - invalid query: " + e.getMessage());
+			return null;
+		}
 
 	}
 

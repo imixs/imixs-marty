@@ -40,7 +40,9 @@ import javax.ejb.Stateless;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * This EJB handles a unique Sequence Number over a group of workitems.
@@ -119,8 +121,12 @@ public class SequenceService {
 		
 		String sQuery="(type:\"configuration\" AND txtname:\"BASIC\")";
 		
-		Collection<ItemCollection> col = documentService.find(sQuery,
-				0, 1);
+		Collection<ItemCollection> col;
+		try {
+			col = documentService.find(sQuery,1, 0);
+		} catch (QueryException e) {
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+		}
 
 		if (col.size() > 0) {
 			configItemCollection = col.iterator().next();

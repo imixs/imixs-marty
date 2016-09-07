@@ -45,7 +45,9 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-
+import org.imixs.workflow.exceptions.InvalidAccessException;
+import org.imixs.workflow.exceptions.QueryException;
+ 
 /**
  * The Marty Config Service can be used to store and access configuration values
  * stored in a configuration entity (type='CONFIGURATION).
@@ -155,7 +157,12 @@ public class ConfigService {
 			
 			String sQuery="(type:\"" + TYPE + "\" AND txtname:\""+name + "\")";
 			
-			Collection<ItemCollection> col = documentService.find(sQuery, 0, 1);
+			Collection<ItemCollection> col;
+			try {
+				col = documentService.find(sQuery, 1, 0);
+			} catch (QueryException e) {
+				throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+			}
 
 			if (col.size() > 0) {
 				configItemCollection = col.iterator().next();

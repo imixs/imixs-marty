@@ -35,7 +35,9 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * This system model plug-in supports additional business logic for space
@@ -140,6 +142,10 @@ public class SpacePlugin extends AbstractPlugin {
 
 	private List<ItemCollection> findAllSubSpaces(String sIDRef) {
 
+		if (sIDRef==null) {
+			return null;
+		}
+		
 //		String sQuery = "SELECT project FROM Entity AS project " + " JOIN project.textItems AS r"
 //				+ " JOIN project.textItems AS n" + " WHERE project.type = 'space'" + " AND n.itemName = 'txtname' "
 //				+ " AND r.itemName='$uniqueidref'" + " AND r.itemValue = '" + sIDRef + "' "
@@ -149,7 +155,12 @@ public class SpacePlugin extends AbstractPlugin {
 		
 		// sort by txtname
 
-		List<ItemCollection> subSpaceList = getWorkflowService().getDocumentService().find(sQuery, 0, -1);
+		List<ItemCollection> subSpaceList;
+		try {
+			subSpaceList = getWorkflowService().getDocumentService().find(sQuery, 1, 0);
+		} catch (QueryException e) {
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+		}
 		
 		// sort by txtname
 		Collections.sort(subSpaceList, new ItemCollectionComparator("txtname", true));

@@ -32,6 +32,7 @@ import javax.ejb.EJB;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.QueryException;
 import org.imixs.workflow.faces.workitem.DocumentController;
 import org.imixs.workflow.faces.workitem.ViewController;
 
@@ -108,7 +109,7 @@ public class ConfigMultiController extends DocumentController  {
 
 
 	/**
-	 * Selects a singel config ItemCollection by Name
+	 * Selects a single config ItemCollection by Name
 	 * 
 	 * @param name
 	 * @return
@@ -122,13 +123,19 @@ public class ConfigMultiController extends DocumentController  {
 //				+ name + "'" + " ORDER BY t2.itemValue asc";
 		
 		String sQuery="(type:\"" + getDefaultType() + "\" AND txtname:\"" + name + "\")";
-		Collection<ItemCollection> col = documentService.find(sQuery, 0, 1);
+		Collection<ItemCollection> col;
+		try {
+			col = documentService.find(sQuery, 1 ,0);
 
-		if (col.size() > 0) {
-			configItemCollection = col.iterator().next();
-		} else {
-			logger.fine("MultiConfigItem '" + name + "' not found");
+			if (col.size() > 0) {
+				configItemCollection = col.iterator().next();
+			} else {
+				logger.fine("MultiConfigItem '" + name + "' not found");
+			}
+		} catch (QueryException e) {
+			logger.warning("getEntityByName - invalid query: " + e.getMessage());
 		}
+
 
 		return configItemCollection;
 

@@ -42,10 +42,10 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
-import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * This plug-in supports additional business logic for profile entities. This
@@ -276,7 +276,12 @@ public class ProfilePlugin extends AbstractPlugin {
 			sQuery="(type:\"profile\" AND txtname:\""+sName + "\") AND (NOT $uniqueid:\"" + sID + "\")";
 		}
 		
-		Collection<ItemCollection> col = this.getWorkflowService().getDocumentService().find(sQuery,0, 1);
+		Collection<ItemCollection> col;
+		try {
+			col = this.getWorkflowService().getDocumentService().find(sQuery,1, 0);
+		} catch (QueryException e) {
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+		}
 
 		return (col.size() == 0);
 
@@ -317,8 +322,12 @@ public class ProfilePlugin extends AbstractPlugin {
 		else {
 			return true;
 		}
-		Collection<ItemCollection> col = this.getWorkflowService().getDocumentService().find(sQuery,
-				0, 1);
+		Collection<ItemCollection> col;
+		try {
+			col = this.getWorkflowService().getDocumentService().find(sQuery,1, 0);
+		} catch (QueryException e) {
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+		}
 
 		return (col.size() == 0);
 

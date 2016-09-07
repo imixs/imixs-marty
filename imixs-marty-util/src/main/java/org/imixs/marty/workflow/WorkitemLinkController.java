@@ -45,6 +45,7 @@ import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.lucene.LuceneSearchService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * The WorkitemLinkController provides suggest-box behavior based on the JSF 2.0
@@ -290,27 +291,31 @@ public class WorkitemLinkController implements Serializable {
 		
 			sQuery +=" )";
 
-			List<ItemCollection> workitems = workflowService.getDocumentService().find(sQuery, 0, -1);
-			
-			// sort by modified
-			Collections.sort(workitems, new ItemCollectionComparator("$modified", true));
-			
+			List<ItemCollection> workitems;
+			try {
+				workitems = workflowService.getDocumentService().find(sQuery, 999,0);
+				// sort by modified
+				Collections.sort(workitems, new ItemCollectionComparator("$modified", true));
+				
 
-			
-			if (workitems.size() == 0) {
-				references.put(filter, filterResult);
-				return filterResult;
-			}
-
-			// now test if filter matches, and clone the workItem
-			for (ItemCollection itemcol : workitems) {
-				// test
-				if (WorkitemHelper.matches(itemcol, filter)) {
-					filterResult.add(WorkitemHelper.clone(itemcol));
+				
+				if (workitems.size() == 0) {
+					references.put(filter, filterResult);
+					return filterResult;
 				}
-			}
 
-			references.put(filter, filterResult);
+				// now test if filter matches, and clone the workItem
+				for (ItemCollection itemcol : workitems) {
+					// test
+					if (WorkitemHelper.matches(itemcol, filter)) {
+						filterResult.add(WorkitemHelper.clone(itemcol));
+					}
+				}
+
+				references.put(filter, filterResult);
+			} catch (QueryException e) {
+				logger.warning("loadVersionWorkItemList - invalid query: " + e.getMessage());
+			}
 		}
 		return filterResult;
 	}
