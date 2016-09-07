@@ -148,6 +148,12 @@ public class ChildWorkitemController extends org.imixs.workflow.jee.faces.workit
 				&& !workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
 			return;
 
+		
+		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent
+				.getEventType()) {
+			reset();
+			
+		}
 	}
 
 	/**
