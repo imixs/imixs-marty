@@ -151,14 +151,14 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		try {
 			aAddr = fetchEmail(aAddr);
 			if (aAddr.indexOf('@') == -1) {
-				System.out.println("[MartyMailPlugin] smtp mail address for '"
+				logger.warning("smtp mail address for '"
 						+ aAddr + "' could not be resolved!");
 				return null;
 			}
 		} catch (NamingException e) {
 			// no valid email was found!
-			logger.severe("[MartyMailPlugin] mail for '" + aAddr
-					+ "' could not be resolved!");
+			logger.warning("smtp mail address for '" + aAddr
+					+ "' could not be resolved - "+e.getMessage());
 			// e.printStackTrace();
 			// avoid sending mail to this address!
 			return null;
