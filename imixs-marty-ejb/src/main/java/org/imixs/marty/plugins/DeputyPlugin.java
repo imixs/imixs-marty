@@ -33,6 +33,11 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  * 
  * The Plugin only runs in all workflows
  * 
+ * 
+ * To avoid conflicts with the ApproverPlugin, the DeputyPlugin ignores fields
+ * ending with 'approvers' and 'approvedby'
+ * 
+ * 
  * @author rsoika
  * 
  */
@@ -42,10 +47,8 @@ public class DeputyPlugin extends AbstractPlugin {
 
 	ItemCollection workitem = null;
 	ProfileService profileService = null;
-	private String[] ignoreList = { "namcreator", "namcurrenteditor",
-			"namlasteditor", "namrequester" };
-	private static Logger logger = Logger.getLogger(DeputyPlugin.class
-			.getName());
+	private String[] ignoreList = { "namcreator", "namcurrenteditor", "namlasteditor", "namrequester" };
+	private static Logger logger = Logger.getLogger(DeputyPlugin.class.getName());
 
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
@@ -64,8 +67,8 @@ public class DeputyPlugin extends AbstractPlugin {
 			profileService = (ProfileService) ctx.lookup(jndiName);
 		} catch (NamingException e) {
 
-			throw new PluginException(MailPlugin.class.getName(),
-					PROFILESERVICE_NOT_BOUND, "ProfileService not bound", e);
+			throw new PluginException(MailPlugin.class.getName(), PROFILESERVICE_NOT_BOUND, "ProfileService not bound",
+					e);
 		}
 
 	}
@@ -93,13 +96,17 @@ public class DeputyPlugin extends AbstractPlugin {
 
 		// iterate over name fields
 		Map<String, List<Object>> map = workitem.getAllItems();
-		for (String key : map.keySet()) { 
+		for (String key : map.keySet()) {
 			key = key.toLowerCase();
 
 			if (!key.startsWith("nam"))
 				continue;
 
 			if (ignoreArrayList.contains(key))
+				continue;
+
+			// skip Approver Fields (issue #130)
+			if (key.endsWith("approvers") || key.endsWith("approvedby"))
 				continue;
 
 			// lookup deputies
@@ -125,38 +132,35 @@ public class DeputyPlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * the method updates a given vector with names and adds the deputies if
-	 * defined. The method returns the a new list of names.
+	 * This method updates a given list of names. For each name the method
+	 * lookups a deputy. If a deputy is defined but not par of the list he will
+	 * be added to the new list.
 	 * 
-	 * @param vNameList
-	 * @return new list of names
+	 * @param sourceNameList
+	 *            - source list of names
+	 * @return new list with all names plus deputies.
 	 */
 	@SuppressWarnings("unchecked")
-	private List<String> updateDeputies(List<String> vNameList) {
-		Vector<String> vNameListNew = new Vector<String>();
+	private List<String> updateDeputies(List<String> sourceNameList) {
+		Vector<String> resultNameList = new Vector<String>();
 
+		resultNameList.addAll(sourceNameList);
 		// test for each entry if a deputy is defined
-		for (String aName : vNameList) {
-			vNameListNew.add(aName);
+		for (String aName : sourceNameList) {
 			// now lookup the deputies
-
 			ItemCollection profile = profileService.findProfileById(aName);
 			if (profile != null) {
-
-				List<String> vDeputies = profile.getItemValue("namdeputy");
-
+				List<String> deputyList = profile.getItemValue("namdeputy");
 				// if we found deputies - we need to add them to the list
-				for (String deputy : vDeputies) {
-					if (deputy != null && !deputy.isEmpty()
-							&& vNameListNew.indexOf(deputy) == -1) {
+				for (String deputy : deputyList) {
+					if (deputy != null && !deputy.isEmpty() && resultNameList.indexOf(deputy) == -1) {
 						// add new entry
-						vNameListNew.add(deputy);
+						resultNameList.add(deputy);
 					}
 				}
 			}
-
 		}
-		return vNameListNew;
+		return resultNameList;
 	}
 
 	public String[] getIgnoreList() {
