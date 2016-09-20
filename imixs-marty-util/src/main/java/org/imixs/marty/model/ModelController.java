@@ -96,10 +96,9 @@ public class ModelController implements Serializable {
 
 	private static Logger logger = Logger.getLogger(ModelController.class.getName());
 
-	
-
 	/**
 	 * returns all groups for a version
+	 * 
 	 * @param version
 	 * @return
 	 */
@@ -142,14 +141,14 @@ public class ModelController implements Serializable {
 		List<String> result = new ArrayList<>();
 
 		// add all groups without '~'
-		for (String agroup:set) {
+		for (String agroup : set) {
 			if (result.contains(agroup))
 				continue;
 			if (agroup.contains("~"))
 				continue;
 			result.add(agroup);
 		}
-		
+
 		Collections.sort(result);
 		return result;
 
@@ -172,7 +171,7 @@ public class ModelController implements Serializable {
 	 * @return list of all sub workflow groups for the given parent group name
 	 */
 	public List<String> getSubWorkflowGroups(String parentWorkflowGroup) {
-		
+
 		Set<String> set = new HashSet<String>();
 		List<String> versions = modelService.getVersions();
 		for (String version : versions) {
@@ -187,19 +186,19 @@ public class ModelController implements Serializable {
 		List<String> result = new ArrayList<>();
 
 		// add all groups starting with GROUP~
-		for (String agroup:set) {
+		for (String agroup : set) {
 			if (result.contains(agroup))
 				continue;
-			if (!agroup.startsWith(parentWorkflowGroup+"~"))
+			if (!agroup.startsWith(parentWorkflowGroup + "~"))
 				continue;
 			result.add(agroup);
 		}
-		
+
 		Collections.sort(result);
 		return result;
 
 	}
-	
+
 	public Model getModelByWorkitem(ItemCollection workitem) {
 		try {
 			return modelService.getModelByWorkitem(workitem);
@@ -207,9 +206,10 @@ public class ModelController implements Serializable {
 			return null;
 		}
 	}
-	
+
 	/**
-	 * Returns a model object for corresponding workflow group. 
+	 * Returns a model object for corresponding workflow group.
+	 * 
 	 * @param group
 	 * @return
 	 */
@@ -227,10 +227,9 @@ public class ModelController implements Serializable {
 		return null;
 	}
 
-	
-	
 	/**
 	 * returns all model versions
+	 * 
 	 * @return
 	 */
 	public List<String> getVersions() {
@@ -240,7 +239,7 @@ public class ModelController implements Serializable {
 	public ItemCollection getModelEntity(String version) {
 		return modelService.loadModelEntity(version);
 	}
-	
+
 	/**
 	 * This method adds all uploaded model files. The method tests the model
 	 * type (.bmpm, .ixm). BPMN Model will be handled by the ImixsBPMNParser. A
@@ -290,7 +289,8 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * This method returns a process entity for a given ModelVersion.
+	 * This method returns a process entity for a given ModelVersion or null if
+	 * no entity exists.
 	 * 
 	 * 
 	 * @param modelVersion
@@ -300,8 +300,14 @@ public class ModelController implements Serializable {
 	 * @return an instance of the matching process entity
 	 * @throws ModelException
 	 */
-	public ItemCollection getProcessEntity(int processid, String modelversion) throws ModelException {
-		return modelService.getModel(modelversion).getTask(processid);
+	public ItemCollection getProcessEntity(int processid, String modelversion) {
+		try {
+			return modelService.getModel(modelversion).getTask(processid);
+		} catch (ModelException e) {
+			logger.warning("Unable to load task " + processid + " in model version '" + modelversion + "' - "
+					+ e.getMessage());
+		}
+		return null;
 	}
 
 	/**
@@ -313,9 +319,15 @@ public class ModelController implements Serializable {
 	 * @return
 	 * @throws ModelException
 	 */
-	public String getProcessDescription(int processid, String modelversion, ItemCollection documentContext)
-			throws ModelException {
-		ItemCollection pe = modelService.getModel(modelversion).getTask(processid);
+	public String getProcessDescription(int processid, String modelversion, ItemCollection documentContext) {
+		ItemCollection pe = null;
+		try {
+			pe = modelService.getModel(modelversion).getTask(processid);
+		} catch (ModelException e1) {
+			logger.warning("Unable to load task " + processid + " in model version '" + modelversion
+					+ "' - " + e1.getMessage());
+
+		}
 		if (pe == null) {
 			return "";
 		}
