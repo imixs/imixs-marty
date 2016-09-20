@@ -1,6 +1,5 @@
 package org.imixs.marty.plugins;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -19,23 +18,22 @@ import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.PluginException;
 
 /**
- * This plugin computes for each name field (prafix = 'nam') if the user has a
- * deputy entry in the corresponding user profile entity. If so the deputy will
- * be added to the name field.
+ * This plugin computes for each name field (prefix = 'nam') if the
+ * corresponding user profile contains a deputy. If so the deputy will be added
+ * into the name field.
  * 
- * If a namField is listed in the 'ignoreList' the field will be skipped.
+ * If a name Field is listed in the 'ignoreList' the field will be skipped. The
+ * ignoreList can include regular expressions and can be modified by a client.
  * 
- * The plugin runns on all kinds of workitems and childworkitems.
+ * The plugin runs on all kinds of workitems and childworkitems.
  * 
- * The Plugin should run after the TeamPlugin but before the ownerPlugin and
- * accessPlugin
- * 
- * 
- * The Plugin only runs in all workflows
- * 
+ * The Plugin should run after the TeamPlugin but before the ownerPlugin,
+ * approverPlugin and accessPlugin
  * 
  * To avoid conflicts with the ApproverPlugin, the DeputyPlugin ignores fields
- * ending with 'approvers' and 'approvedby'
+ * ending with 'approvers' and 'approvedby'.
+ * 
+ * @see https://github.com/imixs/imixs-marty/issues/130
  * 
  * 
  * @author rsoika
@@ -47,7 +45,9 @@ public class DeputyPlugin extends AbstractPlugin {
 
 	ItemCollection workitem = null;
 	ProfileService profileService = null;
-	private String[] ignoreList = { "namcreator", "namcurrenteditor", "namlasteditor", "namrequester" };
+	private String[] ignoreList = { "namcreator", "namcurrenteditor", "namlasteditor", "namrequester",
+			"nam+(?:[a-z0-9_]+)approvers", "nam+(?:[a-z0-9_]+)approvedby", "[^nam(.*)]" };
+
 	private static Logger logger = Logger.getLogger(DeputyPlugin.class.getName());
 
 	@Override
@@ -85,8 +85,6 @@ public class DeputyPlugin extends AbstractPlugin {
 
 		workitem = aworkItem;
 
-		List<String> ignoreArrayList = Arrays.asList(ignoreList);
-
 		// skip if the workitem is from a different type (for example Teams
 		// may not be processed by this plugin)
 		String type = workitem.getItemValueString("type");
@@ -99,14 +97,7 @@ public class DeputyPlugin extends AbstractPlugin {
 		for (String key : map.keySet()) {
 			key = key.toLowerCase();
 
-			if (!key.startsWith("nam"))
-				continue;
-
-			if (ignoreArrayList.contains(key))
-				continue;
-
-			// skip Approver Fields (issue #130)
-			if (key.endsWith("approvers") || key.endsWith("approvedby"))
+			if (matchIgnoreList(key))
 				continue;
 
 			// lookup deputies
@@ -169,6 +160,24 @@ public class DeputyPlugin extends AbstractPlugin {
 
 	public void setIgnoreList(String[] ignoreList) {
 		this.ignoreList = ignoreList;
+	}
+
+	/**
+	 * This method returns true in case the given fieldName matches the
+	 * IgnoreList. Regular expressions are supported by the IgnoreList.
+	 * 
+	 * @param fieldName
+	 * @return true if fieldName matches the ignoreList
+	 */
+	public boolean matchIgnoreList(String fieldName) {
+		if (fieldName == null)
+			return false;
+		for (String pattern : this.ignoreList) {
+			if (fieldName.toLowerCase().matches(pattern)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }
