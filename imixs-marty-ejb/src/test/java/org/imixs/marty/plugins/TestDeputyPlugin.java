@@ -34,13 +34,13 @@ public class TestDeputyPlugin {
 		Assert.assertTrue(deputyPlugin.matchIgnoreList("_responsible"));
 		Assert.assertTrue(deputyPlugin.matchIgnoreList("txtNamOwner"));
 		Assert.assertTrue(deputyPlugin.matchIgnoreList("lnamProcessSuperManagerApprovers"));
+		Assert.assertTrue(deputyPlugin.matchIgnoreList("$activityid"));
+		Assert.assertTrue(deputyPlugin.matchIgnoreList("$readaccess"));
 
-		
 		// negative tests
 		Assert.assertFalse(deputyPlugin.matchIgnoreList("namSpaceTeam"));
 		Assert.assertFalse(deputyPlugin.matchIgnoreList("namProcessSuper-ManagerApprovers"));
 		Assert.assertFalse(deputyPlugin.matchIgnoreList("namResponsible"));
-
 
 	}
 

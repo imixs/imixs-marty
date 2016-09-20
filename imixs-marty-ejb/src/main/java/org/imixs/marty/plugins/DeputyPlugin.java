@@ -14,8 +14,8 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * This plugin computes for each name field (prefix = 'nam') if the
@@ -45,8 +45,8 @@ public class DeputyPlugin extends AbstractPlugin {
 
 	ItemCollection workitem = null;
 	ProfileService profileService = null;
-	private String[] ignoreList = { "namcreator", "namcurrenteditor", "namlasteditor", "namrequester",
-			"nam+(?:[a-z0-9_]+)approvers", "nam+(?:[a-z0-9_]+)approvedby", "^(?!nam)\\w+" };
+	private String[] ignoreList = { "namcreator", "namcurrenteditor", "namlasteditor", "nam+(?:[a-z0-9_]+)approvers",
+			"nam+(?:[a-z0-9_]+)approvedby", "^(?!nam)\\w+|^(\\$)\\w+" };
 
 	private static Logger logger = Logger.getLogger(DeputyPlugin.class.getName());
 
@@ -55,14 +55,11 @@ public class DeputyPlugin extends AbstractPlugin {
 
 		super.init(actx);
 
-		// userCache = new HashMap<String,List<String>>();
-
 		// lookup profile service EJB
 		String jndiName = "ejb/ProfileService";
 		InitialContext ictx;
 		try {
 			ictx = new InitialContext();
-
 			Context ctx = (Context) ictx.lookup("java:comp/env");
 			profileService = (ProfileService) ctx.lookup(jndiName);
 		} catch (NamingException e) {
@@ -95,8 +92,6 @@ public class DeputyPlugin extends AbstractPlugin {
 		// iterate over name fields
 		Map<String, List<Object>> map = workitem.getAllItems();
 		for (String key : map.keySet()) {
-			key = key.toLowerCase();
-
 			if (matchIgnoreList(key))
 				continue;
 
