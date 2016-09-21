@@ -14,16 +14,17 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
-import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * This plugin computes for each name field (prefix = 'nam') if the
  * corresponding user profile contains a deputy. If so the deputy will be added
  * into the name field.
  * 
- * If a name Field is listed in the 'ignoreList' the field will be skipped. The
- * ignoreList can include regular expressions and can be modified by a client.
+ * If a name Field (prafix = 'nam') is listed in the 'ignoreList' the field will
+ * be skipped. The ignoreList can include regular expressions and can be
+ * modified by a client.
  * 
  * The plugin runs on all kinds of workitems and childworkitems.
  * 
@@ -46,7 +47,7 @@ public class DeputyPlugin extends AbstractPlugin {
 	ItemCollection workitem = null;
 	ProfileService profileService = null;
 	private String[] ignoreList = { "namcreator", "namcurrenteditor", "namlasteditor", "nam+(?:[a-z0-9_]+)approvers",
-			"nam+(?:[a-z0-9_]+)approvedby", "^(?!nam)\\w+|^(\\$)\\w+" };
+			"nam+(?:[a-z0-9_]+)approvedby" };
 
 	private static Logger logger = Logger.getLogger(DeputyPlugin.class.getName());
 
@@ -166,7 +167,11 @@ public class DeputyPlugin extends AbstractPlugin {
 	 */
 	public boolean matchIgnoreList(String fieldName) {
 		if (fieldName == null)
-			return false;
+			return true;
+		
+		if (!fieldName.toLowerCase().startsWith("nam")) {
+			return true;
+		}
 		for (String pattern : this.ignoreList) {
 			if (fieldName.toLowerCase().matches(pattern)) {
 				return true;
