@@ -20,7 +20,7 @@ public class TestDeputyPlugin {
 	 * 
 	 */
 	@Test
-	public void testRegex() throws PluginException {
+	public void testMatchIgnoreList() throws PluginException {
 
 		deputyPlugin = new DeputyPlugin();
 
@@ -41,6 +41,7 @@ public class TestDeputyPlugin {
 		Assert.assertFalse(deputyPlugin.matchIgnoreList("namSpaceTeam"));
 		Assert.assertFalse(deputyPlugin.matchIgnoreList("namProcessSuper-ManagerApprovers"));
 		Assert.assertFalse(deputyPlugin.matchIgnoreList("namResponsible"));
+		Assert.assertFalse(deputyPlugin.matchIgnoreList("nam_Responsible"));
 
 	}
 
