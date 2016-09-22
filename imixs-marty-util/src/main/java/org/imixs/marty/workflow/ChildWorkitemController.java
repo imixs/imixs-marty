@@ -36,9 +36,11 @@ import javax.enterprise.context.Conversation;
 import javax.enterprise.context.ConversationScoped;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
+import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 
 import org.imixs.marty.model.ModelController;
 import org.imixs.workflow.ItemCollection;
@@ -211,6 +213,8 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 
 		// start now the new conversation
 		if (conversation.isTransient()) {
+			conversation.setTimeout(((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext()
+					.getRequest()).getSession().getMaxInactiveInterval()*1000);
 			conversation.begin();
 			logger.fine("start new conversation, id=" + conversation.getId());
 		}
@@ -240,6 +244,8 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 
 		// start now the new conversation
 		if (conversation.isTransient()) {
+			conversation.setTimeout(((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext()
+					.getRequest()).getSession().getMaxInactiveInterval()*1000);
 			conversation.begin();
 			logger.fine("start new conversation, id=" + conversation.getId());
 		}

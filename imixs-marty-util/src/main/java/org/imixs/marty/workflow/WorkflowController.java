@@ -48,6 +48,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 
 import org.imixs.marty.ejb.WorkitemService;
 import org.imixs.marty.model.ProcessController;
@@ -184,8 +185,9 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 	@Override
 	public void load(String uniqueID) {
 		super.load(uniqueID);
-
 		if (conversation.isTransient()) {
+			conversation.setTimeout(((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext()
+					.getRequest()).getSession().getMaxInactiveInterval()*1000);
 			conversation.begin();
 			logger.fine("start new conversation, id=" + conversation.getId());
 		}
@@ -202,6 +204,8 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 		super.create();
 
 		if (conversation.isTransient()) {
+			conversation.setTimeout(((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext()
+					.getRequest()).getSession().getMaxInactiveInterval()*1000);
 			conversation.begin();
 			logger.fine("start new conversation, id=" + conversation.getId());
 		}
@@ -259,6 +263,8 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 
 		// start now the new conversation
 		if (conversation.isTransient()) {
+			conversation.setTimeout(((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext()
+					.getRequest()).getSession().getMaxInactiveInterval()*1000);
 			conversation.begin();
 			logger.fine("start new conversation, id=" + conversation.getId());
 		}
