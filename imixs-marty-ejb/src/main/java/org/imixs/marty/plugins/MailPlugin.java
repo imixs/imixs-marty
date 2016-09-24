@@ -50,7 +50,6 @@ import javax.naming.NamingException;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.QueryException;
@@ -103,14 +102,11 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 	 * This method adds the attachments of the blob workitem to the MimeMessage
 	 */
 	@Override
-	public int run(ItemCollection documentContext,
+	public ItemCollection run(ItemCollection documentContext,
 			ItemCollection documentActivity) throws PluginException {
 		// run default functionality
-		int result = super.run(documentContext, documentActivity);
-		// terminate if the result was an error
-		if (result == Plugin.PLUGIN_ERROR)
-			return Plugin.PLUGIN_ERROR;
-
+		ItemCollection result= super.run(documentContext, documentActivity);
+		
 		// now get the Mail Session object
 		MimeMessage mailMessage = (MimeMessage) super.getMailMessage();
 		if (mailMessage != null) {
@@ -125,7 +121,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 				}
 			}
 		}
-		return Plugin.PLUGIN_OK;
+		return result;
 	}
 
 

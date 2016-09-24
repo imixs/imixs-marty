@@ -35,7 +35,6 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.WorkflowService;
@@ -103,22 +102,22 @@ public class UserGroupPlugin extends AbstractPlugin {
 	 * @throws PluginException
 	 */
 	@Override
-	public int run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
+	public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
 
 		// skip if no userGroupService found
 		if (userGroupService == null)
-			return Plugin.PLUGIN_OK;
+			return documentContext;
 
 		workitem = documentContext;
 
 		// check entity type....
 		String sType = workitem.getItemValueString("Type");
 		if (!("profile".equals(sType)))
-			return Plugin.PLUGIN_OK;
+			return documentContext;
 
 		// skip if userDB support is not enabled
 		if (!isUserDBEnabled())
-			return Plugin.PLUGIN_OK;
+			return documentContext;
 
 		// if processid=210 and activity=20 - delete all groups
 		int iProcessID = workitem.getItemValueInteger("$ProcessID");
@@ -131,12 +130,7 @@ public class UserGroupPlugin extends AbstractPlugin {
 		logger.fine("[UserGroupPlugin] update profile '" + workitem.getItemValueString("txtname") + "'....");
 		userGroupService.updateUser(workitem);
 
-		return Plugin.PLUGIN_OK;
-	}
-
-	@Override
-	public void close(int status) throws PluginException {
-
+		return documentContext;
 	}
 
 	/**

@@ -82,14 +82,14 @@ public class MinutePlugin extends VersionPlugin {
 	 * @throws AddressException
 	 */
 	@Override
-	public int run(ItemCollection documentContext,
+	public ItemCollection run(ItemCollection documentContext,
 			ItemCollection documentActivity) throws PluginException {
 
 		// Compute a sequencenumber for new child workitems
 		computeSequenceNumber(documentContext);
 
 		// Versioning....
-		int iResult = super.run(documentContext, documentActivity);
+		documentContext = super.run(documentContext, documentActivity);
 
 		// check if a Version was created
 		ItemCollection version = this.getVersion();
@@ -143,7 +143,7 @@ public class MinutePlugin extends VersionPlugin {
 
 		}
 
-		return iResult;
+		return documentContext;
 	}
 
 	/**

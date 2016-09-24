@@ -33,7 +33,6 @@ import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
-import org.imixs.workflow.Plugin;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
@@ -62,23 +61,21 @@ public class SpacePlugin extends AbstractPlugin {
 	 * 
 	 **/
 	@Override
-	public int run(ItemCollection aworkItem, ItemCollection documentActivity) throws PluginException {
+	public ItemCollection run(ItemCollection aworkItem, ItemCollection documentActivity) throws PluginException {
 		space = null;
 
 		// verify workitem type
 		if (!"space".equals(aworkItem.getItemValueString("type")))
-			return Plugin.PLUGIN_OK;
+			return aworkItem;
 
 		space = aworkItem;
 		updateParentSpaceProperties();
 		updateSubSpaces();
 
-		return Plugin.PLUGIN_OK;
+		return aworkItem;
 	}
 
-	@Override
-	public void close(int arg0) throws PluginException {
-	}
+	
 
 	/**
 	 * This method updates the Space Name ('txtName') and team lists inherited

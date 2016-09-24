@@ -12,7 +12,6 @@ import javax.naming.NamingException;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.PluginException;
@@ -79,7 +78,7 @@ public class DeputyPlugin extends AbstractPlugin {
 	 **/
 	@SuppressWarnings("unchecked")
 	@Override
-	public int run(ItemCollection aworkItem, ItemCollection documentActivity) {
+	public ItemCollection run(ItemCollection aworkItem, ItemCollection documentActivity) {
 
 		workitem = aworkItem;
 
@@ -88,7 +87,7 @@ public class DeputyPlugin extends AbstractPlugin {
 		String type = workitem.getItemValueString("type");
 
 		if (!type.startsWith("workitem") && !type.startsWith("childworkitem"))
-			return Plugin.PLUGIN_OK;
+			return workitem;
 
 		// iterate over name fields
 		Map<String, List<Object>> map = workitem.getAllItems();
@@ -110,14 +109,10 @@ public class DeputyPlugin extends AbstractPlugin {
 			workitem.replaceItemValue(key, newNameList);
 		}
 
-		return Plugin.PLUGIN_OK;
+		return workitem;
 	}
 
-	public void close(int arg0) {
-		// no op
-
-	}
-
+	
 	/**
 	 * This method updates a given list of names. For each name the method
 	 * lookups a deputy. If a deputy is defined but not par of the list he will

@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
@@ -76,7 +75,7 @@ public class SubprocessPlugin extends AbstractPlugin {
 	}
 
 	@Override
-	public int run(ItemCollection adocumentContext,
+	public ItemCollection run(ItemCollection adocumentContext,
 			ItemCollection documentActivity) throws PluginException {
 
 		documentContext = adocumentContext;
@@ -95,13 +94,10 @@ public class SubprocessPlugin extends AbstractPlugin {
 				createSubProcess(subprocess);
 			}
 		}
-		return Plugin.PLUGIN_OK;
+		return documentContext;
 	}
 
-	@Override
-	public void close(int arg0) throws PluginException {
-		// no op
-	}
+	
 
 	/**
 	 * This plugin creates a subprocess depending on subprocess description

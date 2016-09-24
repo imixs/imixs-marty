@@ -36,7 +36,6 @@ import javax.naming.NamingException;
 
 import org.imixs.marty.ejb.SequenceService;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.AccessDeniedException;
@@ -116,7 +115,7 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 	 * @throws AddressException
 	 */
 	@Override
-	public int run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
+	public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
 
 		workitem = documentContext;
 
@@ -132,7 +131,7 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 		String sType = workitem.getItemValueString("Type");
 		// also give a squence number for archived workitems
 		if (!sType.startsWith("workitem") || sType.endsWith("deleted"))
-			return Plugin.PLUGIN_OK;
+			return workitem;
 
 		/* check if worktitem still have a sequence number? */
 		if (workitem.getItemValueInteger("numsequencenumber") == 0) {
@@ -158,12 +157,9 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 
 		}
 
-		return Plugin.PLUGIN_OK;
+		return workitem;
 	}
 
-	@Override
-	public void close(int status) throws PluginException {
-
-	}
+	
 
 }

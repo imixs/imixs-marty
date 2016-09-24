@@ -46,9 +46,8 @@ public class ApplicationPlugin extends org.imixs.workflow.engine.plugins.Applica
 
 	private static Logger logger = Logger.getLogger(ApplicationPlugin.class.getName());
 
-
 	@Override
-	public int run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
+	public ItemCollection run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
 
 		documentContext = adocumentContext;
 
@@ -57,12 +56,7 @@ public class ApplicationPlugin extends org.imixs.workflow.engine.plugins.Applica
 
 			documentContext.replaceItemValue("txtSubject", " - no subject - ");
 
-		return super.run(documentContext, documentActivity);
-	}
-
-	@Override
-	public void close(int arg0) throws PluginException {
-		super.close(arg0);
+		documentContext = super.run(documentContext, documentActivity);
 
 		// now cut txtworkflowgroup if ~ is available
 		String sGroupName = documentContext.getItemValueString("txtWorkflowGroup");
@@ -71,9 +65,8 @@ public class ApplicationPlugin extends org.imixs.workflow.engine.plugins.Applica
 			logger.fine("[ApplicationPlugin] set workflowGroup=" + sGroupName);
 			documentContext.replaceItemValue("txtWorkflowGroup", sGroupName);
 		}
-
+		return documentContext;
 	}
 
-	
 
 }

@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.Plugin;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.engine.plugins.ResultPlugin;
 import org.imixs.workflow.exceptions.PluginException;
@@ -71,7 +70,7 @@ public class CommentPlugin extends AbstractPlugin {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public int run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
+	public ItemCollection run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
 
 		documentContext = adocumentContext;
 	
@@ -82,7 +81,7 @@ public class CommentPlugin extends AbstractPlugin {
 			// test ignore
 			if ("true".equals(evalItemCollection.getItemValueString("comment.ignore"))) {
 				logger.fine("ignore=true - skipping txtCommentLog");
-				return Plugin.PLUGIN_OK;
+				return documentContext;
 			}
 		}
 
@@ -112,17 +111,12 @@ public class CommentPlugin extends AbstractPlugin {
 			documentContext.replaceItemValue("txtcommentLog", vCommentList);
 		}
 
-		return Plugin.PLUGIN_OK;
-
-	}
-
-	/**
-	 * remove comment properties
-	 */
-	@Override
-	public void close(int arg0) throws PluginException {
 		documentContext.removeItem("comment");
 		documentContext.removeItem("comment.ignore");
+		return documentContext;
+
 	}
+
+	
 
 }

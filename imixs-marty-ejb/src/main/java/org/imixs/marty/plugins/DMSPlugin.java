@@ -17,13 +17,11 @@ import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
-import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.engine.plugins.VersionPlugin;
 import org.imixs.workflow.exceptions.QueryException;
-import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
  * The DMS Plug-in stores attached files of a workitem into a separated
@@ -72,14 +70,14 @@ public class DMSPlugin extends AbstractPlugin {
 	 **/
 	@SuppressWarnings("unchecked")
 	@Override
-	public int run(ItemCollection documentContext, ItemCollection documentActivity) {
+	public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) {
 
 		workitem = documentContext;
 
 		// Skip if plugin this processing a new version created by the version
 		// plugin - in this case no changes to the version are needed
 		if (VersionPlugin.isProcssingVersion(workitem)) {
-			return Plugin.PLUGIN_OK;
+			return workitem;
 
 		}
 
@@ -89,7 +87,7 @@ public class DMSPlugin extends AbstractPlugin {
 		if (blobWorkitem == null) {
 			logger.warning("[DMSPlugin] can't access blobworkitem for '"
 					+ workitem.getItemValueString(WorkflowService.UNIQUEID) + "'");
-			return Plugin.PLUGIN_WARNING;
+			return workitem;
 		}
 
 		// import files if txtDmsImport is defined.
@@ -113,25 +111,22 @@ public class DMSPlugin extends AbstractPlugin {
 		blobWorkitem.replaceItemValue("type", "workitemlob");
 
 		logger.fine(
-				"[DMBPlugin] saving blobWorkitem '" + blobWorkitem.getItemValueString(EntityService.UNIQUEID) + "'...");
+				"[DMBPlugin] saving blobWorkitem '" + blobWorkitem.getItemValueString(WorkflowKernel.UNIQUEID) + "'...");
 
 		// update file content and save BlobWorkitem...
 		updateFileContent(workitem, blobWorkitem);
 		blobWorkitem = getWorkflowService().getDocumentService().save(blobWorkitem);
 
 		// update property '$BlobWorkitem'
-		workitem.replaceItemValue(BLOBWORKITEMID, blobWorkitem.getItemValueString(EntityService.UNIQUEID));
+		workitem.replaceItemValue(BLOBWORKITEMID, blobWorkitem.getItemValueString(WorkflowKernel.UNIQUEID));
 
 		// update the dms list - e.g. if another plugin had added a file....
 		updateDmsList(workitem, this.getWorkflowService().getUserName());
 
-		return Plugin.PLUGIN_OK;
+		return workitem;
 	}
 
-	public void close(int arg0) {
-		// no op
-
-	}
+	
 
 	/**
 	 * This method returns a list of ItemCollections for all DMS elements
@@ -358,7 +353,7 @@ public class DMSPlugin extends AbstractPlugin {
 
 		} else {
 			// no $uniqueId set - create a UniqueID for the parentWorkitem
-			parentWorkitem.replaceItemValue(EntityService.UNIQUEID, WorkflowKernel.generateUniqueID());
+			parentWorkitem.replaceItemValue(WorkflowKernel.UNIQUEID, WorkflowKernel.generateUniqueID());
 
 		}
 		// if no blobWorkitem was found, create a empty itemCollection..
@@ -367,8 +362,8 @@ public class DMSPlugin extends AbstractPlugin {
 
 			blobWorkitem.replaceItemValue("type", "workitemlob");
 			// generate default uniqueid...
-			blobWorkitem.replaceItemValue(EntityService.UNIQUEID, WorkflowKernel.generateUniqueID());
-			blobWorkitem.replaceItemValue("$UniqueidRef", parentWorkitem.getItemValueString(EntityService.UNIQUEID));
+			blobWorkitem.replaceItemValue(WorkflowKernel.UNIQUEID, WorkflowKernel.generateUniqueID());
+			blobWorkitem.replaceItemValue("$UniqueidRef", parentWorkitem.getItemValueString(WorkflowKernel.UNIQUEID));
 
 		}
 		return blobWorkitem;

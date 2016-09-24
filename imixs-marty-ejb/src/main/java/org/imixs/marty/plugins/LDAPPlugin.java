@@ -96,7 +96,7 @@ public class LDAPPlugin extends AbstractPlugin {
 	 * Run only on Profile Entities
 	 */
 	@Override
-	public int run(ItemCollection adocumentContext,
+	public ItemCollection run(ItemCollection adocumentContext,
 			ItemCollection documentActivity) throws PluginException {
 		documentContext = adocumentContext;
 		// validate profile..
@@ -104,14 +104,10 @@ public class LDAPPlugin extends AbstractPlugin {
 			updateLDAPAttributes();
 		}
 
-		return PLUGIN_OK;
+		return documentContext;
 	}
 
-	@Override
-	public void close(int arg0) throws PluginException {
-		// no action necessary
-	}
-
+	
 	/**
 	 * Updates txtUserName, txtEmail if ldap entry found
 	 * 

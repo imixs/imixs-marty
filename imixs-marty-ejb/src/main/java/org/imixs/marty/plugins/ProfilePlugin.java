@@ -40,7 +40,6 @@ import javax.naming.NamingException;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.InvalidAccessException;
@@ -113,7 +112,7 @@ public class ProfilePlugin extends AbstractPlugin {
 	 * plug-in tests if the usernam or email is unique
 	 **/
 	@Override
-	public int run(ItemCollection workItem, ItemCollection documentActivity)
+	public ItemCollection run(ItemCollection workItem, ItemCollection documentActivity)
 			throws PluginException {
 
 		// validate profile..
@@ -126,13 +125,10 @@ public class ProfilePlugin extends AbstractPlugin {
 		// translate dynamic activity values - (this is independent form the type of the workitem)
 		updateActivityEntity(workItem, documentActivity);
 
-		return Plugin.PLUGIN_OK;
+		return workItem;
 	}
 
-	@Override
-	public void close(int arg0) throws PluginException {
-
-	}
+	
 
 	/**
 	 * replace the text phrases in the activity

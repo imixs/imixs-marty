@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.Plugin;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.engine.plugins.ResultPlugin;
 import org.imixs.workflow.exceptions.PluginException;
@@ -62,7 +61,7 @@ public class AppoverPlugin extends AbstractPlugin {
 	 **/
 	@SuppressWarnings("unchecked")
 	@Override
-	public int run(ItemCollection workitem, ItemCollection documentActivity) throws PluginException {
+	public ItemCollection run(ItemCollection workitem, ItemCollection documentActivity) throws PluginException {
 
 		ItemCollection evalItemCollection = ResultPlugin.evaluateWorkflowResult(documentActivity, workitem);
 
@@ -99,12 +98,9 @@ public class AppoverPlugin extends AbstractPlugin {
 			}
 		}
 
-		return Plugin.PLUGIN_OK;
+		return workitem;
 	}
 
-	@Override
-	public void close(int arg0) throws PluginException {
-
-	}
+	
 
 }

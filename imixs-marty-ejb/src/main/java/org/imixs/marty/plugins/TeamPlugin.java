@@ -34,7 +34,6 @@ import java.util.Vector;
 import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
@@ -147,7 +146,7 @@ public class TeamPlugin extends AbstractPlugin {
 	 **/
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public int run(ItemCollection workItem, ItemCollection documentActivity) throws PluginException {
+	public ItemCollection run(ItemCollection workItem, ItemCollection documentActivity) throws PluginException {
 
 		documentContext = workItem;
 
@@ -358,17 +357,11 @@ public class TeamPlugin extends AbstractPlugin {
 		workItem.replaceItemValue("txtSpaceName", sSpaceName);
 		workItem.replaceItemValue("txtProcessName", sProcessName);
 
-		return Plugin.PLUGIN_OK;
-	}
-
-	/**
-	 * Remove space and process properties
-	 */
-	@Override
-	public void close(int arg0) throws PluginException {
 		documentContext.removeItem("space");
 		documentContext.removeItem("process");
+		return documentContext;
 	}
+
 
 	/**
 	 * Helper method to lookup an entity in internal cache or load it from
