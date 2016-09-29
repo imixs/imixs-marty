@@ -69,7 +69,7 @@
 	</modules>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<org.imixs.workflow.version>3.9.1-SNAPSHOT</org.imixs.workflow.version>
+		<org.imixs.workflow.version>3.9.1</org.imixs.workflow.version>
 		<org.imixs.adapters.version>1.4.5-SNAPSHOT</org.imixs.adapters.version>
 		<!-- imixs-github-repo on github - see ~/.m2/settings.xml -->
 		<github.global.server>imixs-github-repo</github.global.server>
