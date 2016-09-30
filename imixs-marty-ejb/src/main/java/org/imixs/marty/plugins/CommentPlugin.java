@@ -35,11 +35,9 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.Plugin;
-import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.engine.plugins.ResultPlugin;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.plugins.ResultPlugin;
-import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
  * This plugin suports a commment feature. Comments entered by a user into the
@@ -64,11 +62,6 @@ public class CommentPlugin extends AbstractPlugin {
 
 	private static Logger logger = Logger.getLogger(CommentPlugin.class.getName());
 
-	@Override
-	public void init(WorkflowContext actx) throws PluginException {
-		super.init(actx);
-	}
-
 	/**
 	 * This method updates the comment list. There for the method copies the
 	 * txtComment into the txtCommentList and clears the txtComment field
@@ -77,7 +70,7 @@ public class CommentPlugin extends AbstractPlugin {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public int run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
+	public ItemCollection run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
 
 		documentContext = adocumentContext;
 	
@@ -88,7 +81,7 @@ public class CommentPlugin extends AbstractPlugin {
 			// test ignore
 			if ("true".equals(evalItemCollection.getItemValueString("comment.ignore"))) {
 				logger.fine("ignore=true - skipping txtCommentLog");
-				return Plugin.PLUGIN_OK;
+				return documentContext;
 			}
 		}
 
@@ -97,7 +90,7 @@ public class CommentPlugin extends AbstractPlugin {
 		List<Map<String, Object>> vCommentList = documentContext.getItemValue("txtCommentLog");
 		Map<String, Object> log = new HashMap<String, Object>();
 		Date dt = Calendar.getInstance().getTime();
-		String remoteUser = this.getEjbSessionContext().getCallerPrincipal().getName();
+		String remoteUser = this.getWorkflowService().getUserName();
 		log.put("datcomment", dt);
 		log.put("nameditor", remoteUser);
 
@@ -118,17 +111,12 @@ public class CommentPlugin extends AbstractPlugin {
 			documentContext.replaceItemValue("txtcommentLog", vCommentList);
 		}
 
-		return Plugin.PLUGIN_OK;
-
-	}
-
-	/**
-	 * remove comment properties
-	 */
-	@Override
-	public void close(int arg0) throws PluginException {
 		documentContext.removeItem("comment");
 		documentContext.removeItem("comment.ignore");
+		return documentContext;
+
 	}
+
+	
 
 }

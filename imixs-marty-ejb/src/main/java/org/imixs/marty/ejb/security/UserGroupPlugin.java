@@ -35,12 +35,13 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.plugins.jee.AbstractPlugin;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * This Plugin updates the userId and password for a user profile. The Update
@@ -56,9 +57,9 @@ import org.imixs.workflow.plugins.jee.AbstractPlugin;
  */
 public class UserGroupPlugin extends AbstractPlugin {
 	public static final String INVALID_CONTEXT = "INVALID_CONTEXT";
-	static final int EVENT_PROFILE_LOCK= 90;
-	static final int TASK_PPROFILE_ACTIVE= 210;
-	EntityService entityService = null;
+	static final int EVENT_PROFILE_LOCK = 90;
+	static final int TASK_PPROFILE_ACTIVE = 210;
+	DocumentService documentService = null;
 	UserGroupService userGroupService = null;;
 
 	int sequenceNumber = -1;
@@ -77,7 +78,7 @@ public class UserGroupPlugin extends AbstractPlugin {
 			// yes we are running in a WorkflowService EJB
 			WorkflowService ws = (WorkflowService) actx;
 			// get latest model version....
-			entityService = ws.getEntityService();
+			documentService = ws.getDocumentService();
 		}
 
 		// lookup profile service EJB
@@ -88,7 +89,8 @@ public class UserGroupPlugin extends AbstractPlugin {
 			Context ctx = (Context) ictx.lookup("java:comp/env");
 			userGroupService = (UserGroupService) ctx.lookup(jndiName);
 		} catch (NamingException e) {
-			logger.warning("[UserGroupPlugin] unable to lookup UserGroupService - check deployment or system model configuration!");
+			logger.warning(
+					"[UserGroupPlugin] unable to lookup UserGroupService - check deployment or system model configuration!");
 			userGroupService = null;
 		}
 	}
@@ -100,43 +102,35 @@ public class UserGroupPlugin extends AbstractPlugin {
 	 * @throws PluginException
 	 */
 	@Override
-	public int run(ItemCollection documentContext,
-			ItemCollection documentActivity) throws PluginException {
+	public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
 
 		// skip if no userGroupService found
 		if (userGroupService == null)
-			return Plugin.PLUGIN_OK;
+			return documentContext;
 
 		workitem = documentContext;
 
 		// check entity type....
 		String sType = workitem.getItemValueString("Type");
 		if (!("profile".equals(sType)))
-			return Plugin.PLUGIN_OK;
+			return documentContext;
 
 		// skip if userDB support is not enabled
 		if (!isUserDBEnabled())
-			return Plugin.PLUGIN_OK;
+			return documentContext;
 
-		
 		// if processid=210 and activity=20 - delete all groups
-		int iProcessID=workitem.getItemValueInteger("$ProcessID");
-		int iActivityID=documentActivity.getItemValueInteger("numActivityID");
-		if (iProcessID>=TASK_PPROFILE_ACTIVE && iActivityID==EVENT_PROFILE_LOCK) {
-			logger.info("Lock profile '" + workitem.getItemValueString("txtname")+"'");
+		int iProcessID = workitem.getItemValueInteger("$ProcessID");
+		int iActivityID = documentActivity.getItemValueInteger("numActivityID");
+		if (iProcessID >= TASK_PPROFILE_ACTIVE && iActivityID == EVENT_PROFILE_LOCK) {
+			logger.info("Lock profile '" + workitem.getItemValueString("txtname") + "'");
 			workitem.replaceItemValue("txtGroups", "");
 		}
-		
-		
-		logger.fine("[UserGroupPlugin] update profile '" + workitem.getItemValueString("txtname")+"'....");
+
+		logger.fine("[UserGroupPlugin] update profile '" + workitem.getItemValueString("txtname") + "'....");
 		userGroupService.updateUser(workitem);
 
-		return Plugin.PLUGIN_OK;
-	}
-
-	@Override
-	public void close(int status) throws PluginException {
-
+		return documentContext;
 	}
 
 	/**
@@ -145,23 +139,17 @@ public class UserGroupPlugin extends AbstractPlugin {
 	 * @return
 	 */
 	private boolean isUserDBEnabled() {
+		String searchterm = "(type:\"configuration\" AND txtname:\"BASIC\")";
+		Collection<ItemCollection> col;
 		try {
-			String sQuery = "SELECT config FROM Entity AS config "
-					+ " JOIN config.textItems AS t2"
-					+ " WHERE config.type = 'configuration'"
-					+ " AND t2.itemName = 'txtname'"
-					+ " AND t2.itemValue = 'BASIC'"
-					+ " ORDER BY t2.itemValue asc";
-			Collection<ItemCollection> col = entityService.findAllEntities(
-					sQuery, 0, 1);
+			col = documentService.find(searchterm, 1, 0);
+		} catch (QueryException e) {
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+		}
 
-			if (col.size() > 0) {
-				ItemCollection config = col.iterator().next();
-				return config.getItemValueBoolean("keyEnableUserDB");
-			}
-		} catch (Exception e) {
-			// no op
-			logger.warning("UserGroupPlugin - unable to read configuration!");
+		if (col.size() > 0) {
+			ItemCollection config = col.iterator().next();
+			return config.getItemValueBoolean("keyEnableUserDB");
 		}
 
 		return false;

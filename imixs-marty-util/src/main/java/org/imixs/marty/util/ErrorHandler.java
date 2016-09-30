@@ -8,9 +8,9 @@ import java.util.logging.Logger;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 
+import org.imixs.workflow.engine.plugins.RulePlugin;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.WorkflowException;
-import org.imixs.workflow.plugins.RulePlugin;
 
 public class ErrorHandler {
 
@@ -33,7 +33,7 @@ public class ErrorHandler {
 				&& pe.getErrorParameters() != null
 				&& pe.getErrorParameters().length > 0) {
 
-			// create a faces messae for each param
+			// create a faces message for each parameter
 			Object[] messages = pe.getErrorParameters();
 			for (Object aMessage : messages) {
 
@@ -43,7 +43,7 @@ public class ErrorHandler {
 								.toString(), null));
 			}
 		} else {
-			// default behaivor
+			// default behavior
 			addErrorMessage(pe);
 		}
 

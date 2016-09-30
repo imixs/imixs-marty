@@ -25,7 +25,7 @@ package org.imixs.marty.workflow;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,9 +41,11 @@ import javax.naming.NamingException;
 
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.engine.lucene.LuceneSearchService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.lucene.LuceneSearchService;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * The WorkitemLinkController provides suggest-box behavior based on the JSF 2.0
@@ -73,9 +75,7 @@ public class WorkitemLinkController implements Serializable {
 	@EJB
 	protected WorkflowService workflowService;
 
-	@EJB
-	protected LuceneSearchService luceneSearchService;
-
+	
 	private static final long serialVersionUID = 1L;
 	private List<ItemCollection> searchResult = null;
 	private Map<String, List<ItemCollection>> externalReferences = null;
@@ -161,7 +161,7 @@ public class WorkitemLinkController implements Serializable {
 				sSearchTerm += " (*" + input.toLowerCase() + "*)";
 			}
 
-			searchResult = luceneSearchService.search(sSearchTerm, workflowService);
+			searchResult = workflowService.getDocumentService().find(sSearchTerm,0,-1);
 			// clone result list
 			for (int i = 0; i < searchResult.size(); i++) {
 				searchResult.set(i, WorkitemHelper.clone(searchResult.get(i)));
@@ -272,7 +272,6 @@ public class WorkitemLinkController implements Serializable {
 
 			logger.fine("lookup references for: " + filter);
 
-			long lTime = System.currentTimeMillis();
 			// lookup the references...
 			List<String> list = workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
 			// empty list?
@@ -282,34 +281,41 @@ public class WorkitemLinkController implements Serializable {
 			}
 
 			// start query and filter the result
-			String sQuery = "SELECT entity FROM Entity entity "
-					+ " WHERE entity.type IN ('workitem','workitemarchive') AND entity.id IN (";
+			String sQuery ="(";
+			sQuery=" (type:\"workitem\" OR type:\"workitemarchive\") AND (";
 			for (String aID : list) {
-				sQuery += "'" + aID + "',";
+				sQuery += "$uniqueid:\"" + aID + "\" OR ";
 			}
 			// cut last ,
-			sQuery = sQuery.substring(0, sQuery.length() - 1);
-			sQuery += ")";
-			sQuery += " ORDER BY entity.created DESC";
+			sQuery = sQuery.substring(0, sQuery.length() - 3);
+		
+			sQuery +=" )";
 
-			Collection<ItemCollection> workitems = workflowService.getEntityService().findAllEntities(sQuery, 0, -1);
+			List<ItemCollection> workitems;
+			try {
+				workitems = workflowService.getDocumentService().find(sQuery, 999,0);
+				// sort by modified
+				Collections.sort(workitems, new ItemCollectionComparator("$modified", true));
+				
 
-			logger.fine("  WorkitemRef Lookup:  " + (System.currentTimeMillis() - lTime) + " ms");
-
-			if (workitems.size() == 0) {
-				references.put(filter, filterResult);
-				return filterResult;
-			}
-
-			// now test if filter matches, and clone the workItem
-			for (ItemCollection itemcol : workitems) {
-				// test
-				if (WorkitemHelper.matches(itemcol, filter)) {
-					filterResult.add(WorkitemHelper.clone(itemcol));
+				
+				if (workitems.size() == 0) {
+					references.put(filter, filterResult);
+					return filterResult;
 				}
-			}
 
-			references.put(filter, filterResult);
+				// now test if filter matches, and clone the workItem
+				for (ItemCollection itemcol : workitems) {
+					// test
+					if (WorkitemHelper.matches(itemcol, filter)) {
+						filterResult.add(WorkitemHelper.clone(itemcol));
+					}
+				}
+
+				references.put(filter, filterResult);
+			} catch (QueryException e) {
+				logger.warning("loadVersionWorkItemList - invalid query: " + e.getMessage());
+			}
 		}
 		return filterResult;
 	}
@@ -355,16 +361,22 @@ public class WorkitemLinkController implements Serializable {
 			if ("".equals(uniqueid))
 				return filterResult;
 
-			long lTime = System.currentTimeMillis();
 			// select all references.....
-			String sQuery = "SELECT workitem FROM Entity AS workitem" + " JOIN workitem.textItems AS rnr"
-					+ " WHERE workitem.type IN ('workitem','workitemarchive') " + " AND rnr.itemName = '"
-					+ LINK_PROPERTY + "'" + " AND rnr.itemValue='" + uniqueid + "'" + " ORDER BY workitem.created DESC";
-
-			logger.fine("  Incomming Referece Lookup - query:  " + sQuery);
-			Collection<ItemCollection> workitems = null;
+//			String sQuery = "SELECT workitem FROM Entity AS workitem" + " JOIN workitem.textItems AS rnr"
+//					+ " WHERE workitem.type IN ('workitem','workitemarchive') " + " AND rnr.itemName = '"
+//					+ LINK_PROPERTY + "'" + " AND rnr.itemValue='" + uniqueid + "'" + " ORDER BY workitem.created DESC";
+			
+			
+			String sQuery ="(";
+			sQuery=" (type:\"workitem\" OR type:\"workitemarchive\") AND ("+LINK_PROPERTY+ ":\"" + uniqueid + "\")";
+			
+			List<ItemCollection> workitems = null;
 			try {
-				workitems = workflowService.getEntityService().findAllEntities(sQuery, 0, -1);
+				workitems = workflowService.getDocumentService().find(sQuery, 0, -1);
+				// sort by modified
+				Collections.sort(workitems, new ItemCollectionComparator("$modified", true));
+				
+				
 				if (workitems.size() == 0) {
 					externalReferences.put(filter, filterResult);
 					return filterResult;
@@ -384,10 +396,7 @@ public class WorkitemLinkController implements Serializable {
 					}
 				}
 			}
-
 			externalReferences.put(filter, filterResult);
-
-			logger.fine("  External Referece Lookup:  " + (System.currentTimeMillis() - lTime) + " ms");
 		}
 		return filterResult;
 

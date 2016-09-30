@@ -30,7 +30,6 @@ package org.imixs.marty.plugins;
 import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.PluginException;
 
 /**
@@ -42,18 +41,13 @@ import org.imixs.workflow.exceptions.PluginException;
  * @version 2.0
  * 
  */
-public class ApplicationPlugin extends org.imixs.workflow.plugins.ApplicationPlugin {
+public class ApplicationPlugin extends org.imixs.workflow.engine.plugins.ApplicationPlugin {
 	ItemCollection documentContext;
 
 	private static Logger logger = Logger.getLogger(ApplicationPlugin.class.getName());
 
 	@Override
-	public void init(WorkflowContext actx) throws PluginException {
-		super.init(actx);
-	}
-
-	@Override
-	public int run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
+	public ItemCollection run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
 
 		documentContext = adocumentContext;
 
@@ -62,12 +56,7 @@ public class ApplicationPlugin extends org.imixs.workflow.plugins.ApplicationPlu
 
 			documentContext.replaceItemValue("txtSubject", " - no subject - ");
 
-		return super.run(documentContext, documentActivity);
-	}
-
-	@Override
-	public void close(int arg0) throws PluginException {
-		super.close(arg0);
+		documentContext = super.run(documentContext, documentActivity);
 
 		// now cut txtworkflowgroup if ~ is available
 		String sGroupName = documentContext.getItemValueString("txtWorkflowGroup");
@@ -76,9 +65,8 @@ public class ApplicationPlugin extends org.imixs.workflow.plugins.ApplicationPlu
 			logger.fine("[ApplicationPlugin] set workflowGroup=" + sGroupName);
 			documentContext.replaceItemValue("txtWorkflowGroup", sGroupName);
 		}
-
+		return documentContext;
 	}
 
-	
 
 }

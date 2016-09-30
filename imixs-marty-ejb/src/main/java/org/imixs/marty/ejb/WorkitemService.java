@@ -36,6 +36,8 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.engine.ModelService;
+import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
@@ -62,13 +64,10 @@ import org.imixs.workflow.exceptions.ProcessingErrorException;
 public class WorkitemService {
 
 	@EJB
-	org.imixs.workflow.jee.ejb.EntityService entityService;
+	WorkflowService workflowService;
 
 	@EJB
-	org.imixs.workflow.jee.ejb.WorkflowService workflowService;
-
-	@EJB
-	org.imixs.workflow.jee.ejb.ModelService modelService;
+	ModelService modelService;
 	
 	private static Logger logger = Logger.getLogger(WorkitemService.class
 			.getName());

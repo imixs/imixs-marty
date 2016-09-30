@@ -17,14 +17,11 @@ import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
-import org.imixs.workflow.Plugin;
-import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.WorkflowKernel;
-import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.plugins.jee.AbstractPlugin;
-import org.imixs.workflow.plugins.jee.VersionPlugin;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.engine.plugins.VersionPlugin;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * The DMS Plug-in stores attached files of a workitem into a separated
@@ -55,22 +52,11 @@ public class DMSPlugin extends AbstractPlugin {
 	public final static String DEFAULT_PROTOCOLL = "file://";
 	public final static String BLOBWORKITEMID = "$BlobWorkitem";
 
-	private WorkflowService workflowService = null;
 	ItemCollection workitem = null;
 	private ItemCollection blobWorkitem = null;
 	private static Logger logger = Logger.getLogger(DMSPlugin.class.getName());
 
-	@Override
-	public void init(WorkflowContext actx) throws PluginException {
-
-		super.init(actx);
-		// check for an instance of WorkflowService
-		if (actx instanceof WorkflowService) {
-			// yes we are running in a WorkflowService EJB
-			workflowService = (WorkflowService) actx;
-		}
-
-	}
+	
 
 	/**
 	 * Update the read and writeAccess of the blobWorkitem
@@ -84,14 +70,14 @@ public class DMSPlugin extends AbstractPlugin {
 	 **/
 	@SuppressWarnings("unchecked")
 	@Override
-	public int run(ItemCollection documentContext, ItemCollection documentActivity) {
+	public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) {
 
 		workitem = documentContext;
 
 		// Skip if plugin this processing a new version created by the version
 		// plugin - in this case no changes to the version are needed
 		if (VersionPlugin.isProcssingVersion(workitem)) {
-			return Plugin.PLUGIN_OK;
+			return workitem;
 
 		}
 
@@ -101,7 +87,7 @@ public class DMSPlugin extends AbstractPlugin {
 		if (blobWorkitem == null) {
 			logger.warning("[DMSPlugin] can't access blobworkitem for '"
 					+ workitem.getItemValueString(WorkflowService.UNIQUEID) + "'");
-			return Plugin.PLUGIN_WARNING;
+			return workitem;
 		}
 
 		// import files if txtDmsImport is defined.
@@ -125,25 +111,22 @@ public class DMSPlugin extends AbstractPlugin {
 		blobWorkitem.replaceItemValue("type", "workitemlob");
 
 		logger.fine(
-				"[DMBPlugin] saving blobWorkitem '" + blobWorkitem.getItemValueString(EntityService.UNIQUEID) + "'...");
+				"[DMBPlugin] saving blobWorkitem '" + blobWorkitem.getItemValueString(WorkflowKernel.UNIQUEID) + "'...");
 
 		// update file content and save BlobWorkitem...
 		updateFileContent(workitem, blobWorkitem);
-		blobWorkitem = workflowService.getEntityService().save(blobWorkitem);
+		blobWorkitem = getWorkflowService().getDocumentService().save(blobWorkitem);
 
 		// update property '$BlobWorkitem'
-		workitem.replaceItemValue(BLOBWORKITEMID, blobWorkitem.getItemValueString(EntityService.UNIQUEID));
+		workitem.replaceItemValue(BLOBWORKITEMID, blobWorkitem.getItemValueString(WorkflowKernel.UNIQUEID));
 
 		// update the dms list - e.g. if another plugin had added a file....
-		updateDmsList(workitem, this.getUserName());
+		updateDmsList(workitem, this.getWorkflowService().getUserName());
 
-		return Plugin.PLUGIN_OK;
+		return workitem;
 	}
 
-	public void close(int arg0) {
-		// no op
-
-	}
+	
 
 	/**
 	 * This method returns a list of ItemCollections for all DMS elements
@@ -348,11 +331,20 @@ public class DMSPlugin extends AbstractPlugin {
 		// try to load the blobWorkitem with the parentWorktiem reference....
 		if (!"".equals(sUniqueID)) {
 			// search entity...
-			String sQuery = " SELECT lobitem FROM Entity as lobitem" + " join lobitem.textItems as t2"
-					+ " WHERE lobitem.type = 'workitemlob'" + " AND t2.itemName = '$uniqueidref'"
-					+ " AND t2.itemValue = '" + sUniqueID + "'";
+//			String sQuery = " SELECT lobitem FROM Entity as lobitem" + " join lobitem.textItems as t2"
+//					+ " WHERE lobitem.type = 'workitemlob'" + " AND t2.itemName = '$uniqueidref'"
+//					+ " AND t2.itemValue = '" + sUniqueID + "'";
+//			
+			
+			String sQuery="(type:\"workitemlob\" AND $uniqueidref:\""+sUniqueID + "\")";
+		
 
-			Collection<ItemCollection> itemcol = workflowService.getEntityService().findAllEntities(sQuery, 0, 1);
+			Collection<ItemCollection> itemcol=null;
+			try {
+				itemcol = getWorkflowService().getDocumentService().find(sQuery, 1, 0);
+			} catch (QueryException e) {
+				logger.severe("loadBlobWorkitem - invalid query: " + e.getMessage());
+			}
 			// if blobWorkItem was found return...
 			if (itemcol != null && itemcol.size() > 0) {
 				blobWorkitem = itemcol.iterator().next();
@@ -361,7 +353,7 @@ public class DMSPlugin extends AbstractPlugin {
 
 		} else {
 			// no $uniqueId set - create a UniqueID for the parentWorkitem
-			parentWorkitem.replaceItemValue(EntityService.UNIQUEID, WorkflowKernel.generateUniqueID());
+			parentWorkitem.replaceItemValue(WorkflowKernel.UNIQUEID, WorkflowKernel.generateUniqueID());
 
 		}
 		// if no blobWorkitem was found, create a empty itemCollection..
@@ -370,8 +362,8 @@ public class DMSPlugin extends AbstractPlugin {
 
 			blobWorkitem.replaceItemValue("type", "workitemlob");
 			// generate default uniqueid...
-			blobWorkitem.replaceItemValue(EntityService.UNIQUEID, WorkflowKernel.generateUniqueID());
-			blobWorkitem.replaceItemValue("$UniqueidRef", parentWorkitem.getItemValueString(EntityService.UNIQUEID));
+			blobWorkitem.replaceItemValue(WorkflowKernel.UNIQUEID, WorkflowKernel.generateUniqueID());
+			blobWorkitem.replaceItemValue("$UniqueidRef", parentWorkitem.getItemValueString(WorkflowKernel.UNIQUEID));
 
 		}
 		return blobWorkitem;

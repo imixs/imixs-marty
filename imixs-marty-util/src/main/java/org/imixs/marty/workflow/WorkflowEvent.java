@@ -12,7 +12,7 @@ public class WorkflowEvent {
 	public static final int WORKITEM_BEFORE_SAVE = 14;
 	public static final int WORKITEM_AFTER_SAVE = 15;
 
-
+ 
 	// childevents
 	public static final int CHILDWORKITEM_CREATED = 21;
 	public static final int CHILDWORKITEM_INITIALIZED = 22;

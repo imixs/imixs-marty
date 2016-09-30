@@ -28,40 +28,32 @@
 package org.imixs.marty.view;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
-import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.event.AjaxBehaviorEvent;
-import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.jee.faces.workitem.IViewAdapter;
-import org.imixs.workflow.jee.faces.workitem.ViewController;
-import org.imixs.workflow.lucene.LuceneSearchService;
+import org.imixs.workflow.engine.lucene.LuceneSearchService;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
- * The Marty SearchController extends the Imixs WorklistController and provides
+ * The Marty SearchController extends the Imixs ViewController and provides
  * custom filter and search queries to request a individual WorkList result. The
  * ItemCollection search filter defines custom filter criteria for a customized
  * search result.
- * 
- * The SearchController provides a inner class 'ViewAdapter' to compute the
- * WorkList result based on the search filter. The SearchController provides two
- * modes. The JPQL mode and the search mode. The ViewAdapter method
- * 'findWorkitems' uses a JQPL statement to return a view result. The
- * ViewAdapter method 'searchWorkitems' performs a Lucene Search to return a
- * search result. Both statements are computed by a IQuerBuilder instance which
- * can be injected.
  * 
  * To customize the result an alternative CDI IQueryBuilder bean an be injected.
  * 
@@ -69,10 +61,8 @@ import org.imixs.workflow.lucene.LuceneSearchService;
  * The SearchController has a set of predefined filter properties:
  * 
  * <ul>
- * <li>
- * txtProcessRef = holds a reference to a core process entity</li>
- * <li>
- * txtSpaceRef = holds a list of project references</li>
+ * <li>txtProcessRef = holds a reference to a core process entity</li>
+ * <li>txtSpaceRef = holds a list of project references</li>
  * </ul>
  * 
  * @See QueryBuilder, IQueryBuilder
@@ -82,32 +72,12 @@ import org.imixs.workflow.lucene.LuceneSearchService;
 
 @Named("searchController")
 @SessionScoped
-public class SearchController extends
-		org.imixs.workflow.jee.faces.workitem.WorklistController implements
-		Serializable {
+public class SearchController extends org.imixs.workflow.faces.workitem.ViewController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private static Logger logger = Logger.getLogger(SearchController.class
-			.getName());
+	private static Logger logger = Logger.getLogger(SearchController.class.getName());
 
 	private ItemCollection searchFilter = null;
-
-	@Inject
-	protected IQueryBuilder queryBuilder = null;
-
-	@EJB
-	protected WorkflowService workflowService;
-
-	@EJB
-	protected LuceneSearchService luceneSearchService;
-	
-	/**
-	 * Constructor sets the new ViewController
-	 */
-	public SearchController() {
-		super();
-		setViewAdapter(new SearchController.ViewAdapter());
-	}
 
 	/**
 	 * Resets the search filter and the current result.
@@ -194,11 +164,9 @@ public class SearchController extends
 			return;
 		}
 		// skip if not a workItem...
-		if (!workflowEvent.getWorkitem().getItemValueString("type")
-				.startsWith("workitem"))
+		if (!workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
 			return;
-		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
-				.getEventType()) {
+		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
 			doRefresh();
 		}
 	}
@@ -213,86 +181,173 @@ public class SearchController extends
 		this.searchFilter = searchFilter;
 	}
 
-	public IQueryBuilder getQueryBuilder() {
-		return queryBuilder;
-	}
+	/**
+	 * Returns a Lucene search query based on the define searchFilter parameter
+	 * set
+	 * 
+	 * Depending on the view type the method restricts the result set by
+	 * namcreator or namowner
+	 * 
+	 * @param searchFilter
+	 *            - ItemCollection with filter criteria
+	 * @param view
+	 *            - WorkList View type - @see WorklistController
+	 * 
+	 * @return - a lucene search query
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public String getQuery() {
+		// read the filter parameters and removes duplicates
+		List<Integer> processIDs = searchFilter.getItemValue("$ProcessID");
+		List<String> processRefList = searchFilter.getItemValue("txtProcessRef");
+		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
+		List<String> workflowGroups = searchFilter.getItemValue("txtWorkflowGroup");
+		// trim lists
+		while (processIDs.contains(""))
+			processIDs.remove("");
+		while (processRefList.contains(""))
+			processRefList.remove("");
+		while (spacesRefList.contains(""))
+			spacesRefList.remove("");
+		while (workflowGroups.contains(""))
+			workflowGroups.remove("");
+		while (processRefList.contains("-"))
+			processRefList.remove("-");
+		while (spacesRefList.contains("-"))
+			spacesRefList.remove("-");
 
-	public void setQueryBuilder(IQueryBuilder queryBuilder) {
-		this.queryBuilder = queryBuilder;
-	}
+		List<String> typeList = searchFilter.getItemValue("Type");
+		if (typeList.isEmpty() || "".equals(typeList.get(0))) {
+			typeList = Arrays.asList(new String[] { "workitem", "workitemarchive" });
+		}
 
-	protected class ViewAdapter implements IViewAdapter {
-		/**
-		 * This method computes a search result depending on the current query
-		 * and search filter settings. If a search phrase exists (txtSearch)
-		 * then the method searchWorkitems is called. Otherwise the result list
-		 * is computed by a JQPL statement
-		 */
-		@Override
-		public List<ItemCollection> getViewEntries(ViewController controller) {
-			// test if a search phrase exists
-			if (!queryBuilder.isSearchMode(searchFilter))
-				return findWorkitems(controller);
-			else
-				return searchWorkitems(controller);
+		String sSearchTerm = "";
+
+		// convert type list into comma separated list
+		String sTypeQuery = "";
+		Iterator<String> iterator = typeList.iterator();
+		while (iterator.hasNext()) {
+			sTypeQuery += "type:\"" + iterator.next() + "\"";
+			if (iterator.hasNext())
+				sTypeQuery += " OR ";
+		}
+		sSearchTerm += "(" + sTypeQuery + ") AND";
+
+		// test if result should be restricted to creator?
+		String sCreator = searchFilter.getItemValueString("namCreator");
+
+		// test if result should be restricted to owner?
+		String sOwner = searchFilter.getItemValueString("namOwner");
+
+		Date datFrom = searchFilter.getItemValueDate("datFrom");
+		Date datTo = searchFilter.getItemValueDate("datTo");
+
+		// process ref
+		if (!processRefList.isEmpty()) {
+			sSearchTerm += " (";
+			iterator = processRefList.iterator();
+			while (iterator.hasNext()) {
+				sSearchTerm += "$uniqueidref:\"" + iterator.next() + "\"";
+				if (iterator.hasNext())
+					sSearchTerm += " OR ";
+			}
+			sSearchTerm += " ) AND";
+		}
+
+		// Space ref
+		if (!spacesRefList.isEmpty()) {
+			sSearchTerm += " (";
+			iterator = spacesRefList.iterator();
+			while (iterator.hasNext()) {
+				sSearchTerm += "$uniqueidref:\"" + iterator.next() + "\"";
+				if (iterator.hasNext())
+					sSearchTerm += " OR ";
+			}
+			sSearchTerm += " ) AND";
+		}
+
+		// Workflow Group...
+		if (!workflowGroups.isEmpty()) {
+			sSearchTerm += " (";
+			iterator = workflowGroups.iterator();
+			while (iterator.hasNext()) {
+				sSearchTerm += "txtworkflowgroup:\"" + iterator.next() + "\"";
+				if (iterator.hasNext())
+					sSearchTerm += " OR ";
+			}
+			sSearchTerm += " ) AND";
 
 		}
 
-		/**
-		 * Returns a worklist based on a JQPL statement
-		 * 
-		 * @param controller
-		 *            - the view controller
-		 * @return list of workitems
-		 */
-		private List<ItemCollection> findWorkitems(ViewController controller) {
-			List<ItemCollection> result = new ArrayList<ItemCollection>();
-			if (searchFilter == null)
-				return result;
-			String sQuery = queryBuilder.getJPQLStatement(searchFilter);
-			logger.fine("findWorkitems: " + sQuery);
-			Collection<ItemCollection> col = workflowService.getEntityService()
-					.findAllEntities(sQuery, controller.getRow(),
-							controller.getMaxResult());
-			// clone the result list to reduce size of workitems
-			for (ItemCollection workitem : col) {
-				result.add(WorkitemHelper.clone(workitem));
-			}
-			return result;
+		// serach date range?
+		String sDateFrom = "191401070000"; // because * did not work here
+		String sDateTo = "211401070000";
+		SimpleDateFormat dateformat = new SimpleDateFormat("yyyyMMddHHmm");
+
+		if (datFrom != null) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(datFrom);
+			sDateFrom = dateformat.format(cal.getTime());
+		}
+		if (datTo != null) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(datTo);
+			cal.add(Calendar.DATE, 1);
+			sDateTo = dateformat.format(cal.getTime());
 		}
 
-		/**
-		 * Returns a worklist based on a Lucene search query. IndexFields will
-		 * be search by the keyword search. Keyword search in lucene is case
-		 * sensitive and did not allow wildcards!
-		 * 
-		 * @param controller
-		 *            - the view controller
-		 * @return list of workitems
-		 */
-		private List<ItemCollection> searchWorkitems(ViewController controller) {
-			List<ItemCollection> result = new ArrayList<ItemCollection>();
-			if (searchFilter == null)
-				return result;
-
-			String sSearchTerm = queryBuilder.getSearchQuery(searchFilter);
-			// start lucene search
-			Collection<ItemCollection> col = null;
-			try {
-				logger.fine("searchWorkitems: " + sSearchTerm);
-				col = luceneSearchService.search(sSearchTerm, workflowService);
-			} catch (Exception e) {
-				logger.warning("  lucene error!");
-				e.printStackTrace();
-			}
-
-			// clone the result list to reduce size of workitems
-			for (ItemCollection workitem : col) {
-				result.add(WorkitemHelper.clone(workitem));
-			}
-			return result;
+		if (datFrom != null || datTo != null) {
+			// expected format $created:[20020101 TO 20030101]
+			sSearchTerm += " ($created:[" + sDateFrom + " TO " + sDateTo + "]) AND";
 		}
 
+		// creator
+		if (!"".equals(sCreator)) {
+			sSearchTerm += " (namcreator:\"" + sCreator.toLowerCase() + "\") AND";
+		}
+
+		// owner
+		if (!"".equals(sCreator)) {
+			sSearchTerm += " (namowner:\"" + sOwner.toLowerCase() + "\") AND";
+		}
+
+		if (!processIDs.isEmpty()) {
+			sSearchTerm += " (";
+			Iterator<Integer> iteratorID = processIDs.iterator();
+			while (iteratorID.hasNext()) {
+				sSearchTerm += "$processid:\"" + iteratorID.next() + "\"";
+				if (iteratorID.hasNext())
+					sSearchTerm += " OR ";
+			}
+			sSearchTerm += " ) AND";
+		}
+
+		// Search phrase....
+		String searchphrase = searchFilter.getItemValueString("txtSearch");
+		// escape search phrase
+		try {
+			searchphrase = LuceneSearchService.normalizeSearchTerm(searchphrase);
+		} catch (QueryException e) {
+			// add a new FacesMessage into the FacesContext
+			FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_WARN, e.getLocalizedMessage(), null);
+			FacesContext.getCurrentInstance().addMessage(null,facesMessage);
+			return null;	
+		}
+
+		if (searchphrase!=null && !"".equals(searchphrase)) {
+			// trim
+			searchphrase = searchphrase.trim();
+			// lower case....
+			searchphrase = searchphrase.toLowerCase();
+			sSearchTerm += " (" + searchphrase + ") ";
+		} else
+		// cut last AND
+		if (sSearchTerm.endsWith("AND"))
+			sSearchTerm = sSearchTerm.substring(0, sSearchTerm.length() - 3);
+
+		logger.fine("Query=" + sSearchTerm);
+		return sSearchTerm;
 	}
 
 }

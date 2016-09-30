@@ -29,6 +29,7 @@ package org.imixs.marty.ejb;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Logger;
@@ -44,6 +45,8 @@ import javax.ejb.Stateless;
 
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.engine.DocumentService;
 
 /**
  * The Marty ProcessService provides access to the mary process and space
@@ -74,7 +77,7 @@ public class ProcessService {
 			.getName());
 
 	@EJB
-	private org.imixs.workflow.jee.ejb.EntityService entityService;
+	private DocumentService documentService;
 
 	@Resource
 	private SessionContext ctx;
@@ -102,12 +105,13 @@ public class ProcessService {
 		logger.fine("[ProcessService] getProcessList");
 		List<ItemCollection> processList = new ArrayList<ItemCollection>();
 
-		String sQuery = "SELECT process FROM Entity AS process "
-				+ " JOIN process.textItems AS t2"
-				+ " WHERE process.type = 'process'"
-				+ " AND t2.itemName = 'txtname'" + " ORDER BY t2.itemValue asc";
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, -1);
+//		String sQuery = "SELECT process FROM Entity AS process "
+//				+ " JOIN process.textItems AS t2"
+//				+ " WHERE process.type = 'process'"
+//				+ " AND t2.itemName = 'txtname'" + " ORDER BY t2.itemValue asc";
+//		
+		
+		Collection<ItemCollection> col = documentService.getDocumentsByType("process");
 
 		// create optimized list
 		for (ItemCollection process : col) {
@@ -115,6 +119,9 @@ public class ProcessService {
 			processList.add(clone);
 		}
 
+		// sort by txtname
+		Collections.sort(processList, new ItemCollectionComparator("txtname", true));
+	
 		return processList;
 	}
 
@@ -123,11 +130,14 @@ public class ProcessService {
 		logger.fine("[ProcessService] getSpaces");
 		List<ItemCollection> spaces = new ArrayList<ItemCollection>();
 
-		String sQuery = "SELECT space FROM Entity AS space "
-				+ " JOIN space.textItems AS t2" + " WHERE space.type = 'space'"
-				+ " AND t2.itemName = 'txtname'" + " ORDER BY t2.itemValue asc";
-		Collection<ItemCollection> col = entityService.findAllEntities(sQuery,
-				0, -1);
+//		String sQuery = "SELECT space FROM Entity AS space "
+//				+ " JOIN space.textItems AS t2" + " WHERE space.type = 'space'"
+//				+ " AND t2.itemName = 'txtname'" + " ORDER BY t2.itemValue asc";
+//		Collection<ItemCollection> col = documentService.findAllEntities(sQuery,
+//				0, -1);
+		
+		Collection<ItemCollection> col = documentService.getDocumentsByType("process");
+
 
 		// create optimized list
 		for (ItemCollection space : col) {
@@ -135,7 +145,9 @@ public class ProcessService {
 			spaces.add(clone);
 
 		}
-		return spaces;
+		// sort by txtname
+		Collections.sort(spaces, new ItemCollectionComparator("txtname", true));
+		return spaces; 
 	}
 
 	
@@ -151,7 +163,7 @@ public class ProcessService {
 		clone.replaceItemValue("isManager", false);
 
 		// check the isTeam status for the current user
-		List<String> userNameList = entityService.getUserNameList();
+		List<String> userNameList = documentService.getUserNameList();
 		Vector<String> vNameList = (Vector<String>) orgunit
 				.getItemValue("namTeam");
 		// check if one entry matches....

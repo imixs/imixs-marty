@@ -43,9 +43,9 @@ import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.engine.lucene.LuceneSearchService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.lucene.LuceneSearchService;
 
 /**
  * The UserInputController provides suggest-box behavior based on the JSF 2.0
@@ -76,8 +76,6 @@ public class UserInputController implements Serializable {
 	@EJB
 	protected WorkflowService workflowService;
 	
-	@EJB
-	protected LuceneSearchService luceneSearchService;
 
 
 	private List<ItemCollection> searchResult = null;
@@ -172,10 +170,9 @@ public class UserInputController implements Serializable {
 		Collection<ItemCollection> col = null;
 		try {
 			logger.fine("searchWorkitems: " + sQuery);
-			col = luceneSearchService.search(sQuery, workflowService);
+			col = workflowService.getDocumentService().find(sQuery,0,-1);
 		} catch (Exception e) {
-			logger.warning("  lucene error!");
-			e.printStackTrace();
+			logger.warning("  lucene error - "+e.getMessage());
 		}
 
 		for (ItemCollection profile : col) {

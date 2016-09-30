@@ -50,10 +50,9 @@ import javax.naming.NamingException;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.Plugin;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.WorkflowService;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * This Plugin extends the Imixs Workflow Plugin.
@@ -68,10 +67,9 @@ import org.imixs.workflow.jee.ejb.WorkflowService;
  * @author rsoika
  * @version 2.0
  */
-public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
+public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 
 	private ProfileService profileService = null;
-	private WorkflowService workflowService = null;
 
 	public static String PROFILESERVICE_NOT_BOUND = "PROFILESERVICE_NOT_BOUND";
 	public static String PROPERTYSERVICE_NOT_BOUND = "PROPERTYSERVICE_NOT_BOUND";
@@ -83,12 +81,6 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 	public void init(WorkflowContext actx) throws PluginException {
 
 		super.init(actx);
-
-		// get workflow service instance
-		if (actx instanceof WorkflowService) {
-			// yes we are running in a WorkflowService EJB
-			workflowService = (WorkflowService) actx;
-		}
 
 		// lookup profile service EJB
 		String jndiName = "ejb/ProfileService";
@@ -110,14 +102,11 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 	 * This method adds the attachments of the blob workitem to the MimeMessage
 	 */
 	@Override
-	public int run(ItemCollection documentContext,
+	public ItemCollection run(ItemCollection documentContext,
 			ItemCollection documentActivity) throws PluginException {
 		// run default functionality
-		int result = super.run(documentContext, documentActivity);
-		// terminate if the result was an error
-		if (result == Plugin.PLUGIN_ERROR)
-			return Plugin.PLUGIN_ERROR;
-
+		ItemCollection result= super.run(documentContext, documentActivity);
+		
 		// now get the Mail Session object
 		MimeMessage mailMessage = (MimeMessage) super.getMailMessage();
 		if (mailMessage != null) {
@@ -132,7 +121,7 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 				}
 			}
 		}
-		return Plugin.PLUGIN_OK;
+		return result;
 	}
 
 
@@ -158,14 +147,14 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		try {
 			aAddr = fetchEmail(aAddr);
 			if (aAddr.indexOf('@') == -1) {
-				System.out.println("[MartyMailPlugin] smtp mail address for '"
+				logger.warning("smtp mail address for '"
 						+ aAddr + "' could not be resolved!");
 				return null;
 			}
 		} catch (NamingException e) {
 			// no valid email was found!
-			logger.severe("[MartyMailPlugin] mail for '" + aAddr
-					+ "' could not be resolved!");
+			logger.warning("smtp mail address for '" + aAddr
+					+ "' could not be resolved - "+e.getMessage());
 			// e.printStackTrace();
 			// avoid sending mail to this address!
 			return null;
@@ -364,16 +353,23 @@ public class MailPlugin extends org.imixs.workflow.plugins.jee.MailPlugin {
 		String sUniqueID = itemCol.getItemValueString("$uniqueid");
 
 		// search entity...
-		String sQuery = " SELECT lobitem FROM Entity as lobitem"
-				+ " join lobitem.textItems as t1"
-				+ " join lobitem.textItems as t2"
-				+ " WHERE t1.itemName = 'type'"
-				+ " AND t1.itemValue = 'workitemlob'"
-				+ " AND t2.itemName = '$uniqueidref'" + " AND t2.itemValue = '"
-				+ sUniqueID + "'";
+//		String sQuery = " SELECT lobitem FROM Entity as lobitem"
+//				+ " join lobitem.textItems as t1"
+//				+ " join lobitem.textItems as t2"
+//				+ " WHERE t1.itemName = 'type'"
+//				+ " AND t1.itemValue = 'workitemlob'"
+//				+ " AND t2.itemName = '$uniqueidref'" + " AND t2.itemValue = '"
+//				+ sUniqueID + "'";
 
-		Collection<ItemCollection> itemcol = workflowService.getEntityService()
-				.findAllEntities(sQuery, 0, 1);
+		String sQuery="(type:\"workitemlob\" AND $uniqueidref:\""+sUniqueID + "\")";
+		
+		
+		Collection<ItemCollection> itemcol=null;
+		try {
+			itemcol = getWorkflowService().getDocumentService().find(sQuery, 1, 0);
+		} catch (QueryException e) {
+			logger.severe("loadBlobWorkitem - invalid query: " + e.getMessage());
+		}
 		if (itemcol != null && itemcol.size() > 0) {
 			blobWorkitem = itemcol.iterator().next();
 		}

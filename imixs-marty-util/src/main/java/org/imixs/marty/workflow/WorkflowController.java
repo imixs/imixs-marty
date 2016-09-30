@@ -29,7 +29,7 @@ package org.imixs.marty.workflow;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -50,17 +50,20 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
 
+import org.imixs.marty.ejb.WorkitemService;
 import org.imixs.marty.model.ProcessController;
 import org.imixs.marty.util.ErrorHandler;
 import org.imixs.marty.util.ValidationException;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.exceptions.QueryException;
+import org.imixs.workflow.faces.util.LoginController;
 import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
-import org.imixs.workflow.jee.faces.util.LoginController;
 
 /**
  * The marty WorkflowController extends the
@@ -81,7 +84,7 @@ import org.imixs.workflow.jee.faces.util.LoginController;
  */
 @Named
 @ConversationScoped
-public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.WorkflowController
+public class WorkflowController extends org.imixs.workflow.faces.workitem.WorkflowController
 		implements Serializable {
 
 	public static final String DEFAULT_EDITOR_ID = "form_panel_simple#basic";
@@ -92,7 +95,7 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 
 	/* Services */
 	@EJB
-	protected org.imixs.marty.ejb.WorkitemService workitemService;
+	protected WorkitemService workitemService;
 
 	@Inject
 	protected ProcessController processController;
@@ -648,22 +651,29 @@ public class WorkflowController extends org.imixs.workflow.jee.faces.workitem.Wo
 		versions = new ArrayList<ItemCollection>();
 		if (this.isNewWorkitem() || null == getWorkitem())
 			return;
-		Collection<ItemCollection> col = null;
+		List<ItemCollection> col = null;
 		String sRefID = getWorkitem().getItemValueString("$workitemId");
-		String refQuery = "SELECT entity FROM Entity entity " + " JOIN entity.textItems AS t"
-				+ "  WHERE entity.type IN ('workitem', 'workitemarchive', 'workitemversion') "
-				+ "  AND t.itemName = '$workitemid'" + "  AND t.itemValue = '" + sRefID + "' "
-				+ " ORDER BY entity.modified ASC";
+//		String refQuery = "SELECT entity FROM Entity entity " + " JOIN entity.textItems AS t"
+//				+ "  WHERE entity.type IN ('workitem', 'workitemarchive', 'workitemversion') "
+//				+ "  AND t.itemName = '$workitemid'" + "  AND t.itemValue = '" + sRefID + "' "
+//				+ " ORDER BY entity.modified ASC";
 
-		col = this.getEntityService().findAllEntities(refQuery, 0, -1);
-
-		// Only return version list if more than one version was found!
-		if (col.size() > 1) {
-			for (ItemCollection aworkitem : col) {
-				versions.add(aworkitem);
+		String refQuery="( (type:\"workitem\" OR type:\"workitemarchive\" OR type:\"workitemversion\") AND $workitemid:\""+sRefID + "\")";
+		try {
+			col = this.getWorkflowService().getDocumentService().find(refQuery, 999,0);
+			// sort by $modified
+			Collections.sort(col, new ItemCollectionComparator("$modified", true));
+			
+			// Only return version list if more than one version was found!
+			if (col.size() > 1) {
+				for (ItemCollection aworkitem : col) {
+					versions.add(aworkitem);
+				}
 			}
-		}
 
+		} catch (QueryException e) {
+			logger.warning("loadVersionWorkItemList - invalid query: " + e.getMessage());
+		}
 	}
 
 }

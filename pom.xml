@@ -1,10 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.imixs.marty</groupId>
 	<artifactId>imixs-marty</artifactId>
 	<packaging>pom</packaging>
 	<name>Imixs Workflow - Marty</name>
-	<version>2.9.1-SNAPSHOT</version>
+	<version>3.0.0-SNAPSHOT</version>
 	<description>'Marty' is a sub project of 'Imixs Workflow'. The project provides several business process management solutions. The goal of this project is to simplify the development of workflow management applications by providing a robust and flexible application framework with a set of Java Enterprise components. All the results of this project are subject to the GPL licensing model.</description>
 	<url>https://github.com/imixs/imixs-marty</url>
 
@@ -68,8 +69,8 @@
 	</modules>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<org.imixs.workflow.version>3.9.1</org.imixs.workflow.version>
-		<org.imixs.adapters.version>1.4.6</org.imixs.adapters.version>
+		<org.imixs.workflow.version>4.0.0-SNAPSHOT</org.imixs.workflow.version>
+		<org.imixs.adapters.version>1.4.5-SNAPSHOT</org.imixs.adapters.version>
 		<!-- imixs-github-repo on github - see ~/.m2/settings.xml -->
 		<github.global.server>imixs-github-repo</github.global.server>
 	</properties>
@@ -92,8 +93,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 			</plugin>
 
@@ -212,14 +213,6 @@
 				<groupId>org.imixs.workflow</groupId>
 				<artifactId>imixs-workflow-faces</artifactId>
 				<version>${org.imixs.workflow.version}</version>
-				<scope>provided</scope>
-			</dependency>
-
-
-			<dependency>
-				<groupId>org.imixs.workflow</groupId>
-				<artifactId>imixs-adapters-lucene-ejb</artifactId>
-				<version>${org.imixs.adapters.version}</version>
 				<scope>provided</scope>
 			</dependency>
 

@@ -117,6 +117,7 @@ public class WorkitemHelper {
 				regEx = regEx.trim();
 				String itemName = regEx.substring(0, regEx.indexOf(':'));
 				regEx = regEx.substring(regEx.indexOf(':') + 1);
+				@SuppressWarnings("unchecked")
 				List<Object> itemValues = workitem.getItemValue(itemName);
 				for (Object aValue : itemValues) {
 					if (!aValue.toString().matches(regEx)) {

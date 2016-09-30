@@ -10,12 +10,12 @@ import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.ejb.ReportService;
-import org.imixs.workflow.jee.faces.workitem.DataController;
+import org.imixs.workflow.engine.ReportService;
+import org.imixs.workflow.faces.workitem.DocumentController;
 
 @Named
 @SessionScoped
-public class ReportController extends DataController {
+public class ReportController extends DocumentController {
 
 	@EJB
 	protected ReportService reportService;

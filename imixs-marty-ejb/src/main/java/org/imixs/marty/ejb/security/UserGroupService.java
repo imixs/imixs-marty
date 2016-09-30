@@ -39,6 +39,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 
 /**
@@ -53,14 +54,14 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 @LocalBean
 public class UserGroupService {
 
-	@PersistenceContext(unitName = "org.imixs.workflow.jee.jpa")
+	@PersistenceContext(unitName = "org.imixs.workflow.jpa")
 	private EntityManager manager;
 
 	@Resource
 	SessionContext ctx;
 
 	@EJB
-	org.imixs.workflow.jee.ejb.EntityService entityService;
+	DocumentService documentService;
 
 	private static Logger logger = Logger.getLogger(UserGroupService.class
 			.getName());
@@ -219,7 +220,7 @@ public class UserGroupService {
 
 			try {
 				updateUser(profile);
-				entityService.save(profile);
+				documentService.save(profile);
 			} catch (AccessDeniedException e) {
 				logger.warning("UserGroupService - unable to initialize default admin account");
 				logger.severe(e.getMessage());

@@ -43,8 +43,8 @@ import javax.inject.Named;
 import org.imixs.marty.plugins.DMSPlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.jee.faces.fileupload.FileUploadController;
-import org.imixs.workflow.jee.faces.util.LoginController;
+import org.imixs.workflow.faces.fileupload.FileUploadController;
+import org.imixs.workflow.faces.util.LoginController;
 
 /**
  * This Bean acts a a front controller for the DMS feature. The Bean provides

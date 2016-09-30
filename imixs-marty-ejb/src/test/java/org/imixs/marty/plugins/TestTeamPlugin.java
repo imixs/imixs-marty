@@ -7,18 +7,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import junit.framework.Assert;
-
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Plugin;
+import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+
+import junit.framework.Assert;
 
 /**
  * Test class for RulePlugin
@@ -84,11 +85,11 @@ public class TestTeamPlugin {
 				.mock(WorkflowService.class);
 		when(workflowContextMock.getSessionContext()).thenReturn(null);
 
-		EntityService entityService = Mockito.mock(EntityService.class);
-		when(workflowContextMock.getEntityService()).thenReturn(entityService);
+		DocumentService documentService = Mockito.mock(DocumentService.class);
+		when(workflowContextMock.getDocumentService()).thenReturn(documentService);
 
 		// Simulate entityService.load()...
-		when(entityService.load(Mockito.anyString())).thenAnswer(
+		when(documentService.load(Mockito.anyString())).thenAnswer(
 				new Answer<ItemCollection>() {
 					@Override
 					public ItemCollection answer(InvocationOnMock invocation)
