@@ -24,13 +24,10 @@ import org.imixs.workflow.bpmn.BPMNModel;
 import org.imixs.workflow.bpmn.BPMNParser;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.AbstractWorkflowEnvironment;
-import org.imixs.workflow.jee.ejb.EntityService;
-import org.imixs.workflow.jee.ejb.ModelService;
-import org.imixs.workflow.jee.ejb.WorkflowService;
 import org.junit.Before;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.xml.sax.SAXException;
@@ -67,6 +64,7 @@ public class AbstractWorkflowEnvironment {
 	// @Spy
 	protected WorkflowService workflowService;
 
+	@Spy
 	protected ModelService modelService;
 	protected SessionContext ctx;
 	protected WorkflowContext workflowContext;
@@ -123,9 +121,9 @@ public class AbstractWorkflowEnvironment {
 			}
 		});
 
-		// Mock modelService
-		// modelService = Mockito.m.mock(new ModelService());
-		modelService = new ModelService();
+		// Mock init method of modelService
+		Mockito.doNothing().when(modelService).init();
+		
 		// load default model
 		loadModel();
 
