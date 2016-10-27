@@ -1,0 +1,294 @@
+package org.imixs.marty.plugins;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.logging.Logger;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+
+import org.imixs.marty.plugins.minutes.MinutePlugin;
+import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.WorkflowKernel;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.exceptions.ModelException;
+import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.exceptions.QueryException;
+import org.imixs.workflow.xml.XMLItemCollection;
+import org.imixs.workflow.xml.XMLItemCollectionAdapter;
+
+/**
+ * The Archive Plug-in stores workitems to disk when reached the type
+ * 'workitemarchive'. The plug-in reads properties to define the target
+ * filesystem.
+ * 
+ * archive.path = output directory
+ * 
+ * 
+ * @author rsoika
+ * 
+ */
+public class ArchivePlugin extends AbstractPlugin {
+
+	public final static String IO_ERROR = "IO_ERROR";
+	public final static String DEFAULT_PROTOCOLL = "file://";
+	public final static String BLOBWORKITEMID = "$BlobWorkitem";
+
+	private static Logger logger = Logger.getLogger(ArchivePlugin.class.getName());
+
+	/**
+	 * Archive if workitem type changed to 'workitemarchive'
+	 * 
+	 * Therefore we compare the current task with the next task object.
+	 * 
+	 * @throws PluginException
+	 * 
+	 **/
+	@Override
+	public ItemCollection run(ItemCollection documentContext, ItemCollection event) throws PluginException {
+		Map<String, List<Object>> files = null;
+
+		// get numNextProcessID and modelVersion
+		int iNextProcessID = event.getItemValueInteger("numNextProcessID");
+		int iProcessID = documentContext.getItemValueInteger("$processid");
+		ItemCollection currentTask = null;
+		ItemCollection nextTask = null;
+
+		// get task objects from model version
+		String modelVersion = event.getItemValueString("$modelVersion");
+
+		try {
+
+			currentTask = getCtx().getModelManager().getModel(modelVersion).getTask(iProcessID);
+			nextTask = getCtx().getModelManager().getModel(modelVersion).getTask(iNextProcessID);
+		} catch (ModelException e) {
+			logger.warning("Warning - Task '" + iNextProcessID + "' is not defined by model version '" + modelVersion
+					+ "' : " + e.getMessage());
+			return documentContext;
+		}
+		// check if type will change to archive
+		// note: we need to compare the task objects, because the
+		// documentContext can already be updated by the ApplicationPlugin!
+		if ("workitemarchive".equals(nextTask.getItemValueString("txttype"))
+				&& (!currentTask.getItemValueString("txttype").equals(nextTask.getItemValueString("txttype")))) {
+			// run archive mode!
+
+			String archivePath = computeArchivePath(documentContext);
+
+			// load the blobWorkitem to get the filelist
+			ItemCollection blobWorkitem = loadBlobWorkitem(documentContext);
+			if (blobWorkitem != null) {
+				files = blobWorkitem.getFiles();
+			} else {
+				// no blobworkitem - so we got the files form the current
+				// documentContext
+				files = documentContext.getFiles();
+			}
+
+			writeFiles(archivePath, files);
+
+			// clone workitem and remove file content if available...
+			ItemCollection clone = (ItemCollection) documentContext.clone();
+			clone.replaceItemValue("$file", getCleanFileContent(files));
+			// convert the ItemCollection into a XMLItemcollection...
+			XMLItemCollection xmlItemCollection;
+			try {
+				xmlItemCollection = XMLItemCollectionAdapter.putItemCollection(clone);
+
+				// marshal the Object into an XML Stream....
+				JAXBContext context = JAXBContext.newInstance(XMLItemCollection.class);
+				Marshaller m = context.createMarshaller();
+
+				File file = new File(archivePath + "document.xml");
+				file.mkdirs();
+				m.marshal(xmlItemCollection, file);
+			} catch (Exception e) {
+				logger.severe("failed to archive document " + documentContext.getUniqueID() + " - " + e.getMessage());
+				throw new PluginException(ArchivePlugin.class.getSimpleName(), IO_ERROR,
+						"failed to archive document " + documentContext.getUniqueID() + "(" + e.getMessage() + ")", e);
+			}
+			logger.fine("Document '" + documentContext.getItemValueString(WorkflowKernel.UNIQUEID)
+					+ "' sucessfull archived");
+
+		}
+
+		return documentContext;
+	}
+
+	/**
+	 * This method writes the files assigned to the current workitem to disk
+	 * 
+	 * @throws PluginException
+	 * 
+	 */
+	@SuppressWarnings("unused")
+	private void writeFiles(String archivePath, Map<String, List<Object>> files) throws PluginException {
+
+		if (files == null) {
+			return;
+		}
+		// iterate over files..
+		for (Entry<String, List<Object>> entry : files.entrySet()) {
+			String sFileName = archivePath + entry.getKey();
+			List<?> file = entry.getValue();
+
+			// if data size >0 transfer file to filesystem
+			if (file.size() >= 2) {
+				String contentType = (String) file.get(0);
+				byte[] data = (byte[]) file.get(1);
+				if (data != null && data.length > 1) {
+					// write file...
+
+					logger.fine("archive file " + sFileName);
+					Path newfile = Paths.get(sFileName);
+					
+					try {
+						Files.write(newfile, data);
+					} catch (IOException e) {
+						logger.severe("Unable to archive file " + sFileName + " - " + e.getMessage());
+						throw new PluginException(ArchivePlugin.class.getSimpleName(), IO_ERROR,
+								"failed to write file  " + sFileName + " to disk (" + e.getMessage() + ")", e);
+					}
+
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * This method constructs the archive path form the imixs.properties
+	 * archive.path and the workitem properties $modified, $uniqueid and
+	 * txtWorkflowGroup
+	 * 
+	 * /ARCHIVE_PATH/YYYY/WORKFLOWGROUP/UNIQUEID/
+	 * 
+	 * @return
+	 */
+	private String computeArchivePath(ItemCollection documentContext) {
+		String archivePath = this.getWorkflowService().getPropertyService().getProperties().getProperty("archive.path",
+				"archive");
+		if (archivePath.endsWith(FileSystems.getDefault().getSeparator())) {
+			archivePath = archivePath + FileSystems.getDefault().getSeparator();
+		}
+
+		// build path YEAR/WORKFLOWGRUP/UNIQUEID
+
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy");
+		Date modified = documentContext.getItemValueDate("$modified");
+		if (modified == null) {
+			logger.warning("Document " + documentContext.getUniqueID() + " does not provide $modified!");
+			modified = new Date();
+		}
+		String group = documentContext.getItemValueString("txtworkflowgroup");
+		if (group.isEmpty()) {
+			logger.warning("Document " + documentContext.getUniqueID() + " does not provide txtworkflowgroup!");
+			group = "default";
+		}
+		archivePath = archivePath + FileSystems.getDefault().getSeparator() + formatter.format(modified)
+				+ FileSystems.getDefault().getSeparator() + group + FileSystems.getDefault().getSeparator()
+				+ documentContext.getUniqueID() + FileSystems.getDefault().getSeparator();
+
+		logger.finest("archive path = " + archivePath);
+		return archivePath;
+	}
+
+	/**
+	 * This method loads the BlobWorkitem for a given parent WorkItem. The
+	 * BlobWorkitem is identified by the $unqiueidRef.
+	 * 
+	 * If no BlobWorkitem still exists the method creates a new empty
+	 * BlobWorkitem which can be saved later.
+	 * 
+	 */
+	private ItemCollection loadBlobWorkitem(ItemCollection parentWorkitem) {
+		ItemCollection blobWorkitem = null;
+
+		// is parentWorkitem defined?
+		if (parentWorkitem == null)
+			return null;
+
+		String sUniqueID = parentWorkitem.getItemValueString(WorkflowService.UNIQUEID);
+
+		// try to load the blobWorkitem with the parentWorktiem reference....
+		if (!"".equals(sUniqueID)) {
+
+			String sQuery = "(type:\"workitemlob\" AND $uniqueidref:\"" + sUniqueID + "\")";
+
+			Collection<ItemCollection> itemcol = null;
+			try {
+				itemcol = getWorkflowService().getDocumentService().find(sQuery, 1, 0);
+			} catch (QueryException e) {
+				logger.severe("loadBlobWorkitem - invalid query: " + e.getMessage());
+			}
+			// if blobWorkItem was found return...
+			if (itemcol != null && itemcol.size() > 0) {
+				blobWorkitem = itemcol.iterator().next();
+
+			}
+
+		} else {
+			// no $uniqueId set - create a UniqueID for the parentWorkitem
+			parentWorkitem.replaceItemValue(WorkflowKernel.UNIQUEID, WorkflowKernel.generateUniqueID());
+
+		}
+		// if no blobWorkitem was found, create a empty itemCollection..
+		if (blobWorkitem == null) {
+			blobWorkitem = new ItemCollection();
+
+			blobWorkitem.replaceItemValue("type", "workitemlob");
+			// generate default uniqueid...
+			blobWorkitem.replaceItemValue(WorkflowKernel.UNIQUEID, WorkflowKernel.generateUniqueID());
+			blobWorkitem.replaceItemValue("$UniqueidRef", parentWorkitem.getItemValueString(WorkflowKernel.UNIQUEID));
+
+		}
+		return blobWorkitem;
+
+	}
+
+	/**
+	 * This method clears the File content of the workitem if available. We
+	 * don't want to write the files into the xml stream.
+	 * 
+	 * @param aWorkitem
+	 * @param aBlobWorkitem
+	 */
+	private Map<String, List<Object>> getCleanFileContent(Map<String, List<Object>> files) {
+
+		Map<String, List<Object>> cleanFileList = new HashMap<String, List<Object>>();
+
+		if (files == null) {
+			return cleanFileList;
+		}
+
+		for (Entry<String, List<Object>> entry : files.entrySet()) {
+			String sFileName = entry.getKey();
+			List<?> file = entry.getValue();
+
+			// if data size >0 transfer file into blob
+			if (file.size() >= 2) {
+				String contentType = (String) file.get(0);
+				byte[] empty = { 0 };
+				List<Object> list = new ArrayList<Object>();
+				list.add(contentType);
+				list.add(empty);
+				cleanFileList.put(sFileName, list);
+			}
+		}
+		return cleanFileList;
+	}
+
+}
