@@ -150,11 +150,6 @@ public class ConfigService {
 		// check cache...
 		configItemCollection = cache.get(name);
 		if (configItemCollection == null || discardCache) {
-			// load / create config entity....
-//			String sQuery = "SELECT config FROM Entity AS config " + " JOIN config.textItems AS t2"
-//					+ " WHERE config.type = '" + TYPE + "'" + " AND t2.itemName = 'txtname'" + " AND t2.itemValue = '"
-//					+ name + "'" + " ORDER BY t2.itemValue asc";
-			
 			String sQuery="(type:\"" + TYPE + "\" AND txtname:\""+name + "\")";
 			
 			Collection<ItemCollection> col;

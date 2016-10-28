@@ -36,14 +36,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.event.AjaxBehaviorEvent;
+import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.imixs.marty.config.SetupController;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.lucene.LuceneSearchService;
@@ -78,6 +81,19 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 	private static Logger logger = Logger.getLogger(SearchController.class.getName());
 
 	private ItemCollection searchFilter = null;
+
+	@Inject
+	SetupController setupController;
+
+	/**
+	 * This method set the sort order and sort criteria
+	 * 
+	 **/
+	@PostConstruct
+	public void init() {
+		this.setSortBy(setupController.getSortBy());
+		this.setSortReverse(setupController.getSortReverse());
+	}
 
 	/**
 	 * Resets the search filter and the current result.
@@ -331,11 +347,11 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 		} catch (QueryException e) {
 			// add a new FacesMessage into the FacesContext
 			FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_WARN, e.getLocalizedMessage(), null);
-			FacesContext.getCurrentInstance().addMessage(null,facesMessage);
-			return null;	
+			FacesContext.getCurrentInstance().addMessage(null, facesMessage);
+			return null;
 		}
 
-		if (searchphrase!=null && !"".equals(searchphrase)) {
+		if (searchphrase != null && !"".equals(searchphrase)) {
 			// trim
 			searchphrase = searchphrase.trim();
 			// lower case....
@@ -349,5 +365,4 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 		logger.fine("Query=" + sSearchTerm);
 		return sSearchTerm;
 	}
-
 }

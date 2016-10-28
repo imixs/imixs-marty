@@ -40,10 +40,10 @@ import javax.inject.Named;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.model.ModelController;
 import org.imixs.marty.model.ProcessController;
+import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.DocumentService;
-import org.imixs.workflow.engine.ModelService; 
+import org.imixs.workflow.engine.ModelService;
 import org.imixs.workflow.engine.PropertyService;
-import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
  * This Marty SetupController extends the Marty ConfigController and holds the
@@ -98,8 +98,6 @@ public class SetupController extends ConfigController {
 	@EJB
 	protected ProfileService profileService;
 
-	
-	
 	private static Logger logger = Logger.getLogger(SetupController.class.getName());
 
 	public SetupController() {
@@ -122,7 +120,7 @@ public class SetupController extends ConfigController {
 
 		// if the BASIC configuration was not yet saved before we need to
 		// Initialize it with a default setup
-		if (!getWorkitem().hasItem(EntityService.UNIQUEID)) {
+		if (!getWorkitem().hasItem(WorkflowKernel.UNIQUEID)) {
 			Vector<String> v = new Vector<String>();
 			v.add("IMIXS-WORKFLOW-Manager");
 			v.add("IMIXS-WORKFLOW-Author");
@@ -135,6 +133,38 @@ public class SetupController extends ConfigController {
 		}
 	}
 
+	/**
+	 * Returns the sortBy criteria form the config workitem or the default value
+	 * '$modified' if not yet defined.
+	 * 
+	 * @return
+	 */
+	public String getSortBy() {
+		String result=getWorkitem().getItemValueString("sortby");
+		if (result.isEmpty()) {
+			return "$modified";
+		} else {
+			return result;
+		}
+		
+	}
+
+	/**
+	 * Returns the sortorder form the config workitem or the default value
+	 * 'true' if not yet defined.
+	 * 
+	 * @return
+	 */
+	public boolean getSortReverse() {
+		String result = getWorkitem().getItemValueString("sortorder");
+		if ("0".equals(result)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	
 	/**
 	 * Returns the EAR application name. Useful for JNDI lookups
 	 * 
