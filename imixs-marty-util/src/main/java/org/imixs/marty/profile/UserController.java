@@ -498,76 +498,7 @@ public class UserController implements Serializable {
 		}
 	}
 
-	/**
-	 * This method returns all workitems sotred in the users profile
-	 * txtWorkitemRef
-	 * 
-	 * @param refId
-	 *            - a UnqiueIdRef as optional filter criterium
-	 * @return
-	 */
-	public List<ItemCollection> getFavorites(String refId) {
 
-		List<String> favorites = getFavoriteIds();
-		if (favorites.size() <= 0)
-			return new ArrayList<ItemCollection>();
-
-		// verify optional refId param
-		if (refId != null && ("-".equals(refId) || refId.isEmpty())) {
-			refId = null;
-		}
-
-//		// create a JPQL statement....
-//
-//		// create IN list
-//		String inStatement = "";
-//		for (String aID : favorites) {
-//			inStatement = inStatement + "'" + aID + "',";
-//		}
-//		// cut last ,
-//		inStatement = inStatement.substring(0, inStatement.length() - 1);
-//
-//		String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-//
-//		if (refId != null) {
-//			sQuery += "	 JOIN wi.textItems as ref ";
-//		}
-//		sQuery += " WHERE wi.type IN ('workitem','workitemarchive')";
-//		if (refId != null) {
-//			sQuery += "	AND ref.itemName = '$uniqueidref' AND ref.itemValue = '" + refId + "'";
-//		}
-//		sQuery += " AND wi.id IN (" + inStatement + ")";
-//		sQuery += " ORDER BY wi.modified DESC";
-		
-		
-		String sQuery="(type:\"workitem\" OR type:\"workitemarchive\") ";
-		if (refId != null) {
-			sQuery+=" AND ($uniqueidref:\"" + refId + "\")";
-		}
-		// create IN list
-		sQuery+=" ( ";
-		for (String aID : favorites) {			
-			sQuery += "$uniqueid:\"" + aID + "\" OR ";
-		}
-		// cut last ,
-		sQuery = sQuery.substring(0, sQuery.length() - 3);
-		sQuery+=" ) ";
-		
-		
-
-		try {
-			return workflowService.getDocumentService().find(sQuery,999,0);
-		} catch (QueryException e) {
-			logger.warning("getEntityByName - invalid query: " + e.getMessage());
-			return null;
-		}
-
-	}
-
-	public List<ItemCollection> getFavorites() {
-		return getFavorites(null);
-
-	}
 	/*
 	 * HELPER METHODS
 	 */
