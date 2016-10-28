@@ -55,7 +55,6 @@ import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
-import org.imixs.workflow.exceptions.QueryException;
 import org.imixs.workflow.faces.fileupload.FileData;
 import org.imixs.workflow.faces.fileupload.FileUploadController;
 import org.imixs.workflow.faces.util.LoginController;
