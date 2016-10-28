@@ -253,13 +253,16 @@ public class ModelController implements Serializable {
 	public void doUploadModel(ActionEvent event)
 			throws ModelException, ParseException, ParserConfigurationException, SAXException, IOException {
 		List<FileData> fileList = fileUploadController.getUploades();
+		if (fileList==null) {
+			return;
+		}
 		for (FileData file : fileList) {
-			logger.info("Model Upload started: " + file.getName());
+			logger.info("Import bpmn-model: " + file.getName());
 
 			// test if bpmn model?
 			if (file.getName().endsWith(".bpmn")) {
 				BPMNModel model = BPMNParser.parseModel(file.getData(), "UTF-8");
-				modelService.saveModelEntity(model);
+				modelService.saveModel(model);
 				continue;
 			}
 
@@ -276,13 +279,13 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * This Method deletes the given model
+	 * This Method deletes the given model from the database and the internal model cache.
 	 * 
 	 * @throws AccessDeniedException
 	 * @throws ModelException
 	 */
 	public void deleteModel(String modelversion) throws AccessDeniedException, ModelException {
-		modelService.removeModel(modelversion);
+		modelService.deleteModel(modelversion);
 	}
 
 	/**
