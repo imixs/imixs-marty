@@ -1,6 +1,5 @@
 package org.imixs.marty.plugins;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -19,7 +18,6 @@ import java.util.logging.Logger;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
-import org.imixs.marty.plugins.minutes.MinutePlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.WorkflowService;
@@ -79,11 +77,13 @@ public class ArchivePlugin extends AbstractPlugin {
 					+ "' : " + e.getMessage());
 			return documentContext;
 		}
-		// check if type will change to archive
+		// check if target task type is "workitemarchive" or target type isEmpty
+		// and current type is "workitemarchive".
 		// note: we need to compare the task objects, because the
 		// documentContext can already be updated by the ApplicationPlugin!
-		if ("workitemarchive".equals(nextTask.getItemValueString("txttype"))
-				&& (!currentTask.getItemValueString("txttype").equals(nextTask.getItemValueString("txttype")))) {
+		String targetTaskType = nextTask.getItemValueString("txttype");
+		if ("workitemarchive".equals(targetTaskType)
+				|| (targetTaskType.isEmpty() && "workitemarchive".equals(currentTask.getItemValueString("txttype")))) {
 			// run archive mode!
 
 			String archivePath = computeArchivePath(documentContext);
@@ -112,9 +112,8 @@ public class ArchivePlugin extends AbstractPlugin {
 				JAXBContext context = JAXBContext.newInstance(XMLItemCollection.class);
 				Marshaller m = context.createMarshaller();
 
-				File file = new File(archivePath + "document.xml");
-				file.mkdirs();
-				m.marshal(xmlItemCollection, file);
+				Path file = Paths.get(archivePath + "document.xml");
+				m.marshal(xmlItemCollection, file.toFile());
 			} catch (Exception e) {
 				logger.severe("failed to archive document " + documentContext.getUniqueID() + " - " + e.getMessage());
 				throw new PluginException(ArchivePlugin.class.getSimpleName(), IO_ERROR,
@@ -154,7 +153,7 @@ public class ArchivePlugin extends AbstractPlugin {
 
 					logger.fine("archive file " + sFileName);
 					Path newfile = Paths.get(sFileName);
-					
+
 					try {
 						Files.write(newfile, data);
 					} catch (IOException e) {
@@ -177,8 +176,9 @@ public class ArchivePlugin extends AbstractPlugin {
 	 * /ARCHIVE_PATH/YYYY/WORKFLOWGROUP/UNIQUEID/
 	 * 
 	 * @return
+	 * @throws PluginException
 	 */
-	private String computeArchivePath(ItemCollection documentContext) {
+	private String computeArchivePath(ItemCollection documentContext) throws PluginException {
 		String archivePath = this.getWorkflowService().getPropertyService().getProperties().getProperty("archive.path",
 				"archive");
 		if (archivePath.endsWith(FileSystems.getDefault().getSeparator())) {
@@ -203,6 +203,17 @@ public class ArchivePlugin extends AbstractPlugin {
 				+ documentContext.getUniqueID() + FileSystems.getDefault().getSeparator();
 
 		logger.finest("archive path = " + archivePath);
+
+		// now create dirs...
+		try {
+			Files.createDirectories(Paths.get(archivePath));
+		} catch (IOException e) {
+			logger.severe("failed to create archive directory '" + archivePath + "' - " + e.getMessage());
+			throw new PluginException(ArchivePlugin.class.getSimpleName(), IO_ERROR,
+					"failed to create archive directory '" + archivePath + "' (" + e.getMessage() + ")", e);
+
+		}
+
 		return archivePath;
 	}
 
