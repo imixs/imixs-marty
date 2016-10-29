@@ -1,6 +1,5 @@
 package org.imixs.marty.profile;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.faces.bean.ViewScoped;
@@ -31,10 +30,13 @@ public class FavoritesViewController extends ViewController {
 	public String getQuery() {
 		List<String> favorites = null;
 		if (userController.getWorkitem() == null) {
-			favorites = new ArrayList<String>();
-		} else {
-			// get favorite ids from profile
-			favorites = userController.getWorkitem().getItemValue("txtWorkitemRef");
+			return null;
+		}
+
+		// get favorite ids from profile
+		favorites = userController.getWorkitem().getItemValue("txtWorkitemRef");
+		if (favorites == null || favorites.size() == 0) {
+			return null;
 		}
 
 		String sQuery = "(type:\"workitem\" OR type:\"workitemarchive\") ";
