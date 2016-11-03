@@ -331,13 +331,7 @@ public class DMSPlugin extends AbstractPlugin {
 		// try to load the blobWorkitem with the parentWorktiem reference....
 		if (!"".equals(sUniqueID)) {
 			// search entity...
-//			String sQuery = " SELECT lobitem FROM Entity as lobitem" + " join lobitem.textItems as t2"
-//					+ " WHERE lobitem.type = 'workitemlob'" + " AND t2.itemName = '$uniqueidref'"
-//					+ " AND t2.itemValue = '" + sUniqueID + "'";
-//			
-			
 			String sQuery="(type:\"workitemlob\" AND $uniqueidref:\""+sUniqueID + "\")";
-		
 
 			Collection<ItemCollection> itemcol=null;
 			try {
