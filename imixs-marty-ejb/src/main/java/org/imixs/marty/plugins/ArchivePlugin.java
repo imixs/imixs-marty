@@ -248,7 +248,10 @@ public class ArchivePlugin extends AbstractPlugin {
 			// if blobWorkItem was found return...
 			if (itemcol != null && itemcol.size() > 0) {
 				blobWorkitem = itemcol.iterator().next();
-
+				// !! restore state of blobWorkitem because the blobWorkitem (which
+				// was probably changed before is now detached because of the
+				// implementation of the load() method!...
+				blobWorkitem = getWorkflowService().getDocumentService().save(blobWorkitem);
 			}
 
 		} else {
