@@ -271,36 +271,12 @@ public class DMSSplitPlugin extends AbstractPlugin {
 		if (parentWorkitem == null)
 			return null;
 
-		String sUniqueID = parentWorkitem.getItemValueString(WorkflowService.UNIQUEID);
+		blobWorkitem = BlobWorkitemHandler.load(this.getWorkflowService().getDocumentService(), parentWorkitem);
 
-		// try to load the blobWorkitem with the parentWorktiem reference....
-		if (!"".equals(sUniqueID)) {
-			// search entity...
-			String sQuery = "(type:\"workitemlob\" AND $uniqueidref:\"" + sUniqueID + "\")";
-
-			Collection<ItemCollection> itemcol = null;
-			try {
-				itemcol = getWorkflowService().getDocumentService().find(sQuery, 1, 0);
-			} catch (QueryException e) {
-				logger.severe("loadBlobWorkitem - invalid query: " + e.getMessage());
-			}
-			// if blobWorkItem was found return...
-			if (itemcol != null && itemcol.size() > 0) {
-				blobWorkitem = itemcol.iterator().next();
-				// !! restore state of blobWorkitem because the blobWorkitem (which
-				// was probably changed before is now detached because of the
-				// implementation of the load() method!...
-				blobWorkitem = getWorkflowService().getDocumentService().save(blobWorkitem);
-			}
-
-		}
 		// if blobWorkitem was found, return the file list.
 		if (blobWorkitem != null) {
-
 			Map<String, List<Object>> files = blobWorkitem.getFiles();
-
 			return files;
-
 		}
 		return null;
 

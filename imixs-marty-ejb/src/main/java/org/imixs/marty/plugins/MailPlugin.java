@@ -28,7 +28,6 @@
 package org.imixs.marty.plugins;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -52,7 +51,6 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * This Plugin extends the Imixs Workflow Plugin.
@@ -110,7 +108,8 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		MimeMessage mailMessage = (MimeMessage) super.getMailMessage();
 		if (mailMessage != null) {
 			// test for blob workitem to add attachemtns
-			ItemCollection blobWorkitem = loadBlob(documentContext);
+			ItemCollection blobWorkitem = BlobWorkitemHandler.load(this.getWorkflowService().getDocumentService(),
+					documentContext);
 			if (blobWorkitem != null) {
 				try {
 					attachFiles(blobWorkitem);
@@ -319,38 +318,6 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		}
 
 		return null;
-
-	}
-
-	/**
-	 * Loads the BlobWorkitem of a given parent Workitem. The BlobWorkitem is
-	 * identified by the $unqiueidRef. If no BlobWorkitem exists the method
-	 * returns null;
-	 * 
-	 * @param itemCol
-	 *            - parent workitem where the BlobWorkitem will be attached to
-	 * @throws Exception
-	 */
-	private ItemCollection loadBlob(ItemCollection itemCol) {
-		ItemCollection blobWorkitem = null;
-		String sUniqueID = itemCol.getItemValueString("$uniqueid");
-
-		String sQuery = "(type:\"workitemlob\" AND $uniqueidref:\"" + sUniqueID + "\")";
-		Collection<ItemCollection> itemcol = null;
-		try {
-			itemcol = getWorkflowService().getDocumentService().find(sQuery, 1, 0);
-		} catch (QueryException e) {
-			logger.severe("loadBlobWorkitem - invalid query: " + e.getMessage());
-		}
-		if (itemcol != null && itemcol.size() > 0) {
-			blobWorkitem = itemcol.iterator().next();
-			// !! restore state of blobWorkitem because the blobWorkitem (which
-			// was probably changed before is now detached because of the
-			// implementation of the load() method!...
-			blobWorkitem = getWorkflowService().getDocumentService().save(blobWorkitem);
-		}
-
-		return blobWorkitem;
 
 	}
 

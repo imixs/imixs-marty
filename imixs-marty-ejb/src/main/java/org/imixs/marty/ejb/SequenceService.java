@@ -112,12 +112,6 @@ public class SequenceService {
 			throws AccessDeniedException {
 
 		ItemCollection configItemCollection = null;
-
-//		String sQuery = "SELECT config FROM Entity AS config "
-//				+ " JOIN config.textItems AS t2"
-//				+ " WHERE config.type = 'configuration'"
-//				+ " AND t2.itemName = 'txtname'"
-//				+ " AND t2.itemValue = 'BASIC'" + " ORDER BY t2.itemValue asc";
 		
 		String sQuery="(type:\"configuration\" AND txtname:\"BASIC\")";
 		
