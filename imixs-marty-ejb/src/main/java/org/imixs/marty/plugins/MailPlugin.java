@@ -92,8 +92,8 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 			profileService = (ProfileService) ctx.lookup(jndiName);
 		} catch (NamingException e) {
 
-			throw new PluginException(MailPlugin.class.getSimpleName(),
-					PROFILESERVICE_NOT_BOUND, "ProfileService not bound", e);
+			throw new PluginException(MailPlugin.class.getSimpleName(), PROFILESERVICE_NOT_BOUND,
+					"ProfileService not bound", e);
 		}
 
 	}
@@ -102,11 +102,10 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 	 * This method adds the attachments of the blob workitem to the MimeMessage
 	 */
 	@Override
-	public ItemCollection run(ItemCollection documentContext,
-			ItemCollection documentActivity) throws PluginException {
+	public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
 		// run default functionality
-		ItemCollection result= super.run(documentContext, documentActivity);
-		
+		ItemCollection result = super.run(documentContext, documentActivity);
+
 		// now get the Mail Session object
 		MimeMessage mailMessage = (MimeMessage) super.getMailMessage();
 		if (mailMessage != null) {
@@ -124,7 +123,6 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		return result;
 	}
 
-
 	/**
 	 * this helper method creates an internet address from a string if the
 	 * string has illegal characters like whitespace the string will be
@@ -136,8 +134,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 	 * @return
 	 * @throws AddressException
 	 */
-	public InternetAddress getInternetAddress(String aAddr)
-			throws AddressException {
+	public InternetAddress getInternetAddress(String aAddr) throws AddressException {
 
 		// is smtp address skip profile lookup?
 		if (aAddr.indexOf('@') > -1)
@@ -147,14 +144,12 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		try {
 			aAddr = fetchEmail(aAddr);
 			if (aAddr.indexOf('@') == -1) {
-				logger.warning("smtp mail address for '"
-						+ aAddr + "' could not be resolved!");
+				logger.warning("smtp mail address for '" + aAddr + "' could not be resolved!");
 				return null;
 			}
 		} catch (NamingException e) {
 			// no valid email was found!
-			logger.warning("smtp mail address for '" + aAddr
-					+ "' could not be resolved - "+e.getMessage());
+			logger.warning("smtp mail address for '" + aAddr + "' could not be resolved - " + e.getMessage());
 			// e.printStackTrace();
 			// avoid sending mail to this address!
 			return null;
@@ -176,8 +171,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		ItemCollection itemColProfile = profileService.findProfileById(aUserID);
 
 		if (itemColProfile == null)
-			throw new NamingException(
-					"[MartyMailPlugin] No Profile found for: " + aUserID);
+			throw new NamingException("[MartyMailPlugin] No Profile found for: " + aUserID);
 
 		String sEmail = itemColProfile.getItemValueString("txtEmail");
 
@@ -185,16 +179,13 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 
 		if (sEmail != null && !"".equals(sEmail)) {
 			if (sEmail.indexOf("http") > -1 || sEmail.indexOf("//") > -1)
-				throw new NamingException(
-						"[MartyMailPlugin] Invalid Email: ID=" + aUserID
-								+ " Email=" + sEmail);
+				throw new NamingException("[MartyMailPlugin] Invalid Email: ID=" + aUserID + " Email=" + sEmail);
 			return sEmail;
 		}
 
 		// test if account contains protokoll information - this
 		if (aUserID.indexOf("http") > -1 || aUserID.indexOf("//") > -1)
-			throw new NamingException("[MartyMailPlugin] Invalid Email: ID="
-					+ aUserID);
+			throw new NamingException("[MartyMailPlugin] Invalid Email: ID=" + aUserID);
 
 		return aUserID;
 	}
@@ -207,25 +198,21 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 	 * @param blobWorkitem
 	 * @throws MessagingException
 	 */
-	private void attachFiles(ItemCollection blobWorkitem)
-			throws MessagingException {
+	private void attachFiles(ItemCollection blobWorkitem) throws MessagingException {
 
 		String sFilePattern = null;
 
 		while ((sFilePattern = getAttachmentName()) != null) {
-			logger.fine("MailPlugin attach file pattern: \"" + sFilePattern
-					+ "\"");
+			logger.fine("MailPlugin attach file pattern: \"" + sFilePattern + "\"");
 			// get all fileNames....
 			List<String> fileNames = blobWorkitem.getFileNames();
 			// iterate over all files ....
 			for (String aFileName : fileNames) {
 				// test if aFilename matches the pattern
-				if (sFilePattern.isEmpty()
-						|| Pattern.matches(sFilePattern, aFileName)) {
+				if (sFilePattern.isEmpty() || Pattern.matches(sFilePattern, aFileName)) {
 
 					// fetch the file content
-					FileInfo fileInfo = getFileFromWorkItem(aFileName,
-							blobWorkitem);
+					FileInfo fileInfo = getFileFromWorkItem(aFileName, blobWorkitem);
 
 					logger.fine("MailPlugin - attach : " + aFileName);
 
@@ -235,8 +222,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 					MimeBodyPart attachmentPart = new MimeBodyPart();
 
 					// construct the body part from the byte array
-					DataSource dataSource = new ByteArrayDataSource(
-							fileInfo.content, fileInfo.contentType);
+					DataSource dataSource = new ByteArrayDataSource(fileInfo.content, fileInfo.contentType);
 					attachmentPart.setDataHandler(new DataHandler(dataSource));
 					attachmentPart.setFileName(aFileName);
 					attachmentPart.setDescription("");
@@ -288,8 +274,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		// test if a <value> tag exists...
 		if ((iTagStartPos = content.toLowerCase().indexOf("<attachments")) != -1) {
 
-			iTagEndPos = content.toLowerCase().indexOf("</attachments>",
-					iTagStartPos);
+			iTagEndPos = content.toLowerCase().indexOf("</attachments>", iTagStartPos);
 
 			// if no end tag found return string unchanged...
 			if (iTagEndPos == -1)
@@ -315,14 +300,12 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 			// start and end pos of the value
 
 			// extract Item Value
-			String sFilename = content.substring(iContentStartPos,
-					iContentEndPos);
+			String sFilename = content.substring(iContentStartPos, iContentEndPos);
 
 			String sEMTY = "";
 
 			// now replace the tag with an empty string
-			content = content.substring(0, iTagStartPos) + sEMTY
-					+ content.substring(iTagEndPos);
+			content = content.substring(0, iTagStartPos) + sEMTY + content.substring(iTagEndPos);
 
 			// update mail body
 			try {
@@ -352,19 +335,8 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		ItemCollection blobWorkitem = null;
 		String sUniqueID = itemCol.getItemValueString("$uniqueid");
 
-		// search entity...
-//		String sQuery = " SELECT lobitem FROM Entity as lobitem"
-//				+ " join lobitem.textItems as t1"
-//				+ " join lobitem.textItems as t2"
-//				+ " WHERE t1.itemName = 'type'"
-//				+ " AND t1.itemValue = 'workitemlob'"
-//				+ " AND t2.itemName = '$uniqueidref'" + " AND t2.itemValue = '"
-//				+ sUniqueID + "'";
-
-		String sQuery="(type:\"workitemlob\" AND $uniqueidref:\""+sUniqueID + "\")";
-		
-		
-		Collection<ItemCollection> itemcol=null;
+		String sQuery = "(type:\"workitemlob\" AND $uniqueidref:\"" + sUniqueID + "\")";
+		Collection<ItemCollection> itemcol = null;
 		try {
 			itemcol = getWorkflowService().getDocumentService().find(sQuery, 1, 0);
 		} catch (QueryException e) {
@@ -372,6 +344,10 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		}
 		if (itemcol != null && itemcol.size() > 0) {
 			blobWorkitem = itemcol.iterator().next();
+			// !! restore state of blobWorkitem because the blobWorkitem (which
+			// was probably changed before is now detached because of the
+			// implementation of the load() method!...
+			blobWorkitem = getWorkflowService().getDocumentService().save(blobWorkitem);
 		}
 
 		return blobWorkitem;
@@ -387,8 +363,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private FileInfo getFileFromWorkItem(String fileName,
-			ItemCollection blobWorkitem) {
+	private FileInfo getFileFromWorkItem(String fileName, ItemCollection blobWorkitem) {
 
 		// fetch $file from hashmap....
 
@@ -410,7 +385,6 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		return null;
 
 	}
-
 
 	/**
 	 * Cache implementation to hold userData objects
