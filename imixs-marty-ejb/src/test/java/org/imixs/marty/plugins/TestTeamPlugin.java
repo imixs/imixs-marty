@@ -8,11 +8,10 @@ import java.util.Map;
 import java.util.Vector;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.Plugin;
+import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.EntityService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -48,35 +47,35 @@ public class TestTeamPlugin {
 		for (int i = 1; i < 6; i++) {
 			entity = new ItemCollection();
 			entity.replaceItemValue("type", "process");
-			entity.replaceItemValue(EntityService.UNIQUEID, "P0000-0000" + i);
+			entity.replaceItemValue(WorkflowKernel.UNIQUEID, "P0000-0000" + i);
 			entity.replaceItemValue("txtName", "Process " + i);
-			database.put(entity.getItemValueString(EntityService.UNIQUEID),
+			database.put(entity.getItemValueString(WorkflowKernel.UNIQUEID),
 					entity);
 		}
 
 		for (int i = 1; i < 6; i++) {
 			entity = new ItemCollection();
 			entity.replaceItemValue("type", "space");
-			entity.replaceItemValue(EntityService.UNIQUEID, "S0000-0000" + i);
+			entity.replaceItemValue(WorkflowKernel.UNIQUEID, "S0000-0000" + i);
 			entity.replaceItemValue("txtName", "Space " + i);
-			database.put(entity.getItemValueString(EntityService.UNIQUEID),
+			database.put(entity.getItemValueString(WorkflowKernel.UNIQUEID),
 					entity);
 		}
 
 		for (int i = 1; i < 6; i++) {
 			entity = new ItemCollection();
 			entity.replaceItemValue("type", "workitem");
-			entity.replaceItemValue(EntityService.UNIQUEID, "W0000-0000" + i);
+			entity.replaceItemValue(WorkflowKernel.UNIQUEID, "W0000-0000" + i);
 			entity.replaceItemValue("txtName", "Workitem " + i);
-			database.put(entity.getItemValueString(EntityService.UNIQUEID),
+			database.put(entity.getItemValueString(WorkflowKernel.UNIQUEID),
 					entity);
 		}
 
 		for (int i = 1; i < 6; i++) {
 			entity = new ItemCollection();
-			entity.replaceItemValue(EntityService.UNIQUEID, "C0000-0000" + i);
+			entity.replaceItemValue(WorkflowKernel.UNIQUEID, "C0000-0000" + i);
 			entity.replaceItemValue("txtName", "ChildWorkitem " + i);
-			database.put(entity.getItemValueString(EntityService.UNIQUEID),
+			database.put(entity.getItemValueString(WorkflowKernel.UNIQUEID),
 					entity);
 		}
 
@@ -122,8 +121,8 @@ public class TestTeamPlugin {
 
 		documentContext.replaceItemValue("txtProcessRef", "P0000-00001");
 
-		int result = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertEquals(Plugin.PLUGIN_OK, result);
+		documentContext = teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
 
 		List<String> uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
 
@@ -149,8 +148,8 @@ public class TestTeamPlugin {
 		// Case-1 - one unqiueid
 		documentContext.replaceItemValue("$UniqueIDRef", "P0000-00001");
 
-		int result = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertEquals(Plugin.PLUGIN_OK, result);
+		documentContext = teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
 
 		List<String> processRef = documentContext.getItemValue("txtProcessRef");
 		List<String> uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
@@ -167,8 +166,8 @@ public class TestTeamPlugin {
 
 		documentContext.replaceItemValue("$UniqueIDRef", refs);
 
-		result = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertEquals(Plugin.PLUGIN_OK, result);
+		documentContext = teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
 
 		processRef = documentContext.getItemValue("txtProcessRef");
 		uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
@@ -201,8 +200,8 @@ public class TestTeamPlugin {
 		// empty txtProcessRef
 		documentContext.replaceItemValue("txtProcessRef", "");
 
-		int result = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertEquals(Plugin.PLUGIN_OK, result);
+		documentContext= teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
 
 		List<String> processRef = documentContext.getItemValue("txtProcessRef");
 		List<String> uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
@@ -216,8 +215,8 @@ public class TestTeamPlugin {
 		// empty txtProcessRef
 		documentContext.replaceItemValue("txtProcessRef", "");
 
-		result = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertEquals(Plugin.PLUGIN_OK, result);
+		documentContext = teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
 
 		processRef = documentContext.getItemValue("txtProcessRef");
 		uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
@@ -252,8 +251,8 @@ public class TestTeamPlugin {
 		// old id....
 		documentContext.replaceItemValue("$UnqiueIDRef", "P0000-00001");
 
-		int result = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertEquals(Plugin.PLUGIN_OK, result);
+		documentContext= teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
 
 		List<String> uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
 		// only one id expect
@@ -275,8 +274,8 @@ public class TestTeamPlugin {
 		documentContext.replaceItemValue("$UnqiueIDRef", refs);
 		documentActivity = new ItemCollection();
 
-		result = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertEquals(Plugin.PLUGIN_OK, result);
+		documentContext = teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
 
 		uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
 
@@ -305,8 +304,8 @@ public class TestTeamPlugin {
 		// new id....
 		documentContext.replaceItemValue("txtProcessRef", "S0000-00002");
 
-		int result = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertEquals(Plugin.PLUGIN_OK, result);
+		documentContext = teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
 
 		List<String> uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
 		List<String> processIDref = documentContext
@@ -323,8 +322,8 @@ public class TestTeamPlugin {
 		documentContext = new ItemCollection();
 		documentContext.replaceItemValue("txtProcessRef", "xxxxP0000-00002");
 
-		result = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertEquals(Plugin.PLUGIN_OK, result);
+		documentContext = teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
 
 		uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
 		processIDref = documentContext.getItemValue("txtProcessRef");
@@ -342,8 +341,8 @@ public class TestTeamPlugin {
 		refs.add("S0000-00001");
 		documentContext.replaceItemValue("txtProcessRef", refs);
 
-		result = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertEquals(Plugin.PLUGIN_OK, result);
+		documentContext = teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
 
 		uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
 		processIDref = documentContext.getItemValue("txtProcessRef");
@@ -373,8 +372,8 @@ public class TestTeamPlugin {
 		// new id....
 		documentContext.replaceItemValue("txtSpaceRef", "P0000-00002");
 
-		int result = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertEquals(Plugin.PLUGIN_OK, result);
+		documentContext = teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
 
 		List<String> uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
 		List<String> spaceIDref = documentContext.getItemValue("txtSpaceRef");
@@ -389,8 +388,8 @@ public class TestTeamPlugin {
 		documentContext = new ItemCollection();
 		documentContext.replaceItemValue("txtSpaceRef", "xxxxP0000-00002");
 
-		result = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertEquals(Plugin.PLUGIN_OK, result);
+		documentContext = teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
 
 		uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
 		spaceIDref = documentContext.getItemValue("txtSpaceRef");
@@ -408,8 +407,8 @@ public class TestTeamPlugin {
 		refs.add("S0000-00001");
 		documentContext.replaceItemValue("txtSpaceRef", refs);
 
-		result = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertEquals(Plugin.PLUGIN_OK, result);
+		documentContext = teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
 
 		uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
 		spaceIDref = documentContext.getItemValue("txtSpaceRef");

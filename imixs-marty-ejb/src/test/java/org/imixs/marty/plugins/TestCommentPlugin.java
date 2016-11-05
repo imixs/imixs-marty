@@ -1,8 +1,5 @@
 package org.imixs.marty.plugins;
 
-import static org.mockito.Mockito.when;
-
-import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,14 +9,11 @@ import javax.ejb.SessionContext;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
+import org.imixs.workflow.engine.AbstractWorkflowEnvironment;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.jee.ejb.AbstractWorkflowEnvironment;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import junit.framework.Assert;
 
@@ -31,7 +25,6 @@ import junit.framework.Assert;
 public class TestCommentPlugin extends AbstractWorkflowEnvironment {
 	private final static Logger logger = Logger.getLogger(TestCommentPlugin.class.getName());
 
-	@Spy
 	private CommentPlugin commentPlugin;
  
 	// CommentPlugin commentPlugin = null;
@@ -47,21 +40,14 @@ public class TestCommentPlugin extends AbstractWorkflowEnvironment {
 	 */
 	@Before
 	public void setup() throws PluginException {
-		// initialize @Mock annotations....
-		MockitoAnnotations.initMocks(this);
 
 		super.setup();
 
-		// mock session context of plugin
-		ctx = Mockito.mock(SessionContext.class);
-		Principal principal = Mockito.mock(Principal.class);
-		when(principal.getName()).thenReturn("manfred");
-//		when(commentPlugin.getEjbSessionContext()).thenReturn(ctx);
-//		when(commentPlugin.getEjbSessionContext().getCallerPrincipal()).thenReturn(principal);
 
+		commentPlugin=new CommentPlugin();
 		// init plugin..
 		try {
-			commentPlugin.init(workflowContext);
+			commentPlugin.init(workflowService);
 		} catch (PluginException e) {
 			e.printStackTrace();
 		}
