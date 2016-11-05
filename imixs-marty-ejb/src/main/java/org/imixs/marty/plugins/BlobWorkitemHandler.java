@@ -9,13 +9,8 @@ import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.QueryException;
 
 /**
- * The BlobWorkitemHandler provides a method to load a BlobWorktiem for the current
- * DocumentContext. The handler solves the problem, that a Blobworkitem changed
- * by a plug-in class during the same transaction will be detached from the
- * persistence context by the load() or find() method of the DocumentService
- * EJB.
- * 
- * Plug-ins should use this handler to load a blobWorkitem
+ * The BlobWorkitemHandler provides a method to load a BlobWorktiem for the
+ * current DocumentContext.
  * 
  * @author rsoika
  * 
@@ -56,10 +51,7 @@ public class BlobWorkitemHandler {
 			// if blobWorkItem was found return...
 			if (itemcol != null && itemcol.size() > 0) {
 				blobWorkitem = itemcol.iterator().next();
-				// !! restore state of blobWorkitem because the blobWorkitem (which
-				// was probably changed before is now detached because of the
-				// implementation of the load() method!...
-				blobWorkitem = documentService.save(blobWorkitem);
+				// see also imixs-workflow issue #230
 			}
 
 		} else {

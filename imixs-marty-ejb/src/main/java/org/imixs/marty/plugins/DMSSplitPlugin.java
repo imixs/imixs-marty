@@ -27,7 +27,6 @@
 
 package org.imixs.marty.plugins;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -41,7 +40,6 @@ import org.imixs.workflow.engine.plugins.ResultPlugin;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
-import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * The DMSSplitPlugin provides functionality to create sub-process instances or
