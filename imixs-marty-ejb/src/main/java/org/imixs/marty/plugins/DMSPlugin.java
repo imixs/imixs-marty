@@ -151,8 +151,12 @@ public class DMSPlugin extends AbstractPlugin {
 		}
 
 		// sort list by name
-		Collections.sort(dmsList, new ItemCollectionComparator("txtname", true));
+		//Collections.sort(dmsList, new ItemCollectionComparator("txtname", true));
+		// sort list by $modified
+		Collections.sort(dmsList, new ItemCollectionComparator("$created", true));
 
+		
+		
 		return dmsList;
 	}
 
