@@ -54,7 +54,8 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
  * Usage:
  * 
  * <code>
-       <marty:userInput value="#{workflowController.workitem.itemList['namteam']}"
+       <marty:userInput value=
+"#{workflowController.workitem.itemList['namteam']}"
 		     editmode="true" />
  * </code>
  * 
@@ -75,16 +76,13 @@ public class UserInputController implements Serializable {
 
 	@EJB
 	protected WorkflowService workflowService;
-	
-
 
 	private List<ItemCollection> searchResult = null;
 
 	private String input = null;
 	private static final long serialVersionUID = 1L;
 	private int maxSearchCount = 30;
-	private static Logger logger = Logger.getLogger(UserInputController.class
-			.getName());
+	private static Logger logger = Logger.getLogger(UserInputController.class.getName());
 
 	public UserInputController() {
 		super();
@@ -146,8 +144,8 @@ public class UserInputController implements Serializable {
 
 	/**
 	 * This method returns a list of profile ItemCollections matching the search
-	 * phrase. The JQPL joins over txtName, txtEmail and txtUserName. The result
-	 * list is sorted by txtUserName
+	 * phrase. The search statement includes the items 'txtName', 'txtEmail' and
+	 * 'txtUserName'. The result list is sorted by txtUserName
 	 * 
 	 * @param phrase
 	 *            - search phrase
@@ -160,9 +158,13 @@ public class UserInputController implements Serializable {
 		if (phrase == null || phrase.isEmpty())
 			return searchResult;
 
-		phrase =  phrase.trim();
-
-		String sQuery= "(type:\"profile\") AND ( *" + LuceneSearchService.escapeSearchTerm(phrase) + "* )";
+		phrase = phrase.trim();
+		phrase =  LuceneSearchService.escapeSearchTerm(phrase);
+		String sQuery = "(type:\"profile\") AND "
+				+ "(   (txtname:" + phrase + ") "
+				+ " OR (txtemail:*" + phrase + "*) "
+				+ " OR (txtusername:*" + phrase + "*) "
+				+ ")";
 
 		logger.finest("searchprofile: " + sQuery);
 
@@ -170,17 +172,16 @@ public class UserInputController implements Serializable {
 		Collection<ItemCollection> col = null;
 		try {
 			logger.fine("searchWorkitems: " + sQuery);
-			col = workflowService.getDocumentService().find(sQuery,0,-1);
+			col = workflowService.getDocumentService().find(sQuery, 0, -1);
 		} catch (Exception e) {
-			logger.warning("  lucene error - "+e.getMessage());
+			logger.warning("  lucene error - " + e.getMessage());
 		}
 
 		for (ItemCollection profile : col) {
 			searchResult.add(ProfileService.cloneWorkitem(profile));
 		}
 		// sort by username..
-		Collections.sort(searchResult, new ItemCollectionComparator("txtUserName",
-				true));
+		Collections.sort(searchResult, new ItemCollectionComparator("txtUserName", true));
 
 		return searchResult;
 
@@ -233,8 +234,8 @@ public class UserInputController implements Serializable {
 				if (aEntry != null) {
 					String aValue = aEntry.toString().toLowerCase();
 					if (aValue.equals(aName.toLowerCase())) {
-						logger.warning("userInputController remove '" + aName
-								+ "' from list ignoring upper/lower case!");
+						logger.warning(
+								"userInputController remove '" + aName + "' from list ignoring upper/lower case!");
 						aList.remove(aEntry);
 						break;
 					}
@@ -259,8 +260,7 @@ public class UserInputController implements Serializable {
 		// add all profile objects....
 		for (Object aentry : aNameList) {
 			if (aentry != null && !aentry.toString().isEmpty()) {
-				ItemCollection profile = userController.getProfile(aentry
-						.toString());
+				ItemCollection profile = userController.getProfile(aentry.toString());
 				if (profile != null) {
 					profiles.add(profile);
 				} else {
@@ -285,8 +285,7 @@ public class UserInputController implements Serializable {
 	 * @param workflowEvent
 	 * @throws AccessDeniedException
 	 */
-	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent)
-			throws AccessDeniedException {
+	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) throws AccessDeniedException {
 
 		// reset state
 		reset();
