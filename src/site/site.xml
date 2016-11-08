@@ -52,6 +52,7 @@
 			<item name="ApplicationPlugin" href="plugins/applicationplugin.html" />
 			<item name="CommentPlugin" href="plugins/commentplugin.html" />
 			<item name="DMSPlugin" href="plugins/dmsplugin.html" />
+			<item name="DMSSplitPlugin" href="plugins/dmssplitplugin.html" />
 			<item name="DeputyPlugin" href="plugins/deputyplugin.html" />
 			<item name="ResultPlugin" href="plugins/resultplugin.html" />
 			<item name="SubprocessPlugin" href="plugins/subprocessplugin.html" />

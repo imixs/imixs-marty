@@ -42,7 +42,7 @@ import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 
 /**
- * The DMSSplitPlugin provides functionality to create sub-process instances or
+ * The DMSSplitPlugin provides functionality to create sub-process instances for
  * each attachment added in an origin process. The configuration is similar to
  * the Imixs-Workflow SplitAndJoinPlugin. The item name to trigger the creation
  * of subprocesses is "dms_subprocess_create" The tag '<remove>true</remove>'
