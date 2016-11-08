@@ -48,8 +48,8 @@ import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.faces.util.LoginController;
-import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
  * The ProcessController provides informations about the process and space
@@ -127,7 +127,7 @@ public class ProcessController implements Serializable {
 	 */
 	public ItemCollection loadProcess(String uniqueid) {
 		if (this.process == null
-				|| !this.process.getItemValue(EntityService.UNIQUEID).equals(
+				|| !this.process.getItemValue(WorkflowService.UNIQUEID).equals(
 						uniqueid)) {
 			setProcess(this.getProcessById(uniqueid));
 		}
@@ -149,7 +149,7 @@ public class ProcessController implements Serializable {
 			List<ItemCollection> list = getProcessList();
 			for (ItemCollection process : list) {
 				if (uniqueId.equals(process
-						.getItemValueString(EntityService.UNIQUEID))) {
+						.getItemValueString(WorkflowService.UNIQUEID))) {
 					return process;
 				}
 			}
@@ -276,7 +276,7 @@ public class ProcessController implements Serializable {
 		List<ItemCollection> alist = getProcessList();
 		for (ItemCollection aProcess : alist) {
 			if (uniqueid.equals(aProcess
-					.getItemValueString(EntityService.UNIQUEID)))
+					.getItemValueString(WorkflowService.UNIQUEID)))
 				return aProcess;
 		}
 
@@ -284,7 +284,7 @@ public class ProcessController implements Serializable {
 		alist = getSpaces();
 		for (ItemCollection aSpace : alist) {
 			if (uniqueid.equals(aSpace
-					.getItemValueString(EntityService.UNIQUEID)))
+					.getItemValueString(WorkflowService.UNIQUEID)))
 				return aSpace;
 		}
 		return null;
@@ -305,7 +305,7 @@ public class ProcessController implements Serializable {
 			List<ItemCollection> list = getSpaces();
 			for (ItemCollection space : list) {
 				if (uniqueId.equals(space
-						.getItemValueString(EntityService.UNIQUEID))) {
+						.getItemValueString(WorkflowService.UNIQUEID))) {
 					return space;
 				}
 			}
@@ -393,7 +393,7 @@ public class ProcessController implements Serializable {
 				for (ItemCollection space : list) {
 
 					if (refs.contains(space
-							.getItemValueString(EntityService.UNIQUEID))) {
+							.getItemValueString(WorkflowService.UNIQUEID))) {
 						result.add(space);
 					}
 				}
@@ -418,9 +418,9 @@ public class ProcessController implements Serializable {
 			for (ItemCollection space : list) {
 				logger.fine("Spacename= " + space.getItemValueString("txtName")
 						+ " uniquidref= "
-						+ space.getItemValueString(EntityService.UNIQUEIDREF));
+						+ space.getItemValueString(WorkflowService.UNIQUEIDREF));
 				if (uniqueId.equals(space
-						.getItemValueString(EntityService.UNIQUEIDREF))) {
+						.getItemValueString(WorkflowService.UNIQUEIDREF))) {
 					result.add(space);
 				}
 			}
@@ -504,29 +504,29 @@ public class ProcessController implements Serializable {
 		for (ItemCollection profile : teamList) {
 			// avoid duplicates..
 			if (!dupplicatedIds.contains(profile
-					.getItemValueString(EntityService.UNIQUEID))) {
+					.getItemValueString(WorkflowService.UNIQUEID))) {
 				resultList.add(profile);
 			}
 			dupplicatedIds.add(profile
-					.getItemValueString(EntityService.UNIQUEID));
+					.getItemValueString(WorkflowService.UNIQUEID));
 		}
 		for (ItemCollection profile : managerList) {
 			// avoid duplicates..
 			if (!dupplicatedIds.contains(profile
-					.getItemValueString(EntityService.UNIQUEID))) {
+					.getItemValueString(WorkflowService.UNIQUEID))) {
 				resultList.add(profile);
 			}
 			dupplicatedIds.add(profile
-					.getItemValueString(EntityService.UNIQUEID));
+					.getItemValueString(WorkflowService.UNIQUEID));
 		}
 		for (ItemCollection profile : assistList) {
 			// avoid duplicates..
 			if (!dupplicatedIds.contains(profile
-					.getItemValueString(EntityService.UNIQUEID))) {
+					.getItemValueString(WorkflowService.UNIQUEID))) {
 				resultList.add(profile);
 			}
 			dupplicatedIds.add(profile
-					.getItemValueString(EntityService.UNIQUEID));
+					.getItemValueString(WorkflowService.UNIQUEID));
 		}
 
 		// sort by username..
