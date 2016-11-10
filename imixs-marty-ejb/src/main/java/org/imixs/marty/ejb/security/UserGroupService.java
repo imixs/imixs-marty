@@ -77,8 +77,7 @@ public class UserGroupService {
 	 */
 	@SuppressWarnings("unchecked")
 	public void updateUser(ItemCollection profile) {
-		boolean bNewEntity = false;
-
+		
 		String sType = profile.getItemValueString("Type");
 		if (!("profile".equals(sType)))
 			return;
@@ -91,7 +90,7 @@ public class UserGroupService {
 		user = manager.find(UserId.class, sID);
 		if (user == null) {
 			user = new UserId(sID);
-			bNewEntity = true;
+			manager.persist(user);
 		}
 
 		// encrypt and update password
@@ -109,20 +108,14 @@ public class UserGroupService {
 			// if group dos not exist - create it...
 			if (group == null) {
 				group = new UserGroup(aGroup);
-				manager.persist(user);
+				manager.persist(group);
 			}
-
 			groupList.add(group);
-
 		}
 
 		// update groups
 		user.setUserGroups(groupList);
 
-		if (bNewEntity)
-			manager.persist(user);
-		else
-			manager.merge(user);
 	}
 
 	/**
