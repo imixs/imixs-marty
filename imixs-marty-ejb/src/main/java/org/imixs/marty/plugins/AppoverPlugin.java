@@ -67,7 +67,7 @@ public class AppoverPlugin extends AbstractPlugin {
 
 		// 1.) test for items with name subprocess_create and create the
 		// defined suprocesses
-		if (evalItemCollection.hasItem(APPROVEDBY)) {
+		if (evalItemCollection!=null && evalItemCollection.hasItem(APPROVEDBY)) {
 			// extract the groups definitions...
 			List<String> groups = evalItemCollection.getItemValue(APPROVEDBY);
 			for (String aGroup : groups) {
