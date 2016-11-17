@@ -1,11 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.imixs.marty</groupId>
 	<artifactId>imixs-marty</artifactId>
 	<packaging>pom</packaging>
 	<name>Imixs Workflow - Marty</name>
-	<version>3.0.0-SNAPSHOT</version>
+	<version>3.0.0</version>
 	<description>'Marty' is a sub project of 'Imixs Workflow'. The project provides several business process management solutions. The goal of this project is to simplify the development of workflow management applications by providing a robust and flexible application framework with a set of Java Enterprise components. All the results of this project are subject to the GPL licensing model.</description>
 	<url>https://github.com/imixs/imixs-marty</url>
 
