@@ -45,7 +45,7 @@ public class DeputyPlugin extends AbstractPlugin {
 
 	ItemCollection workitem = null;
 	ProfileService profileService = null;
-	private String[] ignoreList = { "namcreator", "namcurrenteditor", "namlasteditor", "nam+(?:[a-z0-9_]+)approvers",
+	private String[] ignoreList = { "namcreator", "namcurrenteditor", "namlasteditor", "namowner", "nam+(?:[a-z0-9_]+)approvers",
 			"nam+(?:[a-z0-9_]+)approvedby" };
 
 	private static Logger logger = Logger.getLogger(DeputyPlugin.class.getName());
