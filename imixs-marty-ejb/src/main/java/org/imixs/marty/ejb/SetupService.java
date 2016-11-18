@@ -40,6 +40,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.bpmn.BPMNModel;
+import org.imixs.workflow.bpmn.BPMNParser;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.ModelService;
 import org.imixs.workflow.engine.PropertyService;
@@ -67,31 +69,27 @@ public class SetupService {
 
 	@EJB
 	ModelService modelService;
-	
+
 	@EJB
 	PropertyService propertyService;
-	
-	
-	private static Logger logger = Logger.getLogger(SetupService.class
-			.getName());
+
+	private static Logger logger = Logger.getLogger(SetupService.class.getName());
 
 	/**
 	 * This method verifies the default configuration and initiates a import of
 	 * default data
-	 * @throws AccessDeniedException 
+	 * 
+	 * @throws AccessDeniedException
 	 */
-	public void init() throws AccessDeniedException  {
-		
+	public void init() throws AccessDeniedException {
+
 		logger.info("starting System Setup...");
 		loadDefaultModels();
-		
+
 		logger.info("system setup completed");
 
 	}
-	
-	
 
-	
 	/**
 	 * This method loads the default model files defined by the configuration
 	 * file: /configuration/model.properties
@@ -104,59 +102,69 @@ public class SetupService {
 	 */
 	private void loadDefaultModels() {
 
-		
 		try {
 			List<String> colModelVersions = modelService.getVersions();
-			
+
 			if (!colModelVersions.isEmpty()) {
 				logger.info("loadDefaultModels - model - ok");
 				return;
 			}
 
 			logger.info("loadDefaultModels - check system model...");
-			String sDefaultModelList=propertyService.getProperties().getProperty("setup.defaultModel");
-			if (sDefaultModelList== null || sDefaultModelList.isEmpty()) {
-				logger.warning("[SetupService] setup.defaultModel key is not defined in 'imixs.properties' - no default model imported!");
+			String sDefaultModelList = propertyService.getProperties().getProperty("setup.defaultModel");
+			if (sDefaultModelList == null || sDefaultModelList.isEmpty()) {
+				logger.warning(
+						"[SetupService] setup.defaultModel key is not defined in 'imixs.properties' - no default model imported!");
 				return;
 			}
-			
+
 			logger.fine("loadDefaultModels - setup.defaultModel=" + sDefaultModelList);
-			
-			StringTokenizer stModelList=new StringTokenizer(sDefaultModelList,",",false);
-		
+
+			StringTokenizer stModelList = new StringTokenizer(sDefaultModelList, ",", false);
+
 			while (stModelList.hasMoreElements()) {
 				// try to load this model
 				String filePath = stModelList.nextToken();
-				logger.info("[SetupService] loading default model file: '" + filePath + "'....");
+				// test if bpmn model?
+				if (filePath.endsWith(".bpmn") || filePath.endsWith(".xml")) {
+					logger.info("loading default model file: '" + filePath + "'....");
+					InputStream inputStream = SetupService.class.getClassLoader().getResourceAsStream(filePath);
+					// byte[] bytes = IOUtils.toByteArray(inputStream);
 
-				InputStream inputStream = SetupService.class
-						.getClassLoader().getResourceAsStream(filePath);
-				// byte[] bytes = IOUtils.toByteArray(inputStream);
+					ByteArrayOutputStream bos = new ByteArrayOutputStream();
+					int next;
 
-				ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				int next;
-
-				next = inputStream.read();
-
-				while (next > -1) {
-					bos.write(next);
 					next = inputStream.read();
-				}
-				bos.flush();
-				byte[] result = bos.toByteArray();
 
-				importXmlEntityData(result);
+					while (next > -1) {
+						bos.write(next);
+						next = inputStream.read();
+					}
+					bos.flush();
+					byte[] result = bos.toByteArray();
+
+					// is BPMN?
+					if (filePath.endsWith(".bpmn")) {
+						BPMNModel model = BPMNParser.parseModel(result, "UTF-8");
+						modelService.saveModel(model);
+					} else {
+						// XML
+						importXmlEntityData(result);
+					}
+				} else {
+					logger.warning("Wrong model format: '" + filePath + "' - expected *.bpmn or *.xml");
+				}
+
 			}
 		} catch (Exception e) {
-			logger.severe("[SetupService] unable to load model configuration - please check imixs.properties file for key 'setup.defaultModel'");
+			logger.severe(
+					"unable to load model configuration - please check imixs.properties file for key 'setup.defaultModel'");
 			throw new RuntimeException(
 					"loadDefaultModels - unable to load model configuration - please check imixs.properties file for key 'setup.defaultModel'");
 		}
 
 	}
 
-	
-	
 	/**
 	 * this method imports an xml entity data stream. This is used to provide
 	 * model uploads during the system setup. The method can also import general
@@ -173,8 +181,7 @@ public class SetupService {
 		if (filestream == null)
 			return;
 		try {
-			
-			
+
 			DocumentCollection ecol = null;
 			logger.fine("importXmlEntityData - importModel, verifing file content....");
 
@@ -197,22 +204,18 @@ public class SetupService {
 			ecol = (DocumentCollection) jaxbObject;
 			// import the model entities....
 			if (ecol.getDocument().length > 0) {
-		
+
 				Vector<String> vModelVersions = new Vector<String>();
 				// first iterrate over all enttity and find if model entries are
 				// included
 				for (XMLItemCollection aentity : ecol.getDocument()) {
-					itemCollection = XMLItemCollectionAdapter
-							.getItemCollection(aentity);
+					itemCollection = XMLItemCollectionAdapter.getItemCollection(aentity);
 					// test if this is a model entry
 					// (type=WorkflowEnvironmentEntity)
-					if ("WorkflowEnvironmentEntity".equals(itemCollection
-							.getItemValueString("type"))
-							&& "environment.profile".equals(itemCollection
-									.getItemValueString("txtName"))) {
+					if ("WorkflowEnvironmentEntity".equals(itemCollection.getItemValueString("type"))
+							&& "environment.profile".equals(itemCollection.getItemValueString("txtName"))) {
 
-						sModelVersion = itemCollection
-								.getItemValueString("$ModelVersion");
+						sModelVersion = itemCollection.getItemValueString("$ModelVersion");
 						if (vModelVersions.indexOf(sModelVersion) == -1)
 							vModelVersions.add(sModelVersion);
 					}
@@ -226,21 +229,17 @@ public class SetupService {
 				// save new entities into database and update modelversion.....
 				for (int i = 0; i < ecol.getDocument().length; i++) {
 					entity = ecol.getDocument()[i];
-					itemCollection = XMLItemCollectionAdapter
-							.getItemCollection(entity);
+					itemCollection = XMLItemCollectionAdapter.getItemCollection(entity);
 					// save entity
 					documentService.save(itemCollection);
 				}
 
-				logger.fine("importXmlEntityData - " + ecol.getDocument().length
-						+ " entries sucessfull imported");
+				logger.fine("importXmlEntityData - " + ecol.getDocument().length + " entries sucessfull imported");
 			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		
 
 	}
 
