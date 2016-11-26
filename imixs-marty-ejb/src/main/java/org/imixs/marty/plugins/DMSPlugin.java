@@ -308,7 +308,7 @@ public class DMSPlugin extends AbstractPlugin {
 					byte[] empty = { 0 };
 					// add the file name (with empty data) into the
 					// parentWorkitem.
-					aWorkitem.addFile(empty, sFileName, "");
+					aWorkitem.addFile(empty, sFileName, contentType);
 				}
 			}
 		}
