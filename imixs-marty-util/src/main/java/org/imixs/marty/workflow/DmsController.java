@@ -93,10 +93,7 @@ public class DmsController implements Serializable {
 	/**
 	 * WorkflowEvent listener to update the DMS property if a WorkItem has
 	 * changed, processed or saved.
-	 * 
-	 * Newly attached files will be transfered into the BlobWorkitem. The
-	 * BlobWorkitem will be saved before the workItem is processed.
-	 * 
+	 *  
 	 * The read and write access for a BlobWorkitem will be updated by the
 	 * org.imixs.marty.plugins.BlobPlugin.
 	 * 

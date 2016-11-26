@@ -39,7 +39,9 @@ import org.imixs.workflow.exceptions.QueryException;
  * The method getDMSList can be used to convert this list into a List of
  * ItemCollection elements.
  * 
- * The DMS Plug-in also provides a mechanism to import files from the file
+ * The property 'dmsFileList' stores the plain list of file names.
+ * 
+ * In addtion the DMS Plug-in also provides a mechanism to import files from the file
  * system. If the workitem contains the property 'txtDmsImport" all files from
  * the given path will be added into the blobWorkitem
  * 
@@ -48,6 +50,8 @@ import org.imixs.workflow.exceptions.QueryException;
  */
 public class DMSPlugin extends AbstractPlugin {
 
+	public final static String DMS_ITEM = "dms";
+	public final static String DMS_FILELIST = "dmsFileList";
 	public final static String DMS_IMPORT_PROPERTY = "txtDmsImport";
 	public final static String DEFAULT_PROTOCOLL = "file://";
 	public final static String BLOBWORKITEMID = "$BlobWorkitem";
@@ -64,7 +68,7 @@ public class DMSPlugin extends AbstractPlugin {
 	 * If the workItem contains the property 'txtDmsImport" all files from the
 	 * given path will be added into the blobWorkitem
 	 * 
-	 * If a file contained in the property '$file' is not part of the property
+	 * If a file contained in the property '$file' which is not yet part of the property
 	 * 'dms' the method will automatically create a new dms entry by calling the
 	 * method updateDmsList.
 	 **/
@@ -144,7 +148,7 @@ public class DMSPlugin extends AbstractPlugin {
 		if (workitem == null)
 			return dmsList;
 
-		List<Map> vDMS = workitem.getItemValue("dms");
+		List<Map> vDMS = workitem.getItemValue(DMS_ITEM);
 		// first we add all existing dms informations
 		for (Map aMetadata : vDMS) {
 			dmsList.add(new ItemCollection(aMetadata));
@@ -154,8 +158,6 @@ public class DMSPlugin extends AbstractPlugin {
 		//Collections.sort(dmsList, new ItemCollectionComparator("txtname", true));
 		// sort list by $modified
 		Collections.sort(dmsList, new ItemCollectionComparator("$created", true));
-
-		
 		
 		return dmsList;
 	}
@@ -163,7 +165,6 @@ public class DMSPlugin extends AbstractPlugin {
 	/**
 	 * This method converts a list of ItemCollections for DMS elements into Map
 	 * objects and updates the workitem property 'dms'.
-	 * 
 	 * 
 	 */
 	@SuppressWarnings("rawtypes")
@@ -176,7 +177,7 @@ public class DMSPlugin extends AbstractPlugin {
 			}
 		}
 		// update the workitem
-		workitem.replaceItemValue("dms", vDMSnew);
+		workitem.replaceItemValue(DMS_ITEM, vDMSnew);
 	}
 
 	/**
@@ -215,7 +216,7 @@ public class DMSPlugin extends AbstractPlugin {
 	 * files or links.
 	 * 
 	 * This method creates new empty DMS entries for new uploaded files which
-	 * are still not contained in the dms list.
+	 * are still not contained in the dms item list.
 	 * 
 	 * 
 	 * @param aWorkitem
@@ -241,7 +242,7 @@ public class DMSPlugin extends AbstractPlugin {
 			if (sURL.isEmpty() && !currentFileList.contains(sName)) {
 				// Remove the current element from the iterator and the list.
 				iterator.remove();
-				logger.fine("[DMSPlugin] remove dms entry '" + sName + "'");
+				logger.fine("remove dms entry '" + sName + "'");
 			}
 		}
 
@@ -263,6 +264,7 @@ public class DMSPlugin extends AbstractPlugin {
 		}
 
 		putDmsList(aWorkitem,currentDmsList);
+		
 	}
 
 	/**
@@ -295,7 +297,7 @@ public class DMSPlugin extends AbstractPlugin {
 					byte[] empty = { 0 };
 					// add the file name (with empty data) into the
 					// parentWorkitem.
-					aWorkitem.addFile(empty, sFileName, "");
+					aWorkitem.addFile(empty, sFileName, contentType);
 				}
 			}
 		}
