@@ -38,7 +38,7 @@ public class WorkflowSchedulerServlet extends HttpServlet {
 		try {
 			ItemCollection configItemCollection = workflowSchedulerService.loadConfiguration();
 			if (configItemCollection != null && configItemCollection.getItemValueBoolean("_enabled")) {
-				logger.warning("Restarting WorkflowScheduler '" + configItemCollection.getUniqueID() + "'");
+				logger.info("Starting WorkflowScheduler ID='" + configItemCollection.getUniqueID() + "'....");
 				workflowSchedulerService.start();
 			}
 		} catch (Exception e) {
