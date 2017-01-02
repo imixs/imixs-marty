@@ -61,10 +61,10 @@ public class ReportController extends DocumentController {
 			int i = 0;
 			while ((i = query.indexOf('?', i)) > -1) {
 				String sTest = query.substring(i + 1);
-				// cut next space or ' or "
+				// cut next space or ' or " or ] or :
 				for (int j = 0; j < sTest.length(); j++) {
 					char c = sTest.charAt(j);
-					if (c == '\'' || c == '"' || c == ' ') {
+					if (c == '\'' || c == '"' || c == ']' || c == ':' || c == ' ') {
 						// cut here!
 						String sKey = query.substring(i + 1, i + j + 1);
 						params.put(sKey, "");
