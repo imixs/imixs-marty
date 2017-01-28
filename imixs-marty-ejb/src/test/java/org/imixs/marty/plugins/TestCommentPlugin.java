@@ -10,8 +10,10 @@ import javax.ejb.SessionContext;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.AbstractWorkflowEnvironment;
+import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,9 +39,12 @@ public class TestCommentPlugin extends AbstractWorkflowEnvironment {
 	 * Setup script to simulate process and space entities for test cases.
 	 * 
 	 * @throws PluginException
+	 * @throws ModelException 
+	 * @throws ProcessingErrorException 
+	 * @throws AccessDeniedException 
 	 */
 	@Before
-	public void setup() throws PluginException {
+	public void setup() throws PluginException, AccessDeniedException, ProcessingErrorException, ModelException {
 
 		super.setup();
 

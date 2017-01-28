@@ -39,6 +39,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.ModelService;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 
@@ -140,11 +141,12 @@ public class WorkitemService {
 	 * @throws ProcessingErrorException
 	 * @throws AccessDeniedException
 	 * @throws PluginException
+	 * @throws ModelException 
 	 * 
 	 */
 	public ItemCollection processWorkItem(ItemCollection aworkitem)
 			throws AccessDeniedException, ProcessingErrorException,
-			PluginException {
+			PluginException, ModelException {
 		// Process workitem...
 		return workflowService.processWorkItem(aworkitem);
 	}

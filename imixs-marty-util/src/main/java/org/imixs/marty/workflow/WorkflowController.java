@@ -310,10 +310,11 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 	 * In case the processing was successful, the current conversation will be
 	 * closed. In Case of an Exception (e.g PluginException) the conversation
 	 * will not be closed, so that the current workitem data is still available.
+	 * @throws ModelException 
 	 * 
 	 */
 	@Override
-	public String process() throws AccessDeniedException, ProcessingErrorException {
+	public String process() throws AccessDeniedException, ProcessingErrorException, ModelException {
 		String actionResult = null;
 		long lTotal = System.currentTimeMillis();
 

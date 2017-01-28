@@ -38,6 +38,7 @@ import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.engine.plugins.ResultPlugin;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 
@@ -126,7 +127,11 @@ public class DMSSplitPlugin extends AbstractPlugin {
 			// evaluate the item content (XML format expected here!)
 			ItemCollection dmsProcessData = ResultPlugin.parseItemStructure(processValue);
 
-			adocumentContext = createSubprocesses(dmsProcessData, adocumentContext);
+			try {
+				adocumentContext = createSubprocesses(dmsProcessData, adocumentContext);
+			} catch (ModelException e) {
+				throw new PluginException(e.getErrorContext(),e.getErrorCode(),e.getMessage(),e);
+			}
 		}
 
 		return adocumentContext;
@@ -150,7 +155,7 @@ public class DMSSplitPlugin extends AbstractPlugin {
 	 * @throws PluginException
 	 */
 	private ItemCollection createSubprocesses(final ItemCollection processData, final ItemCollection originWorkitem)
-			throws AccessDeniedException, ProcessingErrorException, PluginException {
+			throws AccessDeniedException, ProcessingErrorException, PluginException, ModelException {
 
 		if (processData != null) {
 

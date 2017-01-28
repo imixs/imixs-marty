@@ -53,6 +53,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.PropertyService;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.faces.fileupload.FileData;
@@ -163,6 +164,10 @@ public class UserController implements Serializable {
 					logger.severe("[UserController] unable to process new profile entity!");
 					throw new ProcessingErrorException(UserController.class.getName(),
 							ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!", e);
+				} catch (ModelException e) {
+					logger.severe("[UserController] unable to process new profile entity!");
+					throw new ProcessingErrorException(UserController.class.getName(),
+							ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!", e);
 				}
 				logger.info("Profile successfull created for '" + loginController.getUserPrincipal() + "'");
 
@@ -181,6 +186,11 @@ public class UserController implements Serializable {
 						try {
 							profile = workflowService.processWorkItem(profile);
 						} catch (PluginException e) {
+							logger.severe("[UserController] unable to process new profile entity!");
+							throw new ProcessingErrorException(UserController.class.getName(),
+									ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!",
+									e);
+						} catch (ModelException e) {
 							logger.severe("[UserController] unable to process new profile entity!");
 							throw new ProcessingErrorException(UserController.class.getName(),
 									ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!",

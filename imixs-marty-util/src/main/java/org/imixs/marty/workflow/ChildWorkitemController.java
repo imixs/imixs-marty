@@ -118,9 +118,10 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 
 	/**
 	 * Override process to reset the child list
+	 * @throws ModelException 
 	 */
 	@Override
-	public String process() throws AccessDeniedException, ProcessingErrorException, PluginException {
+	public String process() throws AccessDeniedException, ProcessingErrorException, PluginException, ModelException {
 
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_BEFORE_PROCESS));
