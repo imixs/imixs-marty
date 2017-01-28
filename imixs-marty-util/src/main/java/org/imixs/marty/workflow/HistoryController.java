@@ -35,7 +35,7 @@ import javax.inject.Named;
 
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.jee.ejb.EntityService;
+import org.imixs.workflow.WorkflowKernel;
 
 /**
  * The HistoryController provides a history navigation over workItems the user
@@ -180,7 +180,7 @@ public class HistoryController implements Serializable {
 			// then remove the WorkItem and clear the currentID
 			String result = workflowEvent.getWorkitem().getItemValueString("action");
 			if ("home".equals(result) || "notes".equals(result)) {
-				removeWorkitem(workflowEvent.getWorkitem().getItemValueString(EntityService.UNIQUEID));
+				removeWorkitem(workflowEvent.getWorkitem().getItemValueString(WorkflowKernel.UNIQUEID));
 				setCurrentId("");
 			} else {
 				addWorkItem(workflowEvent.getWorkitem());

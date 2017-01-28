@@ -56,6 +56,7 @@ import org.imixs.marty.util.ErrorHandler;
 import org.imixs.marty.util.ValidationException;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
@@ -63,7 +64,6 @@ import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.exceptions.QueryException;
 import org.imixs.workflow.faces.util.LoginController;
-import org.imixs.workflow.jee.ejb.EntityService;
 
 /**
  * The marty WorkflowController extends the
@@ -254,7 +254,7 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 			ItemCollection process = processController.getProcessById(processRef);
 			if (process != null) {
 				getWorkitem().replaceItemValue("txtProcessName", process.getItemValueString("txtName"));
-				getWorkitem().replaceItemValue("txtProcessRef", process.getItemValueString(EntityService.UNIQUEID));
+				getWorkitem().replaceItemValue("txtProcessRef", process.getItemValueString(WorkflowKernel.UNIQUEID));
 
 			} else {
 				logger.warning("[create] - unable to find process entity '" + processRef + "'!");
@@ -465,7 +465,7 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 		if (this.getWorkitem() == null) {
 			return null;
 		} else {
-			return this.getWorkitem().getItemValueString(EntityService.UNIQUEID);
+			return this.getWorkitem().getItemValueString(WorkflowKernel.UNIQUEID);
 		}
 	}
 
