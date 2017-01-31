@@ -66,6 +66,7 @@ import org.imixs.workflow.exceptions.QueryException;
 public class WorkitemLinkController implements Serializable {
 
 	public static final String LINK_PROPERTY = "txtworkitemref";
+	public static final int MAX_SEARCH_RESULT=999;
 
 	public static Logger logger = Logger.getLogger(WorkitemLinkController.class.getName());
 
@@ -152,7 +153,7 @@ public class WorkitemLinkController implements Serializable {
 			if (filter != null && !"".equals(filter)) {
 				String sNewFilter = filter;
 				sNewFilter = sNewFilter.replace(".", "?");
-				sSearchTerm = "(" + sNewFilter + ") AND ";
+				sSearchTerm += "(" + sNewFilter + ") AND ";
 			}
 			if (!"".equals(input)) {
 				// escape input..
@@ -160,7 +161,7 @@ public class WorkitemLinkController implements Serializable {
 				sSearchTerm += " (*" + input.toLowerCase() + "*)";
 			}
 
-			searchResult = workflowService.getDocumentService().find(sSearchTerm, 0, -1);
+			searchResult = workflowService.getDocumentService().find(sSearchTerm, MAX_SEARCH_RESULT, 0);
 			// clone result list
 			for (int i = 0; i < searchResult.size(); i++) {
 				searchResult.set(i, WorkitemHelper.clone(searchResult.get(i)));
@@ -293,7 +294,7 @@ public class WorkitemLinkController implements Serializable {
 
 			List<ItemCollection> workitems;
 			try {
-				workitems = workflowService.getDocumentService().find(sQuery, 999, 0);
+				workitems = workflowService.getDocumentService().find(sQuery, MAX_SEARCH_RESULT, 0);
 				// sort by modified
 				Collections.sort(workitems, new ItemCollectionComparator("$created", true));
 
@@ -373,7 +374,7 @@ public class WorkitemLinkController implements Serializable {
 
 			List<ItemCollection> workitems = null;
 			try {
-				workitems = workflowService.getDocumentService().find(sQuery, 999, 0);
+				workitems = workflowService.getDocumentService().find(sQuery, MAX_SEARCH_RESULT, 0);
 				// sort by modified
 				Collections.sort(workitems, new ItemCollectionComparator("$created", true));
 
