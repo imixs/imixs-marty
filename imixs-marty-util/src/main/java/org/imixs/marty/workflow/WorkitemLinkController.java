@@ -75,7 +75,6 @@ public class WorkitemLinkController implements Serializable {
 	@EJB
 	protected WorkflowService workflowService;
 
-	
 	private static final long serialVersionUID = 1L;
 	private List<ItemCollection> searchResult = null;
 	private Map<String, List<ItemCollection>> externalReferences = null;
@@ -161,7 +160,7 @@ public class WorkitemLinkController implements Serializable {
 				sSearchTerm += " (*" + input.toLowerCase() + "*)";
 			}
 
-			searchResult = workflowService.getDocumentService().find(sSearchTerm,0,-1);
+			searchResult = workflowService.getDocumentService().find(sSearchTerm, 0, -1);
 			// clone result list
 			for (int i = 0; i < searchResult.size(); i++) {
 				searchResult.set(i, WorkitemHelper.clone(searchResult.get(i)));
@@ -230,7 +229,6 @@ public class WorkitemLinkController implements Serializable {
 		references = null;
 	}
 
-	
 	/**
 	 * This method returns a list of all ItemCollections referred by the current
 	 * workItem (txtWorkitemRef).
@@ -238,10 +236,10 @@ public class WorkitemLinkController implements Serializable {
 	 * @return - list of ItemCollection
 	 */
 	public List<ItemCollection> getReferences() {
-	
+
 		return getReferences("");
 	}
-		
+
 	/**
 	 * This method returns a list of ItemCollections referred by the current
 	 * workItem (txtWorkitemRef).
@@ -281,24 +279,22 @@ public class WorkitemLinkController implements Serializable {
 			}
 
 			// start query and filter the result
-			String sQuery ="(";
-			sQuery=" (type:\"workitem\" OR type:\"workitemarchive\") AND (";
+			String sQuery = "(";
+			sQuery = " (type:\"workitem\" OR type:\"workitemarchive\") AND (";
 			for (String aID : list) {
 				sQuery += "$uniqueid:\"" + aID + "\" OR ";
 			}
 			// cut last ,
 			sQuery = sQuery.substring(0, sQuery.length() - 3);
-		
-			sQuery +=" )";
+
+			sQuery += " )";
 
 			List<ItemCollection> workitems;
 			try {
-				workitems = workflowService.getDocumentService().find(sQuery, 999,0);
+				workitems = workflowService.getDocumentService().find(sQuery, 999, 0);
 				// sort by modified
 				Collections.sort(workitems, new ItemCollectionComparator("$modified", true));
-				
 
-				
 				if (workitems.size() == 0) {
 					references.put(filter, filterResult);
 					return filterResult;
@@ -362,21 +358,23 @@ public class WorkitemLinkController implements Serializable {
 				return filterResult;
 
 			// select all references.....
-//			String sQuery = "SELECT workitem FROM Entity AS workitem" + " JOIN workitem.textItems AS rnr"
-//					+ " WHERE workitem.type IN ('workitem','workitemarchive') " + " AND rnr.itemName = '"
-//					+ LINK_PROPERTY + "'" + " AND rnr.itemValue='" + uniqueid + "'" + " ORDER BY workitem.created DESC";
-			
-			
-			String sQuery ="(";
-			sQuery=" (type:\"workitem\" OR type:\"workitemarchive\") AND ("+LINK_PROPERTY+ ":\"" + uniqueid + "\")";
-			
+			// String sQuery = "SELECT workitem FROM Entity AS workitem" + "
+			// JOIN workitem.textItems AS rnr"
+			// + " WHERE workitem.type IN ('workitem','workitemarchive') " + "
+			// AND rnr.itemName = '"
+			// + LINK_PROPERTY + "'" + " AND rnr.itemValue='" + uniqueid + "'" +
+			// " ORDER BY workitem.created DESC";
+
+			String sQuery = "(";
+			sQuery = " (type:\"workitem\" OR type:\"workitemarchive\") AND (" + LINK_PROPERTY + ":\"" + uniqueid
+					+ "\")";
+
 			List<ItemCollection> workitems = null;
 			try {
-				workitems = workflowService.getDocumentService().find(sQuery, 0, -1);
+				workitems = workflowService.getDocumentService().find(sQuery, 999, 0);
 				// sort by modified
 				Collections.sort(workitems, new ItemCollectionComparator("$modified", true));
-				
-				
+
 				if (workitems.size() == 0) {
 					externalReferences.put(filter, filterResult);
 					return filterResult;
