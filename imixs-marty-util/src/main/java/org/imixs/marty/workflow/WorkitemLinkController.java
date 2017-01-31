@@ -249,6 +249,8 @@ public class WorkitemLinkController implements Serializable {
 	 * are cached into the references map. This cache is discarded if the
 	 * current workItem changed.
 	 * 
+	 * The resultset is sorted by $created
+	 * 
 	 * @return - list of ItemCollection with matches the current filter
 	 */
 	@SuppressWarnings("unchecked")
@@ -293,7 +295,7 @@ public class WorkitemLinkController implements Serializable {
 			try {
 				workitems = workflowService.getDocumentService().find(sQuery, 999, 0);
 				// sort by modified
-				Collections.sort(workitems, new ItemCollectionComparator("$modified", true));
+				Collections.sort(workitems, new ItemCollectionComparator("$created", true));
 
 				if (workitems.size() == 0) {
 					references.put(filter, filterResult);
@@ -373,7 +375,7 @@ public class WorkitemLinkController implements Serializable {
 			try {
 				workitems = workflowService.getDocumentService().find(sQuery, 999, 0);
 				// sort by modified
-				Collections.sort(workitems, new ItemCollectionComparator("$modified", true));
+				Collections.sort(workitems, new ItemCollectionComparator("$created", true));
 
 				if (workitems.size() == 0) {
 					externalReferences.put(filter, filterResult);
