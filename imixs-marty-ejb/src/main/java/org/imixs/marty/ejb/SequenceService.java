@@ -38,6 +38,7 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.InvalidAccessException;
@@ -128,7 +129,7 @@ public class SequenceService {
 			// read configuration and test if a corresponding configuration
 			// exists
 			String sWorkflowGroup = aworkitem
-					.getItemValueString("txtWorkflowGroup");
+					.getItemValueString(WorkflowKernel.WORKFLOWGROUP);
 			@SuppressWarnings("unchecked")
 			List<String> vNumbers = configItemCollection
 					.getItemValue("sequencenumbers");
