@@ -160,11 +160,7 @@ public class UserInputController implements Serializable {
 
 		phrase = phrase.trim();
 		phrase =  LuceneSearchService.escapeSearchTerm(phrase);
-		String sQuery = "(type:\"profile\") AND "
-				+ "(   (txtname:" + phrase + ") "
-				+ " OR (txtemail:*" + phrase + "*) "
-				+ " OR (txtusername:*" + phrase + "*) "
-				+ ")";
+		String sQuery = "(type:\"profile\") AND (*" + phrase + "*)";
 
 		logger.finest("searchprofile: " + sQuery);
 
@@ -181,7 +177,7 @@ public class UserInputController implements Serializable {
 			searchResult.add(ProfileService.cloneWorkitem(profile));
 		}
 		// sort by username..
-		Collections.sort(searchResult, new ItemCollectionComparator("txtUserName", true));
+		Collections.sort(searchResult, new ItemCollectionComparator("txtusername", true));
 
 		return searchResult;
 
