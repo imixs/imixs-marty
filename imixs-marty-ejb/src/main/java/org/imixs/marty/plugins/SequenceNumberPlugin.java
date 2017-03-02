@@ -82,7 +82,7 @@ import org.imixs.workflow.exceptions.PluginException;
 public class SequenceNumberPlugin extends AbstractPlugin {
 	SequenceService sequenceService = null;
 
-	int sequenceNumber = -1;
+	long sequenceNumber = -1;
 	ItemCollection workitem = null;
 	private static Logger logger = Logger.getLogger(SequenceNumberPlugin.class.getName());
 	public static String NO_SEQUENCE_SERVICE_FOUND = "NO_SEQUENCE_SERVICE_FOUND";
@@ -148,7 +148,7 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 				throw new PluginException(e.getErrorContext(), e.getErrorCode(), "[SequenceNumberPlugin] error ", e);
 			}
 			if (sequenceNumber > 0)
-				workitem.replaceItemValue("numsequencenumber", new Integer(sequenceNumber));
+				workitem.replaceItemValue("numsequencenumber", new Long(sequenceNumber));
 			else {
 				// to avoid problems with incorrect data values we remove the
 				// property numsequencenumber in this case

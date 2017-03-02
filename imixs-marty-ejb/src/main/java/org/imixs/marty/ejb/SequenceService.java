@@ -109,7 +109,7 @@ public class SequenceService {
 	 * @throws AccessDeniedException
 	 * 
 	 */
-	public int getNextSequenceNumberByGroup(ItemCollection aworkitem)
+	public long getNextSequenceNumberByGroup(ItemCollection aworkitem)
 			throws AccessDeniedException {
 
 		ItemCollection configItemCollection = null;
@@ -140,9 +140,9 @@ public class SequenceService {
 					String sequcenceNumber = aNumber.substring(aNumber
 							.indexOf('=') + 1);
 					//
-					int currentSequenceNumber = Integer
-							.parseInt(sequcenceNumber);
-					int newSequenceNumber = currentSequenceNumber + 1;
+					long currentSequenceNumber = Long
+							.parseLong(sequcenceNumber);
+					long newSequenceNumber = currentSequenceNumber + 1;
 					// Save the new Number back into the config entity
 					aNumber = sWorkflowGroup + "=" + newSequenceNumber;
 					vNumbers.set(i, sWorkflowGroup + "=" + newSequenceNumber);
@@ -167,21 +167,21 @@ public class SequenceService {
 	 * @throws AccessDeniedException
 	 * @throws PluginException 
 	 */
-	public int getNextSequenceNumberByParent(ItemCollection aworkitem)
+	public long getNextSequenceNumberByParent(ItemCollection aworkitem)
 			throws AccessDeniedException, PluginException {
 		// load current Number
 		ItemCollection sequenceNumberObject = loadParentWorkitem(aworkitem);
-		int currentSequenceNumber = sequenceNumberObject
-				.getItemValueInteger(SEQUENCE_NAME);
+		long currentSequenceNumber = sequenceNumberObject
+				.getItemValueLong(SEQUENCE_NAME);
 
 		// skip number 0
 		if (currentSequenceNumber == 0)
 			currentSequenceNumber = 1;
 
-		int sequenceNumber = currentSequenceNumber;
+		long sequenceNumber = currentSequenceNumber;
 		sequenceNumber++;
 		// Save new Number
-		sequenceNumberObject.replaceItemValue(SEQUENCE_NAME, new Integer(
+		sequenceNumberObject.replaceItemValue(SEQUENCE_NAME, new Long(
 				sequenceNumber));
 		documentService.save(sequenceNumberObject);
 		return currentSequenceNumber;
@@ -193,11 +193,11 @@ public class SequenceService {
 	 * aworkitem. The Method throws an exception if the workitem has no parent
 	 * workitem!
 	 */
-	public int getLastSequenceNumber(ItemCollection aworkitem) throws Exception {
+	public long getLastSequenceNumber(ItemCollection aworkitem) throws Exception {
 		// load current Number
 		ItemCollection sequenceNumberObject = loadParentWorkitem(aworkitem);
-		int sequenceNumber = sequenceNumberObject
-				.getItemValueInteger(SEQUENCE_NAME);
+		long sequenceNumber = sequenceNumberObject
+				.getItemValueLong(SEQUENCE_NAME);
 		return sequenceNumber;
 
 	}
@@ -205,13 +205,13 @@ public class SequenceService {
 	/**
 	 * sets the current sequence Number
 	 */
-	public void setLastSequenceNumber(ItemCollection aworkitem, int aNewID)
+	public void setLastSequenceNumber(ItemCollection aworkitem, long aNewID)
 			throws Exception {
 		// load current Number
 		ItemCollection sequenceNumberObject = loadParentWorkitem(aworkitem);
 		// Save new Number
 		sequenceNumberObject.replaceItemValue(SEQUENCE_NAME,
-				new Integer(aNewID));
+				new Long(aNewID));
 		documentService.save(sequenceNumberObject);
 
 	}
