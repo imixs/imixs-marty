@@ -209,6 +209,7 @@ public class UserGroupService {
 
 			// hard coded version nummer!
 			profile.replaceItemValue("$modelversion", "system-de-0.0.1");
+			profile.replaceItemValue("$workflowgroup", "Profil");
 			profile.replaceItemValue("$processid", 210);
 
 			try {

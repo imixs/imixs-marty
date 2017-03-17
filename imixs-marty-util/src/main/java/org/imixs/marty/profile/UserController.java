@@ -152,6 +152,7 @@ public class UserController implements Serializable {
 				profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
 				// hard coded version nummer!
 				profile.replaceItemValue("$modelversion", "system-de-0.0.1");
+				profile.replaceItemValue("$workflowgroup", "Profil");
 				profile.replaceItemValue("txtName",loginController.getUserPrincipal());
 				profile.replaceItemValue("txtLocale", getLocale());
 				// set default group
