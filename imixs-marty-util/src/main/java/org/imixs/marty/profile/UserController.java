@@ -31,6 +31,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
@@ -98,7 +100,6 @@ public class UserController implements Serializable {
 	@EJB
 	protected UserGroupService userGroupService;
 
-
 	@EJB
 	protected WorkflowService workflowService;
 
@@ -124,6 +125,23 @@ public class UserController implements Serializable {
 	}
 
 	/**
+	 * Returns the system workflow version from the resource bundle.app
+	 * 
+	 * @return
+	 */
+	public String getSystemWorkflowVersion() {
+		String version = null;
+		// try to find the system model version in the app resource bundle...
+		try {
+			ResourceBundle rb = ResourceBundle.getBundle("bundle.app");
+			version = rb.getString("workflowversion_system");
+		} catch (MissingResourceException mre) {
+			logger.warning("Missing resourceBundle entry 'bundle.app.workflowversion_system' : " + mre.getMessage());
+		}
+		return version;
+	}
+
+	/**
 	 * The init method is used to load a user profile or automatically create a
 	 * new one if no profile for the user is available. A new Profile will be
 	 * filled with default values.
@@ -145,15 +163,16 @@ public class UserController implements Serializable {
 			// try to load the profile for the current user
 			ItemCollection profile = profileService.lookupProfileById(loginController.getUserPrincipal());
 			if (profile == null) {
-				logger.info("Create new profile for '" + loginController.getUserPrincipal() + "'.... ");
+				logger.info("create new profile for userid '" + loginController.getUserPrincipal() + "'.... ");
 				// create new Profile for current user
 				profile = new ItemCollection();
 				profile.replaceItemValue("type", "profile");
 				profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
-				// hard coded version nummer!
-				profile.replaceItemValue("$modelversion", "system-de-0.0.1");
-				profile.replaceItemValue("$workflowgroup", "Profil");
-				profile.replaceItemValue("txtName",loginController.getUserPrincipal());
+				// hard system model version from resource bundle.app
+				profile.replaceItemValue("$modelversion", getSystemWorkflowVersion());
+				// the workflow group can not be guessed here...
+				// profile.replaceItemValue("$workflowgroup", "Profil");
+				profile.replaceItemValue("txtName", loginController.getUserPrincipal());
 				profile.replaceItemValue("txtLocale", getLocale());
 				// set default group
 				profile.replaceItemValue("txtgroups", "IMIXS-WORKFLOW-Author");
@@ -161,22 +180,21 @@ public class UserController implements Serializable {
 				profile.replaceItemValue("$ActivityID", CREATE_PROFILE_ACTIVITY_ID);
 				try {
 					profile = workflowService.processWorkItem(profile);
-				} catch (PluginException e) {
-					logger.severe("[UserController] unable to process new profile entity!");
+				} catch (RuntimeException | PluginException | ModelException e) {
+					logger.severe("unable to create profile for userid '" + loginController.getUserPrincipal() + "': "
+							+ e.getMessage());
+					// logout user!!
+					logger.severe("logout current userid '" + loginController.getUserPrincipal() + "'...");
+					loginController.doLogout(null);
 					throw new ProcessingErrorException(UserController.class.getName(),
 							ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!", e);
-				} catch (ModelException e) {
-					logger.severe("[UserController] unable to process new profile entity!");
-					throw new ProcessingErrorException(UserController.class.getName(),
-							ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!", e);
+
 				}
-				logger.info("Profile successfull created for '" + loginController.getUserPrincipal() + "'");
+				logger.fine("new profile created for userid '" + loginController.getUserPrincipal() + "'");
 
 			} else {
 				// check if profile.autoProcessOnLogin is defined
-
 				String sAutoProcessID = propertyService.getProperties().getProperty("profile.autoProcessOnLogin");
-
 				logger.fine("[UserController] profile.autoProcessOnLogin=" + sAutoProcessID);
 
 				try {
@@ -454,8 +472,6 @@ public class UserController implements Serializable {
 
 		}
 
-		
-
 	}
 
 	/**
@@ -507,7 +523,6 @@ public class UserController implements Serializable {
 			workitem = workflowService.getDocumentService().save(workitem);
 		}
 	}
-
 
 	/*
 	 * HELPER METHODS
