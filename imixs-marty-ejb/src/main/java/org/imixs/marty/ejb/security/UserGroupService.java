@@ -63,8 +63,7 @@ public class UserGroupService {
 	@EJB
 	DocumentService documentService;
 
-	private static Logger logger = Logger.getLogger(UserGroupService.class
-			.getName());
+	private static Logger logger = Logger.getLogger(UserGroupService.class.getName());
 
 	/**
 	 * This method verifies the profile data and creates or update the
@@ -77,7 +76,7 @@ public class UserGroupService {
 	 */
 	@SuppressWarnings("unchecked")
 	public void updateUser(ItemCollection profile) {
-		
+
 		String sType = profile.getItemValueString("Type");
 		if (!("profile".equals(sType)))
 			return;
@@ -99,6 +98,8 @@ public class UserGroupService {
 			user.setPassword(sEncryptedPasswort);
 			// remove password....
 			profile.removeItem("txtPassword");
+			logger.info("password change for userid '" + sID + "' by '" + ctx.getCallerPrincipal().getName() + "'");
+
 		}
 
 		// find group relation ships
@@ -115,6 +116,10 @@ public class UserGroupService {
 
 		// update groups
 		user.setUserGroups(groupList);
+
+		// create Log
+		logger.info("updateUser '" + sID + "' by '" + ctx.getCallerPrincipal().getName() + "', GroupList=");
+		groups.forEach(n -> logger.info(n));
 
 	}
 
@@ -133,16 +138,14 @@ public class UserGroupService {
 		// test if new userid still exits
 		user = manager.find(UserId.class, newID);
 		if (user != null) {
-			logger.warning("[UserGroupService] changeUser - new userId '"
-					+ newID + "'is still in Use!");
+			logger.warning("changeUser - new userId '" + newID + "'is still in Use!");
 			return;
 		}
 
 		// find old user entry....
 		user = manager.find(UserId.class, oldID);
 		if (user == null) {
-			logger.warning("[UserGroupService] changeUser - UserID '" + oldID
-					+ "' not found!");
+			logger.warning("changeUser - UserID '" + oldID + "' not found!");
 			return;
 		}
 
@@ -154,6 +157,10 @@ public class UserGroupService {
 
 		// remove old
 		manager.remove(user);
+
+		// log
+		logger.info("changeUserId '" + oldID + "' to '" + newID + "' by '" + ctx.getCallerPrincipal().getName());
+
 	}
 
 	/**
@@ -169,14 +176,15 @@ public class UserGroupService {
 		// test if userid exits
 		user = manager.find(UserId.class, userID);
 		if (user == null) {
-			logger.warning("[UserGroupService] removeUserId - userId '"
-					+ userID + "' did not exist!");
+			logger.warning("removeUserId - userId '" + userID + "' did not exist!");
 			return;
 		}
 
 		// remove old
 		manager.remove(user);
 
+		// log
+		logger.info("removeUserId '" + userID + "' by '" + ctx.getCallerPrincipal().getName());
 	}
 
 	/**
