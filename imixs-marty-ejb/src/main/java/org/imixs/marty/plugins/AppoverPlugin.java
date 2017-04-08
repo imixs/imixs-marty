@@ -13,39 +13,35 @@ import org.imixs.workflow.plugins.ResultPlugin;
 import org.imixs.workflow.plugins.jee.AbstractPlugin;
 
 /**
- * This plugin manages the approver lists of process and space managers and
- * teams
- * 
- * The result will be stored in the following attributes:
- * 
- * <code>
- * namProcessManagerApprovers 
- * namProcessManagerApprovedBy
- * namProcessTeamApprovers 
- * namProcessTeamApprovedBy
- * 
- * namSpaceManagerApprovers 
- * namSpaceManagerApprovedBy 
- * namSpaceTeamApprovers
- * namSpaceTeamApprovedBy
- * 
- * </code>
- * 
- * 
- * Plugin can be activated via the following result code:
+ * This plug-in manages multiple lists of approvers. A approver list can be
+ * declared within the workflow result by the item name "approvedby":
  * 
  * Example:
  * 
- * <code>
- *  <item name='approvedby'>SpaceTeam</item> 
- *  
- *  or: 
- *  
- *  <item name='approvedby'>ProcessManager</item> 
- *  
- * </code>
+ * <pre>
+ * {@code
+ *  <item name='approvedby'>SpaceTeam</item>
+ * }
+ * </pre>
+ * 
+ * The field name from the source attribute must be prefixed with 'nam'.
+ * 
+ * The result will be stored in the following attributes:
+ * 
+ * <pre>
+ * {@code
+ *  nam[ITEMNAME]Approvers 
+ *  nam[ITEMNAME]ApprovedBy
+ * }
+ * </pre>
+ * 
+ * If the source list is updated during the approving process, the plugin will
+ * add new userIDs if these new UserIDs are not yet listed in the
+ * nam[ITEMNAME]ApprovedBy field.
+ * 
  * 
  * @author rsoika
+ * @version 2.0
  * 
  */
 public class AppoverPlugin extends AbstractPlugin {
@@ -84,17 +80,36 @@ public class AppoverPlugin extends AbstractPlugin {
 
 		// 1.) test for items with name subprocess_create and create the
 		// defined suprocesses
-		if (evalItemCollection!=null && evalItemCollection.hasItem(APPROVEDBY)) {
+		if (evalItemCollection != null && evalItemCollection.hasItem(APPROVEDBY)) {
 			// extract the groups definitions...
 			List<String> groups = evalItemCollection.getItemValue(APPROVEDBY);
 			for (String aGroup : groups) {
+				List<String> nameList = workitem.getItemValue("nam" + aGroup);
+				// create a new instance of a Vector to avoid setting the
+				// same vector as reference!
+				List<String> newAppoverList = new ArrayList<String>();
+				newAppoverList.addAll(nameList);
 				if (!workitem.hasItem("nam" + aGroup + "Approvers")) {
-					List<String> nameList = workitem.getItemValue("nam" + aGroup);
-					// create a new instance of a Vector to avoid setting the same vector as reference!
-					List<String> approvers = new ArrayList<String>();
-					approvers.addAll(nameList);
-					logger.fine("creating approver list: " + aGroup + "=" + approvers);
-					workitem.replaceItemValue("nam" + aGroup + "Approvers", approvers);
+					logger.fine("creating new approver list: " + aGroup + "=" + newAppoverList);
+					workitem.replaceItemValue("nam" + aGroup + "Approvers", newAppoverList);
+				} else {
+					// verify if a new member of the existing approvers is available...
+					// (issue #150)
+					List<String> listApprovedBy = workitem.getItemValue("nam" + aGroup + "ApprovedBy");
+					List<String> listApprovers = workitem.getItemValue("nam" + aGroup + "Approvers");
+					boolean update = false;
+					for (String approver : newAppoverList) {
+						if (!listApprovedBy.contains(approver) && !listApprovers.contains(approver)) {
+							// add the new member to the existing approver list
+							logger.fine("adding new approver to list 'nam" + aGroup + "Approvers'");
+							listApprovers.add(approver);
+							update = true;
+						}
+					}
+					if (update) {
+						logger.fine("updating approver list 'nam" + aGroup + "Approvers'");
+						workitem.replaceItemValue("nam" + aGroup + "Approvers", listApprovers);
+					}
 				}
 			}
 
@@ -105,7 +120,7 @@ public class AppoverPlugin extends AbstractPlugin {
 				List<String> listApprovers = workitem.getItemValue("nam" + aGroup + "Approvers");
 				List<String> listApprovedBy = workitem.getItemValue("nam" + aGroup + "ApprovedBy");
 
-				if (listApprovers.contains(currentAppover) && !listApprovedBy.contains(currentAppover) ) {
+				if (listApprovers.contains(currentAppover) && !listApprovedBy.contains(currentAppover)) {
 					listApprovers.remove(currentAppover);
 					listApprovedBy.add(currentAppover);
 					workitem.replaceItemValue("nam" + aGroup + "Approvers", listApprovers);
