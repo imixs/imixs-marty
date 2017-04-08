@@ -21,7 +21,7 @@ import org.mockito.stubbing.Answer;
 import junit.framework.Assert;
 
 /**
- * Test class for RulePlugin
+ * Test class for TeamPlugin
  * 
  * @author rsoika
  */
