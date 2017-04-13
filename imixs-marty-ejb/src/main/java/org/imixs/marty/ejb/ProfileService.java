@@ -190,7 +190,7 @@ public class ProfileService {
 
 		// use cache?
 		if (!refresh) {
-			logger.fine("lookup profile '" + userid + "' in cache...");
+			logger.finest("lookup profile '" + userid + "' in cache...");
 			userProfile = (ItemCollection) cache.get(userid);
 		}
 		// not yet cached?
@@ -208,7 +208,7 @@ public class ProfileService {
 				cache.put(userid, null);
 			}
 		} else {
-			logger.fine("get profile '" + userid + "' from cache");
+			logger.finest("get profile '" + userid + "' from cache");
 		}
 		return userProfile;
 
@@ -326,6 +326,8 @@ public class ProfileService {
 			} else {
 				sInitials = sAccountName;
 			}
+			clone.replaceItemValue("txtinitials", sInitials);
+		} else {
 			clone.replaceItemValue("txtinitials", sInitials);
 		}
 		return clone;
