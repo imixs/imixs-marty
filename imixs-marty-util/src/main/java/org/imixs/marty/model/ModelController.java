@@ -51,6 +51,7 @@ import org.imixs.workflow.Model;
 import org.imixs.workflow.bpmn.BPMNModel;
 import org.imixs.workflow.bpmn.BPMNParser;
 import org.imixs.workflow.engine.ModelService;
+import org.imixs.workflow.engine.PropertyService;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
@@ -81,7 +82,6 @@ public class ModelController implements Serializable {
 	@Inject
 	protected FileUploadController fileUploadController;
 
-
 	@EJB
 	protected ModelService modelService;
 
@@ -91,7 +91,30 @@ public class ModelController implements Serializable {
 	@EJB
 	protected SetupService setupService;
 
+	@EJB
+	protected PropertyService propertyService;
+
 	private static Logger logger = Logger.getLogger(ModelController.class.getName());
+
+	/**
+	 * Returns the system workflow version defined by the imixs.properties file
+	 * 
+	 * <pre>
+	 * {@code
+	 * system.model.version
+	 * }
+	 * </pre>
+	 * 
+	 * @return the system Model version.
+	 */
+	public String getSystemWorkflowVersion() {
+		String version = null;
+		version = this.propertyService.getProperties().getProperty("system.model.version", "");
+		if (version.isEmpty()) {
+			logger.warning("property 'system.model.version' is not defined!");
+		}
+		return version;
+	}
 
 	/**
 	 * returns all groups for a version
@@ -253,7 +276,7 @@ public class ModelController implements Serializable {
 	public void doUploadModel(ActionEvent event)
 			throws ModelException, ParseException, ParserConfigurationException, SAXException, IOException {
 		List<FileData> fileList = fileUploadController.getUploades();
-		if (fileList==null) {
+		if (fileList == null) {
 			return;
 		}
 		for (FileData file : fileList) {
@@ -279,7 +302,8 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * This Method deletes the given model from the database and the internal model cache.
+	 * This Method deletes the given model from the database and the internal
+	 * model cache.
 	 * 
 	 * @throws AccessDeniedException
 	 * @throws ModelException
@@ -324,8 +348,8 @@ public class ModelController implements Serializable {
 		try {
 			pe = modelService.getModel(modelversion).getTask(processid);
 		} catch (ModelException e1) {
-			logger.warning("Unable to load task " + processid + " in model version '" + modelversion
-					+ "' - " + e1.getMessage());
+			logger.warning("Unable to load task " + processid + " in model version '" + modelversion + "' - "
+					+ e1.getMessage());
 
 		}
 		if (pe == null) {
