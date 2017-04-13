@@ -189,8 +189,10 @@ public class ProfileService {
 		ItemCollection userProfile = null;
 
 		// use cache?
-		if (!refresh)
+		if (!refresh) {
+			logger.fine("lookup profile '" + userid + "' in cache...");
 			userProfile = (ItemCollection) cache.get(userid);
+		}
 		// not yet cached?
 		if (userProfile == null && !cache.containsKey(userid)) {
 			userProfile = lookupProfileById(userid);
@@ -199,14 +201,14 @@ public class ProfileService {
 				userProfile = cloneWorkitem(userProfile);
 				// cache profile
 				cache.put(userid, userProfile);
-				logger.fine("[ProfileService] profile '" + userid + "' cached");
+				logger.fine("put profile '" + userid + "' into cache");
 			} else {
-				logger.fine("[ProfileService] profile '" + userid + "' not found");
+				logger.fine("profile '" + userid + "' not found, put 'null' into cache");
 				// put null entry into cache to avoid next lookup!
 				cache.put(userid, null);
 			}
 		} else {
-			logger.fine("[ProfileService] get profile '" + userid + "' from cache");
+			logger.fine("get profile '" + userid + "' from cache");
 		}
 		return userProfile;
 
@@ -229,7 +231,7 @@ public class ProfileService {
 	public ItemCollection lookupProfileById(String userid) {
 
 		if (userid == null || userid.isEmpty()) {
-			logger.warning("[ProfileService] lookupProfileById - no id provided!");
+			logger.warning("lookupProfileById - no id provided!");
 			return null;
 		}
 
@@ -240,14 +242,8 @@ public class ProfileService {
 		// try to get name out from cache
 		ItemCollection userProfile = null;
 
-		logger.fine("[ProfileService] lookupProfileById '" + userid + "'");
+		logger.fine("lookupProfileById '" + userid + "'");
 		// lookup user profile....
-		// String sQuery = "SELECT DISTINCT profile FROM Entity as profile " + "
-		// JOIN profile.textItems AS t2"
-		// + " WHERE profile.type= 'profile' " + " AND t2.itemName = 'txtname' "
-		// + " AND t2.itemValue = '"
-		// + userid + "' ";
-
 		String sQuery = "(type:\"profile\" AND txtname:\"" + userid + "\")";
 		logger.finest("searchprofile: " + sQuery);
 
@@ -261,7 +257,7 @@ public class ProfileService {
 		if (col.size() > 0) {
 			userProfile = col.iterator().next();
 		} else {
-			logger.fine("[ProfileService] lookup profile '" + userid + "' failed");
+			logger.fine("lookup profile '" + userid + "' failed");
 		}
 		return userProfile;
 	}

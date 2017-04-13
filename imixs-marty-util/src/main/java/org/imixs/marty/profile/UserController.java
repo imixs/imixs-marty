@@ -120,7 +120,6 @@ public class UserController implements Serializable {
 		super();
 	}
 
-
 	/**
 	 * The init method is used to load a user profile or automatically create a
 	 * new one if no profile for the user is available. A new Profile will be
@@ -157,7 +156,7 @@ public class UserController implements Serializable {
 			} else {
 				// check if profile.autoProcessOnLogin is defined
 				String sAutoProcessID = propertyService.getProperties().getProperty("profile.autoProcessOnLogin");
-				logger.fine("[UserController] profile.autoProcessOnLogin=" + sAutoProcessID);
+				logger.fine("profile.autoProcessOnLogin=" + sAutoProcessID);
 
 				try {
 					if (sAutoProcessID != null) {
@@ -193,6 +192,7 @@ public class UserController implements Serializable {
 			// Now reset current locale based on the profile information
 			updateLocaleFromProfile();
 
+			logger.info("profile '" + loginController.getUserPrincipal() + "' initialized.");
 		}
 
 	}
@@ -519,7 +519,7 @@ public class UserController implements Serializable {
 			}
 		}
 
-		logger.info("[UserController] update user locale: " + profileLocale);
+		logger.fine("update user locale: " + profileLocale);
 		// reset locale to update cookie
 		setLocale(profileLocale);
 		// set locale for context

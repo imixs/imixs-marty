@@ -190,11 +190,10 @@ public class SetupController extends ConfigController {
 	 * @throws Exception
 	 */
 	public void reset() throws Exception {
-		// reset propertyService
+		// reset services....
 		logger.info("Reset application cache...");
 		propertyService.reset();
 		profileService.reset();
-		// reset processController
 		processController.reset();
 	}
 
