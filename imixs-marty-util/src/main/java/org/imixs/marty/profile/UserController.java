@@ -31,8 +31,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
@@ -85,8 +83,6 @@ import org.imixs.workflow.faces.util.LoginController;
 public class UserController implements Serializable {
 
 	public final static int MAX_PRIMARY_ENTRIES = 5;
-	public final static int START_PROFILE_PROCESS_ID = 200;
-	public final static int CREATE_PROFILE_ACTIVITY_ID = 5;
 	public final static int UPDATE_PROJECT_ACTIVITY_ID = 10;
 	public final static String DEFAULT_LOCALE = "de_DE";
 	public final static String COOKIE_LOCALE = "imixs.workflow.locale";
@@ -124,22 +120,6 @@ public class UserController implements Serializable {
 		super();
 	}
 
-	/**
-	 * Returns the system workflow version from the resource bundle.app
-	 * 
-	 * @return
-	 */
-	public String getSystemWorkflowVersion() {
-		String version = null;
-		// try to find the system model version in the app resource bundle...
-		try {
-			ResourceBundle rb = ResourceBundle.getBundle("bundle.app");
-			version = rb.getString("workflowversion_system");
-		} catch (MissingResourceException mre) {
-			logger.warning("Missing resourceBundle entry 'bundle.app.workflowversion_system' : " + mre.getMessage());
-		}
-		return version;
-	}
 
 	/**
 	 * The init method is used to load a user profile or automatically create a
@@ -163,23 +143,8 @@ public class UserController implements Serializable {
 			// try to load the profile for the current user
 			ItemCollection profile = profileService.lookupProfileById(loginController.getUserPrincipal());
 			if (profile == null) {
-				logger.info("create new profile for userid '" + loginController.getUserPrincipal() + "'.... ");
-				// create new Profile for current user
-				profile = new ItemCollection();
-				profile.replaceItemValue("type", "profile");
-				profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
-				// hard system model version from resource bundle.app
-				profile.replaceItemValue("$modelversion", getSystemWorkflowVersion());
-				// the workflow group can not be guessed here...
-				// profile.replaceItemValue("$workflowgroup", "Profil");
-				profile.replaceItemValue("txtName", loginController.getUserPrincipal());
-				profile.replaceItemValue("txtLocale", getLocale());
-				// set default group
-				profile.replaceItemValue("txtgroups", "IMIXS-WORKFLOW-Author");
-				// process new profile...
-				profile.replaceItemValue("$ActivityID", CREATE_PROFILE_ACTIVITY_ID);
 				try {
-					profile = workflowService.processWorkItem(profile);
+					profile = profileService.createProfile(loginController.getUserPrincipal(), getLocale().toString());
 				} catch (RuntimeException | PluginException | ModelException e) {
 					logger.severe("unable to create profile for userid '" + loginController.getUserPrincipal() + "': "
 							+ e.getMessage());
@@ -187,11 +152,8 @@ public class UserController implements Serializable {
 					logger.severe("logout current userid '" + loginController.getUserPrincipal() + "'...");
 					loginController.doLogout(null);
 					throw new ProcessingErrorException(UserController.class.getName(),
-							ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!", e);
-
+							ProcessingErrorException.INVALID_WORKITEM, " unable to create profile!", e);
 				}
-				logger.fine("new profile created for userid '" + loginController.getUserPrincipal() + "'");
-
 			} else {
 				// check if profile.autoProcessOnLogin is defined
 				String sAutoProcessID = propertyService.getProperties().getProperty("profile.autoProcessOnLogin");

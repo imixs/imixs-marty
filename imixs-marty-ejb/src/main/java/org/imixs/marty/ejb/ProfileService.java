@@ -44,7 +44,12 @@ import javax.ejb.Singleton;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.PropertyService;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.InvalidAccessException;
+import org.imixs.workflow.exceptions.ModelException;
+import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.exceptions.QueryException;
 
 /**
@@ -63,6 +68,8 @@ import org.imixs.workflow.exceptions.QueryException;
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Singleton
 public class ProfileService {
+	public final static int START_PROFILE_PROCESS_ID = 200;
+	public final static int CREATE_PROFILE_ACTIVITY_ID = 5;
 
 	final int DEFAULT_CACHE_SIZE = 100;
 
@@ -76,6 +83,9 @@ public class ProfileService {
 
 	@EJB
 	private PropertyService propertyService;
+
+	@EJB
+	protected WorkflowService workflowService;
 
 	@Resource
 	private SessionContext ctx;
@@ -232,19 +242,20 @@ public class ProfileService {
 
 		logger.fine("[ProfileService] lookupProfileById '" + userid + "'");
 		// lookup user profile....
-//		String sQuery = "SELECT DISTINCT profile FROM Entity as profile " + " JOIN profile.textItems AS t2"
-//				+ " WHERE  profile.type= 'profile' " + " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
-//				+ userid + "' ";
+		// String sQuery = "SELECT DISTINCT profile FROM Entity as profile " + "
+		// JOIN profile.textItems AS t2"
+		// + " WHERE profile.type= 'profile' " + " AND t2.itemName = 'txtname' "
+		// + " AND t2.itemValue = '"
+		// + userid + "' ";
 
-
-		String sQuery="(type:\"profile\" AND txtname:\""+userid + "\")";
+		String sQuery = "(type:\"profile\" AND txtname:\"" + userid + "\")";
 		logger.finest("searchprofile: " + sQuery);
-		
+
 		Collection<ItemCollection> col;
 		try {
 			col = documentService.find(sQuery, 1, 0);
 		} catch (QueryException e) {
-			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID, e.getMessage(), e);
 		}
 
 		if (col.size() > 0) {
@@ -254,8 +265,6 @@ public class ProfileService {
 		}
 		return userProfile;
 	}
-
-	
 
 	/**
 	 * This method removes a profile from the cache.
@@ -324,6 +333,42 @@ public class ProfileService {
 			clone.replaceItemValue("txtinitials", sInitials);
 		}
 		return clone;
+	}
+
+	/**
+	 * Creates a new profile document
+	 * 
+	 * @param userid
+	 * @return
+	 * @throws ModelException
+	 * @throws PluginException
+	 * @throws ProcessingErrorException
+	 * @throws AccessDeniedException
+	 */
+	public ItemCollection createProfile(String userid, String locale)
+			throws AccessDeniedException, ProcessingErrorException, PluginException, ModelException {
+		logger.info("create new profile for userid '" + userid + "'.... ");
+		// create new Profile for current user
+		ItemCollection profile = new ItemCollection();
+		profile.replaceItemValue("type", "profile");
+		profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
+		// get system model version from imixs.properties
+		String modelVersion = this.propertyService.getProperties().getProperty("system.model.version", "");
+		profile.replaceItemValue("$modelversion", modelVersion);
+		// the workflow group can not be guessed here...
+		// profile.replaceItemValue("$workflowgroup", "Profil");
+		profile.replaceItemValue("txtName", userid);
+		profile.replaceItemValue("txtLocale", locale);
+		// set default group
+		profile.replaceItemValue("txtgroups", "IMIXS-WORKFLOW-Author");
+		// process new profile...
+		profile.replaceItemValue("$ActivityID", CREATE_PROFILE_ACTIVITY_ID);
+
+		profile = workflowService.processWorkItem(profile);
+
+		logger.fine("new profile created for userid '" + userid + "'");
+
+		return profile;
 	}
 
 	/**
