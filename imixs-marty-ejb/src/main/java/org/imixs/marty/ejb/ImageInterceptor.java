@@ -7,9 +7,9 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -191,17 +191,17 @@ public class ImageInterceptor {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private BufferedImage getImageFromWorkitem(ItemCollection workItem,
 			String file) {
-		HashMap mapFiles = null;
-		Vector vFiles = (Vector) workItem.getItemValue("$file");
+		Map mapFiles = null;
+		List vFiles = workItem.getItemValue("$file");
 		if (vFiles != null && vFiles.size() > 0) {
-			mapFiles = (HashMap) vFiles.elementAt(0);
+			mapFiles = (Map) vFiles.get(0);
 
-			Vector<Object> vectorFileInfo = new Vector<Object>();
-			vectorFileInfo = (Vector) mapFiles.get(file);
-			if (vectorFileInfo != null) {
+			List<Object> fileInfoList = new Vector<Object>();
+			fileInfoList = (List<Object>) mapFiles.get(file);
+			if (fileInfoList != null) {
 				@SuppressWarnings("unused")
-				String sContentType = vectorFileInfo.elementAt(0).toString();
-				byte[] fileContent = (byte[]) vectorFileInfo.elementAt(1);
+				String sContentType = fileInfoList.get(0).toString();
+				byte[] fileContent = (byte[]) fileInfoList.get(1);
 
 				try {
 				
@@ -252,17 +252,17 @@ public class ImageInterceptor {
 		
 		if (content==null)
 			return;
-		HashMap mapFiles = null;
-		Vector vFiles = (Vector) workItem.getItemValue("$file");
+		Map mapFiles = null;
+		List vFiles =  workItem.getItemValue("$file");
 		if ( vFiles != null && vFiles.size() > 0) {
-			mapFiles = (HashMap) vFiles.elementAt(0);
+			mapFiles = (Map) vFiles.get(0);
 
-			Vector<Object> vectorFileInfo = new Vector<Object>();
-			vectorFileInfo = (Vector) mapFiles.get(file);
-			if (vectorFileInfo != null) {
+			List<Object> fileInfoList = new Vector<Object>();
+			fileInfoList =  (List<Object>) mapFiles.get(file);
+			if (fileInfoList != null) {
 				// replace new content...
-				vectorFileInfo.set(1, content);
-				mapFiles.put(file, vectorFileInfo);
+				fileInfoList.set(1, content);
+				mapFiles.put(file, fileInfoList);
 			}
 		}
 		
