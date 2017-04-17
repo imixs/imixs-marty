@@ -235,7 +235,9 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 
 		List<String> typeList = searchFilter.getItemValue("Type");
 		if (typeList.isEmpty() || "".equals(typeList.get(0))) {
-			typeList = Arrays.asList(new String[] { "workitem", "workitemarchive" });
+			//typeList = Arrays.asList(new String[] { "workitem", "workitemarchive" });
+			// default restrict to workitem
+			typeList = Arrays.asList(new String[] { "workitem"});
 		}
 
 		String sSearchTerm = "";
@@ -249,6 +251,12 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 				sTypeQuery += " OR ";
 		}
 		sSearchTerm += "(" + sTypeQuery + ") AND";
+		
+		
+		// test if dms_search==true
+		if ("true".equals(searchFilter.getItemValueString("dms_search"))) {
+			sSearchTerm += " (dms_count:[1 TO 99]) AND";
+		}
 
 		// test if result should be restricted to creator?
 		String sCreator = searchFilter.getItemValueString("namCreator");

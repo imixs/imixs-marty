@@ -155,6 +155,18 @@ public class DmsController implements Serializable {
 
 	}
 
+	
+	/**
+	 * this method returns a list of all attached files and the file meta data
+	 * provided in a list of ItemCollection for a given workitem.
+	 * 
+	 * @return - list of file meta data objects
+	 */
+	public List<ItemCollection> getDmsListByWorkitem(ItemCollection aWorkitem) {
+		return DMSPlugin.getDmsList(aWorkitem);
+	}
+
+	
 	/**
 	 * This method removes a file form the current dms list and also from the
 	 * workitem
