@@ -103,6 +103,11 @@ public class DMSPlugin extends AbstractPlugin {
 
 		workitem = documentContext;
 
+		// skip if type is not workitem and workitemarchive
+		if (!workitem.getType().equals("workitem") && !workitem.getType().equals("workitemarchive")) {
+			return workitem;
+		}
+
 		// Skip if plugin this processing a new version created by the version
 		// plugin - in this case no changes to the version are needed
 		if (VersionPlugin.isProcssingVersion(workitem)) {
@@ -125,14 +130,33 @@ public class DMSPlugin extends AbstractPlugin {
 			documentContext.removeItem(DMS_IMPORT_PROPERTY);
 		}
 
-	
-
 		// update the dms list - e.g. if another plugin had added a file....
+		// the blob workitem will only be saved in case any changes were
+		// performed...
 		try {
-			updateDmsList(workitem, blobWorkitem, this.getWorkflowService().getUserName());
+			boolean updateBlob = false;
+			updateBlob = updateDmsList(workitem, blobWorkitem, this.getWorkflowService().getUserName());
+			// Update Read and write access list from parent workItem
+
+			if (!workitem.getItemValue(WorkflowService.READACCESS)
+					.equals(blobWorkitem.getItemValue(WorkflowService.READACCESS))) {
+				blobWorkitem.replaceItemValue(WorkflowService.READACCESS,
+						workitem.getItemValue(WorkflowService.READACCESS));
+				updateBlob = true;
+			}
+
+			if (!workitem.getItemValue(WorkflowService.WRITEACCESS)
+					.equals(blobWorkitem.getItemValue(WorkflowService.WRITEACCESS))) {
+				blobWorkitem.replaceItemValue(WorkflowService.WRITEACCESS,
+						workitem.getItemValue(WorkflowService.WRITEACCESS));
+				updateBlob = true;
+			}
 			// save BlobWorkitem...
-			logger.fine("saving blobWorkitem '" + blobWorkitem.getItemValueString(WorkflowKernel.UNIQUEID) + "'...");
-			blobWorkitem = getWorkflowService().getDocumentService().save(blobWorkitem);
+			if (updateBlob) {
+				logger.fine(
+						"saving blobWorkitem '" + blobWorkitem.getItemValueString(WorkflowKernel.UNIQUEID) + "'...");
+				blobWorkitem = getWorkflowService().getDocumentService().save(blobWorkitem);
+			}
 		} catch (NoSuchAlgorithmException e) {
 			logger.severe("failed to compute MD5 checksum: " + documentContext.getUniqueID() + " - " + e.getMessage());
 			throw new PluginException(DMSPlugin.class.getSimpleName(), CHECKSUM_ERROR,
@@ -140,10 +164,6 @@ public class DMSPlugin extends AbstractPlugin {
 		}
 
 		logger.fine("updating $readaccess/$writeaccess for " + workitem.getItemValueString(WorkflowService.UNIQUEID));
-
-		// Update Read and write access list from parent workItem
-		blobWorkitem.replaceItemValue("$ReadAccess",  workitem.getItemValue("$ReadAccess"));
-		blobWorkitem.replaceItemValue("$WriteAccess",  workitem.getItemValue("$WriteAccess"));
 
 		// update property '$BlobWorkitem'
 		workitem.replaceItemValue(BLOBWORKITEMID, blobWorkitem.getItemValueString(WorkflowKernel.UNIQUEID));
@@ -252,28 +272,31 @@ public class DMSPlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * This method updates the property 'dms' with the meta data of attached
+	 * This method transfers new file content into the blobWorkitem and updates
+	 * the property 'dms' of the current workitem with the meta data of attached
 	 * files or links.
 	 * 
-	 * This method creates new empty DMS entries for new uploaded files which
-	 * are still not contained in the dms item list.
-	 * This method transfers the File content of the workitem into the blob
-	 * workitem. The workitem will only hold a empty byte array for files.
+	 * This method creates new empty DMS entries in the current workitem for new
+	 * uploaded files which are still not contained in the dms item list. The
+	 * workitem will only hold a empty byte array for files.
 	 * 
 	 * If a new file content was added, the MD5 checksum will be generated.
 	 * 
+	 * If the content of the blobWorkitem was updated, the method returns true.
 	 * 
 	 * @param aWorkitem
 	 * @param dmsList
 	 *            - map with meta information for each file entry
 	 * @param defaultUsername
 	 *            - default username for new dms entries
+	 * @return true if the dms item was changed
 	 * @throws NoSuchAlgorithmException
 	 * 
 	 */
-	private void updateDmsList(ItemCollection aWorkitem, ItemCollection blobWorkitem, String defaultUsername)
+	private boolean updateDmsList(ItemCollection aWorkitem, ItemCollection blobWorkitem, String defaultUsername)
 			throws NoSuchAlgorithmException {
 
+		boolean updateBlob = false;
 		List<ItemCollection> currentDmsList = getDmsList(aWorkitem);
 		List<String> fileNames = aWorkitem.getFileNames();
 		Map<String, List<Object>> files = aWorkitem.getFiles();
@@ -282,67 +305,76 @@ public class DMSPlugin extends AbstractPlugin {
 
 		// first we remove all DMS entries which did not have a matching
 		// $File-Entry and are not from type link
+		if (fileNames == null) {
+			fileNames = new ArrayList<String>();
+		}
 		for (Iterator<ItemCollection> iterator = currentDmsList.iterator(); iterator.hasNext();) {
 			ItemCollection dmsEntry = iterator.next();
 			String sName = dmsEntry.getItemValueString("txtName");
 			String sURL = dmsEntry.getItemValueString("url");
 			if (sURL.isEmpty() && !fileNames.contains(sName)) {
 				// Remove the current element from the iterator and the list.
-				iterator.remove();
 				logger.fine("remove dms entry '" + sName + "'");
+				iterator.remove();
+				// update = true;
 			}
 		}
 
 		// now we test for each file entry if a dms meta data entry
 		// exists. If not we create a new one...
-		for (Entry<String, List<Object>> entry : files.entrySet()) {
-			String aFilename = entry.getKey();
-			List<?> file = entry.getValue();
+		if (files != null) {
+			for (Entry<String, List<Object>> entry : files.entrySet()) {
+				String aFilename = entry.getKey();
+				List<?> file = entry.getValue();
 
-			// if data size >0 transfer file into blob and create a MD5 Checksum
-			if (file.size() >= 2) {
-				String contentType = (String) file.get(0);
-				byte[] fileContent = (byte[]) file.get(1);
-				if (fileContent != null && fileContent.length > 1) {
-					// move...
-					blobWorkitem.addFile(fileContent, aFilename, contentType);
-					// empty data...
-					byte[] empty = { 0 };
-					// add the file name (with empty data) into the
-					// parentWorkitem.
-					aWorkitem.addFile(empty, aFilename, contentType);
+				// if data size >0 transfer file into blob and create a MD5
+				// Checksum
+				if (file.size() >= 2) {
+					String contentType = (String) file.get(0);
+					byte[] fileContent = (byte[]) file.get(1);
+					if (fileContent != null && fileContent.length > 1) {
+						// move...
+						blobWorkitem.addFile(fileContent, aFilename, contentType);
+						// empty data...
+						byte[] empty = { 0 };
+						// add the file name (with empty data) into the
+						// parentWorkitem.
+						aWorkitem.addFile(empty, aFilename, contentType);
+						updateBlob = true;
+					}
 				}
-			}
 
-			ItemCollection dmsEntry = findDMSEntry(aFilename, currentDmsList);
-			if (dmsEntry == null) {
-				// no meta data exists.... create a new meta object
-				dmsEntry = new ItemCollection();
-				dmsEntry.replaceItemValue("txtname", aFilename);
-				dmsEntry.replaceItemValue("$uniqueidRef", blobWorkitemId);
-				dmsEntry.replaceItemValue("$created", new Date());
-				dmsEntry.replaceItemValue("namCreator", defaultUsername);// deprecated
-				dmsEntry.replaceItemValue("$Creator", defaultUsername);
-				dmsEntry.replaceItemValue("txtcomment", "");
+				ItemCollection dmsEntry = findDMSEntry(aFilename, currentDmsList);
+				if (dmsEntry == null) {
+					// no meta data exists.... create a new meta object
+					dmsEntry = new ItemCollection();
+					dmsEntry.replaceItemValue("txtname", aFilename);
+					dmsEntry.replaceItemValue("$uniqueidRef", blobWorkitemId);
+					dmsEntry.replaceItemValue("$created", new Date());
+					dmsEntry.replaceItemValue("namCreator", defaultUsername);// deprecated
+					dmsEntry.replaceItemValue("$Creator", defaultUsername);
+					dmsEntry.replaceItemValue("txtcomment", "");
 
-				// compute md5 checksum
-				byte[] fileContent = (byte[]) file.get(1);
-				dmsEntry.replaceItemValue("md5Checksum", generateMD5(fileContent));
-				currentDmsList.add(dmsEntry);
-			} else {
-				// dms entry exists. We update if new file content was added
-				byte[] fileContent = (byte[]) file.get(1);
-				if (fileContent != null && fileContent.length > 1) {
+					// compute md5 checksum
+					byte[] fileContent = (byte[]) file.get(1);
 					dmsEntry.replaceItemValue("md5Checksum", generateMD5(fileContent));
-					dmsEntry.replaceItemValue("$modified", new Date());
-					dmsEntry.replaceItemValue("$editor", defaultUsername);
+					currentDmsList.add(dmsEntry);
+				} else {
+					// dms entry exists. We update if new file content was added
+					byte[] fileContent = (byte[]) file.get(1);
+					if (fileContent != null && fileContent.length > 1) {
+						dmsEntry.replaceItemValue("md5Checksum", generateMD5(fileContent));
+						dmsEntry.replaceItemValue("$modified", new Date());
+						dmsEntry.replaceItemValue("$editor", defaultUsername);
 
-					// update dmsEntry in dmsList..
-					// ??? currentDmsList.f..remove(o)
+						// update dmsEntry in dmsList..
+						// ??? currentDmsList.f..remove(o)
+
+					}
+
 				}
 
 			}
-
 		}
 
 		// now we remove all files form the blobWorkitem which are not part of
@@ -355,16 +387,19 @@ public class DMSPlugin extends AbstractPlugin {
 				removeList.add(aname);
 			}
 		}
-		for (String aname : removeList) {
-			blobWorkitem.removeFile(aname);
+
+		if (removeList.size() > 0) {
+			for (String aname : removeList) {
+				blobWorkitem.removeFile(aname);
+			}
+			updateBlob = true;
 		}
 
 		// finally update the modified dms list....
 		putDmsList(aWorkitem, currentDmsList);
 
+		return updateBlob;
 	}
-
-	
 
 	/**
 	 * This method loads the BlobWorkitem for a given parent WorkItem. The
