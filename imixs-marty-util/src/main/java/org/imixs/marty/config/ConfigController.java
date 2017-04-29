@@ -63,8 +63,8 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
  * 
  * <code>
   	<managed-bean>
-		<managed-bean-name>myConfigMB</managed-bean-name>
-		<managed-bean-class>org.imixs.marty.web.util.ConfigMB</managed-bean-class>
+		<managed-bean-name>myConfigController</managed-bean-name>
+		<managed-bean-class>org.imixs.marty.config.ConfigController</managed-bean-class>
 		<managed-property>
 			<property-name>name</property-name>
 			<value>REPORT_CONFIGURATION</value>
