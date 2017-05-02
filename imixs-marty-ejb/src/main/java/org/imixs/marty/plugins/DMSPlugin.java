@@ -36,6 +36,8 @@ import org.imixs.workflow.exceptions.QueryException;
  * the ACL of the processed workItem. The Plug-in should run immediate after the
  * AccessPlugin.
  * 
+ * The Plug-in calculates a MD5 checksum for the file content.
+ * 
  * <br>
  * <br>
  * The Plug-in only runs if workItem type is 'workitem' or 'workitemarchive'
@@ -119,7 +121,7 @@ public class DMSPlugin extends AbstractPlugin {
 
 		if (blobWorkitem == null) {
 			logger.warning(
-					"can't access blobworkitem for '" + workitem.getItemValueString(WorkflowService.UNIQUEID) + "'");
+					"can't access blobworkitem for '" + workitem.getUniqueID() + "'");
 			return workitem;
 		}
 
@@ -154,7 +156,7 @@ public class DMSPlugin extends AbstractPlugin {
 			// save BlobWorkitem...
 			if (updateBlob) {
 				logger.fine(
-						"saving blobWorkitem '" + blobWorkitem.getItemValueString(WorkflowKernel.UNIQUEID) + "'...");
+						"saving blobWorkitem '" + blobWorkitem.getUniqueID() + "'...");
 				blobWorkitem = getWorkflowService().getDocumentService().save(blobWorkitem);
 			}
 		} catch (NoSuchAlgorithmException e) {
@@ -163,10 +165,10 @@ public class DMSPlugin extends AbstractPlugin {
 					"failed to compute MD5 checksum: " + documentContext.getUniqueID() + "(" + e.getMessage() + ")", e);
 		}
 
-		logger.fine("updating $readaccess/$writeaccess for " + workitem.getItemValueString(WorkflowService.UNIQUEID));
+		logger.fine("updating $readaccess/$writeaccess for " + workitem.getUniqueID());
 
 		// update property '$BlobWorkitem'
-		workitem.replaceItemValue(BLOBWORKITEMID, blobWorkitem.getItemValueString(WorkflowKernel.UNIQUEID));
+		workitem.replaceItemValue(BLOBWORKITEMID, blobWorkitem.getUniqueID());
 		// add $filecount
 		workitem.replaceItemValue(DMS_FILE_COUNT, workitem.getFileNames().size());
 		// add $filenames
@@ -301,8 +303,6 @@ public class DMSPlugin extends AbstractPlugin {
 		List<String> fileNames = aWorkitem.getFileNames();
 		Map<String, List<Object>> files = aWorkitem.getFiles();
 
-		String blobWorkitemId = aWorkitem.getItemValueString(BLOBWORKITEMID);
-
 		// first we remove all DMS entries which did not have a matching
 		// $File-Entry and are not from type link
 		if (fileNames == null) {
@@ -349,7 +349,7 @@ public class DMSPlugin extends AbstractPlugin {
 					// no meta data exists.... create a new meta object
 					dmsEntry = new ItemCollection();
 					dmsEntry.replaceItemValue("txtname", aFilename);
-					dmsEntry.replaceItemValue("$uniqueidRef", blobWorkitemId);
+					dmsEntry.replaceItemValue("$uniqueidRef", blobWorkitem.getUniqueID());
 					dmsEntry.replaceItemValue("$created", new Date());
 					dmsEntry.replaceItemValue("namCreator", defaultUsername);// deprecated
 					dmsEntry.replaceItemValue("$Creator", defaultUsername);
@@ -366,6 +366,7 @@ public class DMSPlugin extends AbstractPlugin {
 						dmsEntry.replaceItemValue("md5Checksum", generateMD5(fileContent));
 						dmsEntry.replaceItemValue("$modified", new Date());
 						dmsEntry.replaceItemValue("$editor", defaultUsername);
+						dmsEntry.replaceItemValue("$uniqueidRef", blobWorkitem.getUniqueID());
 
 						// update dmsEntry in dmsList..
 						// ??? currentDmsList.f..remove(o)
@@ -422,7 +423,7 @@ public class DMSPlugin extends AbstractPlugin {
 		}
 
 		// try to load the blobWorkitem with the parentWorktiem reference....
-		String sUniqueID = parentWorkitem.getItemValueString(WorkflowService.UNIQUEID);
+		String sUniqueID = parentWorkitem.getUniqueID();
 		if (!"".equals(sUniqueID)) {
 			// search entity...
 			String sQuery = "(type:\"workitemlob\" AND $uniqueidref:\"" + sUniqueID + "\")";
@@ -450,7 +451,7 @@ public class DMSPlugin extends AbstractPlugin {
 			blobWorkitem.replaceItemValue("type", "workitemlob");
 			// generate default uniqueid...
 			blobWorkitem.replaceItemValue(WorkflowKernel.UNIQUEID, WorkflowKernel.generateUniqueID());
-			blobWorkitem.replaceItemValue("$UniqueidRef", parentWorkitem.getItemValueString(WorkflowKernel.UNIQUEID));
+			blobWorkitem.replaceItemValue("$UniqueidRef", parentWorkitem.getUniqueID());
 
 		}
 		return blobWorkitem;
