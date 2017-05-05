@@ -158,15 +158,19 @@ public class UserInputController implements Serializable {
 		if (phrase == null || phrase.isEmpty())
 			return searchResult;
 
-		phrase = phrase.trim();
-		phrase =  LuceneSearchService.escapeSearchTerm(phrase);
-		String sQuery = "(type:\"profile\") AND (*" + phrase + "*)";
-
-		logger.finest("searchprofile: " + sQuery);
-
 		// start lucene search
 		Collection<ItemCollection> col = null;
+
 		try {
+			phrase = phrase.trim();
+			phrase = LuceneSearchService.escapeSearchTerm(phrase);
+			// issue #170
+			phrase = LuceneSearchService.normalizeSearchTerm(phrase);
+
+			String sQuery = "(type:\"profile\") AND (" + phrase + "*)";
+
+			logger.finest("searchprofile: " + sQuery);
+
 			logger.fine("searchWorkitems: " + sQuery);
 			col = workflowService.getDocumentService().find(sQuery, 0, -1);
 		} catch (Exception e) {
