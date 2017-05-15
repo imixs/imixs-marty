@@ -29,6 +29,7 @@ package org.imixs.marty.ejb;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
@@ -89,6 +90,8 @@ import org.imixs.workflow.exceptions.QueryException;
 @LocalBean
 @RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
 public class SequenceService {
+
+	private static Logger logger = Logger.getLogger(SequenceService.class.getName());
 
 	public final static String SEQUENCE_NAME = "numLastSequenceNummer";
 	
@@ -155,6 +158,8 @@ public class SequenceService {
 
 			}
 
+		} else {
+			logger.warning("No BASIC configuration found!");
 		}
 
 		return 0;
