@@ -27,7 +27,6 @@
 
 package org.imixs.marty.ejb;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -41,10 +40,9 @@ import javax.ejb.Stateless;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * This EJB handles a unique Sequence Number over a group of workitems.
@@ -76,15 +74,11 @@ import org.imixs.workflow.exceptions.QueryException;
  * 
  */
 
-@DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
-		"org.imixs.ACCESSLEVEL.READERACCESS",
-		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
-		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+@DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS", "org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
-@RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS",
-		"org.imixs.ACCESSLEVEL.READERACCESS",
-		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
-		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+@RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS", "org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Stateless
 @LocalBean
@@ -94,64 +88,53 @@ public class SequenceService {
 	private static Logger logger = Logger.getLogger(SequenceService.class.getName());
 
 	public final static String SEQUENCE_NAME = "numLastSequenceNummer";
-	
+
 	public final static String SEQUENCE_ERROR = "MISSING_UNIQUEIDREF";
 
-	// Persistence Manager
+	@EJB
+	ConfigService configService;
+
 	@EJB
 	DocumentService documentService;
 
 	/**
-	 * This method computes the sequecne number based on a configuration entity
+	 * This method computes the sequence number based on a configuration entity
 	 * with the name "BASIC". The configuration provides a property
 	 * 'sequencenumbers' with the current number range for each workflowGroup.
 	 * If a Workitem have a WorkflowGroup with no corresponding entry the method
 	 * will not compute a new number.
 	 * 
+	 * This method loads the configuration via the propertyService and uses the
+	 * internal caching mechnism.
+	 * 
 	 * @throws InvalidWorkitemException
 	 * @throws AccessDeniedException
 	 * 
 	 */
-	public long getNextSequenceNumberByGroup(ItemCollection aworkitem)
-			throws AccessDeniedException {
+	public long getNextSequenceNumberByGroup(ItemCollection aworkitem) throws AccessDeniedException {
 
-		ItemCollection configItemCollection = null;
-		
-		String sQuery="(type:\"configuration\" AND txtname:\"BASIC\")";
-		
-		Collection<ItemCollection> col;
-		try {
-			col = documentService.find(sQuery,1, 0);
-		} catch (QueryException e) {
-			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
-		}
-
-		if (col.size() > 0) {
-			configItemCollection = col.iterator().next();
-
+		ItemCollection configItemCollection = configService.loadConfiguration("BASIC");
+		if (configItemCollection != null) {
 			// read configuration and test if a corresponding configuration
 			// exists
-			String sWorkflowGroup = aworkitem
-					.getItemValueString(WorkflowKernel.WORKFLOWGROUP);
+			String sWorkflowGroup = aworkitem.getItemValueString(WorkflowKernel.WORKFLOWGROUP);
 			@SuppressWarnings("unchecked")
-			List<String> vNumbers = configItemCollection
-					.getItemValue("sequencenumbers");
+			List<String> vNumbers = configItemCollection.getItemValue("sequencenumbers");
 			for (int i = 0; i < vNumbers.size(); i++) {
 				String aNumber = vNumbers.get(i);
 				if (aNumber.startsWith(sWorkflowGroup + "=")) {
 					// we got the next number....
-					String sequcenceNumber = aNumber.substring(aNumber
-							.indexOf('=') + 1);
+					String sequcenceNumber = aNumber.substring(aNumber.indexOf('=') + 1);
 					//
-					long currentSequenceNumber = Long
-							.parseLong(sequcenceNumber);
+					long currentSequenceNumber = Long.parseLong(sequcenceNumber);
 					long newSequenceNumber = currentSequenceNumber + 1;
 					// Save the new Number back into the config entity
 					aNumber = sWorkflowGroup + "=" + newSequenceNumber;
 					vNumbers.set(i, sWorkflowGroup + "=" + newSequenceNumber);
-					configItemCollection.replaceItemValue("sequencenumbers",
-							vNumbers);
-					documentService.save(configItemCollection);
+					configItemCollection.replaceItemValue("sequencenumbers", vNumbers);
+					// do not use documentService here - cache need to be
+					// updated!
+					configService.save(configItemCollection);
 					// return the new number
 					return currentSequenceNumber;
 				}
@@ -170,14 +153,21 @@ public class SequenceService {
 	 * workitem where the last sequence number will be stored.
 	 * 
 	 * @throws AccessDeniedException
-	 * @throws PluginException 
+	 * @throws PluginException
 	 */
-	public long getNextSequenceNumberByParent(ItemCollection aworkitem)
-			throws AccessDeniedException, PluginException {
+	public long getNextSequenceNumberByParent(ItemCollection aworkitem) throws AccessDeniedException, PluginException {
 		// load current Number
-		ItemCollection sequenceNumberObject = loadParentWorkitem(aworkitem);
-		long currentSequenceNumber = sequenceNumberObject
-				.getItemValueLong(SEQUENCE_NAME);
+		String sParentID = aworkitem.getItemValueString(WorkflowService.UNIQUEIDREF);
+		if ("".equals(sParentID))
+			throw new PluginException(SequenceService.class.getName(), SEQUENCE_ERROR,
+					"WARNING: No $UniqueIDRef defined");
+
+		ItemCollection sequenceNumberObject = documentService.load(sParentID);
+		if (sequenceNumberObject == null) {
+			throw new AccessDeniedException(SequenceService.class.getName(), "WARNING: Parent Document not found!");
+		}
+
+		long currentSequenceNumber = sequenceNumberObject.getItemValueLong(SEQUENCE_NAME);
 
 		// skip number 0
 		if (currentSequenceNumber == 0)
@@ -186,57 +176,10 @@ public class SequenceService {
 		long sequenceNumber = currentSequenceNumber;
 		sequenceNumber++;
 		// Save new Number
-		sequenceNumberObject.replaceItemValue(SEQUENCE_NAME, new Long(
-				sequenceNumber));
+		sequenceNumberObject.replaceItemValue(SEQUENCE_NAME, new Long(sequenceNumber));
 		documentService.save(sequenceNumberObject);
 		return currentSequenceNumber;
 
-	}
-
-	/**
-	 * load the current Seuqecnce Number from the parent worktiem to the given
-	 * aworkitem. The Method throws an exception if the workitem has no parent
-	 * workitem!
-	 */
-	public long getLastSequenceNumber(ItemCollection aworkitem) throws Exception {
-		// load current Number
-		ItemCollection sequenceNumberObject = loadParentWorkitem(aworkitem);
-		long sequenceNumber = sequenceNumberObject
-				.getItemValueLong(SEQUENCE_NAME);
-		return sequenceNumber;
-
-	}
-
-	/**
-	 * sets the current sequence Number
-	 */
-	public void setLastSequenceNumber(ItemCollection aworkitem, long aNewID)
-			throws Exception {
-		// load current Number
-		ItemCollection sequenceNumberObject = loadParentWorkitem(aworkitem);
-		// Save new Number
-		sequenceNumberObject.replaceItemValue(SEQUENCE_NAME,
-				new Long(aNewID));
-		documentService.save(sequenceNumberObject);
-
-	}
-
-	/**
-	 * this method loads the parent Workitem of the given workitem
-	 * 
-	 * @return
-	 * @throws PluginException 
-	 */
-	private ItemCollection loadParentWorkitem(ItemCollection aworkitem) throws PluginException {
-		String sParentID = aworkitem.getItemValueString("$UniqueIDRef");
-
-		if ("".equals(sParentID))
-			throw new PluginException(SequenceService.class.getName(),SEQUENCE_ERROR,
-					"WARNING: SequenceService : No $UniqueIDRef defined");
-
-		ItemCollection parent = documentService.load(sParentID);
-
-		return parent;
 	}
 
 }

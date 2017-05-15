@@ -45,8 +45,6 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.exceptions.InvalidAccessException;
-import org.imixs.workflow.exceptions.QueryException;
  
 /**
  * The Marty Config Service can be used to store and access configuration values
@@ -138,6 +136,9 @@ public class ConfigService {
 	 * configuration is found for this name the Method creates an empty
 	 * configuration object. The config entity is cached internally. 
 	 * 
+	 * The method uses JPQL instead of lucene index
+	 * 
+	 * @see issue #172
 	 * @param name
 	 *            in attribute txtname
 	 * 
@@ -146,22 +147,19 @@ public class ConfigService {
 	 */
 	public ItemCollection loadConfiguration(String name, boolean discardCache) {
 		ItemCollection configItemCollection = null;
-
 		// check cache...
 		configItemCollection = cache.get(name);
 		if (configItemCollection == null || discardCache) {
-			String sQuery="(type:\"" + TYPE + "\" AND txtname:\""+name + "\")";
-			
-			Collection<ItemCollection> col;
-			try {
-				col = documentService.find(sQuery, 1, 0);
-			} catch (QueryException e) {
-				throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+			// use JPQL here - issue #172
+			Collection<ItemCollection> col = documentService.getDocumentsByType(TYPE);
+			for (ItemCollection config : col) {
+				if (config.getItemValueString("txtname").equals(name)) {
+					configItemCollection=config;
+					break;
+				}
 			}
-
-			if (col.size() > 0) {
-				configItemCollection = col.iterator().next();
-			} else {
+			
+			if (configItemCollection==null) {
 				// create default values
 				configItemCollection = new ItemCollection();
 				configItemCollection.replaceItemValue("type", TYPE);
@@ -169,9 +167,7 @@ public class ConfigService {
 			}
 			cache.put(name, configItemCollection);
 		}
-
 		return configItemCollection;
-
 	}
 
 	/**
@@ -193,17 +189,14 @@ public class ConfigService {
 	}
 
 	/**
-	 * Returns a list of all configuration entities.
+	 * Returns a list of all configuration entities. The method uses JQPL staements instead of lucene index. 
 	 * 
+	 * @see issue #172
 	 * @return
 	 */
 	public List<ItemCollection> findAllConfigurations() {
 		ArrayList<ItemCollection> configList = new ArrayList<ItemCollection>();
-//		String sQuery = "SELECT orgunit FROM Entity AS orgunit " + " JOIN orgunit.textItems AS t2"
-//				+ " WHERE orgunit.type = '" + TYPE + "'" + " AND t2.itemName = 'txtname'"
-//				+ " ORDER BY t2.itemValue asc";
 		Collection<ItemCollection> col = documentService.getDocumentsByType(TYPE);
-
 		for (ItemCollection aworkitem : col) {
 			configList.add(aworkitem);
 		}
