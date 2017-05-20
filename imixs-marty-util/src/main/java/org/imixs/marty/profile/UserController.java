@@ -486,6 +486,19 @@ public class UserController implements Serializable {
 		}
 	}
 
+	/**
+	 * This method returns true if the user may be using a mobile device
+	 * 
+	 * @return
+	 */
+	public boolean isMobileUser() {
+		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
+				.getRequest();
+		String userAgent = request.getHeader("user-agent").toLowerCase();
+		return (userAgent.indexOf("mobile") > -1);
+
+	}
+
 	/*
 	 * HELPER METHODS
 	 */

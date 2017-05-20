@@ -28,8 +28,7 @@
 
 			<h:commandLink id="input_add" style="margin-left:5px;" styleClass="imixs-no-print" 
 				actionListener="#{userInputController.add(userInputController.input,cc.attrs.value)}"
-				value="[#{message.add}]">
-				<f:ajax render="suggest_box datalist input_add" />
+				value=""><f:ajax render="suggest_box datalist input_add" /><span class="typcn typcn-plus"></span>
 			</h:commandLink>
 
 			<h:panelGroup id="suggest_box">
@@ -67,20 +66,18 @@
 				value="#{userInputController.getSortedProfilelist(cc.attrs.value)}"
 				var="record">
 				<h:column>
-					<h:outputText value="#{record.item['txtUserName']}"
+					<h:outputText value="#{record.item['txtUserName']}" title="#{record.item['txtEmail']}"
 						rendered="#{! empty record.item['txtUserName']}" />
-					<h:outputText value="#{record.item['txtName']}"
+					<h:outputText value="#{record.item['txtName']}"  title="#{record.item['txtEmail']}"
 						rendered="#{empty record.item['txtUserName']}" />
-				</h:column>
-				<h:column>
-					<h:outputText value="#{record.item['txtEmail']}" />
 				</h:column>
 				<!-- Delete member -->
 				<h:column>
-					<h:commandLink value="[#{message.remove}]" id="remove_owner_link_id" 
+					<h:commandLink value="" id="remove_owner_link_id" 
 						styleClass="imixs-no-print" style="margin-left:5px;"
 						actionListener="#{userInputController.remove(record.item['txtName'],cc.attrs.value)}">
 						<f:ajax render=":#{component.parent.parent.parent.clientId}" />
+						<span class="typcn typcn-times"></span>
 					</h:commandLink>
 				</h:column>
 			</h:dataTable>
