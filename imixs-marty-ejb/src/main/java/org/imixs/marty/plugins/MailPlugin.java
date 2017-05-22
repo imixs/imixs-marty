@@ -28,9 +28,8 @@
 package org.imixs.marty.plugins;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Vector;
+import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -329,26 +328,21 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 	 * @param fileName
 	 * @return
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private FileInfo getFileFromWorkItem(String fileName, ItemCollection blobWorkitem) {
 
 		// fetch $file from hashmap....
-
-		HashMap mapFiles = null;
-		Vector vFiles = (Vector) blobWorkitem.getItemValue("$file");
-		if (vFiles != null && vFiles.size() > 0) {
-			mapFiles = (HashMap) vFiles.elementAt(0);
-
-			Vector<Object> vectorFileInfo = new Vector<Object>();
-			vectorFileInfo = (Vector) mapFiles.get(fileName);
-			if (vectorFileInfo != null) {
-				String sContentType = vectorFileInfo.elementAt(0).toString();
-				byte[] fileContent = (byte[]) vectorFileInfo.elementAt(1);
-
+		Map<String, List<Object>> files = blobWorkitem.getFiles();
+		// now fetch the file content....
+		if (files != null) {
+			List<Object> fileData = files.get(fileName);
+			if (fileData != null && fileData.size()>=2) {
+				String sContentType = fileData.get(0).toString();
+				byte[] fileContent = (byte[]) fileData.get(1);
 				FileInfo fileInfo = new FileInfo(fileContent, sContentType);
 				return fileInfo;
 			}
 		}
+		// file with this name not found!
 		return null;
 
 	}
