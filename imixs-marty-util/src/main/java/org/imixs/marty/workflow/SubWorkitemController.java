@@ -105,10 +105,19 @@ public class SubWorkitemController implements Serializable {
 
 	public String process() throws AccessDeniedException, ProcessingErrorException, PluginException, ModelException {
 
-		workflowService.processWorkItem(workitem);
+		workitem = workflowService.processWorkItem(workitem);
+
+		// test if the property 'action' is provided
+		String action = workitem.getItemValueString("action");
+		if ("".equals(action)) {
+			// get default workflowResult message
+			action = workitem.getItemValueString("txtworkflowresultmessage");
+		}
+
 		subWorkitemList = null;
 		workitem = null;
-		return "";
+
+		return ("".equals(action) ? null : action);
 	}
 
 	/**
