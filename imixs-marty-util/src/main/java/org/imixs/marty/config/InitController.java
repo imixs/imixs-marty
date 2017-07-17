@@ -88,16 +88,8 @@ public class InitController implements Serializable {
 			// avoid calling twice
 			initMode = true;
 
-			// PHASE-1: init system indizies and load default models
-			try {
-				logger.info("running systemService.init...");
-				setupService.init();
-			} catch (AccessDeniedException e1) {
-				logger.severe("Error during init setupService: " + e1.getMessage());
-				e1.printStackTrace();
-			}
-
-			// PHASE-2: init userIDs for user db
+		
+			// PHASE-1: init userIDs for user db
 			try {
 				if (userGroupService != null) {
 					logger.info("running userGroupService.initUserIDs...");
@@ -109,6 +101,17 @@ public class InitController implements Serializable {
 				logger.warning("Error during initUserIds: " + e.getMessage());
 			}
 
+			
+			// PHASE-2: init system indizies and load default models
+			try {
+				logger.info("running systemService.init...");
+				setupService.init();
+			} catch (AccessDeniedException e1) {
+				logger.severe("Error during init setupService: " + e1.getMessage());
+				e1.printStackTrace();
+			}
+
+		
 			initMode = false;
 			initStatus = "OK";
 		}
