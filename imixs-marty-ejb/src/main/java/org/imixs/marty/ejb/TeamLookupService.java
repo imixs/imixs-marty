@@ -76,10 +76,9 @@ public class TeamLookupService {
 		// logging
 		if (logger.isLoggable(java.util.logging.Level.FINE)) {
 			String groupListe = "";
-			logger.fine("resolved membership for '" + userId);
 			for (String aGroup : groups)
 				groupListe += "'" + aGroup + "' ";
-			logger.fine(groupListe);
+			logger.fine("resolved membership for '" + userId + " = " + groupListe);
 		}
 
 		return groups;
@@ -114,7 +113,7 @@ public class TeamLookupService {
 		List<String> memberList = new ArrayList<String>();
 
 		Collection<ItemCollection> col = documentService.getDocumentsByType(type);
-		logger.fine(col.size() + " processes found...");
+		logger.fine(col.size() + " orgunits '" + type + "' found...");
 		// create optimized list
 		for (ItemCollection orgunit : col) {
 			boolean isMember = false;
@@ -139,7 +138,7 @@ public class TeamLookupService {
 
 			if (isMember) {
 				memberList.add("{" + type + ":" + orgunitName + ":member}");
-				logger.fine(userId + " is member of '" + orgunitName + "'");
+				logger.finest(userId + " is member of '" + orgunitName + "'");
 			}
 
 		}
