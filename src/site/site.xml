@@ -35,6 +35,7 @@
 		
 		<menu name="Services and EJBs">
 			<item name="ProfileService" href="services/profileservice.html" />
+			<item name="TeamInterceptor" href="services/teaminterceptor.html" />
 			<item name="ImageInterceptor" href="services/imageinterceptor.html" />
 		</menu>
 		
