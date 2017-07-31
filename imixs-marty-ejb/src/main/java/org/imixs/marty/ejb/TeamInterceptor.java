@@ -8,6 +8,8 @@ import javax.ejb.SessionContext;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.InvocationContext;
 
+import org.imixs.workflow.engine.DocumentService;
+
 /**
  * This Intercepter class provides a mechanism to compute the orgunits (process,
  * space) a user belongs to. The Result is put into the EJB contextData which is
@@ -56,9 +58,6 @@ public class TeamInterceptor {
 	@Resource
 	SessionContext ejbCtx;
 
-	public static final String USER_GROUP_LIST = "org.imixs.USER.GROUPLIST"; // equals to DocumentService but needed
-																				// here!
-
 	private static Logger logger = Logger.getLogger(TeamInterceptor.class.getName());
 
 	/**
@@ -92,9 +91,9 @@ public class TeamInterceptor {
 			return ctx.proceed();
 		}
 		// if we have not yet build a USER_GROUP_LIST lets start...
-		if (!ctx.getContextData().containsKey(USER_GROUP_LIST)) {
+		if (!ctx.getContextData().containsKey(DocumentService.USER_GROUP_LIST)) {
 			String[] sGroups = lookupService.findOrgunits(sUserID);
-			ctx.getContextData().put(USER_GROUP_LIST, sGroups);
+			ctx.getContextData().put(DocumentService.USER_GROUP_LIST, sGroups);
 			if (logger.isLoggable(java.util.logging.Level.FINEST)) {
 				String groupListe = "";
 				for (String aGroup : sGroups)
