@@ -8,8 +8,6 @@ import javax.ejb.SessionContext;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.InvocationContext;
 
-import org.imixs.workflow.engine.DocumentService;
-
 /**
  * This Intercepter class provides a mechanism to compute the orgunits (process,
  * space) a user belongs to. The Result is put into the EJB contextData which is
@@ -24,8 +22,8 @@ import org.imixs.workflow.engine.DocumentService;
  * 
  * {process:Finance:Assist}
  * 
- * In addition if theuser is member of one of the roles (team,manager,
- * assist) the general mapping is added <br />
+ * In addition if theuser is member of one of the roles (team,manager, assist)
+ * the general mapping is added <br />
  * {process:Finance:member}
  * 
  * The interceptor can be enabled by the deployment descriptor of the
@@ -58,6 +56,9 @@ public class TeamInterceptor {
 	@Resource
 	SessionContext ejbCtx;
 
+	public static final String USER_GROUP_LIST = "org.imixs.USER.GROUPLIST"; // equals to DocumentService but needed
+																				// here!
+
 	private static Logger logger = Logger.getLogger(TeamInterceptor.class.getName());
 
 	/**
@@ -71,18 +72,29 @@ public class TeamInterceptor {
 	@AroundInvoke
 	public Object intercept(InvocationContext ctx) throws Exception {
 
-		// test method name
+		// To test the method name 'getUserNameList' is not working here, because in one
+		// EJB context, the DocumentService can be called several times. But the
+		// intercept method is only called once (the fist time). For that reason we fill
+		// the Context in any case with the result of the findOrguints() call and store
+		// the result with the key DocumentService.USER_GROUP_LIST into the EJB
+		// context. Therefore we need to ignore the method call 'getDocumentsByType'
+		// which is recursive. But this is ok in this scenario.
+		//
+		// So in all other cases we just need to check if the key already exists in the
+		// current EJB context
+		// See: issue #178
 		String sMethod = ctx.getMethod().getName();
-		if ("getUserNameList".equals(sMethod)) {
-
-			logger.finest("TeamInterceptor Method=" + sMethod);
-
-			String sUserID = ejbCtx.getCallerPrincipal().getName();
-
+		String sUserID = ejbCtx.getCallerPrincipal().getName();
+		// because the methodFindOrgunits calls the DocumentService.getDocumentsByType()
+		// we need to ignore this method call here!!
+		if ("getDocumentsByType".equals(sMethod) || sUserID == null || "anonymous".equals(sUserID)
+				|| sUserID.isEmpty()) {
+			return ctx.proceed();
+		}
+		// if we have not yet build a USER_GROUP_LIST lets start...
+		if (!ctx.getContextData().containsKey(USER_GROUP_LIST)) {
 			String[] sGroups = lookupService.findOrgunits(sUserID);
-
-			ctx.getContextData().put(DocumentService.USER_GROUP_LIST, sGroups);
-
+			ctx.getContextData().put(USER_GROUP_LIST, sGroups);
 			if (logger.isLoggable(java.util.logging.Level.FINEST)) {
 				String groupListe = "";
 				for (String aGroup : sGroups)
