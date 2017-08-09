@@ -1,22 +1,29 @@
 # The Team Interceptor
 
-The *org.imixs.marty.ej.TeamIntercepter* class provides a mechanism to compute the orgunits (process,
+The *org.imixs.marty.ejb.TeamIntercepter* class provides a mechanism to compute the orgunits (process,
 space) a user belongs to. The Result is put into the EJB contextData which is
- read by the DocumentSerivce EJB to grant access by dynamic user roles.
+ read by the DocumentService EJB to grant access by dynamic user roles.
 
  
-As a orgunit contains 3 gerneal roles (manger, team, assist) the sytax for a
+As an orgunit contains 3 roles (manger, team, assist) the syntax for a
 group membership is as followed:
 
     {ORGUNIT:NAME:ROLE}
 
 e.g.
 
-    {process:Finance:Assist}
+    {process:Finance:assist}
  
-In addition if the user is member of one of the roles (team,manager, assist) the general mapping is added 
+In addition if the user is member of one of the roles (team,manager,assist) the general mapping '*member*' is added 
 
     {process:Finance:member}
+
+
+It is also possible to ask if the user is member of any process or space unit. In this case the name of the orgunit can be skipped. See the following examples
+
+    {process:member}
+    {process:manager}
+    {space:team}
 
 ## Configuration
     

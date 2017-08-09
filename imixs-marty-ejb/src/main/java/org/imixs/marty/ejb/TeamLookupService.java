@@ -109,6 +109,10 @@ public class TeamLookupService {
 	 */
 	@SuppressWarnings("unchecked")
 	List<String> getMemberList(String type, String userId) {
+		boolean isGeneralManager = false;
+		boolean isGeneralTeam = false;
+		boolean isGeneralAssist = false;
+		boolean isGeneralMember = false;
 
 		List<String> memberList = new ArrayList<String>();
 
@@ -124,24 +128,38 @@ public class TeamLookupService {
 			if (members.contains(userId)) {
 				memberList.add("{" + type + ":" + orgunitName + ":manager}");
 				isMember = true;
+				isGeneralManager = true;
 			}
 			members = orgunit.getItemValue("namteam");
 			if (members.contains(userId)) {
 				memberList.add("{" + type + ":" + orgunitName + ":team}");
 				isMember = true;
+				isGeneralTeam = true;
 			}
 			members = orgunit.getItemValue("namassist");
 			if (members.contains(userId)) {
 				memberList.add("{" + type + ":" + orgunitName + ":assist}");
 				isMember = true;
+				isGeneralAssist = true;
 			}
 
 			if (isMember) {
 				memberList.add("{" + type + ":" + orgunitName + ":member}");
 				logger.finest(userId + " is member of '" + orgunitName + "'");
+				isGeneralMember = true;
 			}
 
 		}
+
+		// add general roles....
+		if (isGeneralManager)
+			memberList.add("{" + type + ":manager}");
+		if (isGeneralTeam)
+			memberList.add("{" + type + ":team}");
+		if (isGeneralAssist)
+			memberList.add("{" + type + ":assist}");
+		if (isGeneralMember)
+			memberList.add("{" + type + ":member}");
 
 		return memberList;
 	}
