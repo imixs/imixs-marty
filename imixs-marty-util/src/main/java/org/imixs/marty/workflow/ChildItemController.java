@@ -116,6 +116,12 @@ public class ChildItemController implements Serializable {
 			childItems.remove(pos-1);
 		}
 		
+		// now we need to reorder the numPos attribute for all existing childs..
+		int iPos=1;
+		for (ItemCollection item: childItems) {
+			item.replaceItemValue("numPos", iPos);
+			iPos++;
+		}
 		
 	}
 
