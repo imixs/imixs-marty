@@ -200,8 +200,6 @@ public class UserInputController implements Serializable {
 			return;
 		// trim
 		aName = aName.trim();
-		// lowercase (issue #180)
-		aName = aName.toLowerCase();
 
 		if (!aList.contains(aName)) {
 			logger.fine("userInputController add '" + aName + "' from list.");

@@ -43,7 +43,6 @@ import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProcessService;
 import org.imixs.marty.ejb.ProfileService;
-import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
@@ -158,11 +157,9 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
-	 * This method returns all process entities - indepenedend if the current
-	 * user is member of.
-	 * 
-	 * The returned project list is optimized and provides additional the
-	 * following attributes
+	 * This method returns a chached list of process entities for the current user. This list
+	 * can be used to display processs information. The returned
+	 * process list is optimized and provides additional the following attributes
 	 * <p>
 	 * isMember, isTeam, isOwner, isManager, isAssist
 	 * 
@@ -172,92 +169,22 @@ public class ProcessController implements Serializable {
 		if (processList == null) {
 			processList = processService.getProcessList();
 		}
-
 		return processList;
 	}
 
 	/**
-	 * This method returns all space entities for the current user. This list
-	 * can be used to display space informations inside a form. The returned
+	 * This method returns a cached list of spaces for the current user. This list
+	 * can be used to display space information. The returned
 	 * space list is optimized and provides additional the following attributes
 	 * <p>
 	 * isMember, isTeam, isOwner, isManager, isAssist
 	 * 
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
 	public List<ItemCollection> getSpaces() {
 		if (spaces == null) {
-			spaces = new ArrayList<ItemCollection>();
-
-//			String sQuery = "SELECT space FROM Entity AS space "
-//					+ " JOIN space.textItems AS t2"
-//					+ " WHERE space.type = 'space'"
-//					+ " AND t2.itemName = 'txtname'"
-//					+ " ORDER BY t2.itemValue asc";
-			
-			
-			List<ItemCollection> col = documentService.getDocumentsByType("space");
-			// sort by txtname
-			Collections.sort(col, new ItemCollectionComparator("txtname", true));
-			
-
-			// create optimized list
-			for (ItemCollection space : col) {
-
-				ItemCollection clone = WorkitemHelper.clone(space);
-				clone.replaceItemValue("isTeam", false);
-				clone.replaceItemValue("isManager", false);
-
-				// check the isTeam status for the current user
-				List<String> userNameList = documentService.getUserNameList();
-				Vector<String> vNameList = (Vector<String>) space
-						.getItemValue("namTeam");
-				// check if one entry matches....
-				for (String username : userNameList) {
-					if (vNameList.indexOf(username) > -1) {
-						clone.replaceItemValue("isTeam", true);
-						break;
-					}
-				}
-				// check the isManager status for the current user
-				vNameList = (Vector<String>) space.getItemValue("namManager");
-				// check if one entry matches....
-				for (String username : userNameList) {
-					if (vNameList.indexOf(username) > -1) {
-						clone.replaceItemValue("isManager", true);
-						break;
-					}
-				}
-
-				// check the isAssist status for the current user
-				vNameList = (Vector<String>) space.getItemValue("namAssist");
-				// check if one entry matches....
-				for (String username : userNameList) {
-					if (vNameList.indexOf(username) > -1) {
-						clone.replaceItemValue("isAssist", true);
-						break;
-					}
-				}
-
-				// check if user is member of team or manager list
-				boolean bMember = false;
-				if (clone.getItemValueBoolean("isTeam")
-						|| clone.getItemValueBoolean("isManager")
-						|| clone.getItemValueBoolean("isAssist"))
-					bMember = true;
-				clone.replaceItemValue("isMember", bMember);
-
-				// add custom fields into clone...
-				clone.replaceItemValue("txtdescription",
-						space.getItemValue("txtdescription"));
-
-				spaces.add(clone);
-
-			}
-
+			spaces = processService.getSpaces(); new ArrayList<ItemCollection>();
 		}
-
 		return spaces;
 	}
 
