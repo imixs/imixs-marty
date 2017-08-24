@@ -15,7 +15,7 @@ import org.imixs.workflow.engine.DocumentService;
  * space) a user belongs to. The Result is put into the EJB contextData which is
  * read by the DocumentSerivce EJB to grant access by dynamic user roles.
  * 
- * As a orgunit contains 3 gerneal roles (manger, team, assist) the sytax for a
+ * As a orgunit contains 3 general roles (manger, team, assist) the syntax for a
  * group membership is as followed:
  * 
  * {ORGUNIT:NAME:ROLE}
@@ -24,7 +24,7 @@ import org.imixs.workflow.engine.DocumentService;
  * 
  * {process:Finance:Assist}
  * 
- * In addition if theuser is member of one of the roles (team,manager, assist)
+ * In addition if the user is member of one of the roles (team,manager, assist)
  * the general mapping is added <br />
  * {process:Finance:member}
  * 
