@@ -125,19 +125,22 @@ public class TeamLookupService {
 			String orgunitName = orgunit.getItemValueString("txtname");
 
 			members = orgunit.getItemValue("nammanager");
-			if (members.contains(userId)) {
+			//if (members.contains(userId)) {
+			if (members.stream().anyMatch(userId::equalsIgnoreCase)) {
 				memberList.add("{" + type + ":" + orgunitName + ":manager}");
 				isMember = true;
 				isGeneralManager = true;
 			}
 			members = orgunit.getItemValue("namteam");
-			if (members.contains(userId)) {
+			//if (members.contains(userId)) {
+			if (members.stream().anyMatch(userId::equalsIgnoreCase)) {
 				memberList.add("{" + type + ":" + orgunitName + ":team}");
 				isMember = true;
 				isGeneralTeam = true;
 			}
 			members = orgunit.getItemValue("namassist");
-			if (members.contains(userId)) {
+			//if (members.contains(userId)) {
+			if (members.stream().anyMatch(userId::equalsIgnoreCase)) {
 				memberList.add("{" + type + ":" + orgunitName + ":assist}");
 				isMember = true;
 				isGeneralAssist = true;
