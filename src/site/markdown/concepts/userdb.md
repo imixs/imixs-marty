@@ -1,6 +1,6 @@
-# The Imixs Office Worklfow User Database
+# The User Database
 
-Imixs Office Workflow provides a internal user database. This database can be used to manage user IDs  and user groups and authenticate users with a JDBCRealm. To install these database tables make sure  that the persistence.xml file contains a reference to the actual imixs-office-ejb module
+Imixs-Marty provides a internal user database. This database can be used to manage user IDs  and user groups and authenticate users with a JDBCRealm. To install these database tables make sure  that the persistence.xml file contains a reference to the actual imixs-office-ejb module
 
 
         <persistence-unit name="org.imixs.workflow.jpa" transaction-type="JTA">     
@@ -39,7 +39,7 @@ After a restart of the application the default account will be recreated.
 
 ## How to enable the User DB Frontend
 
-If the BASIC configuation flag 'keyEnableUserDB' is set to 'true', a database user management in the frontend of Imixs-Office-Worklfow appears. 
+If the BASIC configuation flag 'keyEnableUserDB' is set to 'true', a database user management in the frontend of Imixs-Office-Workflow appears. 
 
 To change the UserDB flag, navigate to 'Administration->Configuration' in Imixs-Office-Workflow and enable the option 'UserDB'.
 

@@ -5,11 +5,7 @@ Imixs-Marty provides a user profile management. A User Profile is automatically 
 The creation of a new profile is triggered by the userController CDI Bean in the @PostConstruct method. The creation is managed by the EJB *ProfileService*.
 The User Profiles are stored in the document database with the type attribute *'profile'*.
 
-## The UserID
 
-**Note:** In Imixs-Marty a the UserID is always expected in lower-case. therefore a UserID passed by the JAAS login mechanism is automatically lower cased.
-Although the internal comparison of UserIDs in the DocumentService EJB is case-insensitive, it is strongly recommended to work only with lower cased UserIDs! For example the Lucene Search for UserIDs is case sensitive. In difference to the UserID a User-Access-Role is case-sensitive as this is handled through the JAAS feature from Java EE.
-  
 
 ## Autoprocess a New User Profile
 When a user profile is created the first time, the profile will be automatically be processed by the Imixs-Workflow engine with the *ProcessID=200* and the *ActivityID=5*. 

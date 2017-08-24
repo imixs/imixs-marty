@@ -14,20 +14,23 @@
 		</links>
 
 
-		<menu name="General concepts">
-			<item name="Quickstart" href="concepts/quickstart.html" />
-			<item name="Architecture" href="concepts/architecture.html" />
-			<item name="Layout" href="concepts/layout.html" />
-
-			<item name="Coordinates of Workitem" href="concepts/coordinatesofworkitem.html" />
-
+		<menu name="Concepts">
+			<item name="General" href="concepts/quickstart.html" collapse="true">
+				<item name="Architecture" href="concepts/architecture.html" />
+				<item name="Layout" href="concepts/layout.html" />
+				<item name="Coordinates of Workitem" href="concepts/coordinatesofworkitem.html" />
+				<item name="Localization" href="concepts/localization.html" />
+				<item name="Workitem Linking" href="concepts/workitemlinking.html" />
+			</item>
+			
 			<item name="Configuration and Setup" href="concepts/configuration.html" />
+			
+			<item name="Security" href="concepts/security.html" collapse="true">
+				<item name="User Profiles" href="concepts/profiles.html" />
+				<item name="User DB" href="concepts/userdb.html" />
+			</item>	
 			<item name="Modelling" href="concepts/modelling.html" />
-			<item name="Localization" href="concepts/localization.html" />
-			<item name="Workitem Linking" href="concepts/workitemlinking.html" />
 			<item name="Mail" href="concepts/mail.html" />
-			<item name="User Profiles" href="concepts/profiles.html" />
-			<item name="User DB" href="concepts/userdb.html" />
 			<item name="DMS" href="concepts/dms.html" />
 			<item name="QR-Code" href="concepts/qr-code.html" />
 		</menu>
