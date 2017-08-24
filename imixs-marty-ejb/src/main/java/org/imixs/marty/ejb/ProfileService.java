@@ -165,9 +165,7 @@ public class ProfileService {
 	 * a profile.
 	 * 
 	 * If the boolean 'refresh' is true the method lookup the user in any case
-	 * with a JQPL statement and updates the cache.
-	 * 
-	 * The userId is always lower case!
+	 * with a search query and updates the cache.
 	 * 
 	 * @param userid
 	 *            - the profile id
@@ -182,8 +180,8 @@ public class ProfileService {
 		}
 
 		// lower case userId
-		if (useLowerCaseUserID())
-			userid = userid.toLowerCase();
+//		if (useLowerCaseUserID())
+//			userid = userid.toLowerCase();
 
 		// try to get name out from cache
 		ItemCollection userProfile = null;
@@ -222,8 +220,6 @@ public class ProfileService {
 	 * Use findProfileById to work with the internal cache if there is no need
 	 * to update the profile.
 	 * 
-	 * The userId is always lower case!
-	 * 
 	 * @param userid
 	 *            - the profile id
 	 * @return profile workitem
@@ -236,9 +232,10 @@ public class ProfileService {
 		}
 
 		// lower case userId
-		if (useLowerCaseUserID()) {
-			userid = userid.toLowerCase();
-		}
+//		if (useLowerCaseUserID()) {
+//			userid = userid.toLowerCase();
+//		}		
+
 		// try to get name out from cache
 		ItemCollection userProfile = null;
 

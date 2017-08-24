@@ -91,9 +91,9 @@ public class ProcessService {
 	}
 
 	/**
-	 * This method returns all project entities for the current user. This list
-	 * can be used to display project informations inside a form. The returned
-	 * project list is optimized and provides additional the following
+	 * This method returns all process entities for the current user. This list
+	 * can be used to display process information. The returned
+	 * process list is optimized and provides additional the following
 	 * attributes
 	 * <p>
 	 * isMember, isTeam, isOwner, isManager, isAssist
@@ -101,49 +101,39 @@ public class ProcessService {
 	 * @return
 	 */
 	public List<ItemCollection> getProcessList() {
-
 		logger.fine("[ProcessService] getProcessList");
 		List<ItemCollection> processList = new ArrayList<ItemCollection>();
-
-//		String sQuery = "SELECT process FROM Entity AS process "
-//				+ " JOIN process.textItems AS t2"
-//				+ " WHERE process.type = 'process'"
-//				+ " AND t2.itemName = 'txtname'" + " ORDER BY t2.itemValue asc";
-//		
-		
 		Collection<ItemCollection> col = documentService.getDocumentsByType("process");
-
 		// create optimized list
 		for (ItemCollection process : col) {
 			ItemCollection clone =cloneOrgItemCollection(process);
 			processList.add(clone);
 		}
-
 		// sort by txtname
 		Collections.sort(processList, new ItemCollectionComparator("txtname", true));
 	
 		return processList;
 	}
 
+	/**
+	 * This method returns all space entities for the current user. This list
+	 * can be used to display space information. The returned
+	 * space list is optimized and provides additional the following
+	 * attributes
+	 * <p>
+	 * isMember, isTeam, isOwner, isManager, isAssist
+	 * 
+	 * @return
+	 */
 	public List<ItemCollection> getSpaces() {
-
 		logger.fine("[ProcessService] getSpaces");
 		List<ItemCollection> spaces = new ArrayList<ItemCollection>();
-
-//		String sQuery = "SELECT space FROM Entity AS space "
-//				+ " JOIN space.textItems AS t2" + " WHERE space.type = 'space'"
-//				+ " AND t2.itemName = 'txtname'" + " ORDER BY t2.itemValue asc";
-//		Collection<ItemCollection> col = documentService.findAllEntities(sQuery,
-//				0, -1);
-		
-		Collection<ItemCollection> col = documentService.getDocumentsByType("process");
-
+		Collection<ItemCollection> col = documentService.getDocumentsByType("space");
 
 		// create optimized list
 		for (ItemCollection space : col) {
 			ItemCollection clone =cloneOrgItemCollection(space);
 			spaces.add(clone);
-
 		}
 		// sort by txtname
 		Collections.sort(spaces, new ItemCollectionComparator("txtname", true));
@@ -153,7 +143,7 @@ public class ProcessService {
 	
 	/**
 	 * This method clones a given process or space ItemCollection.
-	 * The method also verifiies if the current user is manager, teammember or assit
+	 * The method also verifies if the current user is manager, teammember or assist
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -161,36 +151,25 @@ public class ProcessService {
 		ItemCollection clone = WorkitemHelper.clone(orgunit);
 		clone.replaceItemValue("isTeam", false);
 		clone.replaceItemValue("isManager", false);
+		clone.replaceItemValue("isAssist", false);
 
 		// check the isTeam status for the current user
-		List<String> userNameList = documentService.getUserNameList();
 		Vector<String> vNameList = (Vector<String>) orgunit
 				.getItemValue("namTeam");
-		// check if one entry matches....
-		for (String username : userNameList) {
-			if (vNameList.indexOf(username) > -1) {
-				clone.replaceItemValue("isTeam", true);
-				break;
-			}
+		if (documentService.isUserContained(vNameList)) {
+			clone.replaceItemValue("isTeam", true);
 		}
+
 		// check the isManager status for the current user
 		vNameList = (Vector<String>) orgunit.getItemValue("namManager");
-		// check if one entry matches....
-		for (String username : userNameList) {
-			if (vNameList.indexOf(username) > -1) {
-				clone.replaceItemValue("isManager", true);
-				break;
-			}
+		if (documentService.isUserContained(vNameList)) {
+			clone.replaceItemValue("isManager", true);
 		}
 
 		// check the isAssist status for the current user
 		vNameList = (Vector<String>) orgunit.getItemValue("namAssist");
-		// check if one entry matches....
-		for (String username : userNameList) {
-			if (vNameList.indexOf(username) > -1) {
-				clone.replaceItemValue("isAssist", true);
-				break;
-			}
+		if (documentService.isUserContained(vNameList)) {
+			clone.replaceItemValue("isAssist", true);
 		}
 
 		// check if user is member of team or manager list
