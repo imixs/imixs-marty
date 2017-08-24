@@ -25,6 +25,7 @@ package org.imixs.marty.profile;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -200,7 +201,12 @@ public class UserInputController implements Serializable {
 			return;
 		// trim
 		aName = aName.trim();
-
+		
+		// now we test if the new name is a Access Role. If not we can lowercase the name
+		if (!isRole(aName)) {
+			aName=aName.toLowerCase();
+		}
+		
 		if (!aList.contains(aName)) {
 			logger.fine("userInputController add '" + aName + "' from list.");
 			aList.add(aName);
@@ -216,6 +222,24 @@ public class UserInputController implements Serializable {
 		}
 	}
 
+	/**
+	 * This method tests if a given string is a defined Access Role. 
+	 * @param aName
+	 * @return true if the name is a access role
+	 * @see DocumentService.getAccessRoles()
+	 */
+	public boolean isRole(String aName) {
+		String accessRoles=workflowService.getDocumentService().getAccessRoles();
+		String roleList = "org.imixs.ACCESSLEVEL.READERACCESS,org.imixs.ACCESSLEVEL.AUTHORACCESS,org.imixs.ACCESSLEVEL.EDITORACCESS,org.imixs.ACCESSLEVEL.MANAGERACCESS,"
+				+ accessRoles;
+		List<String> roles = Arrays.asList(roleList.split("\\s*,\\s*"));
+		if (roles.stream().anyMatch(aName::equalsIgnoreCase)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	/**
 	 * This methods removes a name from the userid list
 	 */
