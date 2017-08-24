@@ -53,7 +53,7 @@ As a orgunit contains 3 general roles (manger, team, assist) the syntax for a gr
 
 e.g.
 
-	{process:Finance:Assist}
+	{process:Finance:assist}
 
 In addition if theuser is member of one of the roles (team,manager, assist) the general mapping is added 
  

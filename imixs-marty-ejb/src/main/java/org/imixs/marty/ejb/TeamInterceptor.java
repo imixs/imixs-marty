@@ -22,7 +22,7 @@ import org.imixs.workflow.engine.DocumentService;
  * 
  * e.g.
  * 
- * {process:Finance:Assist}
+ * {process:Finance:assist}
  * 
  * In addition if the user is member of one of the roles (team,manager, assist)
  * the general mapping is added <br />
