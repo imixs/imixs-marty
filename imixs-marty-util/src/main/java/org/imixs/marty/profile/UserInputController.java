@@ -202,11 +202,6 @@ public class UserInputController implements Serializable {
 		// trim
 		aName = aName.trim();
 		
-		// now we test if the new name is a Access Role. If not we can lowercase the name
-		if (!isRole(aName)) {
-			aName=aName.toLowerCase();
-		}
-		
 		if (!aList.contains(aName)) {
 			logger.fine("userInputController add '" + aName + "' from list.");
 			aList.add(aName);
