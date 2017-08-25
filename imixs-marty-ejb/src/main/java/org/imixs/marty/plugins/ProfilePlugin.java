@@ -392,13 +392,17 @@ public class ProfilePlugin extends AbstractPlugin {
 	 * Verifies if the txtemail is still available.
 	 * 
 	 * @param aprofile
-	 * @return - true if address isn't still taken by another profile.
+	 * @return - true if address isn't still taken by another profile or no email address is provided.
 	 */
 	boolean isEmailTaken(ItemCollection profile) {
 
 		String sEmail = profile.getItemValueString("txtEmail");
 		String sID = profile.getItemValueString("$uniqueid");
 
+		if (sEmail.isEmpty()) {
+			return false;
+		}
+		
 		// Trim email....
 		if (!sEmail.equals(sEmail.trim())) {
 			sEmail = sEmail.trim();
@@ -408,12 +412,7 @@ public class ProfilePlugin extends AbstractPlugin {
 		String sQuery;
 		logger.fine("isEmailTaken :" + sEmail);
 		// username provided?
-		if (!"".equals(sEmail)) {
-			sQuery = "(type:\"profile\" AND txtemail:\"" + sEmail + "\") NOT $uniqueid:\"" + sID + "\"";
-
-		} else {
-			return true;
-		}
+		sQuery = "(type:\"profile\" AND txtemail:\"" + sEmail + "\") NOT $uniqueid:\"" + sID + "\"";
 		Collection<ItemCollection> col;
 		try {
 			col = this.getWorkflowService().getDocumentService().find(sQuery, 1, 0);
