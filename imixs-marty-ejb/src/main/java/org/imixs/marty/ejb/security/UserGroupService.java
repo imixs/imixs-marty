@@ -38,8 +38,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
+import org.imixs.marty.plugins.ProfilePlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.engine.PropertyService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 
 /**
@@ -57,11 +59,15 @@ public class UserGroupService {
 	@PersistenceContext(unitName = "org.imixs.workflow.jpa")
 	private EntityManager manager;
 
+
 	@Resource
 	SessionContext ctx;
 
 	@EJB
 	DocumentService documentService;
+	
+	@EJB
+	PropertyService propertyService;
 
 	private static Logger logger = Logger.getLogger(UserGroupService.class.getName());
 
@@ -197,7 +203,16 @@ public class UserGroupService {
 	@SuppressWarnings("unchecked")
 	public void initUserIDs() {
 
-		String sQuery = "SELECT user FROM UserId AS user ";
+		// default admin account
+		String sAdminAccount="admin";
+		String userInputMode = propertyService.getProperties()
+		.getProperty("security.userid.input.mode", ProfilePlugin.USER_INPUT_MODE_DEFAULT);
+
+		if ("uppercase".equalsIgnoreCase(userInputMode)) {
+			sAdminAccount = sAdminAccount.toUpperCase();
+		}
+		
+		String sQuery = "SELECT user FROM UserId AS user WHERE user.id='" + sAdminAccount + "'";
 
 		Query q = manager.createQuery(sQuery);
 		q.setFirstResult(0);
@@ -210,7 +225,8 @@ public class UserGroupService {
 			// create a default account
 			ItemCollection profile = new ItemCollection();
 			profile.replaceItemValue("type", "profile");
-			profile.replaceItemValue("txtName", "admin");
+			profile.replaceItemValue("txtName", sAdminAccount);
+			// set default password
 			profile.replaceItemValue("txtPassword", "adminadmin");
 			profile.replaceItemValue("txtWorkflowGroup", "Profile");
 			profile.replaceItemValue("txtGroups", "IMIXS-WORKFLOW-Manager");
