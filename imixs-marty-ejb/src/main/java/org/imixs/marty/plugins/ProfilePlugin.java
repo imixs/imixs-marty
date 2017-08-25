@@ -71,21 +71,21 @@ public class ProfilePlugin extends AbstractPlugin {
 
 	private ProfileService profileService = null;
 
-	private static Logger logger = Logger.getLogger(ProfilePlugin.class
-			.getName());
+	private static Logger logger = Logger.getLogger(ProfilePlugin.class.getName());
 
 	// error codes
 	public static String USERNAME_ALREADY_TAKEN = "USERNAME_ALREADY_TAKEN";
 	public static String INVALID_USERNAME = "INVALID_USERNAME";
 	public static String EMAIL_ALREADY_TAKEN = "EMAIL_ALREADY_TAKEN";
 	public static String INVALID_EMAIL = "INVALID_EMAIL";
+	public static String USER_INPUT_MODE_DEFAULT = "LOWERCASE";
 
 	public static String NO_PROFILE_SERVICE_FOUND = "NO_PROFILE_SERVICE_FOUND";
 
 	public static String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
 			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
 
-	public static String USERID_PATTERN = "^[A-Za-z0-9.@\\-\\w]+";
+	public static String USERID_PATTERN_DEFAULT = "^[A-Za-z0-9.@\\-\\w]+";
 
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
@@ -100,20 +100,18 @@ public class ProfilePlugin extends AbstractPlugin {
 			Context ctx = (Context) ictx.lookup("java:comp/env");
 			profileService = (ProfileService) ctx.lookup(jndiName);
 		} catch (NamingException e) {
-			throw new PluginException(ProfilePlugin.class.getSimpleName(),
-					NO_PROFILE_SERVICE_FOUND,
+			throw new PluginException(ProfilePlugin.class.getSimpleName(), NO_PROFILE_SERVICE_FOUND,
 					"[ProfilePlugin] unable to lookup profileService: ", e);
 		}
 
 	}
 
 	/**
-	 * The Plug-in verifies if the workitem is from the type 'profile'. The
-	 * plug-in tests if the usernam or email is unique
+	 * The Plug-in verifies if the workitem is from the type 'profile'. The plug-in
+	 * tests if the usernam or email is unique
 	 **/
 	@Override
-	public ItemCollection run(ItemCollection workItem, ItemCollection documentActivity)
-			throws PluginException {
+	public ItemCollection run(ItemCollection workItem, ItemCollection documentActivity) throws PluginException {
 
 		// validate profile..
 		if ("profile".equals(workItem.getItemValueString("type"))) {
@@ -122,247 +120,119 @@ public class ProfilePlugin extends AbstractPlugin {
 			profileService.discardCache(workItem.getItemValueString("txtName"));
 		}
 
-		// translate dynamic activity values - (this is independent form the type of the workitem)
+		// translate dynamic activity values - (this is independent form the type of the
+		// workitem)
 		updateActivityEntity(workItem, documentActivity);
 
 		return workItem;
 	}
 
-	
-
-	/**
-	 * replace the text phrases in the activity
-	 * 
-	 * @param workItem
-	 * @param documentActivity
-	 */
-	void updateActivityEntity(ItemCollection workItem,
-			ItemCollection documentActivity) {
-		String sText;
-
-		String[] fields = { "rtfresultlog", "txtworkflowabstract",
-				"txtworkflowsummary", "txtMailSubject", "rtfMailBody" };
-
-		for (String aField : fields) {
-			sText = documentActivity.getItemValueString(aField);
-			sText = replaceUsernames(sText, workItem);
-			documentActivity.replaceItemValue(aField, sText);
-
-		}
-
-	}
-
 	/**
 	 * The method validates the userProfile entity. The txtName property will be
-	 * initialized if a new profile is created The txtName property will always
-	 * be lower case!
+	 * initialized if a new profile is created The txtName property will always be
+	 * lower case!
 	 * 
 	 * @param profile
 	 * @throws PluginException
 	 */
 	void validateUserProfile(ItemCollection profile) throws PluginException {
-		Pattern pattern;
-		Matcher matcher;
-		String sUsername = profile.getItemValueString("txtName");
+		String sName = profile.getItemValueString("txtName");
 		String sEmail = profile.getItemValueString("txtEmail");
 
-		
-		if (this.getWorkflowService().getUserName() == null || this.getWorkflowService().getUserName().isEmpty()) {
-			throw new PluginException(ProfilePlugin.class.getSimpleName(),
-					INVALID_USERNAME, "Invalid username - username is empty");
+		// is txtname set?
+		if (sName == null || "".equals(sName)) {
+			throw new PluginException(ProfilePlugin.class.getSimpleName(), INVALID_USERNAME, "Missing UserID ");
 		}
-
-		// update the txtname if not already set
-		if ("".equals(sUsername)) {
-			// trim and lower case username!
-			sUsername = this.getWorkflowService().getUserName().toLowerCase().trim();
-			logger.fine("initialize profile with username: " + sUsername);
-			profile.replaceItemValue("txtName", sUsername);
-		}
-
-		// verify email pattern
-		if (!sEmail.isEmpty()) {
-			pattern = Pattern.compile(EMAIL_PATTERN);
-			matcher = pattern.matcher(sEmail);
-			if (!matcher.matches()) {
-				throw new PluginException(ProfilePlugin.class.getSimpleName(),
-						INVALID_EMAIL, "Invalid Email Address",
-						new Object[] { profile.getItemValueString("txtEmail") });
-			}
-		}
-
-		// verify userid pattern
-		pattern = Pattern.compile(USERID_PATTERN);
-		matcher = pattern.matcher(sUsername);
-		if (!matcher.matches()) {
-			throw new PluginException(ProfilePlugin.class.getSimpleName(),
-					INVALID_USERNAME, "Invalid Username",
-					new Object[] { profile.getItemValueString("txtName") });
-		}
-
-		if (!isValidUserName(profile))
-			throw new PluginException(
-					ProfilePlugin.class.getSimpleName(),
-					USERNAME_ALREADY_TAKEN,
-					"Username is already taken - verifiy txtname and txtusername",
-					new Object[] { profile.getItemValueString("txtName") });
-
-		if (!isValidEmail(profile))
-			throw new PluginException(ProfilePlugin.class.getSimpleName(),
-					EMAIL_ALREADY_TAKEN,
-					"Email is already taken - verifiy txtemail",
-					new Object[] { profile.getItemValueString("txtEmail") });
-
-	}
-
-	/**
-	 * verifies if the txtName and txtUsername is available. Attribute
-	 * txtUsername is optional and will be only verified if provided.
-	 * 
-	 * returns true if name isn't still taken by another object.
-	 * 
-	 * @param aprofile
-	 * @return
-	 */
-	boolean isValidUserName(ItemCollection profile) {
-
-		String sName = profile.getItemValueString("txtName");
-		String sUserName = profile.getItemValueString("txtUserName");
-		String sID = profile.getItemValueString("$uniqueid");
 
 		// Trim names....
 		if (!sName.equals(sName.trim())) {
 			sName = sName.trim();
 			profile.replaceItemValue("txtName", sName);
 		}
-		// lower case userid?
-		if ((profileService.useLowerCaseUserID())
-				&& (!sName.equals(sName.toLowerCase()))) {
+
+		// lower/upper case userid?
+		String userInputMode = this.getWorkflowService().getPropertyService().getProperties()
+				.getProperty("security.userid.input.mode", USER_INPUT_MODE_DEFAULT);
+		if ("lowercase".equalsIgnoreCase(userInputMode)) {
 			sName = sName.toLowerCase();
 			profile.replaceItemValue("txtName", sName);
 		}
-
-		if (!sUserName.equals(sUserName.trim())) {
-			sUserName = sUserName.trim();
-			profile.replaceItemValue("txtUserName", sUserName);
+		if ("uppercase".equalsIgnoreCase(userInputMode)) {
+			sName = sName.toUpperCase();
+			profile.replaceItemValue("txtName", sName);
 		}
 
-		String sQuery;
-
-		// username provided?
-		if (sUserName != null && !"".equals(sUserName)) {
-//			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-//					+ " JOIN profile.textItems AS n"
-//					+ " JOIN profile.textItems AS u"
-//					+ " WHERE  profile.type = 'profile' "
-//					+ " AND ((n.itemName = 'txtname' " + " AND n.itemValue = '"
-//					+ sName + "') OR  (u.itemName = 'txtusername' "
-//					+ " AND u.itemValue = '" + sUserName + "'))"
-//					+ " AND profile.id<>'" + sID + "' ";
-			
-			sQuery="(type:\"profile\" AND (txtname:\""+sName + "\" OR txtusername:\""+sUserName + "\")) AND (NOT $uniqueid:\"" + sID + "\")";
-		}
-		else {
-			// query only txtName
-//			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-//					+ " JOIN profile.textItems AS n" + " WHERE profile.id<>'"
-//					+ sID + "' AND  profile.type = 'profile' "
-//					+ " AND n.itemName = 'txtname' " + " AND n.itemValue = '"
-//					+ sName + "'";
-			sQuery="(type:\"profile\" AND txtname:\""+sName + "\") AND (NOT $uniqueid:\"" + sID + "\")";
-		}
-		
-		Collection<ItemCollection> col;
-		try {
-			col = this.getWorkflowService().getDocumentService().find(sQuery,1, 0);
-		} catch (QueryException e) {
-			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+		// validate userid if pattern defined.
+		if (!isValidUserId(sName)) {
+			String userInputPattern = this.getWorkflowService().getPropertyService().getProperties()
+					.getProperty("security.userid.input.pattern", USERID_PATTERN_DEFAULT);
+			throw new PluginException(ProfilePlugin.class.getSimpleName(), INVALID_USERNAME,
+					"UserID did not match 'security.userid.input.pattern'=" + userInputPattern,
+					new Object[] { profile.getItemValueString("txtName") });
 		}
 
-		return (col.size() == 0);
+		// verify email pattern
+		if (!isValidEmailAddress(sEmail)) {
+			throw new PluginException(ProfilePlugin.class.getSimpleName(), INVALID_EMAIL, "Invalid Email Address",
+					new Object[] { profile.getItemValueString("txtEmail") });
+		}
+
+		// verify if userid is already taken
+		if (isUserNameTaken(profile))
+			throw new PluginException(ProfilePlugin.class.getSimpleName(), USERNAME_ALREADY_TAKEN,
+					"Username is already taken - verifiy txtname and txtusername",
+					new Object[] { profile.getItemValueString("txtName") });
+
+		// verify if email is already taken
+		if (isEmailTaken(profile))
+			throw new PluginException(ProfilePlugin.class.getSimpleName(), EMAIL_ALREADY_TAKEN,
+					"Email is already taken - verifiy txtemail",
+					new Object[] { profile.getItemValueString("txtEmail") });
 
 	}
 
 	/**
-	 * verifies if the txtemail is available. returns true if address isn't
-	 * still taken by another object.
-	 * 
-	 * @param aprofile
-	 * @return
+	 * Validate userID with regular expression provided by the property
+	 * 'security.userid.input.pattern'
+	 *
+	 * @param userid
+	 *            - userID for validation
+	 * @return true valid userID, false invalid userID
 	 */
-	boolean isValidEmail(ItemCollection profile) {
+	public boolean isValidUserId(final String userid) {
+		Pattern pattern;
+		Matcher matcher;
+		String userInputPattern = this.getWorkflowService().getPropertyService().getProperties()
+				.getProperty("security.userid.input.pattern", USERID_PATTERN_DEFAULT);
 
-		String sEmail = profile.getItemValueString("txtEmail");
-		String sID = profile.getItemValueString("$uniqueid");
-
-		// Trim email....
-		if (!sEmail.equals(sEmail.trim())) {
-			sEmail = sEmail.trim();
-			profile.replaceItemValue("txtEmail", sEmail);
+		if (userInputPattern != null && !userInputPattern.isEmpty()) {
+			pattern = Pattern.compile(userInputPattern);
+			matcher = pattern.matcher(userid);
+			return matcher.matches();
 		}
-
-		String sQuery;
-
-		// username provided?
-		if (!"".equals(sEmail)) {
-//			sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-//					+ " JOIN profile.textItems AS n"
-//					+ " WHERE  profile.type = 'profile' "
-//					+ " AND (n.itemName = 'txtemail' " + " AND n.itemValue = '"
-//					+ sEmail + "') " + " AND profile.id<>'" + sID + "' ";
-			
-			
-			sQuery="(type:\"profile\" AND txtemail:\""+sEmail + "\") AND (NOT $uniqueid:\"" + sID + "\")";
-		
-		}
-		else {
-			return true;
-		}
-		Collection<ItemCollection> col;
-		try {
-			col = this.getWorkflowService().getDocumentService().find(sQuery,1, 0);
-		} catch (QueryException e) {
-			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
-		}
-
-		return (col.size() == 0);
-
+		return true;
 	}
 
 	/**
-	 * Check for special characters
-	 * 
-	 * @param profile
-	 * @return true if special character found
+	 * Validates a Emailaddress with regular expression
+	 *
+	 * @param userid
+	 *            - email for validation
+	 * @return true valid email, false invalid email
 	 */
-	boolean isValidUserNameInput(ItemCollection profile) {
+	public boolean isValidEmailAddress(final String email) {
+		Pattern pattern;
+		Matcher matcher;
 
-		String sName = profile.getItemValueString("txtName");
+		// verify email pattern
 
-		// if (Pattern.matches( "'.*'", "'Hallo Welt" ))
+		if (email != null && !email.isEmpty()) {
+			pattern = Pattern.compile(EMAIL_PATTERN);
+			matcher = pattern.matcher(email);
+			return matcher.matches();
+		}
+		return true;
 
-		if (sName.contains("ö"))
-			return true;
-		if (sName.contains("ü"))
-			return true;
-		if (sName.contains("ä"))
-			return true;
-		if (sName.contains("Ü"))
-			return true;
-		if (sName.contains("Ö"))
-			return true;
-		if (sName.contains("Ä"))
-			return true;
-		if (sName.contains("ß"))
-			return true;
-		if (sName.contains("ö"))
-			return true;
-		if (sName.contains("ö"))
-			return true;
-		if (sName.contains("ö"))
-			return true;
-
-		return false;
 	}
 
 	/**
@@ -375,8 +245,8 @@ public class ProfilePlugin extends AbstractPlugin {
 	 * </code>
 	 * 
 	 * 
-	 * If the itemValue is a multiValue object the single values can be
-	 * spearated by a separator
+	 * If the itemValue is a multiValue object the single values can be spearated by
+	 * a separator
 	 * 
 	 * <code>
 	 *  
@@ -388,8 +258,7 @@ public class ProfilePlugin extends AbstractPlugin {
 	 * 
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public String replaceUsernames(String aString,
-			ItemCollection documentContext) {
+	public String replaceUsernames(String aString, ItemCollection documentContext) {
 		int iTagStartPos;
 		int iTagEndPos;
 
@@ -408,8 +277,7 @@ public class ProfilePlugin extends AbstractPlugin {
 		// test if a <value> tag exists...
 		while ((iTagStartPos = aString.toLowerCase().indexOf("<username")) != -1) {
 
-			iTagEndPos = aString.toLowerCase().indexOf("</username>",
-					iTagStartPos);
+			iTagEndPos = aString.toLowerCase().indexOf("</username>", iTagStartPos);
 
 			// if no end tag found return string unchanged...
 			if (iTagEndPos == -1)
@@ -441,16 +309,12 @@ public class ProfilePlugin extends AbstractPlugin {
 
 			// next we check if the start tag contains a 'separator'
 			// attribute
-			iSeparatorStartPos = aString.toLowerCase().indexOf("separator=",
-					iTagStartPos);
+			iSeparatorStartPos = aString.toLowerCase().indexOf("separator=", iTagStartPos);
 			// extract format string if available
-			if (iSeparatorStartPos > -1
-					&& iSeparatorStartPos < iContentStartPos) {
+			if (iSeparatorStartPos > -1 && iSeparatorStartPos < iContentStartPos) {
 				iSeparatorStartPos = aString.indexOf("\"", iSeparatorStartPos) + 1;
-				iSeparatorEndPos = aString
-						.indexOf("\"", iSeparatorStartPos + 1);
-				sSeparator = aString.substring(iSeparatorStartPos,
-						iSeparatorEndPos);
+				iSeparatorEndPos = aString.indexOf("\"", iSeparatorStartPos + 1);
+				sSeparator = aString.substring(iSeparatorStartPos, iSeparatorEndPos);
 			}
 
 			// extract Item Value
@@ -461,8 +325,7 @@ public class ProfilePlugin extends AbstractPlugin {
 			List<String> vUserIDs = new Vector(tempList);
 			// get usernames ....
 			for (int i = 0; i < vUserIDs.size(); i++) {
-				ItemCollection profile = profileService
-						.findProfileById(vUserIDs.get(i));
+				ItemCollection profile = profileService.findProfileById(vUserIDs.get(i));
 				if (profile != null) {
 					vUserIDs.set(i, profile.getItemValueString("txtUserName"));
 				}
@@ -472,11 +335,114 @@ public class ProfilePlugin extends AbstractPlugin {
 			String sResult = formatItemValues(vUserIDs, sSeparator, "");
 
 			// now replace the tag with the result string
-			aString = aString.substring(0, iTagStartPos) + sResult
-					+ aString.substring(iTagEndPos);
+			aString = aString.substring(0, iTagStartPos) + sResult + aString.substring(iTagEndPos);
 		}
 
 		return aString;
+
+	}
+
+	/**
+	 * Verifies if the attributes 'txtName' and 'txtUsername' of a user profile are
+	 * valid and not yet taken by another profile. The attribute 'txtUsername' is
+	 * optional and will be only verified if provided.
+	 * <p>
+	 * The txtName (userid) is validated against the property
+	 * security.userid.input.mode if defined.
+	 * 
+	 * @param profile
+	 *            - user profile to be validated
+	 * @return - true if name isn't still taken by another object and is in a valid
+	 *         format.
+	 */
+	boolean isUserNameTaken(ItemCollection profile) {
+
+		String sName = profile.getItemValueString("txtName");
+		String sUserName = profile.getItemValueString("txtUserName");
+		String sID = profile.getItemValueString("$uniqueid");
+
+		if (!sUserName.equals(sUserName.trim())) {
+			sUserName = sUserName.trim();
+			profile.replaceItemValue("txtUserName", sUserName);
+		}
+
+		logger.fine("isUserNameTaken :" + sName);
+		String sQuery;
+		// username provided?
+		if (sUserName != null && !"".equals(sUserName)) {
+			sQuery = "(type:\"profile\" AND (txtname:\"" + sName + "\" OR txtusername:\"" + sUserName
+					+ "\")) NOT $uniqueid:\"" + sID + "\"";
+		} else {
+			// query only txtName
+			sQuery = "(type:\"profile\" AND txtname:\"" + sName + "\") NOT $uniqueid:\"" + sID + "\"";
+		}
+
+		Collection<ItemCollection> col;
+		try {
+			col = this.getWorkflowService().getDocumentService().find(sQuery, 1, 0);
+		} catch (QueryException e) {
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID, e.getMessage(), e);
+		}
+
+		return (col.size() > 0);
+
+	}
+
+	/**
+	 * Verifies if the txtemail is still available.
+	 * 
+	 * @param aprofile
+	 * @return - true if address isn't still taken by another profile.
+	 */
+	boolean isEmailTaken(ItemCollection profile) {
+
+		String sEmail = profile.getItemValueString("txtEmail");
+		String sID = profile.getItemValueString("$uniqueid");
+
+		// Trim email....
+		if (!sEmail.equals(sEmail.trim())) {
+			sEmail = sEmail.trim();
+			profile.replaceItemValue("txtEmail", sEmail);
+		}
+
+		String sQuery;
+		logger.fine("isEmailTaken :" + sEmail);
+		// username provided?
+		if (!"".equals(sEmail)) {
+			sQuery = "(type:\"profile\" AND txtemail:\"" + sEmail + "\") NOT $uniqueid:\"" + sID + "\"";
+
+		} else {
+			return true;
+		}
+		Collection<ItemCollection> col;
+		try {
+			col = this.getWorkflowService().getDocumentService().find(sQuery, 1, 0);
+		} catch (QueryException e) {
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID, e.getMessage(), e);
+		}
+
+		return (col.size() > 0);
+
+	}
+
+	/**
+	 * replace the text phrases in the activity
+	 * 
+	 * @param workItem
+	 * @param documentActivity
+	 */
+	void updateActivityEntity(ItemCollection workItem, ItemCollection documentActivity) {
+		String sText;
+
+		String[] fields = { "rtfresultlog", "txtworkflowabstract", "txtworkflowsummary", "txtMailSubject",
+				"rtfMailBody" };
+
+		for (String aField : fields) {
+			sText = documentActivity.getItemValueString(aField);
+			sText = replaceUsernames(sText, workItem);
+			documentActivity.replaceItemValue(aField, sText);
+
+		}
 
 	}
 

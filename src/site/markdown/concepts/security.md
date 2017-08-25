@@ -12,13 +12,15 @@ As the UserID is not only part of the login process but also for the group and a
 ### UserID Input Mode
 The *input.mode' defines if a UserID contains only upper or lower case characters, or can contain mixed characters. The input mode can be set by the imixs.property file: 
 
-	# UPPER, LOWER, NONE
+	# UPPERCASE, LOWERCASE, NONE
 	security.userid.input.mode=
 
 
- * security.userid.input.mode=UPPER - UserIDs are automatically upper cased by the Imixs-Marty front-end controllers
- * security.userid.input.mode=LOWER - UserIDs are automatically lower cased by the Imixs-Marty front-end controllers
+ * security.userid.input.mode=LOWERCASE (default) - UserIDs are automatically lower cased by the Imixs-Marty front-end controllers
+ * security.userid.input.mode=UPPERCASE - UserIDs are automatically upper cased by the Imixs-Marty front-end controllers
  * security.userid.input.mode=NONE - UserIDs are not converted in upper or lower case (default)
+
+The default mode for the *security.userid.input.mode* is 'LOWERCASE'.
 
 
 ### UserID Input Pattern
@@ -27,6 +29,10 @@ With the *input.pattern*  a UserID can be validated by the Imixs front-end contr
 	# e.g. [A-Za-z]
 	security.userid.input.pattern=
 
+The default pattern for the user input is:
+
+	^[A-Za-z0-9.@\\-\\w]+
+  
   
 ## User Interceptors
 

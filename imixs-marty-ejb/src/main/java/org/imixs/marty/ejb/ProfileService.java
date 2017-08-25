@@ -105,39 +105,14 @@ public class ProfileService {
 	public void reset() {
 		// try to lookup cache size...
 		int iCacheSize = DEFAULT_CACHE_SIZE;
-
 		// early initialization did not work in Wildfly because of security
 		// problem
 		// see issue-#59
-		// try {
-		// String sCacheSize = propertyService.getProperties().getProperty(
-		// "profileservice.cachesize", DEFAULT_CACHE_SIZE + "");
-		//
-		//
-		//
-		// iCacheSize = Integer.parseInt(sCacheSize);
-		// } catch (NumberFormatException nfe) {
-		// logger.warning("ProfileService unable to determine property:
-		// profileservice.cachesize - check imixs.properties!");
-		// iCacheSize = DEFAULT_CACHE_SIZE;
-		// }
 		// initialize cache
 		cache = new Cache(iCacheSize);
 	}
 
-	/**
-	 * This method returns the property 'profile.lowerCaseUserID'. The default
-	 * value is 'true'
-	 * 
-	 * @return
-	 */
-	public boolean useLowerCaseUserID() {
-		String value = propertyService.getProperties().getProperty("profile.lowerCaseUserID", "true");
-		if ("false".equals(value))
-			return false;
-		else
-			return true;
-	}
+	
 
 	/**
 	 * This method returns a profile by its id. The method uses an internal
@@ -159,6 +134,7 @@ public class ProfileService {
 	/**
 	 * This method returns a profile by its id. The method uses an internal
 	 * cache. The method returns null if no Profile for this name was found.
+	 * The userid is case sensitive.
 	 * 
 	 * The returned workitem is a cloned version of the profile entity and can
 	 * not be processed or updated. Use lookupProfile to get the full entity of
@@ -178,10 +154,6 @@ public class ProfileService {
 		if (userid == null || userid.isEmpty()) {
 			return null;
 		}
-
-		// lower case userId
-//		if (useLowerCaseUserID())
-//			userid = userid.toLowerCase();
 
 		// try to get name out from cache
 		ItemCollection userProfile = null;
@@ -216,6 +188,7 @@ public class ProfileService {
 	 * This method returns a profile by its id. In different to the
 	 * findProfileById method this method lookups the profile and returns the
 	 * full entity. The returned workItem can be processed.
+	 * THe userid is case sensitive.
 	 * 
 	 * Use findProfileById to work with the internal cache if there is no need
 	 * to update the profile.
@@ -230,11 +203,6 @@ public class ProfileService {
 			logger.warning("lookupProfileById - no id provided!");
 			return null;
 		}
-
-		// lower case userId
-//		if (useLowerCaseUserID()) {
-//			userid = userid.toLowerCase();
-//		}		
 
 		// try to get name out from cache
 		ItemCollection userProfile = null;
