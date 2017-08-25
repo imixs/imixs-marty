@@ -1,11 +1,32 @@
 # Security
-Imixs-Marty provides a multi level security concept which is based on the [Imixs-Workflow ACL concept](http://www.imixs.org/doc/engine/acl.html).
+Imixs-Marty provides a security concept which is based on the [Imixs-Workflow ACL](http://www.imixs.org/doc/engine/acl.html). 
 
 
 ## The UserID
 
-**Note:** In Imixs-Marty a the UserID is always expected in lower-case. therefore a UserID passed by the JAAS login mechanism is automatically lower cased.
-Although the internal comparison of UserIDs in the DocumentService EJB is case-insensitive, it is strongly recommended to work only with lower cased UserIDs! For example the Lucene Search for UserIDs is case sensitive. In difference to the UserID a User-Access-Role is case-sensitive as this is handled through the JAAS feature from Java EE.
+A UserID in Imixs-Workflow is case sensitive as defined by the JAAS login mechanism. Also the internal comparison of UserIDs in the DocumentService EJB is case-sensitive. It is strongly recommended to take care of the correct transport of the UserID through the different application layers. For example a UserID format can be predefined by an external login system like a LDAP directory. 
+In that case the Imixs-Marty application should take respect to thus an external format of the UserID. 
+
+As the UserID is not only part of the login process but also for the group and access management, Imixs-Marty provides additional features to deal with UserIDs in a specific format. 
+
+### UserID Input Mode
+The *input.mode' defines if a UserID contains only upper or lower case characters, or can contain mixed characters. The input mode can be set by the imixs.property file: 
+
+	# UPPER, LOWER, NONE
+	security.userid.input.mode=
+
+
+ * security.userid.input.mode=UPPER - UserIDs are automatically upper cased by the Imixs-Marty front-end controllers
+ * security.userid.input.mode=LOWER - UserIDs are automatically lower cased by the Imixs-Marty front-end controllers
+ * security.userid.input.mode=NONE - UserIDs are not converted in upper or lower case (default)
+
+
+### UserID Input Pattern
+With the *input.pattern*  a UserID can be validated by the Imixs front-end controllers. The pattern is a regular expression and is used for internal validation. 
+
+	# e.g. [A-Za-z]
+	security.userid.input.pattern=
+
   
 ## User Interceptors
 
