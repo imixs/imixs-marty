@@ -206,7 +206,7 @@ public class UserGroupService {
 		// default admin account
 		String sAdminAccount="admin";
 		String userInputMode = propertyService.getProperties()
-		.getProperty("security.userid.input.mode", ProfilePlugin.USER_INPUT_MODE_DEFAULT);
+		.getProperty("security.userid.input.mode", ProfilePlugin.DEFAULT_USER_INPUT_MODE);
 
 		if ("uppercase".equalsIgnoreCase(userInputMode)) {
 			sAdminAccount = sAdminAccount.toUpperCase();

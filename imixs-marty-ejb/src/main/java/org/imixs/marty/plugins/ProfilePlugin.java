@@ -78,14 +78,13 @@ public class ProfilePlugin extends AbstractPlugin {
 	public static String INVALID_USERNAME = "INVALID_USERNAME";
 	public static String EMAIL_ALREADY_TAKEN = "EMAIL_ALREADY_TAKEN";
 	public static String INVALID_EMAIL = "INVALID_EMAIL";
-	public static String USER_INPUT_MODE_DEFAULT = "LOWERCASE";
-
 	public static String NO_PROFILE_SERVICE_FOUND = "NO_PROFILE_SERVICE_FOUND";
 
+	// input patterns
 	public static String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
 			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
-
-	public static String USERID_PATTERN_DEFAULT = "^[A-Za-z0-9.@\\-\\w]+";
+	public static String DEFAULT_USERID_PATTERN = "^[A-Za-z0-9.@\\-\\w]+";
+	public static String DEFAULT_USER_INPUT_MODE = "LOWERCASE";
 
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
@@ -152,7 +151,7 @@ public class ProfilePlugin extends AbstractPlugin {
 
 		// lower/upper case userid?
 		String userInputMode = this.getWorkflowService().getPropertyService().getProperties()
-				.getProperty("security.userid.input.mode", USER_INPUT_MODE_DEFAULT);
+				.getProperty("security.userid.input.mode", DEFAULT_USER_INPUT_MODE);
 		if ("lowercase".equalsIgnoreCase(userInputMode)) {
 			sName = sName.toLowerCase();
 			profile.replaceItemValue("txtName", sName);
@@ -165,7 +164,7 @@ public class ProfilePlugin extends AbstractPlugin {
 		// validate userid if pattern defined.
 		if (!isValidUserId(sName)) {
 			String userInputPattern = this.getWorkflowService().getPropertyService().getProperties()
-					.getProperty("security.userid.input.pattern", USERID_PATTERN_DEFAULT);
+					.getProperty("security.userid.input.pattern", DEFAULT_USERID_PATTERN);
 			throw new PluginException(ProfilePlugin.class.getSimpleName(), INVALID_USERNAME,
 					"UserID did not match 'security.userid.input.pattern'=" + userInputPattern,
 					new Object[] { profile.getItemValueString("txtName") });
@@ -203,7 +202,7 @@ public class ProfilePlugin extends AbstractPlugin {
 		Pattern pattern;
 		Matcher matcher;
 		String userInputPattern = this.getWorkflowService().getPropertyService().getProperties()
-				.getProperty("security.userid.input.pattern", USERID_PATTERN_DEFAULT);
+				.getProperty("security.userid.input.pattern", DEFAULT_USERID_PATTERN);
 
 		if (userInputPattern != null && !userInputPattern.isEmpty()) {
 			pattern = Pattern.compile(userInputPattern);
@@ -392,7 +391,8 @@ public class ProfilePlugin extends AbstractPlugin {
 	 * Verifies if the txtemail is still available.
 	 * 
 	 * @param aprofile
-	 * @return - true if address isn't still taken by another profile or no email address is provided.
+	 * @return - true if address isn't still taken by another profile or no email
+	 *         address is provided.
 	 */
 	boolean isEmailTaken(ItemCollection profile) {
 
@@ -402,7 +402,7 @@ public class ProfilePlugin extends AbstractPlugin {
 		if (sEmail.isEmpty()) {
 			return false;
 		}
-		
+
 		// Trim email....
 		if (!sEmail.equals(sEmail.trim())) {
 			sEmail = sEmail.trim();

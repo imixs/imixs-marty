@@ -31,21 +31,21 @@ public class TestRegex {
 	
 	@Test
 	public void testUserid() throws PluginException {
-		pattern = Pattern.compile(ProfilePlugin.USERID_PATTERN);
+		pattern = Pattern.compile(ProfilePlugin.DEFAULT_USERID_PATTERN);
 		matcher = pattern.matcher("pin_gi-");
 		Assert.assertTrue( matcher.matches());
 
 		
-		pattern = Pattern.compile(ProfilePlugin.USERID_PATTERN);
+		pattern = Pattern.compile(ProfilePlugin.DEFAULT_USERID_PATTERN);
 		matcher = pattern.matcher("pingiimixs.com");
 		Assert.assertTrue( matcher.matches());
 		
-		pattern = Pattern.compile(ProfilePlugin.USERID_PATTERN);
+		pattern = Pattern.compile(ProfilePlugin.DEFAULT_USERID_PATTERN);
 		matcher = pattern.matcher("www.imixs.com");
 		Assert.assertTrue( matcher.matches());
 	
 		
-		pattern = Pattern.compile(ProfilePlugin.USERID_PATTERN);
+		pattern = Pattern.compile(ProfilePlugin.DEFAULT_USERID_PATTERN);
 		matcher = pattern.matcher("pingi@imixs.com");
 		Assert.assertTrue( matcher.matches());
 	}
