@@ -53,7 +53,11 @@ The Imixs-Marty project provides currently the following Interceptors:
 
 ### The LDAPGroupInterceptor 
 
-The _LDAPGroupInterceptor_ provides a mechanism to compute the LDAP groups a user belongs to. The Result is put into the _USER_GROUP_LIST_ of the EJB contextData which is read by the DocumentSerivce EJB to grant access by dynamic user roles.
+The _LDAPGroupInterceptor_ provides a mechanism to compute the LDAP groups a user belongs to. The Result is put into the EJB session context attribute: 
+
+    USER_GROUP_LIST
+
+This attribute is read by the DocumentSerivce EJB to grant access by dynamic user roles.
 
 The interceptor can be enabled by the deployment descriptor of the  DocumentService. See the following example for a ejb-jar.xml configuration
 
@@ -72,7 +76,11 @@ Find more information at the [Imixs-Adapters LDAP project](https://github.com/im
 
 ### The TeamInterceptor
 
-This _TeamInterceptor_  provides a mechanism to compute the orgunits (process, space) a user belongs to. The Result is put into the  _USER_GROUP_LIST_ of the EJB contextData which is read by the DocumentSerivce EJB to grant access by dynamic user roles.
+This _TeamInterceptor_  provides a mechanism to compute the orgunits (process, space) a user belongs to. The Result is put into the EJB session context attribute: 
+
+    USER_GROUP_LIST
+    
+This attribute is read by the DocumentSerivce EJB to grant access by dynamic user roles.
 
 As a orgunit contains 3 general roles (manger, team, assist) the syntax for a group membership computed by this interceptor is as followed:
  
