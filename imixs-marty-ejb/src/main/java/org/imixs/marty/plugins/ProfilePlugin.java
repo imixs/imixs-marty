@@ -388,13 +388,23 @@ public class ProfilePlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * Verifies if the txtemail is still available.
+	 * Verifies if the txtEmail is still available.
+	 * 
+	 * The validation can be deactivated with the imixs.property 'security.email.unique=false'
 	 * 
 	 * @param aprofile
 	 * @return - true if address isn't still taken by another profile or no email
 	 *         address is provided.
 	 */
 	boolean isEmailTaken(ItemCollection profile) {
+		
+		// is the unique email mode activated?
+		String sUniqueEmailMode = this.getWorkflowService().getPropertyService().getProperties()
+				.getProperty("security.email.unique", "true");
+		if (!"true".equalsIgnoreCase(sUniqueEmailMode.trim())) {
+			// validation is deactivated
+			return false;
+		}
 
 		String sEmail = profile.getItemValueString("txtEmail");
 		String sID = profile.getItemValueString("$uniqueid");

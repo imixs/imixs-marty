@@ -25,8 +25,38 @@ If the [User-Database](userdb.html) is enabled, new user profiles can also be cr
 
 ## The Marty ProfilePlugin
 
-The Plugin org.imixs.marty.plugins.ProfilePlugin provides additional business logic for profile entities and workitems. The plugin is used for the System Workflow as also for the default workflows. When a userProfile is  processed (typically when a User logged in) the plugin validates the username and email address.
+The Plugin org.imixs.marty.plugins.ProfilePlugin provides additional business logic for profile entities and workitems. The plugin is called by the System Workflow Model. When a userProfile is  processed (typically when a User logged in) the plugin validates the username and email address.
 
+
+### UserID validation
+
+The userID is automatically validated for uniqueness. It is not possible to store two profiles with the same userid (txtName). In addtion the userid is validated against a Input Pattern. The default pattern is:
+
+    ^[A-Za-z0-9.@\\-\\w]+
+    
+The pattern can be changed by the imixs.property 
+
+    security.userid.input.pattern=
+    
+With the imixs.property '_security.userid.input.mode_' the userID can be forced to lower or upper case
+
+    security.userid.input.mode=
+    
+Possible values are: '_lowercase_', '_uppercase_' and '_none_'
+
+### Email Validation
+
+In the default configuration a E-Mail attribute is mandatory for a profile. The Profile validates the email also for uniqueness. In this cas it is not possible to store two profiles with the same email (txtEmail).
+
+To deactivate the e-mail validation the system property '_security.email.unique_' can be set to true:
+
+    # force unique email addresses
+    security.email.unique=true
+
+To deactivate the validation for unique email the property can set to 'false'. 
+
+	# allow duplicated email addresses
+    security.email.unique=false
 
 ## How to Translate userIDs into a User Name
 
