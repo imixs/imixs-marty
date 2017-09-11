@@ -56,24 +56,25 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 @LocalBean
 public class UserGroupService {
 
+	public static String ACCESSLEVEL_NOACCESS="org.imixs.ACCESSLEVEL.NOACCESS";
+	
 	@PersistenceContext(unitName = "org.imixs.workflow.jpa")
 	private EntityManager manager;
-
 
 	@Resource
 	SessionContext ctx;
 
 	@EJB
 	DocumentService documentService;
-	
+
 	@EJB
 	PropertyService propertyService;
 
 	private static Logger logger = Logger.getLogger(UserGroupService.class.getName());
 
 	/**
-	 * This method verifies the profile data and creates or update the
-	 * corresponding user entries in the user tables.
+	 * This method verifies the profile data and creates or update the corresponding
+	 * user entries in the user tables.
 	 * 
 	 * NOTE: this method did not change a userid. To do this use the method
 	 * changeUser!
@@ -111,15 +112,32 @@ public class UserGroupService {
 		// find group relation ships
 		Set<UserGroup> groupList = new HashSet<UserGroup>();
 		for (String aGroup : groups) {
-			UserGroup group = manager.find(UserGroup.class, aGroup);
-			// if group dos not exist - create it...
-			if (group == null) {
-				group = new UserGroup(aGroup);
-				manager.persist(group);
+			// we do not except empty groupnames here!
+			if (aGroup != null && !aGroup.isEmpty()) {
+				UserGroup group = manager.find(UserGroup.class, aGroup);
+				// if group dos not exist - create it...
+				if (group == null) {
+					group = new UserGroup(aGroup);
+					manager.persist(group);
+				}
+				groupList.add(group);
 			}
-			groupList.add(group);
 		}
 
+		
+		// if grouplist is empty we set the role 'org.imixs.ACCESSLEVEL.NOACCESS'
+		if (groupList.size()==0) {
+			// verify if no access exists...
+			UserGroup noAccessGroup = manager.find(UserGroup.class, ACCESSLEVEL_NOACCESS);
+			// if group dos not exist - create it...
+			if (noAccessGroup == null) {
+				noAccessGroup = new UserGroup(ACCESSLEVEL_NOACCESS);
+				manager.persist(noAccessGroup);
+			}
+			groupList.add(noAccessGroup);
+		}
+		
+		
 		// update groups
 		user.setUserGroups(groupList);
 
@@ -194,9 +212,8 @@ public class UserGroupService {
 	}
 
 	/**
-	 * This method verifies if a default user id already exists. If no userID
-	 * exists the method generates a default account 'admin' with password
-	 * 'adminadmin'
+	 * This method verifies if a default user id already exists. If no userID exists
+	 * the method generates a default account 'admin' with password 'adminadmin'
 	 * 
 	 * @throws AccessDeniedException
 	 */
@@ -204,14 +221,14 @@ public class UserGroupService {
 	public void initUserIDs() {
 
 		// default admin account
-		String sAdminAccount="admin";
-		String userInputMode = propertyService.getProperties()
-		.getProperty("security.userid.input.mode", ProfilePlugin.DEFAULT_USER_INPUT_MODE);
+		String sAdminAccount = "admin";
+		String userInputMode = propertyService.getProperties().getProperty("security.userid.input.mode",
+				ProfilePlugin.DEFAULT_USER_INPUT_MODE);
 
 		if ("uppercase".equalsIgnoreCase(userInputMode)) {
 			sAdminAccount = sAdminAccount.toUpperCase();
 		}
-		
+
 		String sQuery = "SELECT user FROM UserId AS user WHERE user.id='" + sAdminAccount + "'";
 
 		Query q = manager.createQuery(sQuery);

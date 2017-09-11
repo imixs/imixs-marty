@@ -124,7 +124,7 @@ public class UserGroupPlugin extends AbstractPlugin {
 		int iActivityID = documentActivity.getItemValueInteger("numActivityID");
 		if (iProcessID >= TASK_PPROFILE_ACTIVE && iActivityID == EVENT_PROFILE_LOCK) {
 			logger.info("Lock profile '" + workitem.getItemValueString("txtname") + "'");
-			workitem.replaceItemValue("txtGroups", "");
+			workitem.replaceItemValue("txtGroups", UserGroupService.ACCESSLEVEL_NOACCESS);
 		}
 
 		logger.fine("[UserGroupPlugin] update profile '" + workitem.getItemValueString("txtname") + "'....");
