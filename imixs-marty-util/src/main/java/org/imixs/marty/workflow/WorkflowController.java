@@ -397,11 +397,6 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 			// add a new FacesMessage into the FacesContext
 			ErrorHandler.handlePluginException(pe);
 		}
-//	 catch (ModelException me) {
-//		actionResult = null;
-//		// add a new FacesMessage into the FacesContext
-//		ErrorHandler.handleModelException(me);
-//	}
 
 		return actionResult;
 	}
