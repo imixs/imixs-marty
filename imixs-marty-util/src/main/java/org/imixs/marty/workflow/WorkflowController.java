@@ -362,9 +362,10 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 			if (actionResult.contains("/") && !actionResult.contains("faces-redirect=")) {
 				// append faces-redirect=true
 				if (!actionResult.contains("?")) {
-					actionResult = actionResult + "?";
+					actionResult = actionResult + "?faces-redirect=true";
+				} else {
+					actionResult = actionResult + "&faces-redirect=true";
 				}
-				actionResult = actionResult + "faces-redirect=true";
 			}
 
 			logger.fine("action result=" + actionResult);
