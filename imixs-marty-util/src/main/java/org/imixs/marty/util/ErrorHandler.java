@@ -8,13 +8,11 @@ import java.util.logging.Logger;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
 
 import org.imixs.workflow.engine.plugins.RulePlugin;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.WorkflowException;
-import org.imixs.workflow.faces.util.LoginController;
 
 public class ErrorHandler {
 
@@ -81,7 +79,7 @@ public class ErrorHandler {
 		// try to find the message text in resource bundle...
 		try {
 			Locale browserLocale = FacesContext.getCurrentInstance().getViewRoot().getLocale();
-			ResourceBundle rb = ResourceBundle.getBundle("bundle.app",browserLocale);
+			ResourceBundle rb = ResourceBundle.getBundle("bundle.app", browserLocale);
 			message = rb.getString(pe.getErrorCode());
 		} catch (MissingResourceException mre) {
 			logger.warning("ErrorHandler: " + mre.getMessage());
@@ -123,13 +121,14 @@ public class ErrorHandler {
 		// try to find the message text in resource bundle...
 		try {
 			Locale browserLocale = FacesContext.getCurrentInstance().getViewRoot().getLocale();
-			ResourceBundle rb = ResourceBundle.getBundle("bundle.app",browserLocale);
+			ResourceBundle rb = ResourceBundle.getBundle("bundle.app", browserLocale);
 			message = rb.getString(me.getErrorCode());
 		} catch (MissingResourceException mre) {
 			logger.warning("ErrorHandler: " + mre.getMessage());
 		}
 
-		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, message, me.getMessage()));
+		FacesContext.getCurrentInstance().addMessage(null,
+				new FacesMessage(FacesMessage.SEVERITY_INFO, message, me.getMessage()));
 
 		logger.warning("ErrorHandler cauth ModelException - error code=" + me.getErrorCode() + " - " + me.getMessage());
 		if (logger.isLoggable(Level.FINE)) {

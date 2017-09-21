@@ -156,8 +156,8 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 
 	/**
 	 * Triggers a lucene search based on a search phrase. The search phrase is
-	 * stored in the search filter property 'txtSearch' which is evaluated by
-	 * the IQueryBuilder.
+	 * stored in the search filter property 'txtSearch' which is evaluated by the
+	 * IQueryBuilder.
 	 * 
 	 * @param phrase
 	 *            - search phrase
@@ -170,8 +170,8 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 	}
 
 	/**
-	 * WorkflowEvent listener listens to WORKITEM events and reset the result
-	 * list after changing a workitem.
+	 * WorkflowEvent listener listens to WORKITEM events and reset the result list
+	 * after changing a workitem.
 	 * 
 	 * @param workflowEvent
 	 **/
@@ -198,11 +198,10 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 	}
 
 	/**
-	 * Returns a Lucene search query based on the define searchFilter parameter
-	 * set
+	 * Returns a Lucene search query based on the define searchFilter parameter set
 	 * 
-	 * Depending on the view type the method restricts the result set by
-	 * namcreator or namowner
+	 * Depending on the view type the method restricts the result set by namcreator
+	 * or namowner
 	 * 
 	 * @param searchFilter
 	 *            - ItemCollection with filter criteria
@@ -220,8 +219,6 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
 		List<String> workflowGroups = searchFilter.getItemValue("txtWorkflowGroup");
 		// trim lists
-		while (processIDs.contains(""))
-			processIDs.remove("");
 		while (processRefList.contains(""))
 			processRefList.remove("");
 		while (spacesRefList.contains(""))
@@ -235,9 +232,9 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 
 		List<String> typeList = searchFilter.getItemValue("Type");
 		if (typeList.isEmpty() || "".equals(typeList.get(0))) {
-			//typeList = Arrays.asList(new String[] { "workitem", "workitemarchive" });
+			// typeList = Arrays.asList(new String[] { "workitem", "workitemarchive" });
 			// default restrict to workitem
-			typeList = Arrays.asList(new String[] { "workitem"});
+			typeList = Arrays.asList(new String[] { "workitem" });
 		}
 
 		String sSearchTerm = "";
@@ -251,8 +248,7 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 				sTypeQuery += " OR ";
 		}
 		sSearchTerm += "(" + sTypeQuery + ") AND";
-		
-		
+
 		// test if dms_search==true
 		if ("true".equals(searchFilter.getItemValueString("dms_search"))) {
 			sSearchTerm += " (dms_count:[1 TO 99]) AND";
