@@ -31,9 +31,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
-import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,8 +39,6 @@ import javax.enterprise.context.Conversation;
 import javax.enterprise.context.ConversationScoped;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.ObserverException;
-import javax.faces.component.UIViewRoot;
-import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
@@ -86,7 +81,6 @@ import org.imixs.workflow.faces.util.LoginController;
 @ConversationScoped
 public class WorkflowController extends org.imixs.workflow.faces.workitem.WorkflowController implements Serializable {
 
-	public static final String DEFAULT_EDITOR_ID = "form_panel_simple#basic";
 	public static final String DEFAULT_ACTION_RESULT = "/pages/workitems/workitem";
 
 	@Inject
@@ -109,7 +103,6 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 	private static Logger logger = Logger.getLogger(WorkflowController.class.getName());
 
 	private List<ItemCollection> versions = null;
-	private List<EditorSection> editorSections = null;
 	private String action = null; // optional page result
 	private String deepLinkId = null; // deep link UniqueId
 	private String defaultActionResult = null;
@@ -175,7 +168,7 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 		events.fire(new WorkflowEvent(newWorkitem, WorkflowEvent.WORKITEM_CHANGED));
 		super.setWorkitem(newWorkitem);
 		versions = null;
-		editorSections = null;
+		//editorSections = null;
 	}
 
 	/**
@@ -333,7 +326,6 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 
 			// reset versions and editor sections
 			versions = null;
-			editorSections = null;
 			// ! Do not call setWorkitem here because this fires a
 			// WORKITEM_CHANGED event !
 
@@ -474,166 +466,7 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 		}
 	}
 
-	/**
-	 * returns the workflowEditorID for the current workItem. If no attribute with
-	 * the name "txtWorkflowEditorid" is available then the method return the
-	 * DEFAULT_EDITOR_ID.
-	 * 
-	 * Additional the method tests if the txtWorkflowEditorid contains the character
-	 * '#'. This character indicates additional form-section informations. The
-	 * Method cuts this information and provides an Array of EditoSection Objects by
-	 * the property EditorSections
-	 * 
-	 * @see getEditorSections
-	 * 
-	 * 
-	 * @return
-	 */
-	public String getEditor() {
-		String sEditor = DEFAULT_EDITOR_ID;
 
-		if (getWorkitem() != null) {
-			String currentEditor = getWorkitem().getItemValueString("txtWorkflowEditorid");
-			if (!currentEditor.isEmpty())
-				sEditor = currentEditor;
-		}
-
-		// test if # is provides to indicate optional section
-		// informations
-		if (sEditor.indexOf('#') > -1)
-			sEditor = sEditor.substring(0, sEditor.indexOf('#'));
-		return sEditor;
-
-	}
-
-	/**
-	 * returns an array list with EditorSection Objects. Each EditorSection object
-	 * contains the url and the name of one section. EditorSections can be provided
-	 * by the workitem property 'txtWorkflowEditorid' marked with the '#' character
-	 * and separated with charater '|'.
-	 * 
-	 * e.g.: form_tab#basic_project|sub_timesheet[owner,manager]
-	 * 
-	 * This example provides the editor sections 'basic_project' and
-	 * 'sub_timesheet'. The optional marker after the second section in [] defines
-	 * the user membership to access this action. In this example the second section
-	 * is only visible if the current user is member of the project owner or manager
-	 * list.
-	 * 
-	 * The following example illustrates how to iterate over the section array from
-	 * a JSF fragment:
-	 * 
-	 * <code>
-	 * <ui:repeat value="#{workitemMB.editorSections}" var="section">
-	 *   ....
-	 *      <ui:include src="/pages/workitems/forms/#{section.url}.xhtml" />
-	 * </code>
-	 * 
-	 * 
-	 * The array of EditorSections also contains information about the name for a
-	 * section. This name is read from the resouce bundle 'bundle.forms'. The '/'
-	 * character will be replaced with '_'. So for example the section url
-	 * myforms/sub_timesheet will result in resoure bundle lookup for the name
-	 * 'myforms_sub_timersheet'
-	 * 
-	 * @return
-	 */
-	public List<EditorSection> getEditorSections() {
-
-		if (editorSections == null) {
-			// compute editorSections
-			editorSections = new ArrayList<EditorSection>();
-
-			UIViewRoot viewRoot = FacesContext.getCurrentInstance().getViewRoot();
-			Locale locale = viewRoot.getLocale();
-
-			String sEditor = DEFAULT_EDITOR_ID;
-
-			if (getWorkitem() != null) {
-				String currentEditor = getWorkitem().getItemValueString("txtWorkflowEditorid");
-				if (!currentEditor.isEmpty())
-					sEditor = currentEditor;
-			}
-
-			if (sEditor.indexOf('#') > -1) {
-				String liste = sEditor.substring(sEditor.indexOf('#') + 1);
-
-				StringTokenizer st = new StringTokenizer(liste, "|");
-				while (st.hasMoreTokens()) {
-					try {
-						String sURL = st.nextToken();
-
-						// if the URL contains a [] section test the defined
-						// user
-						// permissions
-						if (sURL.indexOf('[') > -1 || sURL.indexOf(']') > -1) {
-							boolean bPermissionGranted = false;
-							// yes - cut the permissions
-							String sPermissions = sURL.substring(sURL.indexOf('[') + 1, sURL.indexOf(']'));
-
-							// cut the permissions from the URL
-							sURL = sURL.substring(0, sURL.indexOf('['));
-							StringTokenizer stPermission = new StringTokenizer(sPermissions, ",");
-							while (stPermission.hasMoreTokens()) {
-								String aPermission = stPermission.nextToken();
-								// test for user role
-								ExternalContext ectx = FacesContext.getCurrentInstance().getExternalContext();
-								if (ectx.isUserInRole(aPermission)) {
-									bPermissionGranted = true;
-									break;
-								}
-								// test if user is project member
-								String sProjectUniqueID = this.getWorkitem().getItemValueString("$UniqueIDRef");
-
-								if ("manager".equalsIgnoreCase(aPermission)
-										&& processController.isManagerOf(sProjectUniqueID)) {
-									bPermissionGranted = true;
-									break;
-								}
-								if ("team".equalsIgnoreCase(aPermission)
-										&& this.processController.isTeamMemberOf(sProjectUniqueID)) {
-									bPermissionGranted = true;
-									break;
-								}
-
-							}
-
-							// if not permission is granted - skip this section
-							if (!bPermissionGranted)
-								continue;
-
-						}
-
-						String sName = null;
-						// compute name from ressource Bundle....
-						try {
-							ResourceBundle rb = null;
-							if (locale != null)
-								rb = ResourceBundle.getBundle("bundle.app", locale);
-							else
-								rb = ResourceBundle.getBundle("bundle.app");
-
-							String sResouceURL = sURL.replace('/', '_');
-							sName = rb.getString(sResouceURL);
-						} catch (java.util.MissingResourceException eb) {
-							sName = "";
-							logger.warning(eb.getMessage());
-						}
-
-						EditorSection aSection = new EditorSection(sURL, sName);
-						editorSections.add(aSection);
-
-					} catch (Exception est) {
-						logger.severe("[getEditorSections] can not parse EditorSections : '" + sEditor + "'");
-						logger.severe(est.getMessage());
-					}
-				}
-			}
-		}
-
-		return editorSections;
-
-	}
 
 	/**
 	 * returns a List with all Versions of the current Workitem

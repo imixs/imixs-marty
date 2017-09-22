@@ -27,45 +27,39 @@
 
 package org.imixs.marty.workflow;
 
+import java.util.ArrayList;
+
 /**
- * This Class is provided as a property of the WorkitemMB to provide informations about EditorSections 
- * defined in the Model (txtWorkflowEditorID) 
- * 
- * <code>
- *     <c:forEach items="#{workitemMB.editorSections}" var="section">
- *         <ui:include src="/pages/workitems/forms/#{section.url}.xhtml" />
- *         .....
- *         
- *         
- *  other Example:   
- *     
- *      rendered="#{! empty workitemMB.editorSection['prototyp/files']}"
- *      
- *      
- * </code>
- * 
- * @see WorkflowController.getEditorSections
- * @see WorkflowController.getEditorSection
+ * A FormDefinition holds the information about the form parts defined by a
+ * workitem. This object is created by the FormController.
  * 
  * @author rsoika
  *
  */
-public class EditorSection {
-	String url;
+public class FormDefinition {
+	String path;
 	String name;
+	ArrayList<FormSection> sections = null;
 
-	public EditorSection(String url, String name) {
-		super();
-		this.url = url;
-		this.name = name;
+	public ArrayList<FormSection> getSections() {
+		if (sections == null) {
+			sections = new ArrayList<FormSection>();
+		}
+
+		return sections;
 	}
 
-	public String getUrl() {
-		return url;
+	public void setSections(ArrayList<FormSection> sections) {
+		this.sections = sections;
 	}
 
-	public void setUrl(String url) {
-		this.url = url;
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
 	}
 
 	public String getName() {
