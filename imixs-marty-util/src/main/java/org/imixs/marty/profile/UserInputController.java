@@ -40,7 +40,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProfileService;
-import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
@@ -68,9 +67,6 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 @Named("userInputController")
 @SessionScoped
 public class UserInputController implements Serializable {
-
-	@Inject
-	protected WorkflowController workflowController;
 
 	@Inject
 	protected UserController userController;
