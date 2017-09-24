@@ -43,7 +43,6 @@ public class MinutePlugin extends AbstractPlugin {
 	public final static String MINUTE_TYPE_ITEM = "minuteitem";
 	public final static String SEQUENCENUMBER = "numsequencenumber";
 	public final static String MINUTETYPE = "minutetype";
-	public final static String MINUTESINHERIT = "minutesinherit";
 
 	/**
 	 * The method verifies if a sequencenumber is set. If not a new sequencenumber
@@ -75,10 +74,10 @@ public class MinutePlugin extends AbstractPlugin {
 		}
 
 		// test if we need to overtake the minute workitems from the master....
-		if (MINUTE_TYPE_PARENT.equals(minuteType) && documentContext.hasItem(WorkflowKernel.WORKITEMIDREF)
-				&& documentContext.getItemValueBoolean(MINUTESINHERIT) == false) {
+		if (MINUTE_TYPE_PARENT.equals(minuteType) && documentContext.hasItem(WorkflowKernel.UNIQUEIDSOURCE)
+				&& documentContext.getItemValueBoolean(WorkflowKernel.ISVERSION)) {
 
-			String masterUniqueID = documentContext.getItemValueString(WorkflowKernel.WORKITEMIDREF);
+			String masterUniqueID = documentContext.getItemValueString(WorkflowKernel.UNIQUEIDSOURCE);
 			ItemCollection master = this.getWorkflowService().getWorkItem(masterUniqueID);
 			if (master != null) {
 				// take all childs which are still active (type=workitem or childworkitem)
@@ -106,8 +105,7 @@ public class MinutePlugin extends AbstractPlugin {
 				logger.fine("Copied " + newMinuteList.size() + " sucessfull");
 
 			}
-			// mark minute parent
-			documentContext.replaceItemValue(MINUTESINHERIT, true);
+			
 		}
 
 		return documentContext;
