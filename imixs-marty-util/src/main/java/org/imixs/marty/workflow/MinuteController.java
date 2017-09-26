@@ -85,7 +85,7 @@ public class MinuteController extends org.imixs.workflow.faces.workitem.Workflow
 	 * @throws AccessDeniedException
 	 */
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) throws AccessDeniedException {
-		if (workflowEvent == null)
+		if (workflowEvent == null || workflowEvent.getWorkitem()==null)
 			return;
 
 		// skip if not a workItem...
