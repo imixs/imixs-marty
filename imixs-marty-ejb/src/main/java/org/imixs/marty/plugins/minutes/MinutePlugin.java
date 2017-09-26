@@ -85,7 +85,7 @@ public class MinutePlugin extends AbstractPlugin {
 				List<ItemCollection> newMinuteList = new ArrayList<ItemCollection>();
 				for (ItemCollection minute : childs) {
 					String stype = minute.getType();
-					if (minute != null && MINUTE_TYPE_ITEM.equals(minute.getItemValueString("minutetype"))
+					if (minute != null && MINUTE_TYPE_ITEM.equals(minute.getItemValueString(MINUTETYPE))
 							&& ("workitem".equals(stype) || "childworkitem".equals(stype))) {
 						newMinuteList.add(minute);
 					}
@@ -122,7 +122,7 @@ public class MinutePlugin extends AbstractPlugin {
 	@SuppressWarnings("unchecked")
 	private String updateMinuteType(ItemCollection documentContext) {
 		ItemCollection parent = null;
-		String minutetype = documentContext.getItemValueString("minutetype");
+		String minutetype = documentContext.getItemValueString(MINUTETYPE);
 
 		if (!minutetype.isEmpty()) {
 			// we already identified this type..
@@ -136,7 +136,7 @@ public class MinutePlugin extends AbstractPlugin {
 			parent = this.getWorkflowService().getWorkItem(id);
 			if (parent != null) {
 				// test if a parent workitem exits
-				if (MINUTE_TYPE_PARENT.equals(parent.getItemValueString("minutetype"))) {
+				if (MINUTE_TYPE_PARENT.equals(parent.getItemValueString(MINUTETYPE))) {
 					foundMinuteParent = true;
 					break;
 				}
@@ -145,13 +145,13 @@ public class MinutePlugin extends AbstractPlugin {
 
 		if (foundMinuteParent) {
 			// it is a minute item!
-			documentContext.replaceItemValue("minutetype", MINUTE_TYPE_ITEM);
+			documentContext.replaceItemValue(MINUTETYPE, MINUTE_TYPE_ITEM);
 			documentContext.replaceItemValue("minuteParentRef", parent.getUniqueID());
 			return MINUTE_TYPE_ITEM;
 		} else {
 			// Mark this workitem as a MINUTE_TYPE_PARENT
 			logger.fine("mark workitem as minute parent");
-			documentContext.replaceItemValue("minutetype", MINUTE_TYPE_PARENT);
+			documentContext.replaceItemValue(MINUTETYPE, MINUTE_TYPE_PARENT);
 			// Temporally store ....
 			// This is because in the case that a minute-item was created (splitPlugin)
 			// before the parent was saved the first time (first process step), a lookup for
@@ -176,7 +176,7 @@ public class MinutePlugin extends AbstractPlugin {
 			// find all minute itmes and comptue the next Number...
 			List<ItemCollection> childs = this.getWorkflowService().getWorkListByRef(parent.getUniqueID());
 			for (ItemCollection minute : childs) {
-				if (minute != null && MINUTE_TYPE_ITEM.equals(minute.getItemValueString("minutetype"))
+				if (minute != null && MINUTE_TYPE_ITEM.equals(minute.getItemValueString(MINUTETYPE))
 						&& minute.getItemValueInteger(SEQUENCENUMBER) > 0) {
 					nummer++;
 				}

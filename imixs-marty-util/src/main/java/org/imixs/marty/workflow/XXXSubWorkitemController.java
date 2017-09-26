@@ -59,9 +59,9 @@ import org.imixs.workflow.exceptions.QueryException;
 
 @Named
 @RequestScoped
-public class SubWorkitemController implements Serializable {
+public class XXXSubWorkitemController implements Serializable {
 
-	public static Logger logger = Logger.getLogger(SubWorkitemController.class.getName());
+	public static Logger logger = Logger.getLogger(XXXSubWorkitemController.class.getName());
 
 	private static final long serialVersionUID = 1L;
 

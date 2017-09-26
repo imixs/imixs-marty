@@ -155,7 +155,14 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent
 				.getEventType()) {
 			reset();
-			
+			// start now the new conversation
+			if (conversation.isTransient()) {
+				conversation.setTimeout(((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext()
+						.getRequest()).getSession().getMaxInactiveInterval()*1000);
+				conversation.begin();
+				logger.fine("start new conversation, id=" + conversation.getId());
+			}
+
 		}
 	}
 
@@ -213,12 +220,12 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 		super.create(event);
 
 		// start now the new conversation
-		if (conversation.isTransient()) {
-			conversation.setTimeout(((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext()
-					.getRequest()).getSession().getMaxInactiveInterval()*1000);
-			conversation.begin();
-			logger.fine("start new conversation, id=" + conversation.getId());
-		}
+//		if (conversation.isTransient()) {
+//			conversation.setTimeout(((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext()
+//					.getRequest()).getSession().getMaxInactiveInterval()*1000);
+//			conversation.begin();
+//			logger.fine("start new conversation, id=" + conversation.getId());
+//		}
 
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_CREATED));
@@ -244,12 +251,12 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 		getWorkitem().replaceItemValue("$UniqueIDRef", parentRef);
 
 		// start now the new conversation
-		if (conversation.isTransient()) {
-			conversation.setTimeout(((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext()
-					.getRequest()).getSession().getMaxInactiveInterval()*1000);
-			conversation.begin();
-			logger.fine("start new conversation, id=" + conversation.getId());
-		}
+//		if (conversation.isTransient()) {
+//			conversation.setTimeout(((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext()
+//					.getRequest()).getSession().getMaxInactiveInterval()*1000);
+//			conversation.begin();
+//			logger.fine("start new conversation, id=" + conversation.getId());
+//		}
 		// fire event
 		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_CREATED));
 
