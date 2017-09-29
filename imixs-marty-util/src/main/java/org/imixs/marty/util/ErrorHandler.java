@@ -32,14 +32,23 @@ public class ErrorHandler {
 		if (RulePlugin.class.getName().equals(pe.getErrorContext())
 				&& (RulePlugin.VALIDATION_ERROR.equals(pe.getErrorCode())) && pe.getErrorParameters() != null
 				&& pe.getErrorParameters().length > 0) {
-
+			
+			String errorCode = pe.getErrorCode();
+			// try to find the message text in resource bundle...
+			try {
+				Locale browserLocale = FacesContext.getCurrentInstance().getViewRoot().getLocale();
+				ResourceBundle rb = ResourceBundle.getBundle("bundle.app", browserLocale);
+				errorCode = rb.getString(pe.getErrorCode());
+			} catch (MissingResourceException mre) {
+				logger.warning("ErrorHandler: " + mre.getMessage());
+			}
 			// create a faces message for each parameter
 			Object[] messages = pe.getErrorParameters();
 			for (Object aMessage : messages) {
 
 				FacesContext.getCurrentInstance().addMessage(null,
-						new FacesMessage(FacesMessage.SEVERITY_INFO, aMessage.toString(), null));
-			}
+						new FacesMessage(FacesMessage.SEVERITY_INFO,errorCode, aMessage.toString()));
+			} 
 		} else {
 			// default behavior
 			addErrorMessage(pe);
