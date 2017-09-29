@@ -479,6 +479,26 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 		return versions;
 	}
 
+	
+	/**
+	 * this method loads all versions to the current workitem. THe method open versions recursive back to the first source workitem.
+	 * 
+	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
+	 */
+	private void loadVersionWorkItemList() {
+		versions = new ArrayList<ItemCollection>();
+		if (this.isNewWorkitem() || null == getWorkitem())
+			return;
+		String sourceVersion = getWorkitem().getItemValueString(WorkflowKernel.UNIQUEIDSOURCE);
+		while (!sourceVersion.isEmpty()) {
+			ItemCollection version=this.getWorkflowService().getWorkItem(sourceVersion);
+			versions.add(version);
+			sourceVersion = version.getItemValueString(WorkflowKernel.UNIQUEIDSOURCE);
+		}
+	}
+
+	
+	
 	/**
 	 * this method loads all versions to the current workitem. Idependent from the
 	 * type property! The method returns an empty list if no version exist (only the
@@ -486,7 +506,9 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 	 * 
 	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
 	 */
-	private void loadVersionWorkItemList() {
+	@SuppressWarnings("unchecked")
+	@Deprecated
+	private void loadVersionWorkItemListDeprecated() {
 		versions = new ArrayList<ItemCollection>();
 		if (this.isNewWorkitem() || null == getWorkitem())
 			return;
