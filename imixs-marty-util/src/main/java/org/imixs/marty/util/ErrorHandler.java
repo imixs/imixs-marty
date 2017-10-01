@@ -84,12 +84,13 @@ public class ErrorHandler {
 	 */
 	public static void addErrorMessage(WorkflowException pe) {
 
-		String message = pe.getErrorCode();
+		String errorCode = pe.getErrorCode();
+		String message = pe.getMessage();
 		// try to find the message text in resource bundle...
 		try {
 			Locale browserLocale = FacesContext.getCurrentInstance().getViewRoot().getLocale();
 			ResourceBundle rb = ResourceBundle.getBundle("bundle.app", browserLocale);
-			message = rb.getString(pe.getErrorCode());
+			errorCode = rb.getString(pe.getErrorCode());
 		} catch (MissingResourceException mre) {
 			logger.warning("ErrorHandler: " + mre.getMessage());
 		}
@@ -112,7 +113,7 @@ public class ErrorHandler {
 				}
 			}
 		}
-		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, message, null));
+		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,errorCode, message));
 
 	}
 
