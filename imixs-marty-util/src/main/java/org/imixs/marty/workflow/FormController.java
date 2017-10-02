@@ -33,7 +33,7 @@ import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
-import javax.enterprise.context.SessionScoped;
+import javax.enterprise.context.ConversationScoped;
 import javax.enterprise.event.Observes;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
@@ -60,13 +60,10 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
  * 
  */
 @Named
-@SessionScoped
+@ConversationScoped
 public class FormController implements Serializable {
 
 	public static final String DEFAULT_EDITOR_ID = "form_panel_simple#basic";
-
-	@Inject
-	protected WorkflowController workflowController;
 
 	@Inject
 	protected ProcessController processController;
