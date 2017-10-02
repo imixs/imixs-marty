@@ -32,10 +32,9 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
-import javax.enterprise.context.SessionScoped;
+import javax.enterprise.context.ConversationScoped;
 import javax.enterprise.event.Observes;
 import javax.faces.event.AjaxBehaviorEvent;
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
 
@@ -61,17 +60,16 @@ import org.imixs.workflow.exceptions.QueryException;
  * @version 1.0
  */
 
-@Named("workitemLinkController")
-@SessionScoped
+@Named
+@ConversationScoped
 public class WorkitemLinkController implements Serializable {
 
 	public static final String LINK_PROPERTY = "txtworkitemref";
-	public static final int MAX_SEARCH_RESULT=999;
+	public static final int MAX_SEARCH_RESULT = 999;
 
 	public static Logger logger = Logger.getLogger(WorkitemLinkController.class.getName());
 
-	@Inject
-	protected WorkflowController workflowController;
+	private ItemCollection workitem = null;
 
 	@EJB
 	protected WorkflowService workflowService;
@@ -146,7 +144,6 @@ public class WorkitemLinkController implements Serializable {
 
 		try {
 			String sSearchTerm = "";
-
 			// search only type workitem and workitemsarchive
 			sSearchTerm += "((type:workitem) OR (type:workitemarchive)) AND ";
 
@@ -237,7 +234,6 @@ public class WorkitemLinkController implements Serializable {
 	 * @return - list of ItemCollection
 	 */
 	public List<ItemCollection> getReferences() {
-
 		return getReferences("");
 	}
 
@@ -246,9 +242,9 @@ public class WorkitemLinkController implements Serializable {
 	 * workItem (txtWorkitemRef).
 	 * 
 	 * The filter will be applied to the result list. So each WorkItem will be
-	 * tested if it matches the filter expression. The results of this method
-	 * are cached into the references map. This cache is discarded if the
-	 * current workItem changed.
+	 * tested if it matches the filter expression. The results of this method are
+	 * cached into the references map. This cache is discarded if the current
+	 * workItem changed.
 	 * 
 	 * The resultset is sorted by $created
 	 * 
@@ -257,6 +253,10 @@ public class WorkitemLinkController implements Serializable {
 	@SuppressWarnings("unchecked")
 	public List<ItemCollection> getReferences(String filter) {
 		List<ItemCollection> filterResult = null;
+
+		if (workitem == null) {
+			return filterResult;
+		}
 
 		if (references == null)
 			references = new HashMap<String, List<ItemCollection>>();
@@ -267,15 +267,15 @@ public class WorkitemLinkController implements Serializable {
 			// build a new workitem list for that filter....
 			filterResult = new ArrayList<ItemCollection>();
 
-			if (workflowController.getWorkitem() == null) {
-				return filterResult;
-			}
-
 			logger.fine("lookup references for: " + filter);
 
 			// lookup the references...
-			List<String> list = workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
+			List<String> list = workitem.getItemValue(LINK_PROPERTY);
 			// empty list?
+
+			if (references == null)
+				references = new HashMap<String, List<ItemCollection>>();
+
 			if (list.size() == 0 || (list.size() == 1 && "".equals(list.get(0)))) {
 				references.put(filter, filterResult);
 				return filterResult;
@@ -289,7 +289,7 @@ public class WorkitemLinkController implements Serializable {
 			}
 			// cut last ,
 			sQuery = sQuery.substring(0, sQuery.length() - 3);
-
+			
 			sQuery += " )";
 
 			List<ItemCollection> workitems;
@@ -320,8 +320,7 @@ public class WorkitemLinkController implements Serializable {
 	}
 
 	/**
-	 * Returns a list of all workItems holding a reference to the current
-	 * workItem.
+	 * Returns a list of all workItems holding a reference to the current workItem.
 	 * 
 	 * @return
 	 * @throws NamingException
@@ -331,9 +330,8 @@ public class WorkitemLinkController implements Serializable {
 	}
 
 	/**
-	 * returns a list of all workItems holding a reference to the current
-	 * workItem. If the filter is set the processID will be tested for the
-	 * filter regex
+	 * returns a list of all workItems holding a reference to the current workItem.
+	 * If the filter is set the processID will be tested for the filter regex
 	 * 
 	 * @return
 	 * @param filter
@@ -341,6 +339,10 @@ public class WorkitemLinkController implements Serializable {
 	 */
 	public List<ItemCollection> getExternalReferences(String filter) {
 		List<ItemCollection> filterResult = null;
+
+		if (workitem == null) {
+			return filterResult;
+		}
 
 		if (externalReferences == null)
 			externalReferences = new HashMap<String, List<ItemCollection>>();
@@ -352,22 +354,14 @@ public class WorkitemLinkController implements Serializable {
 			// build a new workitem list for that filter....
 			filterResult = new ArrayList<ItemCollection>();
 
-			String uniqueid = workflowController.getWorkitem().getItemValueString("$uniqueid");
+			String uniqueid = workitem.getItemValueString("$uniqueid");
 
 			// return an empty list if still no $uniqueid is defined for the
-			// current
-			// workitem
+			// current workitem
 			if ("".equals(uniqueid))
 				return filterResult;
 
 			// select all references.....
-			// String sQuery = "SELECT workitem FROM Entity AS workitem" + "
-			// JOIN workitem.textItems AS rnr"
-			// + " WHERE workitem.type IN ('workitem','workitemarchive') " + "
-			// AND rnr.itemName = '"
-			// + LINK_PROPERTY + "'" + " AND rnr.itemValue='" + uniqueid + "'" +
-			// " ORDER BY workitem.created DESC";
-
 			String sQuery = "(";
 			sQuery = " (type:\"workitem\" OR type:\"workitemarchive\") AND (" + LINK_PROPERTY + ":\"" + uniqueid
 					+ "\")";
@@ -411,9 +405,6 @@ public class WorkitemLinkController implements Serializable {
 	 */
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) throws AccessDeniedException {
 
-		// reset suggest list state
-		reset();
-
 		if (workflowEvent == null)
 			return;
 
@@ -422,14 +413,13 @@ public class WorkitemLinkController implements Serializable {
 				&& !workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
 			return;
 
-		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
+		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()
+				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
 			externalReferences = null;
 			references = null;
-		}
-
-		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
-			externalReferences = null;
-			references = null;
+			workitem = workflowEvent.getWorkitem();
+			// reset suggest list state
+			reset();
 
 		}
 
