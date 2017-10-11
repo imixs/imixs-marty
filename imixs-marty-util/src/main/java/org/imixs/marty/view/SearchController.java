@@ -203,6 +203,11 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 	 * Depending on the view type the method restricts the result set by namcreator
 	 * or namowner
 	 * 
+	 * 
+	 * If a search phrase is given, sortBy and sortReverse are reset. 
+	 * In case of a general search in a specific contest the sortBy and sortReverse are set the settings provided by the 
+	 * setupController
+	 * 
 	 * @param searchFilter
 	 *            - ItemCollection with filter criteria
 	 * @param view
@@ -213,6 +218,8 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 	@SuppressWarnings("unchecked")
 	@Override
 	public String getQuery() {
+		String sSearchTerm = "";
+		String emptySearchTerm=""; // indicates that no query as the default type-query was defined. 
 		// read the filter parameters and removes duplicates
 		List<Integer> processIDs = searchFilter.getItemValue("$ProcessID");
 		List<String> processRefList = searchFilter.getItemValue("txtProcessRef");
@@ -237,7 +244,7 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 			typeList = Arrays.asList(new String[] { "workitem" });
 		}
 
-		String sSearchTerm = "";
+		
 
 		// convert type list into comma separated list
 		String sTypeQuery = "";
@@ -248,7 +255,8 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 				sTypeQuery += " OR ";
 		}
 		sSearchTerm += "(" + sTypeQuery + ") AND";
-
+		emptySearchTerm=sSearchTerm; // define empty serach query
+		
 		// test if dms_search==true
 		if ("true".equals(searchFilter.getItemValueString("dms_search"))) {
 			sSearchTerm += " (dms_count:[1 TO 99]) AND";
@@ -356,16 +364,31 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 		}
 
 		if (searchphrase != null && !"".equals(searchphrase)) {
+			setSortBy(null);
+			this.setSortReverse(false);
 			// trim
 			searchphrase = searchphrase.trim();
 			// lower case....
 			searchphrase = searchphrase.toLowerCase();
 			sSearchTerm += " (" + searchphrase + ") ";
-		} else
+		} else {
+			// set sortBy and sortReverse
+			this.setSortBy(setupController.getSortBy());
+			this.setSortReverse(setupController.getSortReverse());
+		}
+		
+		
+		// test if a seach query was finally defined....
+		if (sSearchTerm.equals(emptySearchTerm)) {
+			// now query defined
+			sSearchTerm=null;
+		}
+		
 		// cut last AND
-		if (sSearchTerm.endsWith("AND"))
+		if (sSearchTerm!=null && sSearchTerm.endsWith("AND")) {
 			sSearchTerm = sSearchTerm.substring(0, sSearchTerm.length() - 3);
-
+		}
+		
 		logger.fine("Query=" + sSearchTerm);
 		return sSearchTerm;
 	}
