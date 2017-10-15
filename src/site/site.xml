@@ -50,6 +50,7 @@
 			<item name="ChildWorkitemController" href="controller/childworkitemcontroller.html" />
 			<item name="Worklists and Searching" href="controller/worklists.html" />
 			<item name="DMSController" href="controller/dmscontroller.html" />
+			<item name="MinutewController" href="controller/munutecontroller.html" />
 		</menu>
 		
 		<menu name="Plugins">

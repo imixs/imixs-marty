@@ -28,9 +28,11 @@ import org.imixs.workflow.exceptions.PluginException;
  * <p>
  * In case the minute parent is a version (WORKITEMIDREF), than the plugin
  * copies all MinuteItems from the master and renumbers the MinuteItems
- * (sequencenumber). Finally the plugin mark the current workitem with the item
- * 'minutesinherit'='true'
+ * (sequencenumber). 
  * 
+ * <p>
+ * The Plugin manges the items 'minuteparent' and 'minuteitem'. These items hold a $uniqueID for the corresponding parent
+ * or minute entity. 
  * 
  * @author rsoika
  * @version 2.0
