@@ -215,7 +215,7 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 	 * 
 	 * @return - a lucene search query
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "unlikely-arg-type" })
 	@Override
 	public String getQuery() {
 		String sSearchTerm = "";
@@ -226,6 +226,8 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 		List<String> spacesRefList = searchFilter.getItemValue("txtSpaceRef");
 		List<String> workflowGroups = searchFilter.getItemValue("txtWorkflowGroup");
 		// trim lists
+		while (processIDs.contains(""))
+			processIDs.remove("");
 		while (processRefList.contains(""))
 			processRefList.remove("");
 		while (spacesRefList.contains(""))
@@ -392,4 +394,5 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 		logger.fine("Query=" + sSearchTerm);
 		return sSearchTerm;
 	}
+	
 }
