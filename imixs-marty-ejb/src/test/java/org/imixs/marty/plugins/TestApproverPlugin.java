@@ -8,11 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.engine.AbstractWorkflowEnvironment;
-import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.engine.WorkflowMockEnvironment;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -23,34 +21,35 @@ import junit.framework.Assert;
  * 
  * @author rsoika
  */
-public class TestApproverPlugin extends AbstractWorkflowEnvironment {
+public class TestApproverPlugin {
 	ApproverPlugin approverPlugin = null;
 	ItemCollection documentActivity;
 	ItemCollection documentContext;
 	Map<String, ItemCollection> database = new HashMap<String, ItemCollection>();
 
-	/**
-	 * Setup script
-	 * 
-	 * @throws PluginException
-	 * @throws ModelException
-	 * @throws ProcessingErrorException
-	 * @throws AccessDeniedException
-	 */
-	@Before
-	public void setup() throws PluginException, AccessDeniedException, ProcessingErrorException, ModelException {
+	
+	
+	WorkflowMockEnvironment workflowMockEnvironment;
 
-		super.setup();
+	@Before
+	public void setup() throws PluginException, ModelException {
+		
+		workflowMockEnvironment=new WorkflowMockEnvironment();
+		workflowMockEnvironment.setModelPath("/bpmn/TestApproverPlugin.bpmn");
+		
+		workflowMockEnvironment.setup();
+
 		approverPlugin = new ApproverPlugin();
-		// init plugin..
 		try {
-			approverPlugin.init(workflowService);
+			approverPlugin.init(workflowMockEnvironment.getWorkflowService());
 		} catch (PluginException e) {
+
 			e.printStackTrace();
 		}
 
-		documentContext = new ItemCollection();
+		documentContext=new ItemCollection();
 	}
+	
 
 	/**
 	 * This simple test verifies if a approver list is added correctly into the
@@ -63,7 +62,7 @@ public class TestApproverPlugin extends AbstractWorkflowEnvironment {
 	@Test
 	public void testNewApproverList() throws PluginException, ModelException {
 
-		documentActivity = this.getModel().getEvent(100, 10);
+		documentActivity = workflowMockEnvironment.getModel().getEvent(100, 10);
 		// change result
 		documentActivity.replaceItemValue("txtActivityResult", "<item name='approvedby'>ProcessManager</item>");
 
@@ -74,7 +73,7 @@ public class TestApproverPlugin extends AbstractWorkflowEnvironment {
 		documentContext.replaceItemValue("namProcessManager", nameList);
 
 		// test with ronny
-		when(workflowService.getUserName()).thenReturn("ronny");
+		when(workflowMockEnvironment.getWorkflowService().getUserName()).thenReturn("ronny");
 		documentContext = approverPlugin.run(documentContext, documentActivity);
 		Assert.assertNotNull(documentContext);
 
@@ -94,9 +93,7 @@ public class TestApproverPlugin extends AbstractWorkflowEnvironment {
 	@Test
 	public void testNewApproverListImmediateApproval() throws PluginException, ModelException {
 
-		documentActivity = this.getModel().getEvent(100, 10);
-		// change result
-		documentActivity.replaceItemValue("txtActivityResult", "<item name='approvedby'>ProcessManager</item>");
+		documentActivity = workflowMockEnvironment.getModel().getEvent(100, 10);
 
 		List<String> nameList = new ArrayList<String>();
 		nameList.add("anna");
@@ -105,7 +102,7 @@ public class TestApproverPlugin extends AbstractWorkflowEnvironment {
 		documentContext.replaceItemValue("namProcessManager", nameList);
 
 		// test with manfred
-		when(workflowService.getUserName()).thenReturn("manfred");
+		when(workflowMockEnvironment.getWorkflowService().getUserName()).thenReturn("manfred");
 		documentContext = approverPlugin.run(documentContext, documentActivity);
 		Assert.assertNotNull(documentContext);
 
@@ -126,10 +123,8 @@ public class TestApproverPlugin extends AbstractWorkflowEnvironment {
 	@Test
 	public void testUpdateApproverListNewApprover() throws PluginException, ModelException {
 
-		documentActivity = this.getModel().getEvent(100, 10);
-		// change result
-		documentActivity.replaceItemValue("txtActivityResult", "<item name='approvedby'>ProcessManager</item>");
-
+		documentActivity = workflowMockEnvironment.getModel().getEvent(100, 10);
+		
 		List<String> nameList = new ArrayList<String>();
 		nameList.add("anna");
 		nameList.add("manfred");
@@ -137,7 +132,7 @@ public class TestApproverPlugin extends AbstractWorkflowEnvironment {
 		documentContext.replaceItemValue("namProcessManager", nameList);
 
 		// test with manfred
-		when(workflowService.getUserName()).thenReturn("manfred");
+		when(workflowMockEnvironment.getWorkflowService().getUserName()).thenReturn("manfred");
 		documentContext = approverPlugin.run(documentContext, documentActivity);
 		Assert.assertNotNull(documentContext);
 
@@ -154,7 +149,7 @@ public class TestApproverPlugin extends AbstractWorkflowEnvironment {
 		documentContext.replaceItemValue("namProcessManager", nameList);
 
 		// test with manfred
-		when(workflowService.getUserName()).thenReturn("manfred");
+		when(workflowMockEnvironment.getWorkflowService().getUserName()).thenReturn("manfred");
 		documentContext = approverPlugin.run(documentContext, documentActivity);
 		Assert.assertNotNull(documentContext);
 
@@ -176,10 +171,8 @@ public class TestApproverPlugin extends AbstractWorkflowEnvironment {
 	@Test
 	public void testUpdateApproverListExistingApprover() throws PluginException, ModelException {
 
-		documentActivity = this.getModel().getEvent(100, 10);
-		// change result
-		documentActivity.replaceItemValue("txtActivityResult", "<item name='approvedby'>ProcessManager</item>");
-
+		documentActivity = workflowMockEnvironment.getModel().getEvent(100, 10);
+		
 		List<String> nameList = new ArrayList<String>();
 		nameList.add("anna");
 		nameList.add("manfred");
@@ -187,7 +180,7 @@ public class TestApproverPlugin extends AbstractWorkflowEnvironment {
 		documentContext.replaceItemValue("namProcessManager", nameList);
 
 		// test with manfred
-		when(workflowService.getUserName()).thenReturn("manfred");
+		when(workflowMockEnvironment.getWorkflowService().getUserName()).thenReturn("manfred");
 		documentContext = approverPlugin.run(documentContext, documentActivity);
 		Assert.assertNotNull(documentContext);
 
@@ -203,7 +196,7 @@ public class TestApproverPlugin extends AbstractWorkflowEnvironment {
 		documentContext.replaceItemValue("namProcessManager", nameList);
 
 		// test with manfred
-		when(workflowService.getUserName()).thenReturn("manfred");
+		when(workflowMockEnvironment.getWorkflowService().getUserName()).thenReturn("manfred");
 		documentContext = approverPlugin.run(documentContext, documentActivity);
 		Assert.assertNotNull(documentContext);
 

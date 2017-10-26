@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
-import org.imixs.workflow.engine.plugins.ResultPlugin;
 import org.imixs.workflow.exceptions.PluginException;
 
 /**
@@ -58,7 +57,7 @@ public class ApproverPlugin extends AbstractPlugin {
 	@Override
 	public ItemCollection run(ItemCollection workitem, ItemCollection documentActivity) throws PluginException {
 
-		ItemCollection evalItemCollection = ResultPlugin.evaluateWorkflowResult(documentActivity, workitem);
+		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity, workitem);
 
 		// 1.) test for items with name subprocess_create and create the
 		// defined suprocesses

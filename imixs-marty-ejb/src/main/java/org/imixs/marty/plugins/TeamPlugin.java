@@ -249,7 +249,7 @@ public class TeamPlugin extends AbstractPlugin {
 		 * 
 		 * '<item name="process">...</item>' '<item name="space">...</item>'
 		 */
-		ItemCollection evalItemCollection = ResultPlugin.evaluateWorkflowResult(documentActivity, workItem);
+		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity, workItem);
 		if (evalItemCollection != null) {
 			String sRef = fetchRefFromActivity("process", evalItemCollection);
 			if (sRef != null && !sRef.isEmpty()) {

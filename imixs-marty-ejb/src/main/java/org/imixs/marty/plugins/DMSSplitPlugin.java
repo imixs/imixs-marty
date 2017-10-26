@@ -36,11 +36,11 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
-import org.imixs.workflow.engine.plugins.ResultPlugin;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.util.XMLParser;
 
 /**
  * The DMSSplitPlugin provides functionality to create sub-process instances for
@@ -95,7 +95,7 @@ public class DMSSplitPlugin extends AbstractPlugin {
 	public ItemCollection run(ItemCollection adocumentContext, ItemCollection adocumentActivity)
 			throws PluginException {
 
-		ItemCollection evalItemCollection = ResultPlugin.evaluateWorkflowResult(adocumentActivity, adocumentContext);
+		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(adocumentActivity, adocumentContext);
 
 		if (evalItemCollection == null)
 			return adocumentContext;
@@ -125,7 +125,7 @@ public class DMSSplitPlugin extends AbstractPlugin {
 				return adocumentContext;
 			}
 			// evaluate the item content (XML format expected here!)
-			ItemCollection dmsProcessData = ResultPlugin.parseItemStructure(processValue);
+			ItemCollection dmsProcessData = XMLParser.parseItemStructure(processValue);
 
 			try {
 				adocumentContext = createSubprocesses(dmsProcessData, adocumentContext);

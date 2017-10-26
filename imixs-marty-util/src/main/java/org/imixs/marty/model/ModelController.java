@@ -140,8 +140,7 @@ public class ModelController implements Serializable {
 	 * A workflowGroup with a '~' in its name will be skipped. This indicates a
 	 * child process.
 	 * 
-	 * The worflowGroup list is used to assign a workflow Group to a core
-	 * process.
+	 * The worflowGroup list is used to assign a workflow Group to a core process.
 	 * 
 	 * @return list of workflow groups
 	 */
@@ -181,8 +180,7 @@ public class ModelController implements Serializable {
 	 * 
 	 * A SubWorkflowGroup contains a '~' in its name.
 	 * 
-	 * The SubWorflowGroup list is used to assign sub workflow Group to a
-	 * workitem
+	 * The SubWorflowGroup list is used to assign sub workflow Group to a workitem
 	 * 
 	 * @see getWorkflowGroups()
 	 * 
@@ -261,9 +259,9 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * This method adds all uploaded model files. The method tests the model
-	 * type (.bmpm, .ixm). BPMN Model will be handled by the ImixsBPMNParser. A
-	 * .ixm file will be imported using the default import mechanism.
+	 * This method adds all uploaded model files. The method tests the model type
+	 * (.bmpm, .ixm). BPMN Model will be handled by the ImixsBPMNParser. A .ixm file
+	 * will be imported using the default import mechanism.
 	 * 
 	 * @param event
 	 * @throws IOException
@@ -302,8 +300,8 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * This Method deletes the given model from the database and the internal
-	 * model cache.
+	 * This Method deletes the given model from the database and the internal model
+	 * cache.
 	 * 
 	 * @throws AccessDeniedException
 	 * @throws ModelException
@@ -313,8 +311,8 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * This method returns a process entity for a given ModelVersion or null if
-	 * no entity exists.
+	 * This method returns a process entity for a given ModelVersion or null if no
+	 * entity exists.
 	 * 
 	 * 
 	 * @param modelVersion
@@ -335,8 +333,8 @@ public class ModelController implements Serializable {
 	}
 
 	/**
-	 * This method return the 'rtfdescription' of a processentity and applies
-	 * the dynamic Text replacement function from the jee plugin
+	 * This method return the 'rtfdescription' of a processentity and applies the
+	 * dynamic Text replacement function from the jee plugin
 	 * 
 	 * @param processid
 	 * @param modelversion
@@ -356,10 +354,9 @@ public class ModelController implements Serializable {
 			return "";
 		}
 		String desc = pe.getItemValueString("rtfdescription");
-		ApplicationPlugin pp = new ApplicationPlugin();
+
 		try {
-			pp.init(workflowService);
-			desc = pp.replaceDynamicValues(desc, documentContext);
+			desc = workflowService.adaptText(desc, documentContext);
 		} catch (PluginException e) {
 			logger.warning("Unable to update processDescription: " + e.getMessage());
 		}

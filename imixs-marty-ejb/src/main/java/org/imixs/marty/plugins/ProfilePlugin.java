@@ -41,6 +41,7 @@ import javax.naming.NamingException;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.engine.TextItemValueAdapter;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
@@ -331,7 +332,7 @@ public class ProfilePlugin extends AbstractPlugin {
 			}
 
 			// format field value
-			String sResult = formatItemValues(vUserIDs, sSeparator, "");
+			String sResult = TextItemValueAdapter.formatItemValues(vUserIDs, sSeparator, "");
 
 			// now replace the tag with the result string
 			aString = aString.substring(0, iTagStartPos) + sResult + aString.substring(iTagEndPos);

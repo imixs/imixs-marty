@@ -36,7 +36,6 @@ import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
-import org.imixs.workflow.engine.plugins.ResultPlugin;
 import org.imixs.workflow.exceptions.PluginException;
 
 /**
@@ -74,7 +73,7 @@ public class CommentPlugin extends AbstractPlugin {
 
 		documentContext = adocumentContext;
 	
-		ItemCollection evalItemCollection =ResultPlugin.evaluateWorkflowResult(documentActivity, adocumentContext);
+		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity, adocumentContext);
 
 		// test if comment is defined in model
 		if (evalItemCollection != null) {

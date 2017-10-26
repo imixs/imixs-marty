@@ -1,19 +1,12 @@
 package org.imixs.marty.plugins;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
-
-import javax.ejb.SessionContext;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.WorkflowKernel;
-import org.imixs.workflow.engine.AbstractWorkflowEnvironment;
-import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.engine.WorkflowMockEnvironment;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,49 +17,34 @@ import junit.framework.Assert;
  * 
  * @author rsoika
  */
-public class TestCommentPlugin extends AbstractWorkflowEnvironment {
-	private final static Logger logger = Logger.getLogger(TestCommentPlugin.class.getName());
+public class TestCommentPlugin {
 
 	private CommentPlugin commentPlugin;
- 
-	// CommentPlugin commentPlugin = null;
+
 	ItemCollection documentActivity;
-	protected SessionContext ctx;
 	ItemCollection documentContext;
-	Map<String, ItemCollection> database = new HashMap<String, ItemCollection>();
+	
+	WorkflowMockEnvironment workflowMockEnvironment;
 
-	/**
-	 * Setup script to simulate process and space entities for test cases.
-	 * 
-	 * @throws PluginException
-	 * @throws ModelException 
-	 * @throws ProcessingErrorException 
-	 * @throws AccessDeniedException 
-	 */
 	@Before
-	public void setup() throws PluginException, AccessDeniedException, ProcessingErrorException, ModelException {
+	public void setup() throws PluginException, ModelException {
+		
+		workflowMockEnvironment=new WorkflowMockEnvironment();
+		workflowMockEnvironment.setModelPath("/bpmn/TestCommentPlugin.bpmn");
+		
+		workflowMockEnvironment.setup();
 
-		super.setup();
-
-
-		commentPlugin=new CommentPlugin();
-		// init plugin..
+		commentPlugin = new CommentPlugin();
 		try {
-			commentPlugin.init(workflowService);
+			commentPlugin.init(workflowMockEnvironment.getWorkflowService());
 		} catch (PluginException e) {
+
 			e.printStackTrace();
 		}
 
-		// prepare test workitem
-		documentContext = new ItemCollection();
-		logger.info("[TestApplicationPlugin] setup test data...");
-		documentContext.replaceItemValue("namCreator", "ronny");
-		documentContext.replaceItemValue(WorkflowKernel.MODELVERSION, "1.0.0");
-		documentContext.replaceItemValue(WorkflowKernel.PROCESSID, 100);
-		documentContext.replaceItemValue(WorkflowKernel.UNIQUEID, WorkflowKernel.generateUniqueID());
-		documentService.save(documentContext);
-
+		documentContext=new ItemCollection();
 	}
+	
 
 	/**
 	 * This simple test verifies the default comment feature
@@ -80,7 +58,7 @@ public class TestCommentPlugin extends AbstractWorkflowEnvironment {
 	public void testSimpleComment() throws PluginException, ModelException {
 
 		documentContext.replaceItemValue("txtComment", "Some Comment");
-		documentActivity = this.getModel().getEvent(100, 10);
+		documentActivity = workflowMockEnvironment.getModel().getEvent(200, 10);
 
 		try {
 			commentPlugin.run(documentContext, documentActivity);
@@ -111,11 +89,8 @@ public class TestCommentPlugin extends AbstractWorkflowEnvironment {
 	public void testIgnoreComment() throws PluginException, ModelException {
 
 		documentContext.replaceItemValue("txtComment", "Some Comment");
-		documentActivity = this.getModel().getEvent(100, 10);
-
-		// change result
-		documentActivity.replaceItemValue("txtActivityResult", "<item name=\"comment\" ignore=\"true\" />");
-
+		documentActivity = workflowMockEnvironment.getModel().getEvent(100, 10);
+	
 		try {
 			commentPlugin.run(documentContext, documentActivity);
 		} catch (PluginException e) {
@@ -144,12 +119,9 @@ public class TestCommentPlugin extends AbstractWorkflowEnvironment {
 	public void testFixedComment() throws PluginException, ModelException {
 
 		documentContext.replaceItemValue("txtComment", "Some Comment");
-		documentActivity = this.getModel().getEvent(100, 10);
+		documentActivity = workflowMockEnvironment.getModel().getEvent(100, 20);
 
-		// change result
-		documentActivity.replaceItemValue("txtActivityResult",
-				"<item name=\"comment\" ignore=\"false\" >My Comment</item>");
-
+	
 		try {
 			commentPlugin.run(documentContext, documentActivity);
 		} catch (PluginException e) {
