@@ -28,9 +28,7 @@
 package org.imixs.marty.ejb;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -43,16 +41,20 @@ import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.SessionContext;
 import javax.ejb.Singleton;
+import javax.enterprise.event.Observes;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.engine.TextEvent;
+import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.QueryException;
- 
+import org.imixs.workflow.util.XMLParser;
+
 /**
- * The TextBlockService is an EJB handling documents containing textual information.
- * A text-block document is identified by its ID (txtname) and holds a HTML or PlainText information.
+ * The TextBlockService is an EJB handling documents containing textual
+ * information. A text-block document is identified by its ID (txtname) and
+ * holds a HTML or PlainText information.
  * 
  * A text-block document holds the following items
  * 
@@ -63,15 +65,17 @@ import org.imixs.workflow.exceptions.QueryException;
  * 
  * The type of a textBlock document is 'textblock'
  * 
- * A text-block can only be edited by a MANAGER. 
- * A text-block has no read restriction.
+ * A text-block can only be edited by a MANAGER. A text-block has no read
+ * restriction.
  * 
  * 
  * 
  * 
- * The TextBlockService ejb is implemented as a sigelton and uses an internal cache
- * to cache config entities.
+ * The TextBlockService ejb is implemented as a sigelton and uses an internal
+ * cache to cache config entities.
  * 
+ * The Method onEvent is a CDI observer method reacting on events from the type
+ * TextEvent. See the WorkflowService.adaptText() method for details.
  * 
  * @author rsoika
  */
@@ -89,16 +93,18 @@ public class TextBlockService {
 
 	@EJB
 	private DocumentService documentService;
+	
+	@EJB 
+	private WorkflowService workflowService;
 
 	@Resource
 	SessionContext ctx;
-	
+
 	private Cache cache = null;
 
 	final String TYPE = "textblock";
-	
-	private static Logger logger = Logger.getLogger(TextBlockService.class.getName());
 
+	private static Logger logger = Logger.getLogger(TextBlockService.class.getName());
 
 	/**
 	 * PostContruct event - loads the imixs.properties.
@@ -108,8 +114,6 @@ public class TextBlockService {
 		// initialize cache
 		cache = new Cache(DEFAULT_CACHE_SIZE);
 	}
-
-
 
 	/**
 	 * This method deletes an existing text-block.
@@ -123,10 +127,10 @@ public class TextBlockService {
 	}
 
 	/**
-	 * This method returns a text-block ItemCollection for a specified name or ID. If no
-	 * text-block is found for this name the Method creates an empty
-	 * text-block object. The text-block entity is cached internally and read
-	 * from the cache
+	 * This method returns a text-block ItemCollection for a specified name or ID.
+	 * If no text-block is found for this name the Method creates an empty
+	 * text-block object. The text-block entity is cached internally and read from
+	 * the cache
 	 * 
 	 * @param name
 	 *            in attribute txtname
@@ -137,14 +141,14 @@ public class TextBlockService {
 	}
 
 	/**
-	 * This method returns a text-block ItemCollection for a specified name or id. If no
-	 * text-block is found for this name the Method creates an empty
-	 * text-block object. The text-block entity is cached internally. 
+	 * This method returns a text-block ItemCollection for a specified name or id.
+	 * If no text-block is found for this name the Method creates an empty
+	 * text-block object. The text-block entity is cached internally.
 	 * 
 	 * 
 	 * @param name
 	 *            in attribute txtname
-	 *            
+	 * 
 	 * @param discardCache
 	 *            - indicates if the internal cache should be discarded.
 	 */
@@ -153,16 +157,16 @@ public class TextBlockService {
 		// check cache...
 		textBlockItemCollection = cache.get(name);
 		if (textBlockItemCollection == null || discardCache) {
-			
+
 			// try to load by ID....
-			textBlockItemCollection=documentService.load(name);
-			if (textBlockItemCollection==null) {
+			textBlockItemCollection = documentService.load(name);
+			if (textBlockItemCollection == null) {
 				// not found by ID so lets try to load it by txtname.....
 				// load text-block....
-				String sQuery="(type:\"" + TYPE + "\" AND txtname:\"" + name + "\")";
+				String sQuery = "(type:\"" + TYPE + "\" AND txtname:\"" + name + "\")";
 				Collection<ItemCollection> col;
 				try {
-					col = documentService.find(sQuery, 1 ,0);
+					col = documentService.find(sQuery, 1, 0);
 
 					if (col.size() > 0) {
 						textBlockItemCollection = col.iterator().next();
@@ -172,10 +176,10 @@ public class TextBlockService {
 				} catch (QueryException e) {
 					logger.warning("getTextBlock - invalid query: " + e.getMessage());
 				}
-				
+
 			}
-			
-			if (textBlockItemCollection==null) {
+
+			if (textBlockItemCollection == null) {
 				// create default values
 				textBlockItemCollection = new ItemCollection();
 				textBlockItemCollection.replaceItemValue("type", TYPE);
@@ -193,7 +197,7 @@ public class TextBlockService {
 	 * @throws AccessDeniedException
 	 */
 	public ItemCollection save(ItemCollection textBlockItemCollection) throws AccessDeniedException {
-		if (textBlockItemCollection==null) {
+		if (textBlockItemCollection == null) {
 			return textBlockItemCollection;
 		}
 		// update write and read access
@@ -202,7 +206,7 @@ public class TextBlockService {
 		textBlockItemCollection.replaceItemValue("$writeAccess", "org.imixs.ACCESSLEVEL.MANAGERACCESS");
 		textBlockItemCollection.replaceItemValue("$readAccess", "");
 		textBlockItemCollection.replaceItemValue("namcurrentEditor", ctx.getCallerPrincipal().getName().toString());
-		
+
 		// save entity
 		textBlockItemCollection = documentService.save(textBlockItemCollection);
 
@@ -211,24 +215,51 @@ public class TextBlockService {
 		return textBlockItemCollection;
 	}
 
+
 	/**
-	 * Returns a list of all configuration entities. The method uses JQPL staements instead of lucene index. 
+	 * This method reacts on CDI events of the type TextEvent and parses a string
+	 * for xml tag <textblock>. Those tags will be replaced with the
+	 * corresponding system property value.
 	 * 
-	 * @see issue #172
-	 * @return
+	 * 
 	 */
-	public List<ItemCollection> findAllConfigurations() {
-		ArrayList<ItemCollection> configList = new ArrayList<ItemCollection>();
-		Collection<ItemCollection> col = documentService.getDocumentsByType(TYPE);
-		for (ItemCollection aworkitem : col) {
-			configList.add(aworkitem);
+	public void onEvent(@Observes TextEvent event) {
+		String text = event.getText();
+	
+		// lower case <textBlock> into <textblock>
+		if (text.contains("<textBlock") || text.contains("</textBlock>")) {
+			logger.warning("Deprecated <textBlock> tag should be lowercase <textblock> !");
+			text = text.replace("<textBlock", "<textblock");
+			text = text.replace("</textBlock>", "</textblock>");
 		}
+	
+		List<String> tagList = XMLParser.findTags(text, "textblock");
+		logger.finest(tagList.size() + " tags found");
+		// test if a <value> tag exists...
+		for (String tag : tagList) {
+	
+	
+			// read the textblock Value
+			String sTextBlockKey = XMLParser.findTagValue(tag, "textblock");
+			
+			ItemCollection textBlockItemCollection = loadTextBlock(sTextBlockKey);
+			if (textBlockItemCollection!=null) {
+				
+				String sValue=textBlockItemCollection.getItemValueString("txtcontent");
+				// now replace the tag with the result string
+				int iStartPos = text.indexOf(tag);
+				int iEndPos = text.indexOf(tag) + tag.length();
 		
-		// sort by txtname
-		Collections.sort(configList, new ItemCollectionComparator("txtname", true));
-		
-		
-		return configList;
+				// now replace the tag with the result string
+				text = text.substring(0, iStartPos) + sValue + text.substring(iEndPos);
+				
+			} else {
+				logger.warning("text-block '" + sTextBlockKey + "' is not defined!");
+			}
+		}
+	
+		event.setText(text);
+	
 	}
 
 	/**
@@ -250,5 +281,6 @@ public class TextBlockService {
 			return size() > capacity;
 		}
 	}
-
+	
+	
 }
