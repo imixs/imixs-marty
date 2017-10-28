@@ -49,8 +49,9 @@
 			<item name="ChildItemController" href="controller/childitemcontroller.html" />
 			<item name="ChildWorkitemController" href="controller/childworkitemcontroller.html" />
 			<item name="Worklists and Searching" href="controller/worklists.html" />
+			<item name="FormController" href="controller/formcontroller.html" />
 			<item name="DMSController" href="controller/dmscontroller.html" />
-			<item name="MinutewController" href="controller/munutecontroller.html" />
+			<item name="MinuteController" href="controller/minutecontroller.html" />
 		</menu>
 		
 		<menu name="Plugins">
