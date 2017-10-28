@@ -10,6 +10,7 @@
 <cc:interface>
 	<cc:attribute name="value"></cc:attribute>
 	<cc:attribute name="editmode" default="true" type="java.lang.Boolean"></cc:attribute>
+	<cc:attribute name="render"></cc:attribute>
 </cc:interface>
 
 <cc:implementation>
@@ -28,7 +29,7 @@
 
 			<h:commandLink id="input_add" style="margin-left:5px;" styleClass="imixs-no-print" 
 				actionListener="#{userInputController.add(userInputController.input,cc.attrs.value)}"
-				value=""><f:ajax render="suggest_box datalist input_add" /><span class="typcn typcn-plus"></span>
+				value=""><f:ajax render="suggest_box datalist input_add :#{cc.attrs.render}" /><span class="typcn typcn-plus"></span>
 			</h:commandLink>
 
 			<h:panelGroup id="suggest_box">
@@ -46,7 +47,7 @@
 									value="#{suggest.item['txtUserName']}" escape="false" />
 								<h:outputText style="font-weight: bold;margin-left:16px;"
 									value="#{suggest.item['txtEmail']}" escape="false" />
-								<f:ajax render="suggest_box datalist" />
+								<f:ajax render="suggest_box datalist :#{cc.attrs.render}" />
 							</h:commandLink>
 
 						</div>
@@ -76,7 +77,7 @@
 					<h:commandLink value="" id="remove_owner_link_id" 
 						styleClass="imixs-no-print" style="margin-left:5px;"
 						actionListener="#{userInputController.remove(record.item['txtName'],cc.attrs.value)}">
-						<f:ajax render=":#{component.parent.parent.parent.clientId}" />
+						<f:ajax render=":#{component.parent.parent.parent.clientId} :#{cc.attrs.render}" />
 						<span class="typcn typcn-times"></span>
 					</h:commandLink>
 				</h:column>

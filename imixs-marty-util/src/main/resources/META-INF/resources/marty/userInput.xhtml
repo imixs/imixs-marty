@@ -10,6 +10,7 @@
 <cc:interface>
 	<cc:attribute name="value"></cc:attribute>
 	<cc:attribute name="editmode" default="true" type="java.lang.Boolean"></cc:attribute>
+	<cc:attribute name="render"></cc:attribute>
 </cc:interface>
 
 <cc:implementation>
@@ -48,7 +49,7 @@
 								<h:outputText style="font-weight: bold;margin-left:16px;"
 									value="#{suggest.item['txtEmail']}" escape="false" />
 
-								<f:ajax render="suggest_box" />
+								<f:ajax render="suggest_box :#{cc.attrs.render}" />
 							</h:commandLink>
 
 						</div>
