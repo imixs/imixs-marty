@@ -31,3 +31,4 @@ To translate the userID the following format can be used:
 
 The ProfilePlugin will automatically translate the userid into the display name.
 
+See also the [section concepts/profiles](../concepts/profiles.html).
