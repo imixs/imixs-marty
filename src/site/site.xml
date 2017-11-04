@@ -56,14 +56,15 @@
 		
 		<menu name="Plugins">
 			<item name="ApplicationPlugin" href="plugins/applicationplugin.html" />
+			<item name="ApproverPlugin" href="plugins/approverplugin.html" />
+			<item name="ArchivePlugin" href="plugins/archiveplugin.html" />
 			<item name="CommentPlugin" href="plugins/commentplugin.html" />
+			<item name="DeputyPlugin" href="plugins/deputyplugin.html" />
 			<item name="DMSPlugin" href="plugins/dmsplugin.html" />
 			<item name="DMSSplitPlugin" href="plugins/dmssplitplugin.html" />
-			<item name="DeputyPlugin" href="plugins/deputyplugin.html" />
+			<item name="ProfilePlugin" href="plugins/profileplugin.html" />
 			<item name="ResultPlugin" href="plugins/resultplugin.html" />
-			<item name="ArchivePlugin" href="plugins/archiveplugin.html" />
 			<item name="SpacePlugin" href="plugins/spaceplugin.html" />
-			<item name="ApproverPlugin" href="plugins/approverplugin.html" />
 		</menu>
 
 		<menu name="User Interface">
