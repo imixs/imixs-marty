@@ -391,14 +391,15 @@ public class ProfilePlugin extends AbstractPlugin {
 	/**
 	 * Verifies if the txtEmail is still available.
 	 * 
-	 * The validation can be deactivated with the imixs.property 'security.email.unique=false'
+	 * The validation can be deactivated with the imixs.property
+	 * 'security.email.unique=false'
 	 * 
 	 * @param aprofile
 	 * @return - true if address isn't still taken by another profile or no email
 	 *         address is provided.
 	 */
 	boolean isEmailTaken(ItemCollection profile) {
-		
+
 		// is the unique email mode activated?
 		String sUniqueEmailMode = this.getWorkflowService().getPropertyService().getProperties()
 				.getProperty("security.email.unique", "true");
@@ -443,9 +444,8 @@ public class ProfilePlugin extends AbstractPlugin {
 	 */
 	void updateActivityEntity(ItemCollection workItem, ItemCollection documentActivity) {
 		String sText;
-
-		String[] fields = { "rtfresultlog", "txtworkflowabstract", "txtworkflowsummary", "txtMailSubject",
-				"rtfMailBody" };
+		// only fields form the event element can be updated here
+		String[] fields = { "rtfresultlog", "txtMailSubject", "rtfMailBody" };
 
 		for (String aField : fields) {
 			sText = documentActivity.getItemValueString(aField);
