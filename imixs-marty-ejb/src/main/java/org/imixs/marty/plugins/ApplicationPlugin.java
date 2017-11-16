@@ -27,46 +27,23 @@
 
 package org.imixs.marty.plugins;
 
-import java.util.logging.Logger;
-
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.PluginException;
 
 /**
- * This plugin overwrites the Application Plugin and updates marty informations
- * like the subject and the workflowgroup name.
- * 
+ * This plugin is deprecated an simply overwrite the Imixs-Workflow Application
+ * Plugin. Because the plugin was used by older workflow models the plugin will
+ * not be removed.
  * 
  * @author rsoika
- * @version 2.0
+ * @version 3.0
  * 
  */
 public class ApplicationPlugin extends org.imixs.workflow.engine.plugins.ApplicationPlugin {
-	ItemCollection documentContext;
-
-	private static Logger logger = Logger.getLogger(ApplicationPlugin.class.getName());
 
 	@Override
 	public ItemCollection run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
-
-		documentContext = adocumentContext;
-
-		// Update Subject
-		if (!documentContext.hasItem("txtSubject"))
-
-			documentContext.replaceItemValue("txtSubject", " - no subject - ");
-
-		documentContext = super.run(documentContext, documentActivity);
-
-		// now cut txtworkflowgroup if ~ is available
-		String sGroupName = documentContext.getItemValueString("txtWorkflowGroup");
-		if (sGroupName.indexOf('~') > -1) {
-			sGroupName = sGroupName.substring(sGroupName.indexOf('~') + 1);
-			logger.fine("[ApplicationPlugin] set workflowGroup=" + sGroupName);
-			documentContext.replaceItemValue("txtWorkflowGroup", sGroupName);
-		}
-		return documentContext;
+		return super.run(adocumentContext, documentActivity);
 	}
-
 
 }

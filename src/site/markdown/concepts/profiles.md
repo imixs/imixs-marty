@@ -60,19 +60,10 @@ To deactivate the validation for unique email the property can set to 'false'.
 
 ## How to Translate userIDs into a User Name
 
-The Marty ProfilePlugin provides a mechanism to translate userIDs in a BPMN Event or BPMN Task with the corresponding User name stored in the User Profile
-This mechanism is controlled by the ProfileService EJB.
+The Marty project provides a mechanism to translate userIDs in a BPMN Event or BPMN Task with the corresponding User name stored in the User Profile
+This mechanism is controlled by the TextUsernameAdapter.
 See the following example where a BPMN Event text (e.g. History text or Email Body) 
 
 	Request saved by <username>namcurrenteditor</username>.
 
-The UserID stored in the attribute namcurrentedtior is translated into the User name stored in the User Profile.
-
-It is also possible to translate list of user entries. See the next example to translate a team list in a mail text:
-
-
-	Current Team: <username sparator=",">namTeam</username>.
-
-In this example the usernames stored in the property 'namTeam' are replaced with the corresponding user names and separated with a ','
- 
- 
+See the section [TextUsernameAdapter](../services/textusernameadapter.html) for more detailss
