@@ -74,7 +74,7 @@ public class MinutePlugin extends AbstractPlugin {
 			computeNextSequenceNumber(documentContext);
 		}
 
-		// test if we need to overtake the minute workitems from the master....
+		// test if we need to overtake the minute workitems from the master and reset the $created....
 		if (MINUTE_TYPE_PARENT.equals(minuteType) && documentContext.hasItem(WorkflowKernel.UNIQUEIDSOURCE)
 				&& documentContext.getItemValueBoolean(WorkflowKernel.ISVERSION)) {
 
@@ -106,6 +106,10 @@ public class MinutePlugin extends AbstractPlugin {
 				logger.fine("Copied " + newMinuteList.size() + " sucessfull");
 
 			}
+			
+			// now we reset the creation date
+			logger.fine("reset itemvalue $CREATED for new version...");
+			documentContext.removeItem("$created");
 			
 		}
 
