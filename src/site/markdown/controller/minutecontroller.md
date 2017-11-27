@@ -4,6 +4,27 @@ The backing Bean org.imixs.marty.web.workitem.MinuteController provides function
 A minute form consists of a header for general information and a body part to display an manage minutes. 
  
 
+## Name Fields
+
+A minute Workflow distinguish the following name fields. 
+
+** Header **
+
+ * \_team = a team list for the parent minute
+ * \_present = a list of attendees   
+ * namprocessteam = the process team
+ * $editor = keeper of the minutes
+ 
+
+** Minute **
+
+ * \_team = the team list form the header (copied by the splitplugin)
+ * \_present = the  attendees form the header (copied by the splitplugin)
+ * \_minute\_team = a team list for a single minute
+ * namprocessteam = the process team
+ * namspaceteam = optional space team.
+
+
 ## Forms
 
 The project [Imixs-Office-Workflow](http://www.office-workflow.de) provides a set of forms to display minutes. 
