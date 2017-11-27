@@ -142,19 +142,11 @@ public class SpacePlugin extends AbstractPlugin {
 		if (sIDRef==null) {
 			return null;
 		}
-		
-//		String sQuery = "SELECT project FROM Entity AS project " + " JOIN project.textItems AS r"
-//				+ " JOIN project.textItems AS n" + " WHERE project.type = 'space'" + " AND n.itemName = 'txtname' "
-//				+ " AND r.itemName='$uniqueidref'" + " AND r.itemValue = '" + sIDRef + "' "
-//				+ " ORDER BY n.itemValue asc";
-		
 		String sQuery="(type:\"space\" AND $uniqueidref:\""+sIDRef + "\")";
 		
-		// sort by txtname
-
 		List<ItemCollection> subSpaceList;
 		try {
-			subSpaceList = getWorkflowService().getDocumentService().find(sQuery, 1, 0);
+			subSpaceList = getWorkflowService().getDocumentService().find(sQuery, 9999, 0);
 		} catch (QueryException e) {
 			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
 		}
