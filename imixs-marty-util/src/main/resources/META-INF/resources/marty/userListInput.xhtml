@@ -15,8 +15,7 @@
 
 <cc:implementation>
 
-	<div class="marty-userlistinput">
-	
+	<div class="marty-userlistinput #{!cc.attrs.editmode?'marty-userlistinput-read':''}">
 		<!-- Input Field -->
 		<h:panelGroup id="input_box" layout="block"
 			class="marty-userlistinput-inputbox" rendered="#{cc.attrs.editmode}">

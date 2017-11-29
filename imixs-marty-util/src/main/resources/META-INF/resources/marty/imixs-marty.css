@@ -54,11 +54,12 @@
 }
 
 .marty-userlistinput-list {
-	
+	margin-left: 0.25em;
 }
 .marty-userlistinput-inputbox {
 	position: relative;
 	height: 30px;
+	margin-bottom: 5px;
 }
 
 .marty-userlistinput-suggestresultlist {
