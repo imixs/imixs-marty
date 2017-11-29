@@ -106,7 +106,12 @@ public class DMSPlugin extends AbstractPlugin {
 		workitem = documentContext;
 
 		// skip if type is not workitem and workitemarchive
-		if (!workitem.getType().equals("workitem") && !workitem.getType().equals("workitemarchive")) {
+		if (!workitem.getType().equals("workitem")
+		 && !workitem.getType().equals("workitemarchive")
+		 && !workitem.getType().equals("childworkitem")
+		 && !workitem.getType().equals("childworkitemarchive")
+				
+				) {
 			return workitem;
 		}
 
