@@ -1,8 +1,9 @@
 # The MinuteController
 
-The backing Bean org.imixs.marty.web.workitem.MinuteController provides functionality to display miute forms.
+The backing Bean _org.imixs.marty.web.workitem.MinuteController_ provides functionality to display miute forms.
 A minute form consists of a header for general information and a body part to display an manage minutes. 
  
+ See also the [MinutePlugin](../pluginsr/minuteplugin.html)
 
 ## Name Fields
 
