@@ -183,7 +183,8 @@ public class MinutePlugin extends AbstractPlugin {
 		int nummer = 1;
 		if (parent != null) {
 			// find all minute itmes and comptue the next Number...
-			List<ItemCollection> childs = this.getWorkflowService().getWorkListByRef(parent.getUniqueID());
+			List<ItemCollection> childs = this.getWorkflowService().getWorkListByRef(parent.getUniqueID(), null, 999, 0,
+					0);
 			for (ItemCollection minute : childs) {
 				if (minute != null && MINUTE_TYPE_ITEM.equals(minute.getItemValueString(MINUTETYPE))
 						&& minute.getItemValueInteger(SEQUENCENUMBER) > 0) {
