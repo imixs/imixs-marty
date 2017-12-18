@@ -71,7 +71,7 @@ import org.imixs.workflow.exceptions.QueryException;
 public class ProfilePlugin extends AbstractPlugin {
 
 	private ProfileService profileService = null;
-
+	private String userID = null;
 	private static Logger logger = Logger.getLogger(ProfilePlugin.class.getName());
 
 	// error codes
@@ -112,15 +112,28 @@ public class ProfilePlugin extends AbstractPlugin {
 	 **/
 	@Override
 	public ItemCollection run(ItemCollection workItem, ItemCollection documentActivity) throws PluginException {
-
 		// validate profile..
 		if ("profile".equals(workItem.getItemValueString("type"))) {
 			validateUserProfile(workItem);
-			// discared cache for this name
-			profileService.discardCache(workItem.getItemValueString("txtName"));
+			// store userID local to discard the cache when close()...
+			userID = workItem.getItemValueString("txtName");
 		}
-
 		return workItem;
+	}
+
+	/**
+	 * This method discards the cache for the current userID (ProfileService). This
+	 * is called only in case a profile was processed and no rollback is called.
+	 */
+	@Override
+	public void close(boolean rollbackTransaction) throws PluginException {
+
+		// if no rollback we can discard the cache
+		if (!rollbackTransaction && userID != null && !userID.isEmpty()) {
+			// discared cache for this name
+			profileService.discardCache(userID);
+		}
+		super.close(rollbackTransaction);
 	}
 
 	/**
