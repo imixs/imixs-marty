@@ -28,6 +28,9 @@
 			<item name="Security" href="concepts/security.html" collapse="true">
 				<item name="User Profiles" href="concepts/profiles.html" />
 				<item name="User DB" href="concepts/userdb.html" />
+
+				<item name="LDAP Group Interceptor" href="concepts/security_groupinterceptor_ldap.html" />
+				<item name="Team Group Interceptor" href="concepts/security_groupinterceptor_team.html" />
 			</item>	
 			<item name="Modelling" href="concepts/modelling.html" />
 			<item name="Mail" href="concepts/mail.html" />
