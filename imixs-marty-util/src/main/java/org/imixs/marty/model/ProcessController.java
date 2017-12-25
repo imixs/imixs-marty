@@ -84,8 +84,7 @@ public class ProcessController implements Serializable {
 	@EJB
 	protected ProfileService profileService;
 
-	private static Logger logger = Logger.getLogger(ProcessController.class
-			.getName());
+	private static Logger logger = Logger.getLogger(ProcessController.class.getName());
 
 	/**
 	 * Reset the internal cache
@@ -116,8 +115,8 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
-	 * Loads a process entity by its UniqueID from the internal cache and
-	 * updates the current process entity.
+	 * Loads a process entity by its UniqueID from the internal cache and updates
+	 * the current process entity.
 	 * 
 	 * @param uniqueid
 	 *            - of process entity
@@ -125,21 +124,18 @@ public class ProcessController implements Serializable {
 	 * @return current process entity
 	 */
 	public ItemCollection loadProcess(String uniqueid) {
-		if (this.process == null
-				|| !this.process.getItemValue(WorkflowService.UNIQUEID).equals(
-						uniqueid)) {
+		if (this.process == null || !this.process.getItemValue(WorkflowService.UNIQUEID).equals(uniqueid)) {
 			setProcess(this.getProcessById(uniqueid));
 		}
 		return getProcess();
 	}
 
 	/**
-	 * Returns the process for a given uniqueID. The method uses the internal
-	 * cache.
+	 * Returns the process for a given uniqueID. The method uses the internal cache.
 	 * 
 	 * @param uniqueId
-	 * @return itemCollection of process or null if not process with the
-	 *         specified id exists
+	 * @return itemCollection of process or null if not process with the specified
+	 *         id exists
 	 */
 	public ItemCollection getProcessById(String uniqueId) {
 
@@ -147,8 +143,7 @@ public class ProcessController implements Serializable {
 			// iterate over all spaces and compare the $UniqueIDRef
 			List<ItemCollection> list = getProcessList();
 			for (ItemCollection process : list) {
-				if (uniqueId.equals(process
-						.getItemValueString(WorkflowService.UNIQUEID))) {
+				if (uniqueId.equals(process.getItemValueString(WorkflowService.UNIQUEID))) {
 					return process;
 				}
 			}
@@ -157,9 +152,9 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
-	 * This method returns a chached list of process entities for the current user. This list
-	 * can be used to display processs information. The returned
-	 * process list is optimized and provides additional the following attributes
+	 * This method returns a chached list of process entities for the current user.
+	 * This list can be used to display processs information. The returned process
+	 * list is optimized and provides additional the following attributes
 	 * <p>
 	 * isMember, isTeam, isOwner, isManager, isAssist
 	 * 
@@ -174,8 +169,8 @@ public class ProcessController implements Serializable {
 
 	/**
 	 * This method returns a cached list of spaces for the current user. This list
-	 * can be used to display space information. The returned
-	 * space list is optimized and provides additional the following attributes
+	 * can be used to display space information. The returned space list is
+	 * optimized and provides additional the following attributes
 	 * <p>
 	 * isMember, isTeam, isOwner, isManager, isAssist
 	 * 
@@ -183,14 +178,15 @@ public class ProcessController implements Serializable {
 	 */
 	public List<ItemCollection> getSpaces() {
 		if (spaces == null) {
-			spaces = processService.getSpaces(); new ArrayList<ItemCollection>();
+			spaces = processService.getSpaces();
+			new ArrayList<ItemCollection>();
 		}
 		return spaces;
 	}
 
 	/**
-	 * This method returns a space or process entity by its UniqueID. The space
-	 * and process entities are read from the internal cache.
+	 * This method returns a space or process entity by its UniqueID. The space and
+	 * process entities are read from the internal cache.
 	 * 
 	 * @param uniqueid
 	 * @return
@@ -202,16 +198,14 @@ public class ProcessController implements Serializable {
 		// get the process list form local cache
 		List<ItemCollection> alist = getProcessList();
 		for (ItemCollection aProcess : alist) {
-			if (uniqueid.equals(aProcess
-					.getItemValueString(WorkflowService.UNIQUEID)))
+			if (uniqueid.equals(aProcess.getItemValueString(WorkflowService.UNIQUEID)))
 				return aProcess;
 		}
 
 		// get the space list form local cache
 		alist = getSpaces();
 		for (ItemCollection aSpace : alist) {
-			if (uniqueid.equals(aSpace
-					.getItemValueString(WorkflowService.UNIQUEID)))
+			if (uniqueid.equals(aSpace.getItemValueString(WorkflowService.UNIQUEID)))
 				return aSpace;
 		}
 		return null;
@@ -222,8 +216,8 @@ public class ProcessController implements Serializable {
 	 * Returns a Space for a given uniqueID.
 	 * 
 	 * @param uniqueId
-	 * @return itemCollection of process or null if not process with the
-	 *         specified id exists
+	 * @return itemCollection of process or null if not process with the specified
+	 *         id exists
 	 */
 	public ItemCollection getSpaceById(String uniqueId) {
 
@@ -231,8 +225,7 @@ public class ProcessController implements Serializable {
 			// iterate over all spaces and compare the $UniqueIDRef
 			List<ItemCollection> list = getSpaces();
 			for (ItemCollection space : list) {
-				if (uniqueId.equals(space
-						.getItemValueString(WorkflowService.UNIQUEID))) {
+				if (uniqueId.equals(space.getItemValueString(WorkflowService.UNIQUEID))) {
 					return space;
 				}
 			}
@@ -244,8 +237,8 @@ public class ProcessController implements Serializable {
 	 * Returns a process by its name
 	 * 
 	 * @param name
-	 * @return itemCollection of process or null if not process with the
-	 *         specified id exists
+	 * @return itemCollection of process or null if not process with the specified
+	 *         id exists
 	 */
 	public ItemCollection getProcessByName(String name) {
 
@@ -265,8 +258,8 @@ public class ProcessController implements Serializable {
 	 * Returns a space by its name
 	 * 
 	 * @param name
-	 * @return itemCollection of process or null if not process with the
-	 *         specified id exists
+	 * @return itemCollection of process or null if not process with the specified
+	 *         id exists
 	 */
 	public ItemCollection getSpaceByName(String name) {
 
@@ -283,8 +276,7 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
-	 * Returns a list of all spaces which are assigned to a given process
-	 * entity.
+	 * Returns a list of all spaces which are assigned to a given process entity.
 	 * 
 	 * @param uniqueId
 	 *            of a processEntity
@@ -301,8 +293,7 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
-	 * Returns a list of all spaces which are assigned to a given process
-	 * entity.
+	 * Returns a list of all spaces which are assigned to a given process entity.
 	 * 
 	 * @param uniqueId
 	 *            of a processEntity
@@ -312,15 +303,13 @@ public class ProcessController implements Serializable {
 	public List<ItemCollection> getSpacesByProcess(ItemCollection process) {
 		List<ItemCollection> result = new ArrayList<ItemCollection>();
 		if (process != null) {
-			Vector<String> refs = (Vector<String>) process
-					.getItemValue("$UniqueIDRef");
+			Vector<String> refs = (Vector<String>) process.getItemValue("$UniqueIDRef");
 			if (refs != null && !refs.isEmpty()) {
 				// iterate over all spaces and compare the $UniqueIDRef
 				List<ItemCollection> list = getSpaces();
 				for (ItemCollection space : list) {
 
-					if (refs.contains(space
-							.getItemValueString(WorkflowService.UNIQUEID))) {
+					if (refs.contains(space.getItemValueString(WorkflowService.UNIQUEID))) {
 						result.add(space);
 					}
 				}
@@ -343,11 +332,9 @@ public class ProcessController implements Serializable {
 			// iterate over all spaces and compare the $UniqueIDRef
 			List<ItemCollection> list = getSpaces();
 			for (ItemCollection space : list) {
-				logger.fine("Spacename= " + space.getItemValueString("txtName")
-						+ " uniquidref= "
+				logger.fine("Spacename= " + space.getItemValueString("txtName") + " uniquidref= "
 						+ space.getItemValueString(WorkflowService.UNIQUEIDREF));
-				if (uniqueId.equals(space
-						.getItemValueString(WorkflowService.UNIQUEIDREF))) {
+				if (uniqueId.equals(space.getItemValueString(WorkflowService.UNIQUEIDREF))) {
 					result.add(space);
 				}
 			}
@@ -363,12 +350,10 @@ public class ProcessController implements Serializable {
 	 * @return list of profile entities for the current team managers
 	 */
 	public List<ItemCollection> getManagers(String aUniqueID) {
-		List<ItemCollection> resultList = getMemberListByRole(aUniqueID,
-				"namManager");
+		List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "namManager");
 
 		// sort by username..
-		Collections.sort(resultList,
-				new ItemCollectionComparator("txtUserName", true));
+		Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
 
 		return resultList;
 	}
@@ -381,38 +366,33 @@ public class ProcessController implements Serializable {
 	 * @return list of profile entities for the current team members
 	 */
 	public List<ItemCollection> getTeam(String aUniqueID) {
-		List<ItemCollection> resultList = getMemberListByRole(aUniqueID,
-				"namTeam");
+		List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "namTeam");
 
 		// sort by username..
-		Collections.sort(resultList,
-				new ItemCollectionComparator("txtUserName", true));
+		Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
 
 		return resultList;
 	}
 
 	/**
-	 * Returns a unique sorted list of assist members for the current project.
-	 * The returned list contains cloned user profile entities.
+	 * Returns a unique sorted list of assist members for the current project. The
+	 * returned list contains cloned user profile entities.
 	 * 
 	 *
 	 * @return list of profile entities for the current team members
 	 */
 	public List<ItemCollection> getAssist(String aUniqueID) {
-		List<ItemCollection> resultList = getMemberListByRole(aUniqueID,
-				"namAssist");
+		List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "namAssist");
 
 		// sort by username..
-		Collections.sort(resultList,
-				new ItemCollectionComparator("txtUserName", true));
+		Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
 
 		return resultList;
 	}
 
 	/**
-	 * Returns a unique sorted list of all members (Managers, Team, Assist) for
-	 * the current project. The returned list contains cloned user profile
-	 * entities.
+	 * Returns a unique sorted list of all members (Managers, Team, Assist) for the
+	 * current project. The returned list contains cloned user profile entities.
 	 * 
 	 *
 	 * @return list of profile entities for the current team members
@@ -421,51 +401,41 @@ public class ProcessController implements Serializable {
 		List<ItemCollection> resultList = new ArrayList<ItemCollection>();
 		List<String> dupplicatedIds = new ArrayList<String>();
 
-		List<ItemCollection> assistList = getMemberListByRole(aUniqueID,
-				"namAssist");
-		List<ItemCollection> teamList = getMemberListByRole(aUniqueID,
-				"namTeam");
-		List<ItemCollection> managerList = getMemberListByRole(aUniqueID,
-				"namManager");
+		List<ItemCollection> assistList = getMemberListByRole(aUniqueID, "namAssist");
+		List<ItemCollection> teamList = getMemberListByRole(aUniqueID, "namTeam");
+		List<ItemCollection> managerList = getMemberListByRole(aUniqueID, "namManager");
 
 		for (ItemCollection profile : teamList) {
 			// avoid duplicates..
-			if (!dupplicatedIds.contains(profile
-					.getItemValueString(WorkflowService.UNIQUEID))) {
+			if (!dupplicatedIds.contains(profile.getItemValueString(WorkflowService.UNIQUEID))) {
 				resultList.add(profile);
 			}
-			dupplicatedIds.add(profile
-					.getItemValueString(WorkflowService.UNIQUEID));
+			dupplicatedIds.add(profile.getItemValueString(WorkflowService.UNIQUEID));
 		}
 		for (ItemCollection profile : managerList) {
 			// avoid duplicates..
-			if (!dupplicatedIds.contains(profile
-					.getItemValueString(WorkflowService.UNIQUEID))) {
+			if (!dupplicatedIds.contains(profile.getItemValueString(WorkflowService.UNIQUEID))) {
 				resultList.add(profile);
 			}
-			dupplicatedIds.add(profile
-					.getItemValueString(WorkflowService.UNIQUEID));
+			dupplicatedIds.add(profile.getItemValueString(WorkflowService.UNIQUEID));
 		}
 		for (ItemCollection profile : assistList) {
 			// avoid duplicates..
-			if (!dupplicatedIds.contains(profile
-					.getItemValueString(WorkflowService.UNIQUEID))) {
+			if (!dupplicatedIds.contains(profile.getItemValueString(WorkflowService.UNIQUEID))) {
 				resultList.add(profile);
 			}
-			dupplicatedIds.add(profile
-					.getItemValueString(WorkflowService.UNIQUEID));
+			dupplicatedIds.add(profile.getItemValueString(WorkflowService.UNIQUEID));
 		}
 
 		// sort by username..
-		Collections.sort(resultList,
-				new ItemCollectionComparator("txtUserName", true));
+		Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
 
 		return resultList;
 	}
 
 	/**
-	 * Returns true if current user is manager of a given space or process
-	 * entity. Therefore the method checks the cloned field 'isManager'
+	 * Returns true if current user is manager of a given space or process entity.
+	 * Therefore the method checks the cloned field 'isManager'
 	 * 
 	 * @return
 	 */
@@ -510,8 +480,7 @@ public class ProcessController implements Serializable {
 			List<String> vTeam = entity.getItemValue("namTeam");
 			List<String> vManager = entity.getItemValue("namManager");
 
-			if (vTeam.indexOf(remoteUser) > -1
-					|| vManager.indexOf(remoteUser) > -1)
+			if (vTeam.indexOf(remoteUser) > -1 || vManager.indexOf(remoteUser) > -1)
 				return true;
 		}
 
@@ -531,16 +500,12 @@ public class ProcessController implements Serializable {
 		if (workflowEvent == null)
 			return;
 
-		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent
-				.getEventType()) {
+		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
 			// test if a space or process entity was processed
-			String sType = workflowEvent.getWorkitem().getItemValueString(
-					"type");
-			if ("space".equals(sType) || "process".equals(sType)) {
-
+			String sType = workflowEvent.getWorkitem().getItemValueString("type");
+			if (sType.startsWith("space") || sType.startsWith("process")) {
 				reset();
-				logger.fine("ModelController:WorkflowEvent="
-						+ workflowEvent.getEventType());
+				logger.fine("ModelController:WorkflowEvent=" + workflowEvent.getEventType());
 
 			}
 		}
@@ -548,17 +513,15 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
-	 * Returns a unique sorted list of profile itemCollections for a team list
-	 * in a project. The returned list contains cloned user profile entities.
+	 * Returns a unique sorted list of profile itemCollections for a team list in a
+	 * project. The returned list contains cloned user profile entities.
 	 * 
 	 * @param listType
-	 *            - the member field of the project (namTeam, namManager,
-	 *            namAssist)
+	 *            - the member field of the project (namTeam, namManager, namAssist)
 	 * @return list of team profiles
 	 */
 	@SuppressWarnings("unchecked")
-	private List<ItemCollection> getMemberListByRole(String aUniqueID,
-			String role) {
+	private List<ItemCollection> getMemberListByRole(String aUniqueID, String role) {
 		List<ItemCollection> resultList = new ArrayList<ItemCollection>();
 		List<String> dupplicatedIds = new ArrayList<String>();
 

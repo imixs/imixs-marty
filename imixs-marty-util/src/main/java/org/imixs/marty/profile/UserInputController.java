@@ -126,9 +126,9 @@ public class UserInputController implements Serializable {
 	}
 
 	/**
-	 * This method initializes a JPQL search. The method is triggered by ajax
-	 * events from the userInput.xhtml page. The minimum length of a given input
-	 * search phrase have to be at least 2 characters
+	 * This method initializes a JPQL search. The method is triggered by ajax events
+	 * from the userInput.xhtml page. The minimum length of a given input search
+	 * phrase have to be at least 2 characters
 	 * 
 	 */
 	public void search() {
@@ -159,27 +159,29 @@ public class UserInputController implements Serializable {
 		Collection<ItemCollection> col = null;
 
 		try {
-			phrase = phrase.trim();
+			phrase = phrase.trim().toLowerCase();
 			phrase = LuceneSearchService.escapeSearchTerm(phrase);
 			// issue #170
 			phrase = LuceneSearchService.normalizeSearchTerm(phrase);
 
-			String sQuery = "(type:\"profile\") AND (" + phrase + "*)";
+			String sQuery = "(type:profile) AND ((txtname:" + phrase
+					+ "*) OR (txtusername:" + phrase + "*) OR (txtemail:" + phrase + "*))";
 
 			logger.finest("searchprofile: " + sQuery);
 
 			logger.fine("searchWorkitems: " + sQuery);
 			col = workflowService.getDocumentService().find(sQuery, 0, -1);
 		} catch (Exception e) {
-			logger.warning("  lucene error - " + e.getMessage());
+			logger.warning("Lucene error error: " + e.getMessage());
 		}
 
-		for (ItemCollection profile : col) {
-			searchResult.add(ProfileService.cloneWorkitem(profile));
+		if (col != null) {
+			for (ItemCollection profile : col) {
+				searchResult.add(ProfileService.cloneWorkitem(profile));
+			}
+			// sort by username..
+			Collections.sort(searchResult, new ItemCollectionComparator("txtusername", true));
 		}
-		// sort by username..
-		Collections.sort(searchResult, new ItemCollectionComparator("txtusername", true));
-
 		return searchResult;
 
 	}
@@ -197,7 +199,7 @@ public class UserInputController implements Serializable {
 			return;
 		// trim
 		aName = aName.trim();
-		
+
 		if (!aList.contains(aName)) {
 			logger.fine("userInputController add '" + aName + "' from list.");
 			aList.add(aName);
@@ -214,13 +216,14 @@ public class UserInputController implements Serializable {
 	}
 
 	/**
-	 * This method tests if a given string is a defined Access Role. 
+	 * This method tests if a given string is a defined Access Role.
+	 * 
 	 * @param aName
 	 * @return true if the name is a access role
 	 * @see DocumentService.getAccessRoles()
 	 */
 	public boolean isRole(String aName) {
-		String accessRoles=workflowService.getDocumentService().getAccessRoles();
+		String accessRoles = workflowService.getDocumentService().getAccessRoles();
 		String roleList = "org.imixs.ACCESSLEVEL.READERACCESS,org.imixs.ACCESSLEVEL.AUTHORACCESS,org.imixs.ACCESSLEVEL.EDITORACCESS,org.imixs.ACCESSLEVEL.MANAGERACCESS,"
 				+ accessRoles;
 		List<String> roles = Arrays.asList(roleList.split("\\s*,\\s*"));
@@ -230,7 +233,7 @@ public class UserInputController implements Serializable {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * This methods removes a name from the userid list
 	 */

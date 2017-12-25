@@ -27,11 +27,11 @@ import org.imixs.workflow.exceptions.PluginException;
  * <p>
  * In case the minute parent is a version (WORKITEMIDREF), than the plugin
  * copies all MinuteItems from the master and renumbers the MinuteItems
- * (sequencenumber). 
+ * (sequencenumber).
  * 
  * <p>
- * The Plugin manges the items 'minuteparent' and 'minuteitem'. These items hold a $uniqueID for the corresponding parent
- * or minute entity. 
+ * The Plugin manges the items 'minuteparent' and 'minuteitem'. These items hold
+ * a $uniqueID for the corresponding parent or minute entity.
  * 
  * @author rsoika
  * @version 2.0
@@ -60,53 +60,61 @@ public class MinutePlugin extends AbstractPlugin {
 	@Override
 	public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
 
-		// skip if it is no workitem or a 'numsequencenumber' already defined
-		if (documentContext.hasItem("numsequencenumber") || !(documentContext.getType().contains("workitem"))) {
-			logger.fine("skip computeSequenceNumber - number already exits");
-			return documentContext;
-		}
-
 		// update the attribute minuteType)
 		String minuteType = updateMinuteType(documentContext);
 
-		if (MINUTE_TYPE_ITEM.equals(minuteType) && documentContext.getItemValueInteger(SEQUENCENUMBER) <= 0) {
+		if (MINUTE_TYPE_ITEM.equals(minuteType)) {
 			// Compute a sequencenumber for new child workitems
-			computeNextSequenceNumber(documentContext);
+			if (documentContext.getItemValueInteger(SEQUENCENUMBER) <= 0
+					&& documentContext.getType().contains("workitem")) {
+				computeNextSequenceNumber(documentContext);
+			}
+			// Update the parent fields _team and _present
+			updateHeaderItems(documentContext);
 		}
 
-		// test if we need to overtake the minute workitems from the master....
-		if (MINUTE_TYPE_PARENT.equals(minuteType) && documentContext.hasItem(WorkflowKernel.UNIQUEIDSOURCE)
-				&& documentContext.getItemValueBoolean(WorkflowKernel.ISVERSION)) {
+		// Parent
+		if (MINUTE_TYPE_PARENT.equals(minuteType)) {
 
-			String masterUniqueID = documentContext.getItemValueString(WorkflowKernel.UNIQUEIDSOURCE);
-			ItemCollection master = this.getWorkflowService().getWorkItem(masterUniqueID);
-			if (master != null) {
-				// take all childs which are still active (type=workitem or childworkitem)
-				List<ItemCollection> childs = this.getWorkflowService().getWorkListByRef(master.getUniqueID());
-				List<ItemCollection> newMinuteList = new ArrayList<ItemCollection>();
-				for (ItemCollection minute : childs) {
-					String stype = minute.getType();
-					if (minute != null && MINUTE_TYPE_ITEM.equals(minute.getItemValueString(MINUTETYPE))
-							&& ("workitem".equals(stype) || "childworkitem".equals(stype))) {
-						newMinuteList.add(minute);
+			// test if we need to overtake the minute workitems from the master and reset
+			// the $created....
+			if (documentContext.hasItem(WorkflowKernel.UNIQUEIDSOURCE)
+					&& documentContext.getItemValueBoolean(WorkflowKernel.ISVERSION)) {
+
+				String masterUniqueID = documentContext.getItemValueString(WorkflowKernel.UNIQUEIDSOURCE);
+				ItemCollection master = this.getWorkflowService().getWorkItem(masterUniqueID);
+				if (master != null) {
+					// take all childs which are still active (type=workitem or childworkitem)
+					List<ItemCollection> childs = this.getWorkflowService().getWorkListByRef(master.getUniqueID());
+					List<ItemCollection> newMinuteList = new ArrayList<ItemCollection>();
+					for (ItemCollection minute : childs) {
+						String stype = minute.getType();
+						if (minute != null && MINUTE_TYPE_ITEM.equals(minute.getItemValueString(MINUTETYPE))
+								&& ("workitem".equals(stype) || "childworkitem".equals(stype))) {
+							newMinuteList.add(minute);
+						}
 					}
-				}
-				// sort new minutes by old sequence number...
-				Collections.sort(newMinuteList, new ItemCollectionComparator("numsequencenumber", true));
+					// sort new minutes by old sequence number...
+					Collections.sort(newMinuteList, new ItemCollectionComparator("numsequencenumber", true));
 
-				// renumber all minutes and set the new WORKITEMIDREF....
-				for (int i = 0; i < newMinuteList.size(); i++) {
-					ItemCollection minute = newMinuteList.get(i);
-					minute.removeItem(WorkflowKernel.UNIQUEID);
-					minute.replaceItemValue(WorkflowService.UNIQUEIDREF, documentContext.getUniqueID());
-					minute.replaceItemValue(SEQUENCENUMBER, i + 1);
-					// save it....
-					this.getWorkflowService().getDocumentService().save(minute);
+					// renumber all minutes and set the new WORKITEMIDREF....
+					for (int i = 0; i < newMinuteList.size(); i++) {
+						ItemCollection minute = newMinuteList.get(i);
+						minute.removeItem(WorkflowKernel.UNIQUEID);
+						minute.replaceItemValue(WorkflowService.UNIQUEIDREF, documentContext.getUniqueID());
+						minute.replaceItemValue(SEQUENCENUMBER, i + 1);
+						// save it....
+						this.getWorkflowService().getDocumentService().save(minute);
+					}
+					logger.fine("Copied " + newMinuteList.size() + " sucessfull");
+
 				}
-				logger.fine("Copied " + newMinuteList.size() + " sucessfull");
+
+				// now we reset the creation date
+				logger.fine("reset itemvalue $CREATED for new version...");
+				documentContext.removeItem("$created");
 
 			}
-			
 		}
 
 		return documentContext;
@@ -175,7 +183,8 @@ public class MinutePlugin extends AbstractPlugin {
 		int nummer = 1;
 		if (parent != null) {
 			// find all minute itmes and comptue the next Number...
-			List<ItemCollection> childs = this.getWorkflowService().getWorkListByRef(parent.getUniqueID());
+			List<ItemCollection> childs = this.getWorkflowService().getWorkListByRef(parent.getUniqueID(), null, 999, 0,
+					null,false);
 			for (ItemCollection minute : childs) {
 				if (minute != null && MINUTE_TYPE_ITEM.equals(minute.getItemValueString(MINUTETYPE))
 						&& minute.getItemValueInteger(SEQUENCENUMBER) > 0) {
@@ -183,6 +192,23 @@ public class MinutePlugin extends AbstractPlugin {
 				}
 			}
 			documentContext.replaceItemValue(SEQUENCENUMBER, nummer);
+		}
+
+	}
+
+	/**
+	 * This method updtes the header items _team and _present form the parent
+	 * workitem.
+	 * 
+	 */
+	private void updateHeaderItems(ItemCollection documentContext) {
+		// test if minute parent workitem exits
+		ItemCollection parent = this.getWorkflowService()
+				.getWorkItem(documentContext.getItemValueString("minuteParentRef"));
+		if (parent != null) {
+			documentContext.replaceItemValue("_team", parent.getItemValue("_team"));
+			documentContext.replaceItemValue("_present", parent.getItemValue("_present"));
+
 		}
 
 	}

@@ -193,7 +193,7 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 		if (getParentWorkitem() != null) {
 			String uniqueIdRef = getParentWorkitem().getItemValueString(WorkflowKernel.UNIQUEID);
 			//  getWorkListByRef(String aref, String type, int pageSize, int pageIndex, int sortorder) {
-			List<ItemCollection> col = workflowController.getWorkflowService().getWorkListByRef(uniqueIdRef, "workitemchild",0, -1,0);
+			List<ItemCollection> col = workflowController.getWorkflowService().getWorkListByRef(uniqueIdRef, "workitemchild",0, -1,null,false);
 			for (ItemCollection aWorkitem : col) {
 				resultList.add(cloneWorkitem(aWorkitem));
 			}

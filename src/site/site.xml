@@ -28,6 +28,9 @@
 			<item name="Security" href="concepts/security.html" collapse="true">
 				<item name="User Profiles" href="concepts/profiles.html" />
 				<item name="User DB" href="concepts/userdb.html" />
+
+				<item name="LDAP Group Interceptor" href="concepts/security_groupinterceptor_ldap.html" />
+				<item name="Team Group Interceptor" href="concepts/security_groupinterceptor_team.html" />
 			</item>	
 			<item name="Modelling" href="concepts/modelling.html" />
 			<item name="Mail" href="concepts/mail.html" />
@@ -38,6 +41,7 @@
 		
 		<menu name="Services and EJBs">
 			<item name="ProfileService" href="services/profileservice.html" />
+			<item name="TextUsernameAdapter" href="services/textusernameadapter.html" />
 			<item name="TeamInterceptor" href="services/teaminterceptor.html" />
 			<item name="ImageInterceptor" href="services/imageinterceptor.html" />
 		</menu>
@@ -56,14 +60,15 @@
 		
 		<menu name="Plugins">
 			<item name="ApplicationPlugin" href="plugins/applicationplugin.html" />
+			<item name="ApproverPlugin" href="plugins/approverplugin.html" />
+			<item name="ArchivePlugin" href="plugins/archiveplugin.html" />
 			<item name="CommentPlugin" href="plugins/commentplugin.html" />
+			<item name="DeputyPlugin" href="plugins/deputyplugin.html" />
 			<item name="DMSPlugin" href="plugins/dmsplugin.html" />
 			<item name="DMSSplitPlugin" href="plugins/dmssplitplugin.html" />
-			<item name="DeputyPlugin" href="plugins/deputyplugin.html" />
+			<item name="ProfilePlugin" href="plugins/profileplugin.html" />
 			<item name="ResultPlugin" href="plugins/resultplugin.html" />
-			<item name="ArchivePlugin" href="plugins/archiveplugin.html" />
 			<item name="SpacePlugin" href="plugins/spaceplugin.html" />
-			<item name="ApproverPlugin" href="plugins/approverplugin.html" />
 		</menu>
 
 		<menu name="User Interface">

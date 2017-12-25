@@ -28,8 +28,6 @@
 package org.imixs.marty.plugins;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Vector;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,7 +39,6 @@ import javax.naming.NamingException;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowContext;
-import org.imixs.workflow.engine.TextItemValueAdapter;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
@@ -49,29 +46,32 @@ import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * This plug-in supports additional business logic for profile entities. This
- * Plugins is used by the System Workflow when a userProfile is processed
- * (typically when a User logged in).
+ * Plugins is used by the System Workflow only.
+ * <p>
+ * The plugin verifies the userId and email address for input patterns and
+ * validates for duplicates. The input pattern for the userID can be defined by
+ * the imixs property
  * 
- * In additon the Plugin provides a mechanism to translate elements of an
- * activityEntity to replace placeholders for a user id with the corresponding
- * user name. There for the plugin uses the profileService EJB
+ * <ul>
+ * <li>security.userid.input.pattern</li>
+ * </ul>
  * 
- * Example:
+ * The default value is {@code "^[A-Za-z0-9.@\\-\\w]+" }
+ * <p>
+ * In addition the input mode can be set to LOWERCASE or UPPERCASE. This is
+ * controlled by the imixs property
  * 
- * <code>
- *    Workitem updated by: <username>namcurrenteditor</username>.
- * </code>
- * 
- * This will replace the namcurrenteditor with the corrsponding profile full
- * username
+ * <ul>
+ * <li>security.userid.input.mode</li>
+ * </ul>
+ * The default value is LOWERCASE.
  * 
  * @author rsoika
- * 
  */
 public class ProfilePlugin extends AbstractPlugin {
 
 	private ProfileService profileService = null;
-
+	private String userID = null;
 	private static Logger logger = Logger.getLogger(ProfilePlugin.class.getName());
 
 	// error codes
@@ -112,19 +112,28 @@ public class ProfilePlugin extends AbstractPlugin {
 	 **/
 	@Override
 	public ItemCollection run(ItemCollection workItem, ItemCollection documentActivity) throws PluginException {
-
 		// validate profile..
 		if ("profile".equals(workItem.getItemValueString("type"))) {
 			validateUserProfile(workItem);
-			// discared cache for this name
-			profileService.discardCache(workItem.getItemValueString("txtName"));
+			// store userID local to discard the cache when close()...
+			userID = workItem.getItemValueString("txtName");
 		}
-
-		// translate dynamic activity values - (this is independent form the type of the
-		// workitem)
-		updateActivityEntity(workItem, documentActivity);
-
 		return workItem;
+	}
+
+	/**
+	 * This method discards the cache for the current userID (ProfileService). This
+	 * is called only in case a profile was processed and no rollback is called.
+	 */
+	@Override
+	public void close(boolean rollbackTransaction) throws PluginException {
+
+		// if no rollback we can discard the cache
+		if (!rollbackTransaction && userID != null && !userID.isEmpty()) {
+			// discared cache for this name
+			profileService.discardCache(userID);
+		}
+		super.close(rollbackTransaction);
 	}
 
 	/**
@@ -236,113 +245,6 @@ public class ProfilePlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * this method parses a string for xml tag <username>. Those tags will be
-	 * replaced with the corresponding userProfile property 'txtUserName' <code>
-	 *   
-	 *   hello <username>namCreator</username>
-	 *   
-	 *   
-	 * </code>
-	 * 
-	 * 
-	 * If the itemValue is a multiValue object the single values can be spearated by
-	 * a separator
-	 * 
-	 * <code>
-	 *  
-	 *  Team List: <username separator="<br />">txtTeam</username>
-	 * 
-	 * </code>
-	 * 
-	 * 
-	 * 
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public String replaceUsernames(String aString, ItemCollection documentContext) {
-		int iTagStartPos;
-		int iTagEndPos;
-
-		int iContentStartPos;
-		int iContentEndPos;
-
-		int iSeparatorStartPos;
-		int iSeparatorEndPos;
-
-		String sSeparator = " ";
-		String sItemValue;
-
-		if (aString == null)
-			return "";
-
-		// test if a <value> tag exists...
-		while ((iTagStartPos = aString.toLowerCase().indexOf("<username")) != -1) {
-
-			iTagEndPos = aString.toLowerCase().indexOf("</username>", iTagStartPos);
-
-			// if no end tag found return string unchanged...
-			if (iTagEndPos == -1)
-				return aString;
-
-			// reset pos vars
-			iContentStartPos = 0;
-			iContentEndPos = 0;
-
-			iSeparatorStartPos = 0;
-			iSeparatorEndPos = 0;
-			sSeparator = " ";
-			sItemValue = "";
-
-			// so we now search the beginning of the tag content
-			iContentEndPos = iTagEndPos;
-			// start pos is the last > before the iContentEndPos
-			String sTestString = aString.substring(0, iContentEndPos);
-			iContentStartPos = sTestString.lastIndexOf('>') + 1;
-
-			// if no end tag found return string unchanged...
-			if (iContentStartPos >= iContentEndPos)
-				return aString;
-
-			iTagEndPos = iTagEndPos + "</username>".length();
-
-			// now we have the start and end position of a tag and also the
-			// start and end pos of the value
-
-			// next we check if the start tag contains a 'separator'
-			// attribute
-			iSeparatorStartPos = aString.toLowerCase().indexOf("separator=", iTagStartPos);
-			// extract format string if available
-			if (iSeparatorStartPos > -1 && iSeparatorStartPos < iContentStartPos) {
-				iSeparatorStartPos = aString.indexOf("\"", iSeparatorStartPos) + 1;
-				iSeparatorEndPos = aString.indexOf("\"", iSeparatorStartPos + 1);
-				sSeparator = aString.substring(iSeparatorStartPos, iSeparatorEndPos);
-			}
-
-			// extract Item Value
-			sItemValue = aString.substring(iContentStartPos, iContentEndPos);
-
-			List<String> tempList = documentContext.getItemValue(sItemValue);
-			// clone List
-			List<String> vUserIDs = new Vector(tempList);
-			// get usernames ....
-			for (int i = 0; i < vUserIDs.size(); i++) {
-				ItemCollection profile = profileService.findProfileById(vUserIDs.get(i));
-				if (profile != null) {
-					vUserIDs.set(i, profile.getItemValueString("txtUserName"));
-				}
-			}
-
-			// format field value
-			String sResult = TextItemValueAdapter.formatItemValues(vUserIDs, sSeparator, "");
-
-			// now replace the tag with the result string
-			aString = aString.substring(0, iTagStartPos) + sResult + aString.substring(iTagEndPos);
-		}
-
-		return aString;
-
-	}
-
-	/**
 	 * Verifies if the attributes 'txtName' and 'txtUsername' of a user profile are
 	 * valid and not yet taken by another profile. The attribute 'txtUsername' is
 	 * optional and will be only verified if provided.
@@ -391,14 +293,15 @@ public class ProfilePlugin extends AbstractPlugin {
 	/**
 	 * Verifies if the txtEmail is still available.
 	 * 
-	 * The validation can be deactivated with the imixs.property 'security.email.unique=false'
+	 * The validation can be deactivated with the imixs.property
+	 * 'security.email.unique=false'
 	 * 
 	 * @param aprofile
 	 * @return - true if address isn't still taken by another profile or no email
 	 *         address is provided.
 	 */
 	boolean isEmailTaken(ItemCollection profile) {
-		
+
 		// is the unique email mode activated?
 		String sUniqueEmailMode = this.getWorkflowService().getPropertyService().getProperties()
 				.getProperty("security.email.unique", "true");
@@ -432,27 +335,6 @@ public class ProfilePlugin extends AbstractPlugin {
 		}
 
 		return (col.size() > 0);
-
-	}
-
-	/**
-	 * replace the text phrases in the activity
-	 * 
-	 * @param workItem
-	 * @param documentActivity
-	 */
-	void updateActivityEntity(ItemCollection workItem, ItemCollection documentActivity) {
-		String sText;
-
-		String[] fields = { "rtfresultlog", "txtworkflowabstract", "txtworkflowsummary", "txtMailSubject",
-				"rtfMailBody" };
-
-		for (String aField : fields) {
-			sText = documentActivity.getItemValueString(aField);
-			sText = replaceUsernames(sText, workItem);
-			documentActivity.replaceItemValue(aField, sText);
-
-		}
 
 	}
 

@@ -15,8 +15,7 @@
 
 <cc:implementation>
 
-	<div class="marty-userlistinput">
-	
+	<div class="marty-userlistinput #{!cc.attrs.editmode?'marty-userlistinput-read':''}">
 		<!-- Input Field -->
 		<h:panelGroup id="input_box" layout="block"
 			class="marty-userlistinput-inputbox" rendered="#{cc.attrs.editmode}">
@@ -74,7 +73,7 @@
 				</h:column>
 				<!-- Delete member -->
 				<h:column>
-					<h:commandLink value="" id="remove_owner_link_id" 
+					<h:commandLink value="" id="remove_owner_link_id" rendered="#{cc.attrs.editmode}"
 						styleClass="imixs-no-print" style="margin-left:5px;"
 						actionListener="#{userInputController.remove(record.item['txtName'],cc.attrs.value)}">
 						<f:ajax render=":#{component.parent.parent.parent.clientId} :#{cc.attrs.render}" />
