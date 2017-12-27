@@ -32,8 +32,10 @@ import java.io.Serializable;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -45,7 +47,6 @@ import javax.inject.Named;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.imixs.marty.ejb.SetupService;
-import org.imixs.marty.plugins.ApplicationPlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Model;
 import org.imixs.workflow.bpmn.BPMNModel;
@@ -93,6 +94,9 @@ public class ModelController implements Serializable {
 
 	@EJB
 	protected PropertyService propertyService;
+	
+	
+	private Map<String, ItemCollection> modelEntityCache=new HashMap<String, ItemCollection>();
 
 	private static Logger logger = Logger.getLogger(ModelController.class.getName());
 
@@ -255,7 +259,14 @@ public class ModelController implements Serializable {
 	}
 
 	public ItemCollection getModelEntity(String version) {
-		return modelService.loadModelEntity(version);
+		
+		ItemCollection result=modelEntityCache.get(version);
+		if (result==null) {
+			 result=modelService.loadModelEntity(version);
+			 modelEntityCache.put(version, result);
+		}
+		
+		return result;
 	}
 
 	/**
