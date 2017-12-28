@@ -29,8 +29,12 @@ package org.imixs.marty.workflow;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
@@ -42,6 +46,7 @@ import javax.inject.Named;
 
 import org.imixs.marty.plugins.DMSPlugin;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.faces.fileupload.FileUploadController;
 import org.imixs.workflow.faces.util.LoginController;
@@ -68,6 +73,8 @@ import org.imixs.workflow.faces.util.LoginController;
 @SessionScoped
 public class DmsController implements Serializable {
 
+	public final static String DMS_ITEM = "dms";
+	
 	@Inject
 	protected LoginController loginController = null;
 
@@ -81,6 +88,8 @@ public class DmsController implements Serializable {
 
 	private List<ItemCollection> dmsList = null;
 	private String link = null;
+
+	private static Logger logger = Logger.getLogger(DMSPlugin.class.getName());
 
 	public String getLink() {
 		return link;
@@ -123,7 +132,7 @@ public class DmsController implements Serializable {
 				|| WorkflowEvent.WORKITEM_BEFORE_SAVE == eventType) {
 			// reconvert the List<ItemCollection> into a List<Map>
 			if (dmsList!=null) {
-				DMSPlugin.putDmsList(workflowEvent.getWorkitem(), dmsList);
+				putDmsList(workflowEvent.getWorkitem(), dmsList);
 			}
 			
 			// add files
@@ -137,11 +146,37 @@ public class DmsController implements Serializable {
 
 			fileUploadController.reset();
 			// convert dms property into a list of ItemCollection
-			dmsList = DMSPlugin.getDmsList(workflowEvent.getWorkitem());
+			dmsList = getDmsListByWorkitem(workflowEvent.getWorkitem());
 		}
 
 	}
 
+	/**
+	 * This method converts a list of ItemCollections for DMS elements into Map
+	 * objects and updates the workitem property 'dms'.
+	 * 
+	 * The method is used by the DmsController to update dms data provided by the
+	 * user.
+	 * 
+	 * @param workitem
+	 *            - the workitem to be updated
+	 * @param dmsList
+	 *            - the dms metha data to be put into the workitem
+	 * @version 1.0
+	 */
+	@SuppressWarnings("rawtypes")
+	public static void putDmsList(ItemCollection workitem, List<ItemCollection> dmsList) {
+		// convert the List<ItemCollection> into a List<Map>
+		List<Map> vDMSnew = new ArrayList<Map>();
+		if (dmsList != null) {
+			for (ItemCollection dmsEntry : dmsList) {
+				vDMSnew.add(dmsEntry.getAllItems());
+			}
+		}
+		// update the workitem
+		workitem.replaceItemValue(DMS_ITEM, vDMSnew);
+	}
+	
 	/**
 	 * this method returns a list of all attached files and the file meta data
 	 * provided in a list of ItemCollection.
@@ -154,18 +189,45 @@ public class DmsController implements Serializable {
 		return dmsList;
 
 	}
-
 	
 	/**
-	 * this method returns a list of all attached files and the file meta data
-	 * provided in a list of ItemCollection for a given workitem.
+	 * This method returns a list of ItemCollections for all DMS elements attached
+	 * to the current workitem. The DMS meta data is read from the property 'dms'.
 	 * 
-	 * @return - list of file meta data objects
+	 * The dms property is updated in the run() method of this plug-in.
+	 * 
+	 * The method is used by the DmsController to display the dms meta data.
+	 * 
+	 * @param workitem
+	 *            - source of meta data, sorted by $creation
+	 * @version 1.0
 	 */
-	public List<ItemCollection> getDmsListByWorkitem(ItemCollection aWorkitem) {
-		return DMSPlugin.getDmsList(aWorkitem);
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static List<ItemCollection> getDmsListByWorkitem(ItemCollection workitem) {
+		// build a new fileList and test if each file contained in the $files is
+		// listed
+		List<ItemCollection> dmsList = new ArrayList<ItemCollection>();
+		if (workitem == null)
+			return dmsList;
+
+		List<Map> vDMS = workitem.getItemValue(DMS_ITEM);
+		// first we add all existing dms informations
+		for (Map aMetadata : vDMS) {
+			dmsList.add(new ItemCollection(aMetadata));
+		}
+
+		// sort list by name
+		// Collections.sort(dmsList, new ItemCollectionComparator("txtname",
+		// true));
+		// sort list by $modified
+		Collections.sort(dmsList, new ItemCollectionComparator("$created", true));
+
+		return dmsList;
 	}
 
+	
+	
+	
 	
 	/**
 	 * This method removes a file form the current dms list and also from the
@@ -217,7 +279,7 @@ public class DmsController implements Serializable {
 			dmsEntry.replaceItemValue("namCreator", remoteUser);
 			dmsEntry.replaceItemValue("txtName", sLink);
 
-			dmsList = DMSPlugin.addDMSEntry(workflowController.getWorkitem(),
+			dmsList = addDMSEntry(workflowController.getWorkitem(),
 					dmsEntry);
 
 			// clear link
@@ -225,6 +287,41 @@ public class DmsController implements Serializable {
 
 		}
 
+	}
+	
+	
+	/**
+	 * This method adds a new entry into the dms property. The method returns
+	 * the updated DMS List.
+	 * 
+	 * The method is used by the DMSController to add links.
+	 * 
+	 * @param aworkitem
+	 *            - the workitem to be updated
+	 * @param dmsEntity
+	 *            - the metha data to be added into the dms item
+	 * @version 1.0
+	 */
+	public static List<ItemCollection> addDMSEntry(ItemCollection aworkitem, ItemCollection dmsEntity) {
+		List<ItemCollection> dmsList = getDmsListByWorkitem(aworkitem);
+		String sNewName = dmsEntity.getItemValueString("txtName");
+		String sNewUrl = dmsEntity.getItemValueString("url");
+
+		// test if the entry already exists - than overwrite it....
+		for (Iterator<ItemCollection> iterator = dmsList.iterator(); iterator.hasNext();) {
+			ItemCollection admsEntry = iterator.next();
+			String sName = admsEntry.getItemValueString("txtName");
+			String sURL = admsEntry.getItemValueString("url");
+			if (sURL.endsWith(sNewUrl) && sName.equals(sNewName)) {
+				// Remove the current element from the iterator and the list.
+				iterator.remove();
+				logger.fine("remove dms entry '" + sName + "'");
+			}
+		}
+		dmsList.add(dmsEntity);
+		putDmsList(aworkitem, dmsList);
+
+		return dmsList;
 	}
 
 }
