@@ -182,8 +182,8 @@ public class FormController implements Serializable {
 		}
 
 		if (editorID.indexOf('#') == -1) {
-			logger.warning("Undifinde Editor Format: '" + editorID + "'");
-			// return empty definition
+			// set form as direct path
+			formDefinition.setPath(editorID);
 			return formDefinition;
 		}
 
