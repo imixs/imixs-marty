@@ -25,7 +25,7 @@ public class DMSPlugin extends AbstractPlugin {
 	@Override
 	public ItemCollection run(ItemCollection document, ItemCollection event) throws PluginException {
 
-		logger.warning("The DMSPlugin is deprected and can be removed from this model!");
+		logger.warning("The DMSPlugin is deprecated and can be removed from this model!");
 		return document;
 
 	}
