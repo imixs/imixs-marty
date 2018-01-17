@@ -28,8 +28,6 @@
 package org.imixs.marty.workflow;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,14 +48,12 @@ import org.imixs.marty.model.ProcessController;
 import org.imixs.marty.util.ErrorHandler;
 import org.imixs.marty.util.ValidationException;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
-import org.imixs.workflow.exceptions.QueryException;
 import org.imixs.workflow.faces.util.LoginController;
 
 /**
@@ -168,7 +164,7 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 		events.fire(new WorkflowEvent(newWorkitem, WorkflowEvent.WORKITEM_CHANGED));
 		super.setWorkitem(newWorkitem);
 		versions = null;
-		//editorSections = null;
+		// editorSections = null;
 	}
 
 	/**
@@ -466,71 +462,19 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 		}
 	}
 
-
-
 	/**
 	 * returns a List with all Versions of the current Workitem
 	 * 
 	 * @return
 	 */
 	public List<ItemCollection> getVersions() {
-		if (versions == null)
-			loadVersionWorkItemList();
+		if (versions == null) {
+			// loadVersionWorkItemList();
+			versions = workitemService.findAllVersions(this.getWorkitem());
+		}
 		return versions;
 	}
 
 	
-	/**
-	 * this method loads all versions to the current workitem. THe method open versions recursive back to the first source workitem.
-	 * 
-	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
-	 */
-	private void loadVersionWorkItemList() {
-		versions = new ArrayList<ItemCollection>();
-		if (this.isNewWorkitem() || null == getWorkitem())
-			return;
-		String sourceVersion = getWorkitem().getItemValueString(WorkflowKernel.UNIQUEIDSOURCE);
-		while (!sourceVersion.isEmpty()) {
-			ItemCollection version=this.getWorkflowService().getWorkItem(sourceVersion);
-			versions.add(version);
-			sourceVersion = version.getItemValueString(WorkflowKernel.UNIQUEIDSOURCE);
-		}
-	}
-
-	
-	
-	/**
-	 * this method loads all versions to the current workitem. Idependent from the
-	 * type property! The method returns an empty list if no version exist (only the
-	 * main version)
-	 * 
-	 * @see org.imixs.WorkitemService.business.WorkitemServiceBean
-	 */
-	@SuppressWarnings("unchecked")
-	@Deprecated
-	private void loadVersionWorkItemListDeprecated() {
-		versions = new ArrayList<ItemCollection>();
-		if (this.isNewWorkitem() || null == getWorkitem())
-			return;
-		List<ItemCollection> col = null;
-		String sRefID = getWorkitem().getItemValueString("$workitemId");
-		String refQuery = "( (type:\"workitem\" OR type:\"workitemarchive\" OR type:\"workitemversion\") AND $workitemid:\""
-				+ sRefID + "\")";
-		try {
-			col = this.getWorkflowService().getDocumentService().find(refQuery, 999, 0);
-			// sort by $modified
-			Collections.sort(col, new ItemCollectionComparator("$modified", true));
-
-			// Only return version list if more than one version was found!
-			if (col.size() > 1) {
-				for (ItemCollection aworkitem : col) {
-					versions.add(aworkitem);
-				}
-			}
-
-		} catch (QueryException e) {
-			logger.warning("loadVersionWorkItemList - invalid query: " + e.getMessage());
-		}
-	}
 
 }

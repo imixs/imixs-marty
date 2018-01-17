@@ -27,6 +27,9 @@
 
 package org.imixs.marty.ejb;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.annotation.security.DeclareRoles;
@@ -36,12 +39,15 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.ModelService;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * The WorkitemService provides methods to create, process, update and remove a
@@ -151,4 +157,56 @@ public class WorkitemService {
 		return workflowService.processWorkItem(aworkitem);
 	}
 
+	
+	
+	
+	/**
+	 * This method finds all versions of a given workitem.
+	 * 
+	 */
+	public List<ItemCollection> findAllVersions(ItemCollection workitem) {
+		List<ItemCollection> versions = new ArrayList<ItemCollection>();
+		if (null == workitem)
+			return versions;
+		List<ItemCollection> col = null;
+		String sRefID = workitem.getItemValueString("$workitemId");
+		String refQuery = "( (type:\"workitem\" OR type:\"workitemarchive\" OR type:\"workitemversion\") AND $workitemid:\""
+				+ sRefID + "\")";
+		try {
+			col = workflowService.getDocumentService().find(refQuery, 999, 0);
+			// sort by $modified
+			Collections.sort(col, new ItemCollectionComparator("$modified", true));
+			// Only return version list if more than one version was found!
+			if (col.size() > 1) {
+				for (ItemCollection aworkitem : col) {
+					versions.add(aworkitem);
+				}
+			}
+	
+		} catch (QueryException e) {
+			logger.warning("findAllVersions - invalid query: " + e.getMessage());
+		}
+		return versions;
+	}
+
+	/**
+	 * This method finds all ancestors versions to a given workitem. The method open
+	 * versions recursive back to the first source workitem. The method returns an
+	 * empty list if no version exist (only the main version)
+	 * 
+	 */
+	public List<ItemCollection> findAncestorsVersions(ItemCollection workitem) {
+		List<ItemCollection> versions = new ArrayList<ItemCollection>();
+		if (null != workitem) {
+			String sourceVersion = workitem.getItemValueString(WorkflowKernel.UNIQUEIDSOURCE);
+			while (!sourceVersion.isEmpty()) {
+				ItemCollection version = workflowService.getWorkItem(sourceVersion);
+				versions.add(version);
+				sourceVersion = version.getItemValueString(WorkflowKernel.UNIQUEIDSOURCE);
+			}
+		}
+		return versions;
+	}
+	
+	
 }
