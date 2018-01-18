@@ -69,6 +69,7 @@
 			<item name="ProfilePlugin" href="plugins/profileplugin.html" />
 			<item name="ResultPlugin" href="plugins/resultplugin.html" />
 			<item name="SpacePlugin" href="plugins/spaceplugin.html" />
+			<item name="MinutePlugin" href="plugins/minuteplugin.html" />
 		</menu>
 
 		<menu name="User Interface">

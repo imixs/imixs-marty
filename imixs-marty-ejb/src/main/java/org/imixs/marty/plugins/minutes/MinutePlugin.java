@@ -25,13 +25,17 @@ import org.imixs.workflow.exceptions.PluginException;
  * When a new MinuteItem is created or has no sequencenumber, the plugin
  * computes the next sequencenumber automatically.
  * <p>
- * In case the minute parent is a version (WORKITEMIDREF), than the plugin
+ * In case the minute parent is a version (UNIQUEIDSOURCE), than the plugin
  * copies all MinuteItems from the master and renumbers the MinuteItems
  * (sequencenumber).
  * 
  * <p>
  * The Plugin manges the items 'minuteparent' and 'minuteitem'. These items hold
  * a $uniqueID for the corresponding parent or minute entity.
+ * 
+ * <p>
+ * If the Event sets the item 'resetminuteversionhistory' to the boolean value 'true', the plugin
+ * will reset the version history. 
  * 
  * @author rsoika
  * @version 2.0
@@ -44,6 +48,9 @@ public class MinutePlugin extends AbstractPlugin {
 	public final static String MINUTE_TYPE_ITEM = "minuteitem";
 	public final static String SEQUENCENUMBER = "numsequencenumber";
 	public final static String MINUTETYPE = "minutetype";
+	
+	public final static String RESET_MINUTE_VERSION_HISTORY = "resetminuteversionhistory";
+	
 
 	/**
 	 * The method verifies if a sequencenumber is set. If not a new sequencenumber
@@ -114,6 +121,14 @@ public class MinutePlugin extends AbstractPlugin {
 				logger.fine("reset itemvalue $CREATED for new version...");
 				documentContext.removeItem("$created");
 
+			
+				ItemCollection evalResult=this.getWorkflowService().evalWorkflowResult(documentActivity, documentContext);
+				if (evalResult!=null && evalResult.getItemValueBoolean(RESET_MINUTE_VERSION_HISTORY)) {
+					logger.fine("reset version history...."); 
+					documentContext.removeItem("$WorkItemID");
+					documentContext.removeItem(RESET_MINUTE_VERSION_HISTORY);
+				}
+				
 			}
 		}
 

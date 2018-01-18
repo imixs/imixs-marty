@@ -45,3 +45,8 @@ In case a MinuteItem is processed, the _MinutePlugin_ automatically refreshes th
 The values are copied from the parent workitem.
 
 
+# Reset Version History
+In some cases it is useful to delete the version history of a minute. This is the case when working with templates. A minute created from a template is not necessarily a version of the template. In such a case the common version identifier '_$workitemID_' can be deleted by setting the event item 'resetminuteversionhistory' to the boolean 'true'.
+
+
+	<item name="resetminuteversionhistory" type="boolean">true</item> 
