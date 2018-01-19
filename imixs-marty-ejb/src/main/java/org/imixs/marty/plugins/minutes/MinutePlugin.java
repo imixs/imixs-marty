@@ -125,7 +125,7 @@ public class MinutePlugin extends AbstractPlugin {
 				ItemCollection evalResult=this.getWorkflowService().evalWorkflowResult(documentActivity, documentContext);
 				if (evalResult!=null && evalResult.getItemValueBoolean(RESET_MINUTE_VERSION_HISTORY)) {
 					logger.fine("reset version history...."); 
-					documentContext.removeItem("$WorkItemID");
+					documentContext.replaceItemValue("$WorkItemID", WorkflowKernel.generateUniqueID());
 					documentContext.removeItem(RESET_MINUTE_VERSION_HISTORY);
 				}
 				
