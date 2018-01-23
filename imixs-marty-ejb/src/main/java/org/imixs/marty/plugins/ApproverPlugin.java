@@ -66,6 +66,10 @@ public class ApproverPlugin extends AbstractPlugin {
 			List<String> groups = evalItemCollection.getItemValue(APPROVEDBY);
 			for (String aGroup : groups) {
 				List<String> nameList = workitem.getItemValue("nam" + aGroup);
+
+				// remove empty entries...
+				nameList.removeIf(item -> item == null || "".equals(item));
+
 				// create a new instance of a Vector to avoid setting the
 				// same vector as reference!
 				List<String> newAppoverList = new ArrayList<String>();
@@ -85,6 +89,9 @@ public class ApproverPlugin extends AbstractPlugin {
 							// add the new member to the existing approver list
 							logger.fine("adding new approver to list 'nam" + aGroup + "Approvers'");
 							listApprovers.add(approver);
+							// remove empty entries...
+							listApprovers.removeIf(item -> item == null || "".equals(item));
+
 							update = true;
 						}
 					}
@@ -105,6 +112,11 @@ public class ApproverPlugin extends AbstractPlugin {
 				if (listApprovers.contains(currentAppover) && !listApprovedBy.contains(currentAppover)) {
 					listApprovers.remove(currentAppover);
 					listApprovedBy.add(currentAppover);
+
+					// remove empty entries...
+					listApprovers.removeIf(item -> item == null || "".equals(item));
+					listApprovedBy.removeIf(item -> item == null || "".equals(item));
+
 					workitem.replaceItemValue("nam" + aGroup + "Approvers", listApprovers);
 					workitem.replaceItemValue("nam" + aGroup + "ApprovedBy", listApprovedBy);
 					logger.fine("new list of approvedby: " + aGroup + "=" + listApprovedBy);
