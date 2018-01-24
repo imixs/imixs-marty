@@ -70,7 +70,8 @@ public class TeamCache {
 		logger.fine("resetCache - initalizing settings....");
 		int iCacheSize = DEFAULT_CACHE_SIZE;
 		try {
-			iCacheSize = Integer.valueOf(configurationProperties.getProperty("team.cache-size", "100"));
+			iCacheSize = Integer
+					.valueOf(configurationProperties.getProperty("team.cache-size", DEFAULT_CACHE_SIZE + ""));
 		} catch (NumberFormatException nfe) {
 			iCacheSize = DEFAULT_CACHE_SIZE;
 		}
@@ -83,7 +84,7 @@ public class TeamCache {
 		// read expires time...
 		try {
 			expiresTime = DEFAULT_EXPIRES_TIME;
-			String sExpires = configurationProperties.getProperty("team.cache-expires", "600000");
+			String sExpires = configurationProperties.getProperty("team.cache-expires", DEFAULT_EXPIRES_TIME + "");
 			expiresTime = Long.valueOf(sExpires);
 		} catch (NumberFormatException nfe) {
 			expiresTime = DEFAULT_EXPIRES_TIME;

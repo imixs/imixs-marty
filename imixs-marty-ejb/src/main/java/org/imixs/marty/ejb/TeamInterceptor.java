@@ -8,6 +8,7 @@ import javax.ejb.SessionContext;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.InvocationContext;
 
+import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 
 /**
@@ -58,6 +59,9 @@ public class TeamInterceptor {
 	@Resource
 	SessionContext ejbCtx;
 
+	@EJB
+	TeamCache teamCache;
+
 	private static Logger logger = Logger.getLogger(TeamInterceptor.class.getName());
 
 	/**
@@ -90,6 +94,19 @@ public class TeamInterceptor {
 				|| sUserID.isEmpty()) {
 			return ctx.proceed();
 		}
+
+		// if a space or process entity is saved, then we need to reset the teamCache!
+		if ("save".equals(sMethod)) {
+			// get the itemcollection and lets see if we have a space or process entity....
+			ItemCollection document = (ItemCollection) ctx.getParameters()[0];
+			if (document != null && ("space".equals(document.getType()) || "process".equals(document.getType()))) {
+				Object result = ctx.proceed();
+				logger.fine("reset teamlookup cache....");
+				teamCache.resetCache();
+				return result;
+			}
+		}
+
 		// if we have not yet build a USER_GROUP_LIST lets start...
 		if (!ctx.getContextData().containsKey(DocumentService.USER_GROUP_LIST)) {
 			String[] sGroups = lookupService.findOrgunits(sUserID);
