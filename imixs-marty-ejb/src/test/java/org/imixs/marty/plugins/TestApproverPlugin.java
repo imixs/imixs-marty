@@ -27,16 +27,14 @@ public class TestApproverPlugin {
 	ItemCollection documentContext;
 	Map<String, ItemCollection> database = new HashMap<String, ItemCollection>();
 
-	
-	
 	WorkflowMockEnvironment workflowMockEnvironment;
 
 	@Before
 	public void setup() throws PluginException, ModelException {
-		
-		workflowMockEnvironment=new WorkflowMockEnvironment();
+
+		workflowMockEnvironment = new WorkflowMockEnvironment();
 		workflowMockEnvironment.setModelPath("/bpmn/TestApproverPlugin.bpmn");
-		
+
 		workflowMockEnvironment.setup();
 
 		approverPlugin = new ApproverPlugin();
@@ -47,13 +45,12 @@ public class TestApproverPlugin {
 			e.printStackTrace();
 		}
 
-		documentContext=new ItemCollection();
+		documentContext = new ItemCollection();
 	}
-	
 
 	/**
 	 * This simple test verifies if a approver list is added correctly into the
-	 * workitem
+	 * workitem. The current user IS NOT A MEMBER of the approvers.
 	 * 
 	 * @throws PluginException
 	 * @throws ModelException
@@ -84,7 +81,9 @@ public class TestApproverPlugin {
 
 	/**
 	 * This simple test verifies if a approver list is added correctly into the
-	 * workitem if the current user is equals one of the approvers!
+	 * workitem. The current user IS A MEMBER of the approvers.
+	 * 
+	 * A approval for the current user should not be performed.
 	 * 
 	 * @throws PluginException
 	 * @throws ModelException
@@ -106,15 +105,15 @@ public class TestApproverPlugin {
 		documentContext = approverPlugin.run(documentContext, documentActivity);
 		Assert.assertNotNull(documentContext);
 
-		Assert.assertEquals(2, documentContext.getItemValue("namProcessManagerApprovers").size());
-		Assert.assertEquals(1, documentContext.getItemValue("namProcessManagerApprovedBy").size());
+		Assert.assertEquals(3, documentContext.getItemValue("namProcessManagerApprovers").size());
+		Assert.assertEquals(0, documentContext.getItemValue("namProcessManagerApprovedBy").size());
 
 	}
 
 	/**
-	 * Complex test verifies if a approver list is updated in a second run, a
-	 * new approver (which may be added by the deputy plug-in) is added
-	 * correctly into the existing list
+	 * Complex test verifies if a approver list is updated in a second run, a new
+	 * approver (which may be added by the deputy plug-in) is added correctly into
+	 * the existing list
 	 * 
 	 * @throws PluginException
 	 * @throws ModelException
@@ -124,7 +123,7 @@ public class TestApproverPlugin {
 	public void testUpdateApproverListNewApprover() throws PluginException, ModelException {
 
 		documentActivity = workflowMockEnvironment.getModel().getEvent(100, 10);
-		
+
 		List<String> nameList = new ArrayList<String>();
 		nameList.add("anna");
 		nameList.add("manfred");
@@ -136,8 +135,8 @@ public class TestApproverPlugin {
 		documentContext = approverPlugin.run(documentContext, documentActivity);
 		Assert.assertNotNull(documentContext);
 
-		Assert.assertEquals(2, documentContext.getItemValue("namProcessManagerApprovers").size());
-		Assert.assertEquals(1, documentContext.getItemValue("namProcessManagerApprovedBy").size());
+		Assert.assertEquals(3, documentContext.getItemValue("namProcessManagerApprovers").size());
+		Assert.assertEquals(0, documentContext.getItemValue("namProcessManagerApprovedBy").size());
 
 		// second run - change soruce list
 
@@ -153,16 +152,16 @@ public class TestApproverPlugin {
 		documentContext = approverPlugin.run(documentContext, documentActivity);
 		Assert.assertNotNull(documentContext);
 
+		Assert.assertEquals(4, documentContext.getItemValue("namProcessManager").size());
 		Assert.assertEquals(3, documentContext.getItemValue("namProcessManagerApprovers").size());
 		Assert.assertEquals(1, documentContext.getItemValue("namProcessManagerApprovedBy").size());
 
 	}
 
 	/**
-	 * Complex test verifies if a approver list is updated in a second run, if a
-	 * new approver (which may be added by the deputy plug-in) is added
-	 * correctly into the existing list (in this case a user which already
-	 * approved)
+	 * Complex test verifies if a approver list is updated in a second run, if a new
+	 * approver (which may be added by the deputy plug-in) is added correctly into
+	 * the existing list (in this case a user which already approved)
 	 * 
 	 * @throws PluginException
 	 * @throws ModelException
@@ -172,7 +171,7 @@ public class TestApproverPlugin {
 	public void testUpdateApproverListExistingApprover() throws PluginException, ModelException {
 
 		documentActivity = workflowMockEnvironment.getModel().getEvent(100, 10);
-		
+
 		List<String> nameList = new ArrayList<String>();
 		nameList.add("anna");
 		nameList.add("manfred");
@@ -184,8 +183,8 @@ public class TestApproverPlugin {
 		documentContext = approverPlugin.run(documentContext, documentActivity);
 		Assert.assertNotNull(documentContext);
 
-		Assert.assertEquals(2, documentContext.getItemValue("namProcessManagerApprovers").size());
-		Assert.assertEquals(1, documentContext.getItemValue("namProcessManagerApprovedBy").size());
+		Assert.assertEquals(3, documentContext.getItemValue("namProcessManagerApprovers").size());
+		Assert.assertEquals(0, documentContext.getItemValue("namProcessManagerApprovedBy").size());
 
 		// second run - change soruce list
 
@@ -203,6 +202,64 @@ public class TestApproverPlugin {
 		// list should not be changed!
 		Assert.assertEquals(2, documentContext.getItemValue("namProcessManagerApprovers").size());
 		Assert.assertEquals(1, documentContext.getItemValue("namProcessManagerApprovedBy").size());
+
+	}
+
+	/**
+	 * Complex test verifies if a complete approval.
+	 * 
+	 * @throws PluginException
+	 * @throws ModelException
+	 * 
+	 */
+	@Test
+	public void testCompleteApproval() throws PluginException, ModelException {
+
+		documentActivity = workflowMockEnvironment.getModel().getEvent(100, 10);
+
+		List<String> nameList = new ArrayList<String>();
+		nameList.add("anna");
+		nameList.add("manfred");
+		nameList.add("eddy");
+		documentContext.replaceItemValue("namProcessManager", nameList);
+
+		// test with manfred
+		when(workflowMockEnvironment.getWorkflowService().getUserName()).thenReturn("manfred");
+		documentContext = approverPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
+
+		Assert.assertEquals(3, documentContext.getItemValue("namProcessManagerApprovers").size());
+		Assert.assertEquals(0, documentContext.getItemValue("namProcessManagerApprovedBy").size());
+
+		// second run - Anna
+		when(workflowMockEnvironment.getWorkflowService().getUserName()).thenReturn("anna");
+		documentContext = approverPlugin.run(documentContext, documentActivity);
+		Assert.assertEquals(2, documentContext.getItemValue("namProcessManagerApprovers").size());
+		Assert.assertEquals(1, documentContext.getItemValue("namProcessManagerApprovedBy").size());
+
+		// 3rd run - eddy
+		when(workflowMockEnvironment.getWorkflowService().getUserName()).thenReturn("eddy");
+		documentContext = approverPlugin.run(documentContext, documentActivity);
+		Assert.assertEquals(1, documentContext.getItemValue("namProcessManagerApprovers").size());
+		Assert.assertEquals(2, documentContext.getItemValue("namProcessManagerApprovedBy").size());
+
+		// 4th run - manfred
+		when(workflowMockEnvironment.getWorkflowService().getUserName()).thenReturn("manfred");
+		documentContext = approverPlugin.run(documentContext, documentActivity);
+		Assert.assertEquals(0, documentContext.getItemValue("namProcessManagerApprovers").size());
+		Assert.assertEquals(3, documentContext.getItemValue("namProcessManagerApprovedBy").size());
+
+		// 5th run - Anna (no effect)
+		when(workflowMockEnvironment.getWorkflowService().getUserName()).thenReturn("anna");
+		documentContext = approverPlugin.run(documentContext, documentActivity);
+		Assert.assertEquals(0, documentContext.getItemValue("namProcessManagerApprovers").size());
+		Assert.assertEquals(3, documentContext.getItemValue("namProcessManagerApprovedBy").size());
+
+		// 6th run - ronny (no effect)
+		when(workflowMockEnvironment.getWorkflowService().getUserName()).thenReturn("ronny");
+		documentContext = approverPlugin.run(documentContext, documentActivity);
+		Assert.assertEquals(0, documentContext.getItemValue("namProcessManagerApprovers").size());
+		Assert.assertEquals(3, documentContext.getItemValue("namProcessManagerApprovedBy").size());
 
 	}
 

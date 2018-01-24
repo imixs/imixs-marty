@@ -59,14 +59,16 @@ public class ApproverPlugin extends AbstractPlugin {
 
 		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity, workitem);
 
-		// 1.) test for items with name subprocess_create and create the
-		// defined suprocesses
+		// test for items with name 'approvedby'
 		if (evalItemCollection != null && evalItemCollection.hasItem(APPROVEDBY)) {
-			// extract the groups definitions...
+			
+			
+			// 1.) extract the groups definitions 
 			List<String> groups = evalItemCollection.getItemValue(APPROVEDBY);
+			
+			// 2.) iterate over all definitions 
 			for (String aGroup : groups) {
 				List<String> nameList = workitem.getItemValue("nam" + aGroup);
-
 				// remove empty entries...
 				nameList.removeIf(item -> item == null || "".equals(item));
 
@@ -78,8 +80,7 @@ public class ApproverPlugin extends AbstractPlugin {
 					logger.fine("creating new approver list: " + aGroup + "=" + newAppoverList);
 					workitem.replaceItemValue("nam" + aGroup + "Approvers", newAppoverList);
 				} else {
-					// verify if a new member of the existing approvers is
-					// available...
+					// verify if a new member of the existing approvers is available...
 					// (issue #150)
 					List<String> listApprovedBy = workitem.getItemValue("nam" + aGroup + "ApprovedBy");
 					List<String> listApprovers = workitem.getItemValue("nam" + aGroup + "Approvers");
@@ -99,29 +100,28 @@ public class ApproverPlugin extends AbstractPlugin {
 						logger.fine("updating approver list 'nam" + aGroup + "Approvers'");
 						workitem.replaceItemValue("nam" + aGroup + "Approvers", listApprovers);
 					}
+					
+					
+					// 2.) check current approver
+					String currentAppover = getWorkflowService().getUserName();
+					logger.fine("approved by:  " + currentAppover);
+					
+					if (listApprovers.contains(currentAppover) && !listApprovedBy.contains(currentAppover)) {
+						listApprovers.remove(currentAppover);
+						listApprovedBy.add(currentAppover);
+
+						// remove empty entries...
+						listApprovers.removeIf(item -> item == null || "".equals(item));
+						listApprovedBy.removeIf(item -> item == null || "".equals(item));
+
+						workitem.replaceItemValue("nam" + aGroup + "Approvers", listApprovers);
+						workitem.replaceItemValue("nam" + aGroup + "ApprovedBy", listApprovedBy);
+						logger.fine("new list of approvedby: " + aGroup + "=" + listApprovedBy);
+					}
 				}
 			}
 
-			// check current approver
-			String currentAppover = getWorkflowService().getUserName();
-			logger.fine("approved by:  " + currentAppover);
-			for (String aGroup : groups) {
-				List<String> listApprovers = workitem.getItemValue("nam" + aGroup + "Approvers");
-				List<String> listApprovedBy = workitem.getItemValue("nam" + aGroup + "ApprovedBy");
-
-				if (listApprovers.contains(currentAppover) && !listApprovedBy.contains(currentAppover)) {
-					listApprovers.remove(currentAppover);
-					listApprovedBy.add(currentAppover);
-
-					// remove empty entries...
-					listApprovers.removeIf(item -> item == null || "".equals(item));
-					listApprovedBy.removeIf(item -> item == null || "".equals(item));
-
-					workitem.replaceItemValue("nam" + aGroup + "Approvers", listApprovers);
-					workitem.replaceItemValue("nam" + aGroup + "ApprovedBy", listApprovedBy);
-					logger.fine("new list of approvedby: " + aGroup + "=" + listApprovedBy);
-				}
-			}
+		
 		}
 
 		return workitem;
