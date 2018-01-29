@@ -69,15 +69,7 @@ How to create a custom build from Imixs Office Workflow
 
  * 5.) Click next to setup your project, choose a groupid and artefact id
 
-[../images/maven002.png]
-
-
- * 6.) Choose the jdbc database, the realm and worklfow version (don't change if you like to work with the defaults)
-
- 
- NOTE: if you see no properties restart your Eclipse IDE!
-
- * 7.) click finish to create the project
+ * 6.) click finish to create the project
 
 *Create a custom build using maven comandline tool
 ~~~~~~~~~~~~~~
@@ -87,78 +79,7 @@ How to create a custom build from Imixs Office Workflow
  mvn archetype:generate -Dfilter=imixs-office
 +---------------+
 
- this is an example from the maven command line tool:
 
-
-+---------------+
- >/home$ mvn archetype:generate -Dfilter=imixs-office
- [INFO] Scanning for projects...
- [INFO] Searching repository for plugin with prefix: 'archetype'.
- [INFO] ------------------------------------------------------------------------
- [INFO] Building Maven Default Project
- [INFO]    task-segment: [archetype:generate] (aggregator-style)
- [INFO] ------------------------------------------------------------------------
- [INFO] Preparing archetype:generate
- [INFO] No goals needed for project - skipping
- [INFO] [archetype:generate {execution: default-cli}]
- [INFO] Generating project in Interactive mode
- [INFO] No archetype defined. Using maven-archetype-quickstart (org.apache.maven.archetypes:maven-archetype-quickstart:1.0) 
- Choose archetype:
- 1: local -> com.imixs.workflow:imixs-office-archetype (imixs-office-archetype)
- Choose a number or apply filter (format: [groupId:]artifactId, case sensitive contains): : 1
- Define value for property 'groupId': : mytest.com 
- Define value for property 'artifactId': : mycustom-office
- Define value for property 'version': 1.0-SNAPSHOT: 
- Define value for property 'package': mytest.com: 
- [INFO] Using property: contextRoot = office
- [INFO] Using property: jtaDataSource = jdbc/imixs_office
- [INFO] Using property: realmName = imixsrealm
- [INFO] Using property: versionNumber-marty = 1.1.1-RC-3
- [INFO] Using property: versionNumber-office = 1.1.1-RC-2
- [INFO] Using property: versionNumber-workflow = 3.0.2 
- Confirm properties configuration: 
- groupId: mytest.com 
- artifactId: mycustom-office
- version: 1.0-SNAPSHOT
- package: mytest.com
- contextRoot: office
- jtaDataSource: jdbc/imixs_office
- realmName: imixsrealm
- versionNumber-marty: 1.1.1-RC-3
- versionNumber-office: 1.1.1-RC-2
- versionNumber-workflow: 3.0.2
- Y: 
- [INFO] ----------------------------------------------------------------------------
- [INFO] Using following parameters for creating project from Archetype: imixs-office-archetype:0.0.2
- [INFO] ----------------------------------------------------------------------------
- [INFO] Parameter: groupId, Value: mytest.com
- [INFO] Parameter: artifactId, Value: mycustom-office
- [INFO] Parameter: version, Value: 1.0-SNAPSHOT
- [INFO] Parameter: package, Value: mytest.com
- [INFO] Parameter: packageInPathFormat, Value: mytest/com
- [INFO] Parameter: jtaDataSource, Value: jdbc/imixs_office
- [INFO] Parameter: groupId, Value: mytest.com
- [INFO] Parameter: version, Value: 1.0-SNAPSHOT
- [INFO] Parameter: versionNumber-marty, Value: 1.1.1-RC-3
- [INFO] Parameter: versionNumber-workflow, Value: 3.0.2
- [INFO] Parameter: package, Value: mytest.com
- [INFO] Parameter: realmName, Value: imixsrealm
- [INFO] Parameter: artifactId, Value: mycustom-office
- [INFO] Parameter: versionNumber-office, Value: 1.1.1-RC-2
- [INFO] Parameter: contextRoot, Value: office
- [INFO] Parent element not overwritten in /home/mycustom-office/mycustom-office-ear/pom.xml
- [INFO] Parent element not overwritten in /home/mycustom-office/mycustom-office-web/pom.xml
- [INFO] Parent element not overwritten in /homemycustom-office/mycustom-office-ejb/pom.xml
- [INFO] project created from Archetype in dir: /home/mycustom-office
- [INFO] ------------------------------------------------------------------------
- [INFO] BUILD SUCCESSFUL
- [INFO] ------------------------------------------------------------------------
- [INFO] Total time: 56 seconds
- [INFO] Finished at: Sat Jul 07 14:01:35 CEST 2012
- [INFO] Final Memory: 21M/129M
- [INFO] ------------------------------------------------------------------------
- ....
- +---------------+
  
  
  
