@@ -21,81 +21,83 @@
 				<item name="Coordinates of Workitem" href="concepts/coordinatesofworkitem.html" />
 				<item name="Localization" href="concepts/localization.html" />
 				<item name="Workitem Linking" href="concepts/workitemlinking.html" />
+				<item name="Modelling" href="concepts/modelling.html" />
 			</item>
-			
-			<item name="Configuration and Setup" href="concepts/configuration.html" />
-			
+
+			<item name="Configuration" href="concepts/configuration.html" />
+
 			<item name="Security" href="concepts/security.html" collapse="true">
 				<item name="User Profiles" href="concepts/profiles.html" />
 				<item name="User DB" href="concepts/userdb.html" />
-
 				<item name="LDAP Group Interceptor" href="concepts/security_groupinterceptor_ldap.html" />
 				<item name="Team Group Interceptor" href="concepts/security_groupinterceptor_team.html" />
-			</item>	
-			<item name="Modelling" href="concepts/modelling.html" />
+			</item>
+
 			<item name="Mail" href="concepts/mail.html" />
 			<item name="DMS" href="concepts/dms.html" />
 			<item name="QR-Code" href="concepts/qr-code.html" />
 		</menu>
-		
-		
-		<menu name="Services and EJBs">
-			<item name="ProfileService" href="services/profileservice.html" />
-			<item name="TextUsernameAdapter" href="services/textusernameadapter.html" />
-			<item name="TeamInterceptor" href="services/teaminterceptor.html" />
-			<item name="ImageInterceptor" href="services/imageinterceptor.html" />
-		</menu>
-		
-		<menu name="Controller">
-			<item name="WorkflowController" href="controller/workflowcontroller.html" />
-			<item name="WorklistController" href="controller/worklistcontroller.html" />
-			<item name="Exception Handling" href="controller/exceptionhandling.html" />
-			<item name="ChildItemController" href="controller/childitemcontroller.html" />
-			<item name="ChildWorkitemController" href="controller/childworkitemcontroller.html" />
-			<item name="Worklists and Searching" href="controller/worklists.html" />
-			<item name="FormController" href="controller/formcontroller.html" />
-			<item name="DMSController" href="controller/dmscontroller.html" />
-			<item name="MinuteController" href="controller/minutecontroller.html" />
-		</menu>
-		
-		<menu name="Plugins">
-			<item name="ApplicationPlugin" href="plugins/applicationplugin.html" />
-			<item name="ApproverPlugin" href="plugins/approverplugin.html" />
-			<item name="ArchivePlugin" href="plugins/archiveplugin.html" />
-			<item name="CommentPlugin" href="plugins/commentplugin.html" />
-			<item name="DeputyPlugin" href="plugins/deputyplugin.html" />
-			<item name="DMSPlugin" href="plugins/dmsplugin.html" />
-			<item name="DMSSplitPlugin" href="plugins/dmssplitplugin.html" />
-			<item name="ProfilePlugin" href="plugins/profileplugin.html" />
-			<item name="ResultPlugin" href="plugins/resultplugin.html" />
-			<item name="SpacePlugin" href="plugins/spaceplugin.html" />
-			<item name="MinutePlugin" href="plugins/minuteplugin.html" />
+
+		<menu name="API">
+			<item name="Services" href="services/index.html" collapse="true">
+				<item name="ProfileService" href="services/profileservice.html" />
+				<item name="TextUsernameAdapter" href="services/textusernameadapter.html" />
+				<item name="TeamInterceptor" href="services/teaminterceptor.html" />
+				<item name="ImageInterceptor" href="services/imageinterceptor.html" />
+			</item>
+
+			<item name="Controller" href="controller/index.html" collapse="true">
+
+				<item name="WorkflowController" href="controller/workflowcontroller.html" />
+				<item name="WorklistController" href="controller/worklistcontroller.html" />
+				<item name="Exception Handling" href="controller/exceptionhandling.html" />
+				<item name="ChildItemController" href="controller/childitemcontroller.html" />
+				<item name="ChildWorkitemController" href="controller/childworkitemcontroller.html" />
+				<item name="Worklists and Searching" href="controller/worklists.html" />
+				<item name="FormController" href="controller/formcontroller.html" />
+				<item name="DMSController" href="controller/dmscontroller.html" />
+				<item name="MinuteController" href="controller/minutecontroller.html" />
+			</item>
+
+			<item name="Plugins" href="plugins/index.html" collapse="true">
+				<item name="ApplicationPlugin" href="plugins/applicationplugin.html" />
+				<item name="ApproverPlugin" href="plugins/approverplugin.html" />
+				<item name="ArchivePlugin" href="plugins/archiveplugin.html" />
+				<item name="CommentPlugin" href="plugins/commentplugin.html" />
+				<item name="DeputyPlugin" href="plugins/deputyplugin.html" />
+				<item name="DMSPlugin" href="plugins/dmsplugin.html" />
+				<item name="DMSSplitPlugin" href="plugins/dmssplitplugin.html" />
+				<item name="ProfilePlugin" href="plugins/profileplugin.html" />
+				<item name="ResultPlugin" href="plugins/resultplugin.html" />
+				<item name="SpacePlugin" href="plugins/spaceplugin.html" />
+				<item name="MinutePlugin" href="plugins/minuteplugin.html" />
+			</item>
+
+
+			<item name="User Interface" href="ui/index.html" collapse="true">
+				<item name="UserInput Widget" href="ui/userinput.html" />
+				<item name="Calendar Widget" href="ui/datepicker.html" />
+				<item name="Browser Cache - History Back" href="ui/browsercache.html" />
+				<item name="Form Parts" href="ui/parts.html" />
+				<item name="Reports" href="ui/reports.html" />
+				<item name="Navigation" href="ui/navigation.html" />
+			</item>
+
 		</menu>
 
-		<menu name="User Interface">
-			<item name="Overview" href="ui/overview.html" />
-			<item name="Navigation" href="ui/navigation.html" />
-			<item name="UserInput Widgets" href="ui/userinput.html" />
-			<item name="Browser Cache - History Back" href="ui/browsercache.html" />
-			<item name="Form Parts" href="ui/parts.html" />
-			<item name="Reports" href="ui/reports.html" />
 
-		</menu>
-		
-		
-		<menu name="Build Management">
+
+
+		<menu name="Build">
 			<item name="Releasemanagement" href="build/releasemanagement.html" />
 			<item name="Manual build from sources" href="build/manualbuild.html" />
 			<item name="Custom builds" href="build/custombuild.html" />
 			<item name="Integration" href="build/integration.html" />
-
-		</menu>
-		
-		<menu name="Installation">
 			<item name="Initial Setup" href="install/setup.html" />
 			<item name="WildFly" href="install/wildfly.html" />
 
 		</menu>
+
 
 		<menu name="Project Information">
 			<item name="Summary" href="project-summary.html" />
@@ -107,9 +109,8 @@
 
 		<menu name="Maven">
 			<item name="Modules" href="modules.html" />
-			<item name="Dependency-Info" href="dependency-info.html" />
-			<item name="Dependency-Convergence" href="dependency-convergence.html" />
 			<item name="Dependency-Management" href="dependency-management.html" />
+			<item name="Dependency-Convergence" href="dependency-convergence.html" />
 			<item name="Plugins" href="plugins.html" />
 			<item name="Plugin Management" href="plugin-management.html" />
 		</menu>
