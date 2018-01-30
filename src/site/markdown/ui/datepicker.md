@@ -13,7 +13,6 @@ To add the calendar widget to a date input field just add the css class 'imixs-d
 		<f:convertDateTime pattern="#{message.datePatternShort}" timeZone="#{message.timeZone}" />
 	</h:inputText>
 
-
 Alternatively the Marty JSF imixsDateInput component can be used to activate the Datepicker :
 
 	<i:imixsDateInput value="#{workflowController.workitem.item['datDate']}"/>
@@ -37,13 +36,20 @@ The jQuery Datepicker plugin provides support for localizing its content to cate
 For JSF applications we recommend to just load the localization file for the corresponding locale of the current user:
 
 	<script type="text/javascript"
-		src="#{facesContext.externalContext.requestContextPath}/js/datepicker-#{userControler.locale.country}.js"></script>
+		src="#{facesContext.externalContext.requestContextPath}/js/datepicker-#{userControler.locale.language}.js"></script>
 		
-Typically the language package can be set easily via the resource bundle. This results in a better abstraction: 
+### Imixs-Office-Workflow
+		
+Typically the language package can be set easily via a resource bundle. This results in a better abstraction which is used for example in Imixs-Office-Workflow: 
 
 	<script type="text/javascript"
-		src="#{facesContext.externalContext.requestContextPath}/js/datepicker-#{app.datepicker_locale}.js"></script>
+		src="#{facesContext.externalContext.requestContextPath}/js/#{message['jquey.datepicker.regional']}"></script>
 
+The entry in the corresponding resource bundle file looks like this:
+
+	# german (de_DE)
+	jquey.datepicker.regional=jquery.datepicker-de.js
+	....
 		
 ## Display Week of Year
 
@@ -56,4 +62,15 @@ The following example will set the calendar week for all date input fields:
 	    ....
 	    $('.imixs-date').datepicker('option', 'showWeek', true);
 	}
+
+### Imixs-Office-Workflow
+
+Imixs-Office-Workflow provides the corresponding settings in the resource bundle file 'app'. So this feature can be configured also by custom builds:
+
+	$('.imixs-date').datepicker('option', 'showWeek', #{app["jquey.datepicker.showWeek"]});
+
+The entry in the corresponding resource bundle file looks like this:
+
+	jquey.datepicker.showWeek=true
+
 	
