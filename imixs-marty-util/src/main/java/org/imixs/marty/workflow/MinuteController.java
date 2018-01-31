@@ -8,10 +8,13 @@ import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.ConversationScoped;
+import javax.enterprise.event.ObserverException;
 import javax.enterprise.event.Observes;
 import javax.inject.Named;
 
 import org.imixs.marty.plugins.minutes.MinutePlugin;
+import org.imixs.marty.util.ErrorHandler;
+import org.imixs.marty.util.ValidationException;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.WorkflowKernel;
@@ -66,13 +69,47 @@ public class MinuteController extends org.imixs.workflow.faces.workitem.Workflow
 	}
 
 	/**
-	 * Override process to close the current minute
+	 * Override process to close the current minute.
+	 * 
+	 * The method handles PluginExceptions and adds the error messages into the faces context. 
 	 * 
 	 * @throws ModelException
 	 */
 	@Override
 	public String process() throws AccessDeniedException, ProcessingErrorException, PluginException, ModelException {
-		String result = super.process();
+
+		String result = "";
+		// process workItem and catch exceptions
+		try {
+
+			result = super.process();
+
+		} catch (ObserverException oe) {
+			result = "";
+			// test if we can handle the exception...
+			if (oe.getCause() instanceof PluginException) {
+				// add error message into current form
+				ErrorHandler.addErrorMessage((PluginException) oe.getCause());
+			} else {
+				if (oe.getCause() instanceof ValidationException) {
+					// add error message into current form
+					ErrorHandler.addErrorMessage((ValidationException) oe.getCause());
+				} else {
+					// throw unknown exception
+					throw oe;
+				}
+			}
+		} catch (PluginException pe) {
+			// add a new FacesMessage into the FacesContext
+			ErrorHandler.handlePluginException(pe);
+			return "";
+		} catch (ModelException me) {
+			// add a new FacesMessage into the FacesContext
+			ErrorHandler.handleModelException(me);
+			return "";
+		}
+
+		// we have no errors, so reset the current item and close it
 		this.reset();
 		minutes = null;
 		return result;
@@ -85,7 +122,7 @@ public class MinuteController extends org.imixs.workflow.faces.workitem.Workflow
 	 * @throws AccessDeniedException
 	 */
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) throws AccessDeniedException {
-		if (workflowEvent == null || workflowEvent.getWorkitem()==null)
+		if (workflowEvent == null || workflowEvent.getWorkitem() == null)
 			return;
 
 		// skip if not a workItem...
