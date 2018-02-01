@@ -1,7 +1,5 @@
 package org.imixs.marty.plugins;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -75,12 +73,9 @@ public class ApproverPlugin extends AbstractPlugin {
 				nameList.removeIf(item -> item == null || "".equals(item));
 
 				// create a new instance of a Vector to avoid setting the
-				// same vector as reference!
-				List<String> newAppoverList = new ArrayList<String>();
-				newAppoverList.addAll(nameList);
+				// same vector as reference! We also distinct the List here.
+				List<String> newAppoverList  = nameList.stream().distinct().collect(Collectors.toList());
 				if (!workitem.hasItem("nam" + aGroup + "Approvers")) {
-					// unique List
-					Arrays.stream(newAppoverList.toArray()).distinct().collect(Collectors.toList());
 					logger.fine("creating new approver list: " + aGroup + "=" + newAppoverList);
 					workitem.replaceItemValue("nam" + aGroup + "Approvers", newAppoverList);
 				} else {
@@ -103,22 +98,17 @@ public class ApproverPlugin extends AbstractPlugin {
 					if (update) {
 						logger.fine("updating approver list 'nam" + aGroup + "Approvers'");						
 						workitem.replaceItemValue("nam" + aGroup + "Approvers", listApprovers);
-					}
-					
+					}					
 					
 					// 2.) check current approver
 					String currentAppover = getWorkflowService().getUserName();
-					logger.fine("approved by:  " + currentAppover);
-					
+					logger.fine("approved by:  " + currentAppover);					
 					if (listApprovers.contains(currentAppover) && !listApprovedBy.contains(currentAppover)) {
 						listApprovers.remove(currentAppover);
 						listApprovedBy.add(currentAppover);
-
 						// remove empty entries...
 						listApprovers.removeIf(item -> item == null || "".equals(item));
 						listApprovedBy.removeIf(item -> item == null || "".equals(item));
-						// unique List
-						Arrays.stream(listApprovedBy.toArray()).distinct().collect(Collectors.toList());
 						workitem.replaceItemValue("nam" + aGroup + "Approvers", listApprovers);
 						workitem.replaceItemValue("nam" + aGroup + "ApprovedBy", listApprovedBy);
 						logger.fine("new list of approvedby: " + aGroup + "=" + listApprovedBy);
