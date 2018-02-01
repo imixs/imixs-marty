@@ -80,6 +80,61 @@ public class TestApproverPlugin {
 	}
 
 	/**
+	 * This simple test verifies if a approver list containing null values, empty
+	 * values and duplicates is cleared and distinct.
+	 * 
+	 * @throws PluginException
+	 * @throws ModelException
+	 * 
+	 */
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testDistinctApproverList() throws PluginException, ModelException {
+
+		documentActivity = workflowMockEnvironment.getModel().getEvent(100, 10);
+		// change result
+		documentActivity.replaceItemValue("txtActivityResult", "<item name='approvedby'>ProcessManager</item>");
+
+		List<String> nameList = new ArrayList<String>();
+		nameList.add("anna");
+		nameList.add("manfred");
+		nameList.add("eddy");
+		nameList.add("ronny");
+
+		// add null values and empty values
+		nameList.add(null);
+		nameList.add("");
+		nameList.add(null);
+		
+		// add duplicate
+		nameList.add("anna");
+
+		documentContext.replaceItemValue("namProcessManager", nameList);
+
+		// test with ronny
+		when(workflowMockEnvironment.getWorkflowService().getUserName()).thenReturn("ronny");
+		documentContext = approverPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
+
+		// we expect that the null and empty values are removed and the name anna is
+		// distinct.
+
+		List<String> approvers = documentContext.getItemValue("namProcessManagerApprovers");
+		Assert.assertEquals(4, approvers.size());
+		Assert.assertEquals(0, documentContext.getItemValue("namProcessManagerApprovedByBy").size());
+
+		Assert.assertTrue(approvers.contains("anna"));
+		Assert.assertTrue(approvers.contains("manfred"));
+		Assert.assertTrue(approvers.contains("eddy"));
+		Assert.assertTrue(approvers.contains("ronny"));
+		
+		// test sortorder
+		Assert.assertTrue(approvers.indexOf("anna")==0);
+		Assert.assertTrue(approvers.indexOf("ronny")==3);
+
+	}
+
+	/**
 	 * This simple test verifies if a approver list is added correctly into the
 	 * workitem. The current user IS A MEMBER of the approvers.
 	 * 
