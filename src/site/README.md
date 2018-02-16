@@ -1,4 +1,4 @@
-#Imixs-Workflow Documenation
+#Imixs-Workflow Documentation
 Imixs-Workflow documentation is generated using the maven site plugin in the parent project.
 The pages are written using markdown. 
 
