@@ -1,4 +1,4 @@
-#The ApproverPlugin
+# The TeamPlugin
 
 The Marty TeamPlugin organizes the hierarchical order of a workitem between
 processes, spaces and workitems and computes the users associated with an orgunit.  
@@ -14,16 +14,19 @@ The items _txtProcessRef_ and _txtSpaceRef_ can also be modified by the workflow
  
 The Marty TeamPlugin computes additional workflow properties:
 
- * namSpaceTeam - current team members of an associated space orgunit. 
- * namSpaceManager  - current managers of an associated space orgunit. 
- * namSpaceAssist - current assists of an associated space orgunit. 
- * namSpaceName - name of  an associated space orgunit. 
- * txtSpaceRef  - $uniqueID  of an associated space orgunit. 
- * namProcessTeam - current team members of an associated process orgunit. 
- * namProcessManager  - current managers of an associated process orgunit. 
- * namProcessAssist - current assists of an associated process orgunit. 
- * namProcessName - name of  an associated process orgunit. 
- * txtProcessRef  - $uniqueID  of an associated process orgunit. 
+  
+| Item       		| Type      | Description                               						|
+|-------------------|-----------|-------------------------------------------------------------------|
+|namSpaceTeam   	| names		| current team members of an associated space orgunit. 				|
+|namSpaceManager	| names   	|current managers of an associated space orgunit.					|
+|namSpaceAssist		| names   	|current assists of an associated space orgunit. 					|
+|namSpaceName		| text		|name of  an associated space orgunit. 								| 
+|txtSpaceRef		| text		|$uniqueID  of an associated space orgunit. 						| 
+|namProcessTeam		| names		|current team members of an associated process orgunit. 			| 
+|namProcessManager	| names		|current managers of an associated process orgunit. 				| 
+|namProcessAssist	| names		|current assists of an associated process orgunit. 					| 
+|namProcessName		| text		|name of  an associated process orgunit. 							| 
+|txtProcessRef		| text		|$uniqueID  of an associated process orgunit.						| 
  
 The name items can be used in ACL settings or mail settings.
  

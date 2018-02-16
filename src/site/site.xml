@@ -29,7 +29,7 @@
 			<item name="Security" href="concepts/security.html" collapse="true">
 				<item name="User Profiles" href="concepts/profiles.html" />
 				<item name="User DB" href="concepts/userdb.html" />
-				<item name="Team Group Interceptor" href="concepts/security_groupinterceptor_team.html" />
+				<item name="TeamInterceptor" href="concepts/teaminterceptor.html" />
 			</item>
 
 			<item name="Mail" href="concepts/mail.html" />
@@ -41,7 +41,6 @@
 			<item name="Services" href="services/index.html" collapse="true">
 				<item name="ProfileService" href="services/profileservice.html" />
 				<item name="TextUsernameAdapter" href="services/textusernameadapter.html" />
-				<item name="TeamInterceptor" href="services/teaminterceptor.html" />
 				<item name="ImageInterceptor" href="services/imageinterceptor.html" />
 			</item>
 
