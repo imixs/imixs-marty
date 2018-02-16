@@ -2,8 +2,10 @@
 
 The ApproverPlugin manages the approver lists of process and space managers and
  teams
+ 
+     org.imixs.marty.plugins.ApproverPlugin
   
-  The result will be stored in the following attributes:
+The result will be stored in the following attributes:
  
 
  * namProcessManagerApprovers 

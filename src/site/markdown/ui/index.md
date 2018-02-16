@@ -1,6 +1,7 @@
 # Imixs-Marty - User Interface
 
-Imixs-Marty contains UI components and JSF fragments to be integrated into a application.
+The Imixs-Marty UI module provides additional UI interfaces and web components to implement modern web front-ends. 
+The UI interfaces are provided as custom facelets having a custom namespace. 
 The marty widgets are often based jquery. The JQuery libraries are included in the Imixs JSF Tools which can be added in the header on a jsf page.  
 
 ## Installation

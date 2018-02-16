@@ -29,7 +29,6 @@
 			<item name="Security" href="concepts/security.html" collapse="true">
 				<item name="User Profiles" href="concepts/profiles.html" />
 				<item name="User DB" href="concepts/userdb.html" />
-				<item name="LDAP Group Interceptor" href="concepts/security_groupinterceptor_ldap.html" />
 				<item name="Team Group Interceptor" href="concepts/security_groupinterceptor_team.html" />
 			</item>
 
@@ -60,17 +59,16 @@
 			</item>
 
 			<item name="Plugins" href="plugins/index.html" collapse="true">
-				<item name="ApplicationPlugin" href="plugins/applicationplugin.html" />
 				<item name="ApproverPlugin" href="plugins/approverplugin.html" />
 				<item name="ArchivePlugin" href="plugins/archiveplugin.html" />
 				<item name="CommentPlugin" href="plugins/commentplugin.html" />
 				<item name="DeputyPlugin" href="plugins/deputyplugin.html" />
-				<item name="DMSPlugin" href="plugins/dmsplugin.html" />
 				<item name="DMSSplitPlugin" href="plugins/dmssplitplugin.html" />
+				<item name="MinutePlugin" href="plugins/minuteplugin.html" />
 				<item name="ProfilePlugin" href="plugins/profileplugin.html" />
 				<item name="ResultPlugin" href="plugins/resultplugin.html" />
 				<item name="SpacePlugin" href="plugins/spaceplugin.html" />
-				<item name="MinutePlugin" href="plugins/minuteplugin.html" />
+				<item name="TeamPlugin" href="plugins/teamplugin.html" />
 			</item>
 
 

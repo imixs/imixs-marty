@@ -5,7 +5,7 @@ when a userProfile is processed (typically when a User logged in).
 
 ## Translate UserIDs into Display Names
 
-In additon the Plugin provides a mechanism to translate elements of an activityEntity to replace placeholders for a user id with the corresponding user name. There for the plugin uses the profileService EJB
+In addition the Plugin provides a mechanism to translate elements of an activityEntity to replace placeholders for a user id with the corresponding user name. There for the plugin uses the profileService EJB
  
 Example:
 

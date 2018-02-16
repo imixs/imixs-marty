@@ -1,25 +1,23 @@
 # User Profile Management 
 
 Imixs-Marty provides a user profile management. A User Profile is automatically created after a user logged in the first time. 
+The creation of a new profile is triggered by the userController CDI Bean in the @PostConstruct method. The creation is managed by the EJB *ProfileService*. The User Profiles are stored in the document database with the type attribute *'profile'*.
 
-The creation of a new profile is triggered by the userController CDI Bean in the @PostConstruct method. The creation is managed by the EJB *ProfileService*.
-The User Profiles are stored in the document database with the type attribute *'profile'*.
+Additionally the Imixs-Marty project provides a [User-Database](userdb.html). If the User-Database is enabled, the userid and password can be stored into a local user table. In this case new user profiles can also be created manually by the administrator where the UserID and a Password is provided along the creation process. 
 
 
-
-## Autoprocess a New User Profile
+### Autoprocess a New User Profile
 When a user profile is created the first time, the profile will be automatically be processed by the Imixs-Workflow engine with the *ProcessID=200* and the *ActivityID=5*. 
 The System Model files *system-de.bpmn* and *system-en.bpmn* provide a valid BPMN model. 
 
 
-## Autoprocess a User Profile During the Login
+### Autoprocess a User Profile During the Login
 When a user profile is created the first time, additional the user profile can be processed by the Imixs-Workflow engine. 
 To enable this 'auto process mode'  the system property *'profile.autoProcessOnLogin'* can be set with a BPMN Event ID:
 
 	profile.autoProcessOnLogin=10
 	
-## The User Database
-If the [User-Database](userdb.html) is enabled, new user profiles can also be created manually by the administrator. In this case a UserID and a Password has to be provided along the creation process. 
+
 
 
 

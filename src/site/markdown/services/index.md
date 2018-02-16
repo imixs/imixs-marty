@@ -1,3 +1,3 @@
 # Imixs-Marty - Services
 
-Imixs-Marty provides a set of service (EJB) to extend the Imixs-Workflow engine.
+Services provided by the Imixs-Marty project extend the functionality of the Imixs-Workflow engine. The services are implemented either as  stateless EJBs or Interceptor classes. 

@@ -1,0 +1,56 @@
+#The ApproverPlugin
+
+The Marty TeamPlugin organizes the hierarchical order of a workitem between
+processes, spaces and workitems and computes the users associated with an orgunit.  
+ 
+     org.imixs.marty.plugins.TeamPlugin
+
+
+A WorkItem is typically assigned to one or more orgunits. These references are stored in the item _$UniqueIDRef_. 
+TeamPlugin automatically computes the references and stores the information into the items 
+_txtProcessRef_ and _txtSpaceRef_ which containing only uniqueIDs of the corresponding orgunit type.
+
+The items _txtProcessRef_ and _txtSpaceRef_ can also be modified by the workflow model or a custom business logic.
+ 
+The Marty TeamPlugin computes additional workflow properties:
+
+ * namSpaceTeam - current team members of an associated space orgunit. 
+ * namSpaceManager  - current managers of an associated space orgunit. 
+ * namSpaceAssist - current assists of an associated space orgunit. 
+ * namSpaceName - name of  an associated space orgunit. 
+ * txtSpaceRef  - $uniqueID  of an associated space orgunit. 
+ * namProcessTeam - current team members of an associated process orgunit. 
+ * namProcessManager  - current managers of an associated process orgunit. 
+ * namProcessAssist - current assists of an associated process orgunit. 
+ * namProcessName - name of  an associated process orgunit. 
+ * txtProcessRef  - $uniqueID  of an associated process orgunit. 
+ 
+The name items can be used in ACL settings or mail settings.
+ 
+The item '_txtProcessRef_' and '_txtSpaceRef_' are optional and can update the current $uniqueIDs for referenced orgunits. 
+The Plug-in updates the item _$UniqueIDRef_ automatically if these properties are filled.
+
+### Evaluate a Orgunit
+
+If the workflow result message of an Imixs-Event contains a space or process reference the plug-in will update the references
+
+Example:
+
+	<item name="space">...</item>
+	<item name="process">...</item>
+
+
+
+## Compute Orgunit Roles
+
+In combination with the [TeamInterceptor](../services/teaminterceptor.html) the TeamPlugin can also compute a Orgunit Roles associated with the current workitem. To add the team role for the orgunit currently associated with the worktiem into the ACL the following role definition can be added:
+
+
+	{process:?:team}
+	
+The TeamPlugin will lookup the associated process orgunit and compute the role name (e.g. from the orgunit 'Finance'):
+
+    {process:Finance:team}
+    {process:8838786e-6fda-4e0d-a76c-5ac3e0b04071:team}
+
+ 

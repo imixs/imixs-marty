@@ -27,6 +27,8 @@
 
 package org.imixs.marty.plugins;
 
+import java.util.logging.Logger;
+
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.PluginException;
 
@@ -39,10 +41,13 @@ import org.imixs.workflow.exceptions.PluginException;
  * @version 3.0
  * 
  */
+@Deprecated
 public class ApplicationPlugin extends org.imixs.workflow.engine.plugins.ApplicationPlugin {
+	private static Logger logger = Logger.getLogger(ApplicationPlugin.class.getName());
 
 	@Override
 	public ItemCollection run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
+		logger.warning("The Marty ApplicationPlugin is deprecated and can be removed from this model!");
 		return super.run(adocumentContext, documentActivity);
 	}
 

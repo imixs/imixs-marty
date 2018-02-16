@@ -14,6 +14,7 @@ import org.imixs.workflow.exceptions.PluginException;
  * @version 1.0
  * @author rsoika
  */
+@Deprecated
 public class DMSPlugin extends AbstractPlugin {
 	private static Logger logger = Logger.getLogger(DMSPlugin.class.getName());
 
