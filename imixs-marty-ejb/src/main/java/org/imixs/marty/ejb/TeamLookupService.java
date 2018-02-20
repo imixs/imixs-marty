@@ -128,6 +128,7 @@ public class TeamLookupService {
 			//if (members.contains(userId)) {
 			if (members.stream().anyMatch(userId::equalsIgnoreCase)) {
 				memberList.add("{" + type + ":" + orgunitName + ":manager}");
+				memberList.add("{" + type + ":" + orgunit.getUniqueID() + ":manager}");
 				isMember = true;
 				isGeneralManager = true;
 			}
@@ -135,6 +136,7 @@ public class TeamLookupService {
 			//if (members.contains(userId)) {
 			if (members.stream().anyMatch(userId::equalsIgnoreCase)) {
 				memberList.add("{" + type + ":" + orgunitName + ":team}");
+				memberList.add("{" + type + ":" + orgunit.getUniqueID() + ":team}");
 				isMember = true;
 				isGeneralTeam = true;
 			}
@@ -142,12 +144,14 @@ public class TeamLookupService {
 			//if (members.contains(userId)) {
 			if (members.stream().anyMatch(userId::equalsIgnoreCase)) {
 				memberList.add("{" + type + ":" + orgunitName + ":assist}");
+				memberList.add("{" + type + ":" + orgunit.getUniqueID() + ":assist}");
 				isMember = true;
 				isGeneralAssist = true;
 			}
 
 			if (isMember) {
 				memberList.add("{" + type + ":" + orgunitName + ":member}");
+				memberList.add("{" + type + ":" + orgunit.getUniqueID() + ":member}");
 				logger.finest(userId + " is member of '" + orgunitName + "'");
 				isGeneralMember = true;
 			}
