@@ -51,7 +51,10 @@ In combination with the [TeamInterceptor](../services/teaminterceptor.html) the 
 
 	{process:?:team}
 	
+<img src="../images/acl002.png" style="width: 75%;"/>
+
 The TeamPlugin will lookup the associated process orgunit and compute the role name (e.g. from the orgunit 'Finance'):
+
 
     {process:Finance:team}
     {process:8838786e-6fda-4e0d-a76c-5ac3e0b04071:team}

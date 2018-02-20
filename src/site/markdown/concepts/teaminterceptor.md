@@ -52,7 +52,7 @@ In this example the read access for a task is extended to the orgunit role '{pro
 
 In combination with the [TeamPlugin](../plugins/teamplugin.html) the orgunit role can be also computed automatically. There for the wildcard '?' can be used. 
 
-<img src="../images/acl001.png" style="width: 75%;"/>
+<img src="../images/acl002.png" style="width: 75%;"/>
 
 
 The assoicated orgunite will be computed by teh TeamPlugin
