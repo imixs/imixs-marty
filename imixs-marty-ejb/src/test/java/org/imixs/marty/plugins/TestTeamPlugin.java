@@ -40,17 +40,15 @@ public class TestTeamPlugin {
 	public void setup() throws PluginException {
 		ItemCollection entity = null;
 
-		
-		System.out.println("ClassName: "+TestTeamPlugin.class.getName());
-		
+		System.out.println("ClassName: " + TestTeamPlugin.class.getName());
+
 		// simulate process and space entities
 		for (int i = 1; i < 6; i++) {
 			entity = new ItemCollection();
 			entity.replaceItemValue("type", "process");
 			entity.replaceItemValue(WorkflowKernel.UNIQUEID, "P0000-0000" + i);
 			entity.replaceItemValue("txtName", "Process " + i);
-			database.put(entity.getItemValueString(WorkflowKernel.UNIQUEID),
-					entity);
+			database.put(entity.getItemValueString(WorkflowKernel.UNIQUEID), entity);
 		}
 
 		for (int i = 1; i < 6; i++) {
@@ -58,8 +56,7 @@ public class TestTeamPlugin {
 			entity.replaceItemValue("type", "space");
 			entity.replaceItemValue(WorkflowKernel.UNIQUEID, "S0000-0000" + i);
 			entity.replaceItemValue("txtName", "Space " + i);
-			database.put(entity.getItemValueString(WorkflowKernel.UNIQUEID),
-					entity);
+			database.put(entity.getItemValueString(WorkflowKernel.UNIQUEID), entity);
 		}
 
 		for (int i = 1; i < 6; i++) {
@@ -67,38 +64,33 @@ public class TestTeamPlugin {
 			entity.replaceItemValue("type", "workitem");
 			entity.replaceItemValue(WorkflowKernel.UNIQUEID, "W0000-0000" + i);
 			entity.replaceItemValue("txtName", "Workitem " + i);
-			database.put(entity.getItemValueString(WorkflowKernel.UNIQUEID),
-					entity);
+			database.put(entity.getItemValueString(WorkflowKernel.UNIQUEID), entity);
 		}
 
 		for (int i = 1; i < 6; i++) {
 			entity = new ItemCollection();
 			entity.replaceItemValue(WorkflowKernel.UNIQUEID, "C0000-0000" + i);
 			entity.replaceItemValue("txtName", "ChildWorkitem " + i);
-			database.put(entity.getItemValueString(WorkflowKernel.UNIQUEID),
-					entity);
+			database.put(entity.getItemValueString(WorkflowKernel.UNIQUEID), entity);
 		}
 
 		// Mockito setup
-		WorkflowService workflowContextMock = Mockito
-				.mock(WorkflowService.class);
+		WorkflowService workflowContextMock = Mockito.mock(WorkflowService.class);
 		when(workflowContextMock.getSessionContext()).thenReturn(null);
 
 		DocumentService documentService = Mockito.mock(DocumentService.class);
 		when(workflowContextMock.getDocumentService()).thenReturn(documentService);
 
 		// Simulate entityService.load()...
-		when(documentService.load(Mockito.anyString())).thenAnswer(
-				new Answer<ItemCollection>() {
-					@Override
-					public ItemCollection answer(InvocationOnMock invocation)
-							throws Throwable {
-						Object[] args = invocation.getArguments();
-						String id = (String) args[0];
-						ItemCollection result = database.get(id);
-						return result;
-					}
-				});
+		when(documentService.load(Mockito.anyString())).thenAnswer(new Answer<ItemCollection>() {
+			@Override
+			public ItemCollection answer(InvocationOnMock invocation) throws Throwable {
+				Object[] args = invocation.getArguments();
+				String id = (String) args[0];
+				ItemCollection result = database.get(id);
+				return result;
+			}
+		});
 
 		teamPlugin = new TeamPlugin();
 		teamPlugin.init(workflowContextMock);
@@ -114,7 +106,7 @@ public class TestTeamPlugin {
 	 * 
 	 * @throws PluginException
 	 * 
-	 * */
+	 */
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testProcessRefInit() throws PluginException {
@@ -131,16 +123,15 @@ public class TestTeamPlugin {
 	}
 
 	/**
-	 * If the property txtProcessRef not exists, but $UnqiueIDref contains a
-	 * valid Process then the value in $UnqiueIDref must be transfered into
-	 * txtProcessRef
+	 * If the property txtProcessRef not exists, but $UnqiueIDref contains a valid
+	 * Process then the value in $UnqiueIDref must be transfered into txtProcessRef
 	 * 
 	 * This test verifies if the txtProcessRef is created and if the value in
 	 * $UnqiueIDref is transfered into txtProcessRef
 	 * 
 	 * @throws PluginException
 	 * 
-	 * */
+	 */
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testProcessRefInitNoProcessRef() throws PluginException {
@@ -180,18 +171,18 @@ public class TestTeamPlugin {
 	}
 
 	/**
-	 * Case-1: If the property txtProcessRef exists but is empty and
-	 * $UnqiueIDref contains a Process then the value in $UnqiueIDref must be
-	 * removed and txtProcessRef should still be empty.
+	 * Case-1: If the property txtProcessRef exists but is empty and $UnqiueIDref
+	 * contains a Process then the value in $UnqiueIDref must be removed and
+	 * txtProcessRef should still be empty.
 	 * 
-	 * Case-2: If a workitem ref is stored in $uniqueid than this id should be
-	 * still available.
+	 * Case-2: If a workitem ref is stored in $uniqueid than this id should be still
+	 * available.
 	 * 
 	 * This test verifies if the ref in $Uniqueid is removed
 	 * 
 	 * @throws PluginException
 	 * 
-	 * */
+	 */
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testProcessRefInitEmptyProcessRef() throws PluginException {
@@ -200,7 +191,7 @@ public class TestTeamPlugin {
 		// empty txtProcessRef
 		documentContext.replaceItemValue("txtProcessRef", "");
 
-		documentContext= teamPlugin.run(documentContext, documentActivity);
+		documentContext = teamPlugin.run(documentContext, documentActivity);
 		Assert.assertNotNull(documentContext);
 
 		List<String> processRef = documentContext.getItemValue("txtProcessRef");
@@ -228,15 +219,15 @@ public class TestTeamPlugin {
 
 	/**
 	 * If a new Process is assigned into txtProcessRef and $UniqueIDRef holds an
-	 * different value then the new process ref will be transfered into
-	 * $UniueIdRef and the old id will be removed.
+	 * different value then the new process ref will be transfered into $UniueIdRef
+	 * and the old id will be removed.
 	 * 
-	 * This test verifies if the txtProcessRef is transfered into $UnqiueIDref
-	 * and an old process id is removed correctly
+	 * This test verifies if the txtProcessRef is transfered into $UnqiueIDref and
+	 * an old process id is removed correctly
 	 * 
 	 * @throws PluginException
 	 * 
-	 * */
+	 */
 	@SuppressWarnings("unchecked")
 	// @Ignore
 	@Test
@@ -251,7 +242,7 @@ public class TestTeamPlugin {
 		// old id....
 		documentContext.replaceItemValue("$UnqiueIDRef", "P0000-00001");
 
-		documentContext= teamPlugin.run(documentContext, documentActivity);
+		documentContext = teamPlugin.run(documentContext, documentActivity);
 		Assert.assertNotNull(documentContext);
 
 		List<String> uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
@@ -292,7 +283,7 @@ public class TestTeamPlugin {
 	 * 
 	 * @throws PluginException
 	 * 
-	 * */
+	 */
 	@SuppressWarnings("unchecked")
 	// @Ignore
 	@Test
@@ -308,16 +299,14 @@ public class TestTeamPlugin {
 		Assert.assertNotNull(documentContext);
 
 		List<String> uniqueIDref = documentContext.getItemValue("$UniqueIDRef");
-		List<String> processIDref = documentContext
-				.getItemValue("txtProcessRef");
+		List<String> processIDref = documentContext.getItemValue("txtProcessRef");
 		// empty expect
 		Assert.assertEquals(0, uniqueIDref.size());
 		Assert.assertTrue(uniqueIDref.isEmpty());
 
 		Assert.assertEquals(0, processIDref.size());
 		Assert.assertTrue(processIDref.isEmpty());
-		
-		
+
 		// case-2 invalid id
 		documentContext = new ItemCollection();
 		documentContext.replaceItemValue("txtProcessRef", "xxxxP0000-00002");
@@ -361,7 +350,7 @@ public class TestTeamPlugin {
 	 * 
 	 * @throws PluginException
 	 * 
-	 * */
+	 */
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testInvalidSpaceRef() throws PluginException {
@@ -417,5 +406,63 @@ public class TestTeamPlugin {
 
 		Assert.assertEquals(1, spaceIDref.size());
 		Assert.assertEquals(uniqueIDref, spaceIDref);
+	}
+
+	/**
+	 * This test validates the wildcard orgunit role as a ACL notation:
+	 * 
+	 * {process:?:team}
+	 * 
+	 * The Plugin should compute the orgunit based on the assigement to the current
+	 * workitem.
+	 * 
+	 * 
+	 * @throws PluginException
+	 * 
+	 */
+	@SuppressWarnings({ "rawtypes" })
+	@Test
+	public void testWildcardOrgunitRole() throws PluginException {
+
+		// test case-1 :
+		// assign space as an invalid ref
+
+		// new id....
+		documentContext.replaceItemValue("txtSpaceRef", "S0000-00002");
+		documentContext.replaceItemValue("txtProcessRef", "P0000-00003");
+
+		// set ACL (namaddreadaccess)....
+		documentActivity.replaceItemValue("namaddreadaccess", "{space:?:team}");
+		// set ACL (namaddwriteaccess)....
+		documentActivity.replaceItemValue("namaddwriteaccess", "{process:?:manager}");
+		// set ACL (namOwnershipNames)....
+		documentActivity.replaceItemValue("namOwnershipNames", "{process:?:member}");
+
+		documentContext = teamPlugin.run(documentContext, documentActivity);
+		Assert.assertNotNull(documentContext);
+
+		// now we expect that the namaddreadaccess is addapted with the real team roles
+		List accessList = documentActivity.getItemValue("namaddreadaccess");
+		// wildcard role should be replaced
+		Assert.assertFalse(accessList.contains("{space:?:team}"));
+		Assert.assertTrue(accessList.contains("{space:S0000-00002:team}"));
+		Assert.assertTrue(accessList.contains("{space:Space 2:team}"));
+
+		// next we expect that also the namaddwriteaccess is addapted with the real team
+		// roles
+		accessList = documentActivity.getItemValue("namaddwriteaccess");
+		// wildcard role should be replaced
+		Assert.assertFalse(accessList.contains("{process:?:team}"));
+		Assert.assertTrue(accessList.contains("{process:P0000-00003:manager}"));
+		Assert.assertTrue(accessList.contains("{process:Process 3:manager}"));
+
+		// and finally we expect that also the namOwnershipNames is addapted with the
+		// real team roles
+		accessList = documentActivity.getItemValue("namOwnershipNames");
+		// wildcard role should be replaced
+		Assert.assertFalse(accessList.contains("{process:?:team}"));
+		Assert.assertTrue(accessList.contains("{process:P0000-00003:member}"));
+		Assert.assertTrue(accessList.contains("{process:Process 3:member}"));
+
 	}
 }

@@ -27,6 +27,7 @@
 
 package org.imixs.marty.plugins;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,7 +107,6 @@ public class TeamPlugin extends AbstractPlugin {
 
 	private Map<String, ItemCollection> entityCache = null;
 
-	
 	/**
 	 * Fetch workflowService and entityService from WorkflowContext
 	 */
@@ -118,8 +118,8 @@ public class TeamPlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * The method updates information from the Process and Space entiy
-	 * (optional) stored in the attribute '$uniqueIdref'
+	 * The method updates information from the Process and Space entiy (optional)
+	 * stored in the attribute '$uniqueIdref'
 	 * <ul>
 	 * <li>txtProcessRef
 	 * <li>txtSpaceRef
@@ -358,13 +358,17 @@ public class TeamPlugin extends AbstractPlugin {
 
 		documentContext.removeItem("space");
 		documentContext.removeItem("process");
+
+		// finally we can replace wildcard team roles (e.g. {space:?:team}
+		replaceWidlcardTeamRoles("namaddreadaccess", documentActivity);
+		replaceWidlcardTeamRoles("namaddwriteaccess", documentActivity);
+		replaceWidlcardTeamRoles("namownershipnames", documentActivity);
+
 		return documentContext;
 	}
 
-
 	/**
-	 * Helper method to lookup an entity in internal cache or load it from
-	 * database
+	 * Helper method to lookup an entity in internal cache or load it from database
 	 * 
 	 * @param id
 	 * @return entity or null if not exits
@@ -394,8 +398,7 @@ public class TeamPlugin extends AbstractPlugin {
 
 	}
 
-	private String fetchRefFromActivity(String type, ItemCollection evalItemCollection)
-			throws PluginException {
+	private String fetchRefFromActivity(String type, ItemCollection evalItemCollection) throws PluginException {
 
 		String sRef = null;
 		// Read workflow result directly from the activity definition
@@ -405,7 +408,7 @@ public class TeamPlugin extends AbstractPlugin {
 		// activity. This will overwrite the current value!!
 		if (!"".equals(aActivityRefName)) {
 
-			ItemCollection entity =this.getWorkflowService().getDocumentService().load(aActivityRefName);
+			ItemCollection entity = this.getWorkflowService().getDocumentService().load(aActivityRefName);
 			if (entity != null && !type.equals(entity.getItemValueString("type"))) {
 				entity = null;
 			}
@@ -426,30 +429,26 @@ public class TeamPlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * This method returns a Process or Space entity for a specified name.
-	 * Returns null if no entity with the provided name was found
+	 * This method returns a Process or Space entity for a specified name. Returns
+	 * null if no entity with the provided name was found
 	 * 
-	 * Because of the fact that spaces can be ordered in a hirachical order we
-	 * need to be a little more tricky if we seach for spaces....
+	 * Because of the fact that spaces can be ordered in a hirachical order we need
+	 * to be a little more tricky if we seach for spaces....
 	 */
 	private ItemCollection findRefByName(String aName, String type) {
-//		String sQuery = "SELECT project FROM Entity AS project " + " JOIN project.textItems AS t2"
-//				+ " WHERE  project.type = '" + type + "' " + " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
-//				+ aName + "'";
 
-		if (type==null || aName==null) {
+		if (type == null || aName == null) {
 			return null;
 		}
-		String sQuery="(type:\"" + type + "\" AND txtname:\""+aName + "\")";
-	
-		
+		String sQuery = "(type:\"" + type + "\" AND txtname:\"" + aName + "\")";
+
 		// because of the fact that spaces can be ordered in a hirachical order
 		// we need to be a little more tricky if we seach for spaces....
 		// Important: to find ambigous space names we search for maxount=2!
 		List<ItemCollection> col;
 		try {
 			col = this.getWorkflowService().getDocumentService().find(sQuery, 2, 0);
-		
+
 			if (col.size() == 0) {
 				logger.warning("findRefByName '" + aName + "' not found!");
 			} else {
@@ -462,7 +461,7 @@ public class TeamPlugin extends AbstractPlugin {
 					entityCache.put(entity.getItemValueString(WorkflowKernel.UNIQUEID), entity);
 					return entity;
 				}
-	
+
 			}
 		} catch (QueryException e) {
 			logger.warning("findRefByName - invalid query: " + e.getMessage());
@@ -491,4 +490,64 @@ public class TeamPlugin extends AbstractPlugin {
 		entity.replaceItemValue(field, target);
 	}
 
+	/**
+	 * This helper method replaces wildcard teamrols like:
+	 * 
+	 * {process:?:team}
+	 * 
+	 * With the corresponding orgunit name and orgunite uniqueID
+	 * 
+	 * {process:Finance:team}
+	 * 
+	 * {process:8838786e-6fda-4e0d-a76c-5ac3e0b04071:team}
+	 * 
+	 * This notation is supported for the ACL settings in the Modeler.
+	 * 
+	 * See: http://www.imixs.org/marty/plugins/teamplugin.html
+	 */
+	@SuppressWarnings("unchecked")
+	private void replaceWidlcardTeamRoles(String nameAddField, ItemCollection documentActivity) {
+		List<String> orgunitIDs = null;
+		List<String> additionalRoles = null;
+		logger.fine("replacing wildcard roles....");
+		List<String> accessRoleList = documentActivity.getItemValue(nameAddField);
+
+		additionalRoles = new ArrayList<String>();
+		// for (String role: accessRoleList) {
+		for (int i = 0; i < accessRoleList.size(); i++) {
+			String role = accessRoleList.get(i);
+			// lookup all the spaces.....
+			if (role.startsWith("{space:?:")) {
+				orgunitIDs = documentContext.getItemValue("txtspaceref");
+				for (String id : orgunitIDs) {
+					ItemCollection orgunit = findEntity(id);
+					if (orgunit != null) {
+						additionalRoles.add(role.replace("{space:?:", "{space:" + id + ":"));
+						accessRoleList.set(i,
+								role.replace("{space:?:", "{space:" + orgunit.getItemValueString("txtname") + ":"));
+					}
+				}
+			}
+
+			// lookup all the processes.....
+			if (role.startsWith("{process:?:")) {
+				orgunitIDs = documentContext.getItemValue("txtprocessref");
+				for (String id : orgunitIDs) {
+					ItemCollection orgunit = findEntity(id);
+					if (orgunit != null) {
+						additionalRoles.add(role.replace("{process:?:", "{process:" + id + ":"));
+						accessRoleList.set(i,
+								role.replace("{process:?:", "{process:" + orgunit.getItemValueString("txtname") + ":"));
+					}
+				}
+			}
+
+		}
+		// update nameaddReadAccess....
+		if (additionalRoles.size() > 0) {
+			accessRoleList.addAll(additionalRoles);
+			documentActivity.replaceItemValue(nameAddField, accessRoleList);
+		}
+
+	}
 }
