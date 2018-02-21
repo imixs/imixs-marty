@@ -27,7 +27,6 @@
 
 package org.imixs.marty.plugins;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -359,11 +358,6 @@ public class TeamPlugin extends AbstractPlugin {
 		documentContext.removeItem("space");
 		documentContext.removeItem("process");
 
-		// finally we can replace wildcard team roles (e.g. {space:?:team}
-		replaceWidlcardTeamRoles("namaddreadaccess", documentActivity);
-		replaceWidlcardTeamRoles("namaddwriteaccess", documentActivity);
-		replaceWidlcardTeamRoles("namownershipnames", documentActivity);
-
 		return documentContext;
 	}
 
@@ -490,64 +484,4 @@ public class TeamPlugin extends AbstractPlugin {
 		entity.replaceItemValue(field, target);
 	}
 
-	/**
-	 * This helper method replaces wildcard teamrols like:
-	 * 
-	 * {process:?:team}
-	 * 
-	 * With the corresponding orgunit name and orgunite uniqueID
-	 * 
-	 * {process:Finance:team}
-	 * 
-	 * {process:8838786e-6fda-4e0d-a76c-5ac3e0b04071:team}
-	 * 
-	 * This notation is supported for the ACL settings in the Modeler.
-	 * 
-	 * See: http://www.imixs.org/marty/plugins/teamplugin.html
-	 */
-	@SuppressWarnings("unchecked")
-	private void replaceWidlcardTeamRoles(String nameAddField, ItemCollection documentActivity) {
-		List<String> orgunitIDs = null;
-		List<String> additionalRoles = null;
-		logger.fine("replacing wildcard roles....");
-		List<String> accessRoleList = documentActivity.getItemValue(nameAddField);
-
-		additionalRoles = new ArrayList<String>();
-		// for (String role: accessRoleList) {
-		for (int i = 0; i < accessRoleList.size(); i++) {
-			String role = accessRoleList.get(i);
-			// lookup all the spaces.....
-			if (role.startsWith("{space:?:")) {
-				orgunitIDs = documentContext.getItemValue("txtspaceref");
-				for (String id : orgunitIDs) {
-					ItemCollection orgunit = findEntity(id);
-					if (orgunit != null) {
-						additionalRoles.add(role.replace("{space:?:", "{space:" + id + ":"));
-						accessRoleList.set(i,
-								role.replace("{space:?:", "{space:" + orgunit.getItemValueString("txtname") + ":"));
-					}
-				}
-			}
-
-			// lookup all the processes.....
-			if (role.startsWith("{process:?:")) {
-				orgunitIDs = documentContext.getItemValue("txtprocessref");
-				for (String id : orgunitIDs) {
-					ItemCollection orgunit = findEntity(id);
-					if (orgunit != null) {
-						additionalRoles.add(role.replace("{process:?:", "{process:" + id + ":"));
-						accessRoleList.set(i,
-								role.replace("{process:?:", "{process:" + orgunit.getItemValueString("txtname") + ":"));
-					}
-				}
-			}
-
-		}
-		// update nameaddReadAccess....
-		if (additionalRoles.size() > 0) {
-			accessRoleList.addAll(additionalRoles);
-			documentActivity.replaceItemValue(nameAddField, accessRoleList);
-		}
-
-	}
 }
