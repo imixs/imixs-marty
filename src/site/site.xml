@@ -41,6 +41,7 @@
 			<item name="Services" href="services/index.html" collapse="true">
 				<item name="ProfileService" href="services/profileservice.html" />
 				<item name="TextUsernameAdapter" href="services/textusernameadapter.html" />
+				<item name="TeamRoleWildcardAdapter" href="services/teamrolewildcardadapter.html" />
 				<item name="ImageInterceptor" href="services/imageinterceptor.html" />
 			</item>
 
