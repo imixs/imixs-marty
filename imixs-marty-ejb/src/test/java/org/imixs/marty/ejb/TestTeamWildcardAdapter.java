@@ -1,20 +1,21 @@
-package org.imixs.marty.plugins;
+package org.imixs.marty.ejb;
 
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
+import org.imixs.marty.plugins.TeamPlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.DocumentService;
-import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.engine.TextEvent;
 import org.imixs.workflow.exceptions.PluginException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -31,6 +32,9 @@ public class TestTeamWildcardAdapter {
 	ItemCollection documentContext;
 	Map<String, ItemCollection> database = new HashMap<String, ItemCollection>();
 
+	@Spy
+	TeamRoleWildcardAdapter teamRoleWildcardAdapter;
+
 	/**
 	 * Setup script to simulate process and space entities for test cases.
 	 * 
@@ -38,6 +42,8 @@ public class TestTeamWildcardAdapter {
 	 */
 	@Before
 	public void setup() throws PluginException {
+		MockitoAnnotations.initMocks(this);
+
 		ItemCollection entity = null;
 
 		System.out.println("ClassName: " + TestTeamWildcardAdapter.class.getName());
@@ -75,12 +81,7 @@ public class TestTeamWildcardAdapter {
 		}
 
 		// Mockito setup
-		WorkflowService workflowContextMock = Mockito.mock(WorkflowService.class);
-		when(workflowContextMock.getSessionContext()).thenReturn(null);
-
 		DocumentService documentService = Mockito.mock(DocumentService.class);
-		when(workflowContextMock.getDocumentService()).thenReturn(documentService);
-
 		// Simulate entityService.load()...
 		when(documentService.load(Mockito.anyString())).thenAnswer(new Answer<ItemCollection>() {
 			@Override
@@ -92,11 +93,10 @@ public class TestTeamWildcardAdapter {
 			}
 		});
 
-		teamPlugin = new TeamPlugin();
-		teamPlugin.init(workflowContextMock);
-
 		documentActivity = new ItemCollection();
 		documentContext = new ItemCollection();
+
+		teamRoleWildcardAdapter.documentService = documentService;
 
 	}
 
@@ -105,56 +105,32 @@ public class TestTeamWildcardAdapter {
 	 * 
 	 * {process:?:team}
 	 * 
-	 * The Plugin should compute the orgunit based on the assigement to the current
-	 * workitem.
+	 * The Plugin should compute the orgunit bas"{space:?:team}"ed on the assigement
+	 * to the current workitem.
 	 * 
 	 * 
 	 * @throws PluginException
 	 * 
 	 */
-	@SuppressWarnings({ "rawtypes" })
 	@Test
 	public void testWildcardOrgunitRole() throws PluginException {
 
-		// test case-1 :
-		// assign space as an invalid ref
-
-		// new id....
+		// test a space team role...
 		documentContext.replaceItemValue("txtSpaceRef", "S0000-00002");
 		documentContext.replaceItemValue("txtProcessRef", "P0000-00003");
 
-		// set ACL (namaddreadaccess)....
-		documentActivity.replaceItemValue("namaddreadaccess", "{space:?:team}");
-		// set ACL (namaddwriteaccess)....
-		documentActivity.replaceItemValue("namaddwriteaccess", "{process:?:manager}");
-		// set ACL (namOwnershipNames)....
-		documentActivity.replaceItemValue("namOwnershipNames", "{process:?:member}");
+		String testRole = "{space:?:team}";
+		TextEvent event = new TextEvent(testRole, documentContext);
+		teamRoleWildcardAdapter.onEvent(event);
+		String roleResult = event.getText();
+		Assert.assertEquals(roleResult, "{space:S0000-00002:team}");
 
-		documentContext = teamPlugin.run(documentContext, documentActivity);
-		Assert.assertNotNull(documentContext);
-
-		// now we expect that the namaddreadaccess is addapted with the real team roles
-		List accessList = documentActivity.getItemValue("namaddreadaccess");
-		// wildcard role should be replaced
-		Assert.assertFalse(accessList.contains("{space:?:team}"));
-		Assert.assertTrue(accessList.contains("{space:S0000-00002:team}"));
-		Assert.assertTrue(accessList.contains("{space:Space 2:team}"));
-
-		// next we expect that also the namaddwriteaccess is addapted with the real team
-		// roles
-		accessList = documentActivity.getItemValue("namaddwriteaccess");
-		// wildcard role should be replaced
-		Assert.assertFalse(accessList.contains("{process:?:team}"));
-		Assert.assertTrue(accessList.contains("{process:P0000-00003:manager}"));
-		Assert.assertTrue(accessList.contains("{process:Process 3:manager}"));
-
-		// and finally we expect that also the namOwnershipNames is addapted with the
-		// real team roles
-		accessList = documentActivity.getItemValue("namOwnershipNames");
-		// wildcard role should be replaced
-		Assert.assertFalse(accessList.contains("{process:?:team}"));
-		Assert.assertTrue(accessList.contains("{process:P0000-00003:member}"));
-		Assert.assertTrue(accessList.contains("{process:Process 3:member}"));
+		// test member role
+		testRole = "{process:?:member}";
+		event = new TextEvent(testRole, documentContext);
+		teamRoleWildcardAdapter.onEvent(event);
+		roleResult = event.getText();
+		Assert.assertEquals(roleResult, "{process:P0000-00003:member}");
 
 	}
 }
