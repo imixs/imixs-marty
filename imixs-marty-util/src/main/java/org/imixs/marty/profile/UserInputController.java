@@ -164,7 +164,7 @@ public class UserInputController implements Serializable {
 			// issue #170
 			phrase = LuceneSearchService.normalizeSearchTerm(phrase);
 
-			String sQuery = "(type:profile) AND ((txtname:" + phrase
+			String sQuery = "(type:profile) AND ($processid:[210 TO 249]) AND  ((txtname:" + phrase
 					+ "*) OR (txtusername:" + phrase + "*) OR (txtemail:" + phrase + "*))";
 
 			logger.finest("searchprofile: " + sQuery);
