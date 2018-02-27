@@ -74,6 +74,8 @@ import org.imixs.workflow.util.XMLParser;
  * 
  */
 public class DMSSplitPlugin extends AbstractPlugin {
+
+	public static String SNAPSHOTID = "$snapshotid";
 	public static final String LINK_PROPERTY = "txtworkitemref";
 	public static final String DMS_SUBPROCESS_CREATE = "dms_subprocess_create";
 
@@ -95,7 +97,8 @@ public class DMSSplitPlugin extends AbstractPlugin {
 	public ItemCollection run(ItemCollection adocumentContext, ItemCollection adocumentActivity)
 			throws PluginException {
 
-		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(adocumentActivity, adocumentContext);
+		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(adocumentActivity,
+				adocumentContext);
 
 		if (evalItemCollection == null)
 			return adocumentContext;
@@ -130,7 +133,7 @@ public class DMSSplitPlugin extends AbstractPlugin {
 			try {
 				adocumentContext = createSubprocesses(dmsProcessData, adocumentContext);
 			} catch (ModelException e) {
-				throw new PluginException(e.getErrorContext(),e.getErrorCode(),e.getMessage(),e);
+				throw new PluginException(e.getErrorContext(), e.getErrorCode(), e.getMessage(), e);
 			}
 		}
 
@@ -139,9 +142,9 @@ public class DMSSplitPlugin extends AbstractPlugin {
 
 	/**
 	 * This method expects a of DMS-Subprocess definition and creates for each
-	 * attachment a new subprocess. The reference of the created subprocess will
-	 * be stored in the property txtworkitemRef of the origin workitem. The
-	 * method will remove attachments form the originWorkitem in case the tag
+	 * attachment a new subprocess. The reference of the created subprocess will be
+	 * stored in the property txtworkitemRef of the origin workitem. The method will
+	 * remove attachments form the originWorkitem in case the tag
 	 * <remove>true</remove> is found.
 	 * 
 	 * The method returns the originWorkitem
@@ -159,8 +162,24 @@ public class DMSSplitPlugin extends AbstractPlugin {
 
 		if (processData != null) {
 
-			// get all attachments
-			Map<String, List<Object>> files = loadFilesFromBlobWorkitem(originWorkitem);
+			Map<String, List<Object>> files = null;
+
+			// we can add the attachment
+			// test for snapshot workitem to add attachemtns
+			ItemCollection attachmentContext = (ItemCollection) originWorkitem.clone();
+			// lookup for a snapthos
+			ItemCollection snapshotWorkitem = this.getWorkflowService().getDocumentService()
+					.load(originWorkitem.getItemValueString(SNAPSHOTID));
+			// if snapshot found we can transfere the missing file content
+			if (snapshotWorkitem != null) {
+				// merge the current documents into the snapshot context
+				copyFilesFromItemCollection(attachmentContext, snapshotWorkitem);
+			}
+
+			if (attachmentContext != null) {
+
+				files = attachmentContext.getFiles();
+			}
 
 			if (files == null) {
 				return originWorkitem;
@@ -219,8 +238,8 @@ public class DMSSplitPlugin extends AbstractPlugin {
 	 * This Method copies the fields defined in 'items' into the targetWorkitem.
 	 * Multiple values are separated with comma ','.
 	 * 
-	 * In case a item name contains '|' the target field name will become the
-	 * right part of the item name.
+	 * In case a item name contains '|' the target field name will become the right
+	 * part of the item name.
 	 */
 	private void copyItemList(String items, ItemCollection source, ItemCollection target) {
 		// clone the field list...
@@ -261,27 +280,47 @@ public class DMSSplitPlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * This method loads the BlobWorkitem for a given parent WorkItem and
-	 * returns the FileList. The BlobWorkitem is identified by the $unqiueidRef.
+	 * This helper method transfers the $files content from a source workitem into a
+	 * target workitem if no content for the same file exists in the target
+	 * workitem.
 	 * 
-	 * If no BlobWorkitem still exists the method returns null
+	 * The method returns true if a content was missing in the source workitem.
 	 * 
+	 * 
+	 * If 'protectContent' is set to 'true' than in case a file with the same name
+	 * already exits, will be 'archived' with a time-stamp-sufix
+	 * 
+	 * e.g.: 'ejb_obj.gif' => 'ejb_obj-1514410113556.gif'
+	 * 
+	 * @param currentWorkitem
+	 * @param snaptshotWorkitem
+	 * @return
 	 */
-	private Map<String, List<Object>> loadFilesFromBlobWorkitem(ItemCollection parentWorkitem) {
-		ItemCollection blobWorkitem = null;
+	private void copyFilesFromItemCollection(ItemCollection currentWorkitem, ItemCollection snaptshotWorkitem) {
 
-		// is parentWorkitem defined?
-		if (parentWorkitem == null)
-			return null;
-
-		blobWorkitem = BlobWorkitemHandler.load(this.getWorkflowService().getDocumentService(), parentWorkitem);
-
-		// if blobWorkitem was found, return the file list.
-		if (blobWorkitem != null) {
-			Map<String, List<Object>> files = blobWorkitem.getFiles();
-			return files;
+		Map<String, List<Object>> files = currentWorkitem.getFiles();
+		if (files != null) {
+			for (Map.Entry<String, List<Object>> entry : files.entrySet()) {
+				String fileName = entry.getKey();
+				List<Object> file = entry.getValue();
+				// test if the content of the file is empty. In this case we copy
+				// the content from the last snapshot (source)
+				byte[] content = (byte[]) file.get(1);
+				if (content.length == 0 || content.length <= 2) { // <= 2 migration issue from shnaptho-workitem (size
+																	// can
+																	// be 1 byte)
+					// fetch the old content from snapshot...
+					if (snaptshotWorkitem != null) {
+						List<Object> oldFile = snaptshotWorkitem.getFile(fileName);
+						if (oldFile != null) {
+							logger.fine("copy file content '" + fileName + "' from: " + currentWorkitem.getUniqueID());
+							currentWorkitem.addFile((byte[]) oldFile.get(1), fileName, (String) oldFile.get(0));
+						}
+					}
+				}
+			}
 		}
-		return null;
 
 	}
+
 }
