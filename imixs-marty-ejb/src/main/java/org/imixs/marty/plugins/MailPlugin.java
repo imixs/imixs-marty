@@ -67,7 +67,7 @@ import org.imixs.workflow.exceptions.PluginException;
 public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 
 	private ProfileService profileService = null;
-
+	public static String SNAPSHOTID = "$snapshotid";
 	public static String PROFILESERVICE_NOT_BOUND = "PROFILESERVICE_NOT_BOUND";
 	public static String PROPERTYSERVICE_NOT_BOUND = "PROPERTYSERVICE_NOT_BOUND";
 	public static String INVALID_EMAIL = "INVALID_EMAIL";
@@ -106,15 +106,46 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		// now get the Mail Session object
 		MimeMessage mailMessage = (MimeMessage) super.getMailMessage();
 		if (mailMessage != null) {
-			// test for blob workitem to add attachemtns
-			ItemCollection blobWorkitem = BlobWorkitemHandler.load(this.getWorkflowService().getDocumentService(),
-					documentContext);
-			if (blobWorkitem != null) {
-				try {
-					attachFiles(blobWorkitem);
-				} catch (MessagingException e) {
-					logger.warning("unable to attach files!");
-					e.printStackTrace();
+
+			// run only if we have a message body with a <attachment tag....
+			String content = null;
+			MimeBodyPart messagePart = null;
+			// did we have a message body?
+			Multipart multipart = super.getMultipart();
+			try {
+				messagePart = (MimeBodyPart) multipart.getBodyPart(0);
+				content = (String) messagePart.getContent();
+			} catch (MessagingException e) {
+				logger.warning("Unable to parse tag 'attachments' !");
+				e.printStackTrace();
+				return null;
+			} catch (IOException e) {
+				logger.warning("Unable to parse tag 'attachments' !");
+				e.printStackTrace();
+				return null;
+			}
+			
+			// did our message body contain a <attachments .....?
+			if (content != null && content.toLowerCase().indexOf("<attachments") != -1) {
+				// we can add the attachment
+				// test for snapshot workitem to add attachemtns
+				ItemCollection attachmentContext = (ItemCollection) documentContext.clone();
+				// lookup for a snapthos
+				ItemCollection snapshotWorkitem = this.getWorkflowService().getDocumentService()
+						.load(documentContext.getItemValueString(SNAPSHOTID));
+				// if snapshot found we can transfere the missing file content
+				if (snapshotWorkitem != null) {
+					// merge the current documents into the snapshot context
+					copyFilesFromItemCollection(attachmentContext, snapshotWorkitem);
+				}
+
+				if (attachmentContext != null) {
+					try {
+						attachFiles(attachmentContext);
+					} catch (MessagingException e) {
+						logger.warning("unable to attach files!");
+						e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -122,11 +153,11 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 	}
 
 	/**
-	 * this helper method creates an internet address from a string if the
-	 * string has illegal characters like whitespace the string will be
-	 * surrounded with "". If you subclass this MailPlugin Class you can
-	 * overwrite this method to return a different mail-address name or lookup a
-	 * mail attribute in a directory like a ldap directory.
+	 * this helper method creates an internet address from a string if the string
+	 * has illegal characters like whitespace the string will be surrounded with "".
+	 * If you subclass this MailPlugin Class you can overwrite this method to return
+	 * a different mail-address name or lookup a mail attribute in a directory like
+	 * a ldap directory.
 	 * 
 	 * @param aAddr
 	 * @return
@@ -189,8 +220,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 	}
 
 	/**
-	 * This method adds all files of a given BlobWOrkitem to the current
-	 * MailMessage
+	 * This method adds all files of a given BlobWOrkitem to the current MailMessage
 	 * 
 	 * 
 	 * @param blobWorkitem
@@ -235,9 +265,9 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 
 	/**
 	 * this method parses a mail body for the xml tag
-	 * <attachments>name</attachments>. If an tag exists the method removes the
-	 * tag and returns the value. The value is used by the method attachFile()
-	 * to add files into the mail body.
+	 * <attachments>name</attachments>. If an tag exists the method removes the tag
+	 * and returns the value. The value is used by the method attachFile() to add
+	 * files into the mail body.
 	 * 
 	 * 
 	 */
@@ -321,8 +351,8 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 	}
 
 	/**
-	 * This method returns a FileInfo object for a specific FilenName. The
-	 * FileInfo contains the Content (byte[]) and the ContentType
+	 * This method returns a FileInfo object for a specific FilenName. The FileInfo
+	 * contains the Content (byte[]) and the ContentType
 	 * 
 	 * @param uniqueid
 	 * @param fileName
@@ -335,7 +365,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		// now fetch the file content....
 		if (files != null) {
 			List<Object> fileData = files.get(fileName);
-			if (fileData != null && fileData.size()>=2) {
+			if (fileData != null && fileData.size() >= 2) {
 				String sContentType = fileData.get(0).toString();
 				byte[] fileContent = (byte[]) fileData.get(1);
 				FileInfo fileInfo = new FileInfo(fileContent, sContentType);
@@ -365,4 +395,47 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 
 	}
 
+	/**
+	 * This helper method transfers the $files content from a source workitem into a
+	 * target workitem if no content for the same file exists in the target
+	 * workitem.
+	 * 
+	 * The method returns true if a content was missing in the source workitem.
+	 * 
+	 * 
+	 * If 'protectContent' is set to 'true' than in case a file with the same name
+	 * already exits, will be 'archived' with a time-stamp-sufix
+	 * 
+	 * e.g.: 'ejb_obj.gif' => 'ejb_obj-1514410113556.gif'
+	 * 
+	 * @param currentWorkitem
+	 * @param snaptshotWorkitem
+	 * @return
+	 */
+	private void copyFilesFromItemCollection(ItemCollection currentWorkitem, ItemCollection snaptshotWorkitem) {
+
+		Map<String, List<Object>> files = currentWorkitem.getFiles();
+		if (files != null) {
+			for (Map.Entry<String, List<Object>> entry : files.entrySet()) {
+				String fileName = entry.getKey();
+				List<Object> file = entry.getValue();
+				// test if the content of the file is empty. In this case we copy
+				// the content from the last snapshot (source)
+				byte[] content = (byte[]) file.get(1);
+				if (content.length == 0 || content.length <= 2) { // <= 2 migration issue from shnaptho-workitem (size
+																	// can
+																	// be 1 byte)
+					// fetch the old content from snapshot...
+					if (snaptshotWorkitem != null) {
+						List<Object> oldFile = snaptshotWorkitem.getFile(fileName);
+						if (oldFile != null) {
+							logger.fine("copy file content '" + fileName + "' from: " + currentWorkitem.getUniqueID());
+							currentWorkitem.addFile((byte[]) oldFile.get(1), fileName, (String) oldFile.get(0));
+						}
+					}
+				}
+			}
+		}
+
+	}
 }
