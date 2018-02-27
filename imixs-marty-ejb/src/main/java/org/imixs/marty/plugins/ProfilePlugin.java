@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.ejb.EJB;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -39,6 +40,7 @@ import javax.naming.NamingException;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.engine.adminp.AdminPService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
@@ -87,6 +89,11 @@ public class ProfilePlugin extends AbstractPlugin {
 	public static String DEFAULT_USERID_PATTERN = "^[A-Za-z0-9.@\\-\\w]+";
 	public static String DEFAULT_USER_INPUT_MODE = "LOWERCASE";
 
+	// adminP
+	@EJB
+	AdminPService adminPService;
+	
+	
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
@@ -117,6 +124,30 @@ public class ProfilePlugin extends AbstractPlugin {
 			validateUserProfile(workItem);
 			// store userID local to discard the cache when close()...
 			userID = workItem.getItemValueString("txtName");
+			
+			
+			// verify if deputy was changes?
+			// load the old workitem
+			ItemCollection oldProfile=this.getWorkflowService().getDocumentService().load(workItem.getUniqueID());
+			if (oldProfile!=null) {
+				String lastDeputy=oldProfile.getItemValueString("namdeputy");
+				String currentDeputy=workItem.getItemValueString("namdeputy");
+				if (!currentDeputy.isEmpty() && !currentDeputy.equals(lastDeputy)) {
+					logger.info("namdeputy has changed, staring new ein adminp job: " + userID + "=>" + currentDeputy);
+					if (adminPService!=null) {
+						ItemCollection adminPJob=new ItemCollection();
+						adminPJob.replaceItemValue("type", "adminp");
+						adminPJob.replaceItemValue("typelist", "workitem");
+						adminPJob.appendItemValue("typelist", "childworkitem");
+						
+						adminPJob.replaceItemValue("namfrom", userID);
+						adminPJob.replaceItemValue("namto	", currentDeputy);
+						adminPJob.replaceItemValue("job", AdminPService.JOB_RENAME_USER);
+						adminPService.createJob(adminPJob);
+					}
+				}
+			}
+			
 		}
 		return workItem;
 	}
