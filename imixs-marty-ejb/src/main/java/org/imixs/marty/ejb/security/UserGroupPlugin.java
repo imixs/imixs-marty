@@ -67,8 +67,7 @@ public class UserGroupPlugin extends AbstractPlugin {
 	private static Logger logger = Logger.getLogger(UserGroupPlugin.class.getName());
 
 	/**
-	 * Try to lookup the UserGroupService. If not availalbe the plugin will not
-	 * run.
+	 * Try to lookup the UserGroupService. If not availalbe the plugin will not run.
 	 */
 	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
@@ -122,9 +121,13 @@ public class UserGroupPlugin extends AbstractPlugin {
 		// if processid=210 and activity=20 - delete all groups
 		int iProcessID = workitem.getItemValueInteger("$ProcessID");
 		int iActivityID = documentActivity.getItemValueInteger("numActivityID");
-		if (iProcessID >= TASK_PPROFILE_ACTIVE && iActivityID == EVENT_PROFILE_LOCK) {
-			logger.info("Lock profile '" + workitem.getItemValueString("txtname") + "'");
-			workitem.replaceItemValue("txtGroups", UserGroupService.ACCESSLEVEL_NOACCESS);
+
+		// we do not clear roles for 'admin' profile!
+		if (!"admin".equalsIgnoreCase(workitem.getItemValueString("txtname"))) {
+			if (iProcessID >= TASK_PPROFILE_ACTIVE && iActivityID == EVENT_PROFILE_LOCK) {
+				logger.info("Lock profile '" + workitem.getItemValueString("txtname") + "'");
+				workitem.replaceItemValue("txtGroups", UserGroupService.ACCESSLEVEL_NOACCESS);
+			}
 		}
 
 		logger.fine("[UserGroupPlugin] update profile '" + workitem.getItemValueString("txtname") + "'....");
@@ -144,7 +147,7 @@ public class UserGroupPlugin extends AbstractPlugin {
 		try {
 			col = documentService.find(searchterm, 1, 0);
 		} catch (QueryException e) {
-			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID, e.getMessage(), e);
 		}
 
 		if (col.size() > 0) {
