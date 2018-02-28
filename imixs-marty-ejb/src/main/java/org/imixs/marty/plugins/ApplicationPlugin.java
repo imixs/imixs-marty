@@ -47,7 +47,7 @@ public class ApplicationPlugin extends org.imixs.workflow.engine.plugins.Applica
 
 	@Override
 	public ItemCollection run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
-		logger.warning("The Marty ApplicationPlugin is deprecated and can be removed from this model!");
+		logger.warning("The Marty ApplicationPlugin is deprecated and should be replaced with 'org.imixs.workflow.engine.plugins.ApplicationPlugin'");
 		return super.run(adocumentContext, documentActivity);
 	}
 
