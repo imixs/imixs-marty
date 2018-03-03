@@ -92,8 +92,7 @@ public class ProfilePlugin extends AbstractPlugin {
 	// adminP
 	@EJB
 	AdminPService adminPService;
-	
-	
+
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
@@ -124,32 +123,39 @@ public class ProfilePlugin extends AbstractPlugin {
 			validateUserProfile(workItem);
 			// store userID local to discard the cache when close()...
 			userID = workItem.getItemValueString("txtName");
-			
-			
-			// verify if deputy was changes?
-			// load the old workitem
-			ItemCollection oldProfile=this.getWorkflowService().getDocumentService().load(workItem.getUniqueID());
-			if (oldProfile!=null) {
-				String lastDeputy=oldProfile.getItemValueString("namdeputy");
-				String currentDeputy=workItem.getItemValueString("namdeputy");
+
+			// load the old user profile
+			ItemCollection oldProfile = this.getWorkflowService().getDocumentService().load(workItem.getUniqueID());
+			if (oldProfile != null) {
+				// verify if the deputy has changed?
+				String lastDeputy = oldProfile.getItemValueString("namdeputy");
+				String currentDeputy = workItem.getItemValueString("namdeputy");
 				if (!currentDeputy.isEmpty() && !currentDeputy.equals(lastDeputy)) {
-					logger.info("namdeputy has changed, staring new ein adminp job: " + userID + "=>" + currentDeputy);
-					if (adminPService!=null) {
-						ItemCollection adminPJob=new ItemCollection();
-						adminPJob.replaceItemValue("type", "adminp");
-						adminPJob.replaceItemValue("typelist", "workitem");
-						adminPJob.appendItemValue("typelist", "childworkitem");
-						
-						adminPJob.replaceItemValue("namfrom", userID);
-						adminPJob.replaceItemValue("namto	", currentDeputy);
-						adminPJob.replaceItemValue("job", AdminPService.JOB_RENAME_USER);
-						adminPService.createJob(adminPJob);
-					}
+					// start an adminP job...
+					createAdminPJob(currentDeputy);
 				}
 			}
-			
 		}
 		return workItem;
+	}
+
+	/**
+	 * Create an AdminP JOB_RENAME_USER. The method expects the source userId and
+	 * the target userId.
+	 * 
+	 */
+	private void createAdminPJob(String targetUserID) {
+		logger.info("namdeputy has changed, staring new ein adminp job: " + userID + "=>" + targetUserID);
+		if (adminPService != null) {
+			ItemCollection adminPJob = new ItemCollection();
+			adminPJob.replaceItemValue("type", "adminp");
+			adminPJob.replaceItemValue("typelist", "workitem,childworkitem");
+			adminPJob.replaceItemValue("namfrom", userID);
+			adminPJob.replaceItemValue("namto	", targetUserID);
+			adminPJob.replaceItemValue("job", AdminPService.JOB_RENAME_USER);
+			adminPService.createJob(adminPJob);
+		}
+
 	}
 
 	/**
