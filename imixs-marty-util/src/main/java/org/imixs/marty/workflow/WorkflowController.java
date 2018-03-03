@@ -49,7 +49,6 @@ import org.imixs.marty.util.ErrorHandler;
 import org.imixs.marty.util.ValidationException;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
-import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
@@ -359,7 +358,7 @@ public class WorkflowController extends org.imixs.workflow.faces.workitem.Workfl
 			logger.fine("action result=" + actionResult);
 
 			if (logger.isLoggable(Level.FINEST)) {
-				logger.finest("[process] '" + getWorkitem().getItemValueString(WorkflowService.UNIQUEID)
+				logger.finest("[process] '" + getWorkitem().getItemValueString(WorkflowKernel.UNIQUEID)
 						+ "' completed in " + (System.currentTimeMillis() - lTotal) + "ms");
 			}
 
