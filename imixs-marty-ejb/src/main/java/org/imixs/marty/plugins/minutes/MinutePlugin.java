@@ -188,14 +188,16 @@ public class MinutePlugin extends AbstractPlugin {
 
 	/**
 	 * This method compute a new numsequencenumber for a minute item. The next
-	 * number is computed based on the count numbered minute items.
+	 * number is computed based on the highest available number.
+	 * 
+	 * See issue #234
 	 * 
 	 */
 	private void computeNextSequenceNumber(ItemCollection documentContext) {
 		// test if minute parent workitem exits
 		ItemCollection parent = this.getWorkflowService()
 				.getWorkItem(documentContext.getItemValueString("minuteParentRef"));
-		int nummer = 1;
+		int bestNumber=1;
 		if (parent != null) {
 			// find all minute itmes and comptue the next Number...
 			List<ItemCollection> childs = this.getWorkflowService().getWorkListByRef(parent.getUniqueID(), null, 999, 0,
@@ -203,10 +205,13 @@ public class MinutePlugin extends AbstractPlugin {
 			for (ItemCollection minute : childs) {
 				if (minute != null && MINUTE_TYPE_ITEM.equals(minute.getItemValueString(MINUTETYPE))
 						&& minute.getItemValueInteger(SEQUENCENUMBER) > 0) {
-					nummer++;
+					int currentNumber=  minute.getItemValueInteger(SEQUENCENUMBER);
+					if (currentNumber>=bestNumber) {
+						bestNumber=currentNumber+1;
+					}
 				}
 			}
-			documentContext.replaceItemValue(SEQUENCENUMBER, nummer);
+			documentContext.replaceItemValue(SEQUENCENUMBER, bestNumber);
 		}
 
 	}
