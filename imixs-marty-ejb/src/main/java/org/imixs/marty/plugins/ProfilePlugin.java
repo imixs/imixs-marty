@@ -154,6 +154,8 @@ public class ProfilePlugin extends AbstractPlugin {
 			adminPJob.replaceItemValue("namto	", targetUserID);
 			adminPJob.replaceItemValue("job", AdminPService.JOB_RENAME_USER);
 			adminPService.createJob(adminPJob);
+		} else {
+			logger.warning("Service not injected!");
 		}
 
 	}
