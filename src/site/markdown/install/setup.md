@@ -1,4 +1,4 @@
-#Initial Setup
+# Initial Setup
 
 Imixs-Marty provides a SetupService to initialize the System. The SetupService can be controlled by the 
 imixs.property 'setup.mode':
@@ -10,9 +10,10 @@ imixs.property 'setup.mode':
 |mode	| uploads the default models only									|
 |auto	| no action 														|
 
+## Integration
+The Setup Service can either be called by the Rest API or by integration into a JSP page.
 
-
-## Rest API 
+### Rest API 
 The SetupService can be triggered by the Rest API:
 The GET method is used to trigger the system setup:
 
@@ -23,7 +24,7 @@ The GET method is used to trigger the system setup:
 
 
 
-## JSF Integration
+### JSF Integration
 
 The SetupService can also be triggered by the CDI bean InitController. This bean will trigger the setup service and 
 can be placed into a page as followed:
