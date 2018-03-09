@@ -219,7 +219,15 @@ public class UserGroupService {
 	 */
 	@SuppressWarnings("unchecked")
 	public void initUserIDs() {
-
+		
+		String setupMode = propertyService.getProperties().getProperty("setup.mode", "auto");
+		if (!"auto".equalsIgnoreCase(setupMode)) {
+			// init userdb is disabled
+			logger.finest("...... initUserIDs is disabled");
+			return;
+		}
+		
+		logger.info("init default UserIDs...");
 		// default admin account
 		String sAdminAccount = "admin";
 		String userInputMode = propertyService.getProperties().getProperty("security.userid.input.mode",

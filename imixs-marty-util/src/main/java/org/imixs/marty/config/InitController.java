@@ -28,8 +28,6 @@
 package org.imixs.marty.config;
 
 import java.io.Serializable;
-import java.util.Properties;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -38,17 +36,15 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Named;
 
 import org.imixs.marty.ejb.SetupService;
-import org.imixs.marty.ejb.security.UserGroupService;
-import org.imixs.workflow.exceptions.AccessDeniedException;
 
 /**
  * This Marty InitController verifies the init status of userDB and system
- * models and calls the method initDatabase if the system was not yet
- * initialized and the imixs.property param 'setup.mode' is set to 'auto'.
+ * models and calls the SystemSetup if the system was not yet initialized
  * 
- * The bean is triggered in the index.xhtml page. This guarantees that the
- * database is initialized when the application is triggered the first time,
- * after successful deployment.
+ * The setup mode can be controlled by imixs.property 'setup.mode' which is set
+ * to 'auto' | 'model' | 'none'.
+ * 
+ * The bean can be placed in a jsf page to trigger the service setup.
  * 
  * 
  * @author rsoika
@@ -58,92 +54,44 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 @ApplicationScoped
 public class InitController implements Serializable {
 
+	@EJB
+	SetupService setupService;
+
 	private static final long serialVersionUID = 1L;
-
-	@EJB
-	private UserGroupService userGroupService;
-
-	@EJB
-	private SetupService setupService;
-
 	private boolean initMode = false;
 	private String initStatus = "";
 
 	private static Logger logger = Logger.getLogger(InitController.class.getName());
 
-	public InitController() {
-		super();
-	}
-
 	/**
-	 * This method initializes the userDB and system models.
+	 * This method initializes the sytem by calling the SystemServcie EJB.
+	 * 
+	 * The setup mode can be set by the imixs.property 'setup.mode'
+	 * 
+	 * setup.mode = auto | model | none
 	 */
 	@PostConstruct
 	public void init() {
-
-		// init system database...
-		Properties properties = loadProperties();
-		if (!initMode && properties.containsKey("setup.mode") && "auto".equals(properties.getProperty("setup.mode"))) {
-			logger.info("setup.mode=auto -> starting system setup...");
-			// avoid calling twice
+		// avoid calling twice
+		if (!initMode) {
+			logger.info("calling System Setup...");
 			initMode = true;
-
-		
-			// PHASE-1: init userIDs for user db
-			try {
-				if (userGroupService != null) {
-					logger.info("running userGroupService.initUserIDs...");
-					userGroupService.initUserIDs();
-				} else {
-					logger.warning("userGroupService not initialized!");
-				}
-			} catch (Exception e) {
-				logger.warning("Error during initUserIds: " + e.getMessage());
-			}
-
-			
-			// PHASE-2: init system indizies and load default models
-			try {
-				logger.info("running systemService.init...");
-				setupService.init();
-			} catch (AccessDeniedException e1) {
-				logger.severe("Error during init setupService: " + e1.getMessage());
-				e1.printStackTrace();
-			}
-
-		
-			initMode = false;
-			initStatus = "OK";
+			initStatus = setupService.init();
 		}
 	}
 
 	/**
-	 * Returns the initStatus. The variable is set during the init() method.
+	 * Returns the initStatus. The variable is set during the init() method. To
+	 * trigger the system setup place the following line in your jsf page:
+	 * 
+	 * <code>
+	 * 	<!-- SystemSetupStatus=#{initController.initStatus} -->
+	 * </code>
 	 * 
 	 * @return
 	 */
 	public String getInitStatus() {
 		return initStatus;
-	}
-
-	/**
-	 * Helper method which loads a imixs.property file
-	 * 
-	 * (located at current threads classpath)
-	 * 
-	 */
-	private Properties loadProperties() {
-		Properties properties = new Properties();
-		try {
-			properties
-					.load(Thread.currentThread().getContextClassLoader().getResource("imixs.properties").openStream());
-		} catch (Exception e) {
-			logger.warning("PropertyService unable to find imixs.properties in current classpath");
-			if (logger.isLoggable(Level.FINE)) {
-				e.printStackTrace();
-			}
-		}
-		return properties;
 	}
 
 }

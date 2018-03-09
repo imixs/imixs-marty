@@ -1,14 +1,33 @@
 #Initial Setup
 
-Imixs-Marty provides a SetupServlet which is called during deployment and also can be triggered via the URI
+Imixs-Marty provides a SetupService to initialize the System. 
+The default for the 'setup.mode' is set to 'auto'. To disable the setup mode it can be set to 'none'.
+
+
+The SetupService is triggered by the initController which can be placed into a page as followed:
+
+	<!-- SystemSetupStatus=#{initController.initStatus} -->
+
+This will call the init mechanism.
+
+The SetupService can be called during deployment and also can be triggered via the URI
 
     http://localhost:8080/office/setup
 
-The SetupServlet verifies the status of a marty instance and inits default values. It creates a default user 'admin' and initalizes the entity indicies. The auto-setup during deplyoment can be disabled by the imixs.property key
+The SetupServlet verifies the status of a marty instance and inits default values. 
 
     setup.mode=none
 
-##Import default Data
+
+## Disable UserDb
+The SetupService creates a default user 'admin' in the interal user db. 
+
+
+	setup.userdb.disabled=false
+
+
+
+## Import default Model
 
 During the deployment of a marty application it is possible to load default model data  into the database. This feature simplifies the installation of a Marty Workflow Instance  because no manually deploy of a system model or a business model before the first access  is necessary.
 If no System Model is still available  (System Models start with the version numer 'system-") the servlet loads all entity data files defined by the imixs property key 
