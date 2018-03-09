@@ -1,35 +1,40 @@
 #Initial Setup
 
-Imixs-Marty provides a SetupService to initialize the System. 
-The default for the 'setup.mode' is set to 'auto'. To disable the setup mode it can be set to 'none'.
+Imixs-Marty provides a SetupService to initialize the System. The SetupService can be controlled by the 
+imixs.property 'setup.mode':
 
 
-The SetupService is triggered by the initController which can be placed into a page as followed:
+| mode  | Description                               						|
+|---------------------------------------------------------------------------|
+|auto (default)	| initializes the userDb default user and uploads the default models|
+|mode	| uploads the default models only									|
+|auto	| no action 														|
+
+
+
+## Rest API 
+The SetupService can be triggered by the Rest API:
+The GET method is used to trigger the system setup:
+
+
+| URI                                           | Method| Description                                                           | 
+|-----------------------------------------------|-------|----------------------------------------------------------------|
+| /setup                                        | GET  | trigger the setup service |
+
+
+
+## JSF Integration
+
+The SetupService can also be triggered by the CDI bean InitController. This bean will trigger the setup service and 
+can be placed into a page as followed:
 
 	<!-- SystemSetupStatus=#{initController.initStatus} -->
-
-This will call the init mechanism.
-
-The SetupService can be called during deployment and also can be triggered via the URI
-
-    http://localhost:8080/office/setup
-
-The SetupServlet verifies the status of a marty instance and inits default values. 
-
-    setup.mode=none
-
-
-## Disable UserDb
-The SetupService creates a default user 'admin' in the interal user db. 
-
-
-	setup.userdb.disabled=false
 
 
 
 ## Import default Model
 
-During the deployment of a marty application it is possible to load default model data  into the database. This feature simplifies the installation of a Marty Workflow Instance  because no manually deploy of a system model or a business model before the first access  is necessary.
+The SetupService allows to load default model data  into the database. This feature simplifies the installation of a Marty Workflow Instance  because no manually deploy of a system model or a business model before the first access  is necessary.
 If no System Model is still available  (System Models start with the version numer 'system-") the servlet loads all entity data files defined by the imixs property key 
 
     setup.defaultModel
@@ -74,8 +79,5 @@ Make sure that the model data and project configuration is uptodate before you s
     JOIN wi.textItems AS v
     WHERE wi.type IN ('ProcessEntity','ActivityEntity','WorkflowEnvironmentEntity')
     AND v.itemName = '$modelversion' AND v.itemValue = '?1'
- 
- 
-# Autostart WorkflowScheduler
-During first deployment the SetupServlet verifies if a WorkflowScheduler was defined once before. In this case the TimerSerivce will autoatically restarted by the SetupServlet
+
  
