@@ -234,7 +234,7 @@ public class SetupService {
 			if (!colModelVersions.isEmpty()) {
 				logger.info("models available: ");
 				for (String amodel : colModelVersions) {
-					logger.warning("................ '" + amodel + "'");
+					logger.info("................ '" + amodel + "'");
 				}
 				return;
 			}
