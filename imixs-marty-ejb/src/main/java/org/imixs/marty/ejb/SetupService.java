@@ -24,7 +24,9 @@ package org.imixs.marty.ejb;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -44,6 +46,7 @@ import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.imixs.marty.ejb.security.UserGroupService;
 import org.imixs.workflow.ItemCollection;
@@ -57,6 +60,7 @@ import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.xml.DocumentCollection;
 import org.imixs.workflow.xml.XMLItemCollection;
 import org.imixs.workflow.xml.XMLItemCollectionAdapter;
+import org.xml.sax.SAXException;
 
 /**
  * The SetupService EJB initializes the system settings by its method 'init()'.
@@ -75,6 +79,14 @@ import org.imixs.workflow.xml.XMLItemCollectionAdapter;
 @Produces({ MediaType.TEXT_HTML, MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 @Path("/setup")
 public class SetupService {
+
+	public static String USERDB_OK = "USERDB_OK";
+	public static String USERDB_DISABLED = "USERDB_DISABLED";
+
+	public static String MODEL_OK = "MODEL_OK";
+	public static String MODEL_INITIALIZED = "MODEL_INITIALIZED";
+	public static String MODEL_ERROR_MISSING_CONFIGURATION = "MODEL_ERROR_MISSING_CONFIGURATION";
+	public static String MODEL_ERROR_MISSING_MODELFILE = "MODEL_ERROR_MISSING_MODELFILE";
 
 	@EJB
 	DocumentService documentService;
@@ -98,6 +110,7 @@ public class SetupService {
 	 */
 	@GET
 	public String init() {
+		String result = "";
 		logger.info("starting System Setup...");
 
 		// read setup mode...
@@ -111,6 +124,7 @@ public class SetupService {
 				if (userGroupService != null) {
 					userGroupService.initUserIDs();
 					logger.info("... UserDB OK");
+					result = USERDB_OK;
 				} else {
 					logger.warning("userGroupService not initialized!");
 				}
@@ -119,22 +133,22 @@ public class SetupService {
 			}
 
 		} else {
+			result = USERDB_DISABLED;
 			logger.finest("......UserDB is disabled.");
 		}
 
 		// load default models...?
 		if ("auto".equalsIgnoreCase(setupMode) || "model".equalsIgnoreCase(setupMode)) {
 			try {
-
-				loadDefaultModels();
+				result += ", " + loadDefaultModels();
 			} catch (AccessDeniedException e1) {
 				logger.severe("Error during init setupService: " + e1.getMessage());
 				e1.printStackTrace();
 			}
 		}
 
-		logger.info("System Setup OK");
-		return "OK";
+		logger.info("SystemSetup: " + result);
+		return result;
 
 	}
 
@@ -226,71 +240,78 @@ public class SetupService {
 	 * @param aSkin
 	 * @return
 	 */
-	private void loadDefaultModels() {
+	private String loadDefaultModels() {
 		logger.finest("......load default model...");
-		try {
-			List<String> colModelVersions = modelService.getVersions();
 
-			if (!colModelVersions.isEmpty()) {
-				logger.info("models available: ");
-				for (String amodel : colModelVersions) {
-					logger.info("................ '" + amodel + "'");
-				}
-				return;
+		List<String> colModelVersions = modelService.getVersions();
+
+		if (!colModelVersions.isEmpty()) {
+			logger.info("existing models: ");
+			for (String amodel : colModelVersions) {
+				logger.info("................ '" + amodel + "'");
 			}
-
-			logger.info("uploading default models...");
-			String sDefaultModelList = propertyService.getProperties().getProperty("setup.defaultModel");
-			if (sDefaultModelList == null || sDefaultModelList.isEmpty()) {
-				logger.warning("setup.defaultModel key is not defined in 'imixs.properties' - no default model found");
-				return;
-			}
-
-			logger.fine("......setup.defaultModel=" + sDefaultModelList);
-
-			StringTokenizer stModelList = new StringTokenizer(sDefaultModelList, ",", false);
-
-			while (stModelList.hasMoreElements()) {
-				// try to load this model
-				String filePath = stModelList.nextToken();
-				// test if bpmn model?
-				if (filePath.endsWith(".bpmn") || filePath.endsWith(".xml")) {
-					logger.fine("...uploading default model file: '" + filePath + "'....");
-					InputStream inputStream = SetupService.class.getClassLoader().getResourceAsStream(filePath);
-					// byte[] bytes = IOUtils.toByteArray(inputStream);
-
-					ByteArrayOutputStream bos = new ByteArrayOutputStream();
-					int next;
-
-					next = inputStream.read();
-
-					while (next > -1) {
-						bos.write(next);
-						next = inputStream.read();
-					}
-					bos.flush();
-					byte[] result = bos.toByteArray();
-
-					// is BPMN?
-					if (filePath.endsWith(".bpmn")) {
-						BPMNModel model = BPMNParser.parseModel(result, "UTF-8");
-						modelService.saveModel(model);
-					} else {
-						// XML
-						importXmlEntityData(result);
-					}
-				} else {
-					logger.warning("Wrong model format: '" + filePath + "' - expected *.bpmn or *.xml");
-				}
-
-			}
-		} catch (Exception e) {
-			logger.severe(
-					"unable to load model configuration - please check imixs.properties file for key 'setup.defaultModel'");
-			throw new RuntimeException(
-					"loadDefaultModels - unable to load model configuration - please check imixs.properties file for key 'setup.defaultModel'");
+			return MODEL_OK;
 		}
 
+		logger.info("uploading default models...");
+		String sDefaultModelList = propertyService.getProperties().getProperty("setup.defaultModel");
+		if (sDefaultModelList == null || sDefaultModelList.isEmpty()) {
+			logger.warning("setup.defaultModel key is not defined in 'imixs.properties' - no default model found");
+			return MODEL_ERROR_MISSING_CONFIGURATION;
+		}
+
+		logger.fine("......setup.defaultModel=" + sDefaultModelList);
+
+		StringTokenizer stModelList = new StringTokenizer(sDefaultModelList, ",", false);
+
+		while (stModelList.hasMoreElements()) {
+			// try to load this model
+			String filePath = stModelList.nextToken();
+			// test if bpmn model?
+			if (filePath.endsWith(".bpmn") || filePath.endsWith(".xml")) {
+				logger.fine("...uploading default model file: '" + filePath + "'....");
+				InputStream inputStream = SetupService.class.getClassLoader().getResourceAsStream(filePath);
+				if (inputStream != null) {
+					// parse model file....
+					try {
+						ByteArrayOutputStream bos = new ByteArrayOutputStream();
+						int next;
+
+						next = inputStream.read();
+
+						while (next > -1) {
+							bos.write(next);
+							next = inputStream.read();
+						}
+						bos.flush();
+						byte[] result = bos.toByteArray();
+
+						// is BPMN?
+						if (filePath.endsWith(".bpmn")) {
+							BPMNModel model = BPMNParser.parseModel(result, "UTF-8");
+							modelService.saveModel(model);
+						} else {
+							// XML
+							importXmlEntityData(result);
+						}
+					} catch (IOException | ModelException | ParseException | ParserConfigurationException
+							| SAXException e) {
+						logger.severe(
+								"unable to load model configuration - please check imixs.properties file for key 'setup.defaultModel'");
+						throw new RuntimeException(
+								"loadDefaultModels - unable to load model configuration - please check imixs.properties file for key 'setup.defaultModel'");
+					}
+				} else {
+					// unable to open file!
+					logger.warning("File not found: '" + filePath + "' - upload failed, verify configuration!");
+					return MODEL_ERROR_MISSING_MODELFILE;
+				}
+			} else {
+				logger.warning("Wrong model format: '" + filePath + "' - expected *.bpmn or *.xml");
+			}
+
+		}
+		return MODEL_INITIALIZED;
 	}
 
 	/**
