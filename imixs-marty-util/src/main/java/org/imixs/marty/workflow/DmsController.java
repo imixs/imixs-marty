@@ -44,7 +44,6 @@ import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.marty.plugins.DMSPlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.exceptions.AccessDeniedException;
@@ -89,7 +88,7 @@ public class DmsController implements Serializable {
 	private List<ItemCollection> dmsList = null;
 	private String link = null;
 
-	private static Logger logger = Logger.getLogger(DMSPlugin.class.getName());
+	private static Logger logger = Logger.getLogger(DmsController.class.getName());
 
 	public String getLink() {
 		return link;
