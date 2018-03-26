@@ -24,12 +24,17 @@
 package org.imixs.marty.config;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.inject.Inject;
 
+import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.QueryException;
@@ -65,35 +70,49 @@ import org.imixs.workflow.faces.workitem.ViewController;
  * @author rsoika
  * 
  */
-public class ConfigMultiController extends DocumentController  {
+public class ConfigMultiController extends DocumentController {
 
 	private static final long serialVersionUID = 1L;
 	private static Logger logger = Logger.getLogger(ConfigMultiController.class.getName());
 
-	
+	private List<ItemCollection> workitems = null;
+	private String sortBy=null;
+
+	@Inject
+	private UserController userController;
+
 	@EJB
 	private DocumentService documentService;
-	
+
 	ViewController viewController = null;
 
 	public ConfigMultiController() {
 		super();
+		sortBy="txtname";
 	}
-	
+
 	/**
-	 * The init method is used to add necessary indices to the entity index list
-	 * if index still exists the method did change any data
+	 * The init method is used to add necessary indices to the entity index list if
+	 * index still exists the method did change any data
 	 */
 	@PostConstruct
 	public void init() {
 		viewController = new ViewController();
 		viewController.setType(this.getDefaultType());
-		//viewController.setView("worklist.modified.desc");
+		// viewController.setView("worklist.modified.desc");
+	}
+
+	public String getSortBy() {
+		return sortBy;
+	}
+
+	public void setSortBy(String sortBy) {
+		this.sortBy = sortBy;
 	}
 
 	/**
-	 * save method tries to load the config entity. if not availabe. the method
-	 * will create the entity the first time
+	 * save method tries to load the config entity. if not availabe. the method will
+	 * create the entity the first time
 	 * 
 	 * @return
 	 */
@@ -107,6 +126,11 @@ public class ConfigMultiController extends DocumentController  {
 
 	}
 
+	@Override
+	public void reset() {
+		super.reset();
+		workitems=null;
+	}
 
 	/**
 	 * Selects a single config ItemCollection by Name
@@ -117,15 +141,10 @@ public class ConfigMultiController extends DocumentController  {
 	public ItemCollection getEntityByName(String name) {
 		ItemCollection configItemCollection = null;
 
-		// load / create config entity....
-//		String sQuery = "SELECT config FROM Entity AS config " + " JOIN config.textItems AS t2"
-//				+ " WHERE config.type = '" + getDefaultType() + "'" + " AND t2.itemName = 'txtname'" + " AND t2.itemValue = '"
-//				+ name + "'" + " ORDER BY t2.itemValue asc";
-		
-		String sQuery="(type:\"" + getDefaultType() + "\" AND txtname:\"" + name + "\")";
+		String sQuery = "(type:\"" + getDefaultType() + "\" AND txtname:\"" + name + "\")";
 		Collection<ItemCollection> col;
 		try {
-			col = documentService.find(sQuery, 1 ,0);
+			col = documentService.find(sQuery, 1, 0);
 
 			if (col.size() > 0) {
 				configItemCollection = col.iterator().next();
@@ -136,8 +155,47 @@ public class ConfigMultiController extends DocumentController  {
 			logger.warning("getEntityByName - invalid query: " + e.getMessage());
 		}
 
-
 		return configItemCollection;
+
+	}
+
+	
+	
+	/**
+	 * Default worklist sorted by txtname
+	 * 
+	 * @return view result
+	 * @throws QueryException
+	 */
+	public List<ItemCollection> getWorkitems() throws QueryException {
+		return getEntitiesSortedBy(getSortBy());
+	}
+	
+	
+	/**
+	 * returns all entities sorted by ItemCollectionComparator
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public List<ItemCollection> getEntitiesSortedBy(String sortBy) {
+
+		if (workitems == null) {
+			String sQuery = "(type:\"" + getDefaultType() + "\")";
+
+			try {
+				workitems = documentService.find(sQuery, 999, 0, sortBy, false);
+
+				if (workitems.size() > 0 && sortBy!=null && !sortBy.isEmpty()) {
+					// sort by comperator
+					Collections.sort(workitems,
+							new ItemCollectionComparator(sortBy, true, userController.getLocale()));
+				}
+			} catch (QueryException e) {
+				logger.warning("getEntitiesSortedBy - invalid query: " + e.getMessage());
+			}
+		}
+		return workitems;
 
 	}
 
