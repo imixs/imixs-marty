@@ -44,6 +44,7 @@ import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.ModelService;
 import org.imixs.workflow.engine.PropertyService;
+import org.imixs.workflow.exceptions.AccessDeniedException;
 
 /**
  * This Marty SetupController extends the Marty ConfigController and holds the
@@ -189,12 +190,22 @@ public class SetupController extends ConfigController {
 	 * @param event
 	 * @throws Exception
 	 */
-	public void reset() throws Exception {
+	public void reset() {
 		// reset services....
 		logger.info("Reset application cache...");
 		propertyService.reset();
 		profileService.reset();
 		processController.reset();
+	}
+	
+	
+	/**
+	 * After save the application property cache is reset automatically. 
+	 */
+	@Override
+	public void save() throws AccessDeniedException {
+		super.save();
+		propertyService.reset();		
 	}
 
 	public PropertyService getPropertyService() {
