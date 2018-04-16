@@ -48,8 +48,8 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.QueryException;
-import org.imixs.workflow.xml.DocumentCollection;
-import org.imixs.workflow.xml.XMLItemCollectionAdapter;
+import org.imixs.workflow.xml.XMLDataCollection;
+import org.imixs.workflow.xml.XMLDataCollectionAdapter;
 
 /**
  * The UserRestService provides methods to access the marty user profile The
@@ -81,16 +81,14 @@ public class UserRestService implements Serializable {
 	 */
 	@GET
 	@Path("/favorites")
-	public DocumentCollection getFavorites(
+	public XMLDataCollection getFavorites(
 			@Context HttpServletRequest servletRequest) {
 		Collection<ItemCollection> col = null;
 		try {
 
 			List<String> favorites = getFavoriteIds(servletRequest);
 			if (favorites.size() <= 0)
-				return XMLItemCollectionAdapter.putCollection(null);
-
-			// create a JPQL statement....
+				return new XMLDataCollection();
 
 			// create IN list
 			String inStatement = "(";
@@ -100,27 +98,22 @@ public class UserRestService implements Serializable {
 			// cut last ,
 			inStatement = inStatement.substring(0, inStatement.length() - 3) + ")";
 
-//			String sQuery = "SELECT DISTINCT wi FROM Entity AS wi ";
-//			sQuery += " WHERE wi.type IN ('workitem','workitemarchive')";
-//			sQuery += " AND wi.id IN (" + inStatement + ")";
-//			sQuery += " ORDER BY wi.modified DESC";
-			
 			String sQuery="( (type:\"workitem\" OR type:\"workitem\") AND " + inStatement + ")";
 
 			col = documentService.find(sQuery,0,-1);
 
-			return XMLItemCollectionAdapter.putCollection(col);
+			return XMLDataCollectionAdapter.getDataCollection(col);
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new DocumentCollection();
+		return new XMLDataCollection();
 	}
 
 	@GET
 	@Path("/favorites.xml")
 	@Produces(MediaType.TEXT_XML)
-	public DocumentCollection getFavoritesXML(
+	public XMLDataCollection getFavoritesXML(
 			@Context HttpServletRequest servletRequest) {
 		try {
 			return getFavorites(servletRequest);
@@ -128,13 +121,13 @@ public class UserRestService implements Serializable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new DocumentCollection();
+		return new XMLDataCollection();
 	}
 
 	@GET
 	@Path("/favorites.json")
 	@Produces(MediaType.APPLICATION_JSON)
-	public DocumentCollection getFavoritesJSON(
+	public XMLDataCollection getFavoritesJSON(
 			@Context HttpServletRequest servletRequest) {
 		try {
 			return getFavorites(servletRequest);
@@ -142,7 +135,7 @@ public class UserRestService implements Serializable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new DocumentCollection();
+		return new XMLDataCollection();
 	}
 
 	/**
@@ -158,12 +151,6 @@ public class UserRestService implements Serializable {
 		if (user != null)
 			userid = user.getName();
 
-//		String sQuery = "SELECT DISTINCT profile FROM Entity as profile "
-//				+ " JOIN profile.textItems AS t2"
-//				+ " WHERE  profile.type= 'profile' "
-//				+ " AND t2.itemName = 'txtname' " + " AND t2.itemValue = '"
-//				+ userid + "' ";
-		
 		String sQuery="(type:\"profile\" AND txtname:\"" + userid + "\")";
 
 		Collection<ItemCollection> col;

@@ -57,9 +57,9 @@ import org.imixs.workflow.engine.ModelService;
 import org.imixs.workflow.engine.PropertyService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
-import org.imixs.workflow.xml.DocumentCollection;
-import org.imixs.workflow.xml.XMLItemCollection;
-import org.imixs.workflow.xml.XMLItemCollectionAdapter;
+import org.imixs.workflow.xml.XMLDataCollection;
+import org.imixs.workflow.xml.XMLDocument;
+import org.imixs.workflow.xml.XMLDocumentAdapter;
 import org.xml.sax.SAXException;
 
 /**
@@ -161,7 +161,7 @@ public class SetupService {
 	 * @throws Exception
 	 */
 	public void importXmlEntityData(byte[] filestream) {
-		XMLItemCollection entity;
+		XMLDocument entity;
 		ItemCollection itemCollection;
 		String sModelVersion = null;
 
@@ -169,7 +169,7 @@ public class SetupService {
 			return;
 		try {
 
-			DocumentCollection ecol = null;
+			XMLDataCollection ecol = null;
 			logger.fine("importXmlEntityData - importModel, verifing file content....");
 
 			JAXBContext context;
@@ -177,7 +177,7 @@ public class SetupService {
 			// unmarshall the model file
 			ByteArrayInputStream input = new ByteArrayInputStream(filestream);
 			try {
-				context = JAXBContext.newInstance(DocumentCollection.class);
+				context = JAXBContext.newInstance(XMLDataCollection.class);
 				Unmarshaller m = context.createUnmarshaller();
 				jaxbObject = m.unmarshal(input);
 			} catch (JAXBException e) {
@@ -188,15 +188,15 @@ public class SetupService {
 				throw new ModelException(ModelException.INVALID_MODEL,
 						"error - wrong xml file format - unable to import model file!");
 
-			ecol = (DocumentCollection) jaxbObject;
+			ecol = (XMLDataCollection) jaxbObject;
 			// import the model entities....
 			if (ecol.getDocument().length > 0) {
 
 				Vector<String> vModelVersions = new Vector<String>();
 				// first iterrate over all enttity and find if model entries are
 				// included
-				for (XMLItemCollection aentity : ecol.getDocument()) {
-					itemCollection = XMLItemCollectionAdapter.getItemCollection(aentity);
+				for (XMLDocument aentity : ecol.getDocument()) {
+					itemCollection = XMLDocumentAdapter.putDocument(aentity);
 					// test if this is a model entry
 					// (type=WorkflowEnvironmentEntity)
 					if ("WorkflowEnvironmentEntity".equals(itemCollection.getItemValueString("type"))
@@ -216,7 +216,7 @@ public class SetupService {
 				// save new entities into database and update modelversion.....
 				for (int i = 0; i < ecol.getDocument().length; i++) {
 					entity = ecol.getDocument()[i];
-					itemCollection = XMLItemCollectionAdapter.getItemCollection(entity);
+					itemCollection = XMLDocumentAdapter.putDocument(entity);
 					// save entity
 					documentService.save(itemCollection);
 				}

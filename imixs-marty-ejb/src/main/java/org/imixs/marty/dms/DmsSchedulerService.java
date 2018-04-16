@@ -52,8 +52,8 @@ import javax.ejb.Timer;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
-import org.imixs.workflow.xml.XMLItemCollection;
-import org.imixs.workflow.xml.XMLItemCollectionAdapter;
+import org.imixs.workflow.xml.XMLDocument;
+import org.imixs.workflow.xml.XMLDocumentAdapter;
 
 /**
  * This EJB implements a TimerService which scans a configured file path for new
@@ -233,10 +233,10 @@ public class DmsSchedulerService {
 		String msg = "started at " + dateFormatDE.format(calNow.getTime())
 				+ " by " + ctx.getCallerPrincipal().getName();
 		configItemCollection.replaceItemValue("statusmessage", msg);
-		XMLItemCollection xmlConfigItem = null;
+		XMLDocument xmlConfigItem = null;
 		try {
-			xmlConfigItem = XMLItemCollectionAdapter
-					.putItemCollection(configItemCollection);
+			xmlConfigItem = XMLDocumentAdapter
+					.getDocument(configItemCollection);
 		} catch (Exception e) {
 			logger.severe("Unable to serialize confitItemCollection into a XML object");
 			e.printStackTrace();
@@ -377,11 +377,11 @@ public class DmsSchedulerService {
 	private Timer findTimer(String id) throws Exception {
 		for (Object obj : timerService.getTimers()) {
 			Timer timer = (javax.ejb.Timer) obj;
-			if (timer.getInfo() instanceof XMLItemCollection) {
-				XMLItemCollection xmlItemCollection = (XMLItemCollection) timer
+			if (timer.getInfo() instanceof XMLDocument) {
+				XMLDocument xmlItemCollection = (XMLDocument) timer
 						.getInfo();
-				ItemCollection adescription = XMLItemCollectionAdapter
-						.getItemCollection(xmlItemCollection);
+				ItemCollection adescription = XMLDocumentAdapter
+						.putDocument(xmlItemCollection);
 				if (id.equals(adescription.getItemValueString("$uniqueid"))) {
 					return timer;
 				}

@@ -46,8 +46,8 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.ModelService;
 import org.imixs.workflow.exceptions.ModelException;
-import org.imixs.workflow.xml.DocumentCollection;
-import org.imixs.workflow.xml.XMLItemCollectionAdapter;
+import org.imixs.workflow.xml.XMLDataCollection;
+import org.imixs.workflow.xml.XMLDataCollectionAdapter;
 
 /**
  * The ProcessRestService provides methods to access the marty process and space
@@ -80,92 +80,92 @@ public class ProcessRestService implements Serializable {
 
 	@GET
 	@Path("/processlist")
-	public DocumentCollection getProcessList() {
+	public XMLDataCollection getProcessList() {
 		Collection<ItemCollection> col = null;
 		try {
 			col = processService.getProcessList();
 			logger.fine("getProcessList - " + col.size() + " entries found");
-			return XMLItemCollectionAdapter.putCollection(col);
+			return XMLDataCollectionAdapter.getDataCollection(col);
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new DocumentCollection();
+		return new XMLDataCollection();
 	}
 
 	@GET
 	@Path("/processlist.xml")
 	@Produces(MediaType.TEXT_XML)
-	public DocumentCollection getProcessListXML() {
+	public XMLDataCollection getProcessListXML() {
 		Collection<ItemCollection> col = null;
 		try {
 			col = processService.getProcessList();
 			logger.fine("getProcessList - " + col.size() + " entries found");
-			return XMLItemCollectionAdapter.putCollection(col);
+			return XMLDataCollectionAdapter.getDataCollection(col);
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new DocumentCollection();
+		return new XMLDataCollection();
 	}
 
 	@GET
 	@Path("/processlist.json")
 	@Produces(MediaType.APPLICATION_JSON)
-	public DocumentCollection getProcessListJSON() {
+	public XMLDataCollection getProcessListJSON() {
 		Collection<ItemCollection> col = null;
 		try {
 			col = processService.getProcessList();
-			return XMLItemCollectionAdapter.putCollection(col);
+			return XMLDataCollectionAdapter.getDataCollection(col);
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new DocumentCollection();
+		return new XMLDataCollection();
 	}
 
 	@GET
 	@Path("/spaces")
-	public DocumentCollection getSpaces() {
+	public XMLDataCollection getSpaces() {
 		Collection<ItemCollection> col = null;
 		try {
 			col = processService.getSpaces();
-			return XMLItemCollectionAdapter.putCollection(col);
+			return XMLDataCollectionAdapter.getDataCollection(col);
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new DocumentCollection();
+		return new XMLDataCollection();
 	}
 
 	@GET
 	@Path("/spaces.xml")
 	@Produces(MediaType.TEXT_XML)
-	public DocumentCollection getSpacesXML() {
+	public XMLDataCollection getSpacesXML() {
 		Collection<ItemCollection> col = null;
 		try {
 			col = processService.getSpaces();
-			return XMLItemCollectionAdapter.putCollection(col);
+			return XMLDataCollectionAdapter.getDataCollection(col);
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new DocumentCollection();
+		return new XMLDataCollection();
 	}
 
 	@GET
 	@Path("/spaces.json")
 	@Produces(MediaType.APPLICATION_JSON)
-	public DocumentCollection getSpacesJSON() {
+	public XMLDataCollection getSpacesJSON() {
 		Collection<ItemCollection> col = null;
 		try {
 			col = processService.getProcessList();
-			return XMLItemCollectionAdapter.putCollection(col);
+			return XMLDataCollectionAdapter.getDataCollection(col);
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new DocumentCollection();
+		return new XMLDataCollection();
 	}
 
 	/**
@@ -177,7 +177,7 @@ public class ProcessRestService implements Serializable {
 	@GET
 	@Path("/workflowgroups.json")
 	@Produces(MediaType.APPLICATION_JSON)
-	public  DocumentCollection getWorkflowGroupsJSON() throws ModelException {
+	public  XMLDataCollection getWorkflowGroupsJSON() throws ModelException {
 		List<ItemCollection> col=new ArrayList<ItemCollection>();
 		List<String> result = new ArrayList<String>();
 		List<String> modelVersions = modelService.getVersions();
@@ -202,13 +202,13 @@ public class ProcessRestService implements Serializable {
 	
 		
 		try {
-			return XMLItemCollectionAdapter.putCollection(col);
+			return XMLDataCollectionAdapter.getDataCollection(col);
 		} catch (Exception e) {
 			
 			e.printStackTrace();
 		}
 		
-		return new DocumentCollection();
+		return new XMLDataCollection();
 	}
 
 
