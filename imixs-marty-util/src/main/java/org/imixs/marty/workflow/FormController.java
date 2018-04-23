@@ -277,7 +277,7 @@ public class FormController implements Serializable {
 			sName = rb.getString(sResouceURL);
 		} catch (java.util.MissingResourceException eb) {
 			sName = "";
-			logger.fine(eb.getMessage());
+			logger.warning("Form-label not found: "+eb.getMessage());
 		}
 		return sName;
 	}
