@@ -35,13 +35,13 @@ import java.util.logging.Logger;
 
 import javax.enterprise.context.ConversationScoped;
 import javax.enterprise.event.Observes;
-import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.model.ProcessController;
+import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 
@@ -67,20 +67,18 @@ public class FormController implements Serializable {
 
 	@Inject
 	protected ProcessController processController;
+	
+	@Inject
+	protected UserController userController;
 
 	private static final long serialVersionUID = 1L;
 
 	private FormDefinition formDefinition = null;
 
-	private UIViewRoot viewRoot = null;
-	private Locale locale = null;
 	private static Logger logger = Logger.getLogger(FormController.class.getName());
 
 	public FormController() {
 		super();
-		viewRoot = FacesContext.getCurrentInstance().getViewRoot();
-		locale = viewRoot.getLocale();
-
 	}
 
 	/**
@@ -267,6 +265,8 @@ public class FormController implements Serializable {
 		String sName = "";
 		// compute name from ressource Bundle....
 		try {
+			// get locale from profile
+			Locale locale = userController.getLocale();
 			ResourceBundle rb = null;
 			if (locale != null)
 				rb = ResourceBundle.getBundle("bundle.app", locale);
