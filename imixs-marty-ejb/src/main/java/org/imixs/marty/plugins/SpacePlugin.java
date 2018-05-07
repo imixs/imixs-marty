@@ -50,36 +50,50 @@ import org.imixs.workflow.exceptions.QueryException;
  */
 public class SpacePlugin extends AbstractPlugin {
 
+	public static String SPACE_DELETE_ERROR = "SPACE_DELETE_ERROR";
+
 	private static Logger logger = Logger.getLogger(SpacePlugin.class.getName());
 	private ItemCollection space = null;
 
-
 	/**
-	 * The run method verifies if the workitem is from the type 'space'. Only in
-	 * this case the plug-in will update space Information and updates parent
-	 * and subSpaces.
+	 * If a 'space' is processed, the method verifies if the space Information need
+	 * to be updated to the parent and subSpaces.
+	 * 
+	 * If a 'spacedeleted' is processed, the method verifies if a deletion is
+	 * allowed. This is not the case if subspaces exist!
 	 * 
 	 **/
 	@Override
-	public ItemCollection run(ItemCollection aworkItem, ItemCollection documentActivity) throws PluginException {
+	public ItemCollection run(ItemCollection documentContext, ItemCollection event) throws PluginException {
 		space = null;
 
-		// verify workitem type
-		if (!"space".equals(aworkItem.getItemValueString("type")))
-			return aworkItem;
+		// verify type 'spacedeleted'
+		// in case of a deletion we test if parent nodes still exist! In this case
+		// deletion is not allowed
+		if ("spacedeleted".equals(documentContext.getItemValueString("type"))) {
 
-		space = aworkItem;
-		updateParentSpaceProperties();
-		updateSubSpaces();
+			List<ItemCollection> subspaces = findAllSubSpaces(documentContext.getUniqueID());
+			// if a parentSpace exist - stop deletion!
+			if (subspaces != null && subspaces.size() > 0) {
+				throw new PluginException(SpacePlugin.class.getName(), SPACE_DELETE_ERROR,
+						"Space object can not be deleted, because descendant space object(s) exist!");
+			}
 
-		return aworkItem;
+		}
+
+		// verify if sub spaces need to be renamed...
+		if ("space".equals(documentContext.getItemValueString("type"))) {
+			space = documentContext;
+			updateParentSpaceProperties();
+			updateSubSpaces();
+		}
+
+		return documentContext;
 	}
 
-	
-
 	/**
-	 * This method updates the Space Name ('txtName') and team lists inherited
-	 * from a parent Space. A parent space is referenced by the $UniqueIDRef.
+	 * This method updates the Space Name ('txtName') and team lists inherited from
+	 * a parent Space. A parent space is referenced by the $UniqueIDRef.
 	 * 
 	 */
 	private void updateParentSpaceProperties() {
@@ -139,21 +153,21 @@ public class SpacePlugin extends AbstractPlugin {
 
 	private List<ItemCollection> findAllSubSpaces(String sIDRef) {
 
-		if (sIDRef==null) {
+		if (sIDRef == null) {
 			return null;
 		}
-		String sQuery="(type:\"space\" AND $uniqueidref:\""+sIDRef + "\")";
-		
+		String sQuery = "(type:\"space\" AND $uniqueidref:\"" + sIDRef + "\")";
+
 		List<ItemCollection> subSpaceList;
 		try {
 			subSpaceList = getWorkflowService().getDocumentService().find(sQuery, 9999, 0);
 		} catch (QueryException e) {
-			throw new InvalidAccessException(InvalidAccessException.INVALID_ID,e.getMessage(),e);
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID, e.getMessage(), e);
 		}
-		
+
 		// sort by txtname
 		Collections.sort(subSpaceList, new ItemCollectionComparator("txtname", true));
-	
+
 		return subSpaceList;
 	}
 }
