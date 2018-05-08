@@ -160,7 +160,7 @@ public class ProfileService {
 
 		// use cache?
 		if (!refresh) {
-			logger.finest("lookup profile '" + userid + "' in cache...");
+			logger.finest("......lookup profile '" + userid + "' in cache...");
 			userProfile = (ItemCollection) cache.get(userid);
 		}
 		// not yet cached?
@@ -171,14 +171,14 @@ public class ProfileService {
 				userProfile = cloneWorkitem(userProfile);
 				// cache profile
 				cache.put(userid, userProfile);
-				logger.fine("put profile '" + userid + "' into cache");
+				logger.finest("......put profile '" + userid + "' into cache");
 			} else {
-				logger.fine("profile '" + userid + "' not found, put 'null' into cache");
+				logger.finest("......profile '" + userid + "' not found, put 'null' into cache");
 				// put null entry into cache to avoid next lookup!
 				cache.put(userid, null);
 			}
 		} else {
-			logger.finest("get profile '" + userid + "' from cache");
+			logger.finest("......get profile '" + userid + "' from cache");
 		}
 		return userProfile;
 
@@ -207,10 +207,10 @@ public class ProfileService {
 		// try to get name out from cache
 		ItemCollection userProfile = null;
 
-		logger.fine("lookupProfileById '" + userid + "'");
+		logger.finest("......lookupProfileById '" + userid + "'");
 		// lookup user profile....
 		String sQuery = "(type:\"profile\" AND txtname:\"" + userid + "\")";
-		logger.finest("searchprofile: " + sQuery);
+		logger.finest("......search: " + sQuery);
 
 		Collection<ItemCollection> col;
 		try {
@@ -222,7 +222,7 @@ public class ProfileService {
 		if (col.size() > 0) {
 			userProfile = col.iterator().next();
 		} else {
-			logger.fine("lookup profile '" + userid + "' failed");
+			logger.finest("......lookup profile '" + userid + "' failed");
 		}
 		return userProfile;
 	}
@@ -329,7 +329,7 @@ public class ProfileService {
 
 		profile = workflowService.processWorkItem(profile);
 
-		logger.fine("new profile created for userid '" + userid + "'");
+		logger.finest("......new profile created for userid '" + userid + "'");
 
 		return profile;
 	}
