@@ -115,11 +115,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 			try {
 				messagePart = (MimeBodyPart) multipart.getBodyPart(0);
 				content = (String) messagePart.getContent();
-			} catch (MessagingException e) {
-				logger.warning("Unable to parse tag 'attachments' !");
-				e.printStackTrace();
-				return null;
-			} catch (IOException e) {
+			} catch (MessagingException | ArrayIndexOutOfBoundsException | IOException e) {
 				logger.warning("Unable to parse tag 'attachments' !");
 				e.printStackTrace();
 				return null;
