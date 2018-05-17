@@ -366,6 +366,7 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 		}
 
 		if (searchphrase != null && !"".equals(searchphrase)) {
+			// we do not sort the result other then by relevance. Sorting by date does not make sense.
 			setSortBy(null);
 			this.setSortReverse(false);
 			// trim
