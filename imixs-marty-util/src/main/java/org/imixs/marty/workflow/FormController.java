@@ -265,9 +265,12 @@ public class FormController implements Serializable {
 		String sName = "";
 		// compute name from ressource Bundle....
 		try {
-			// get locale from profile
-			Locale locale = userController.getLocale();
+			Locale locale = null;
 			ResourceBundle rb = null;
+			// get locale from profile
+			if (userController!=null) {
+				locale = userController.getLocale();
+			}
 			if (locale != null)
 				rb = ResourceBundle.getBundle("bundle.app", locale);
 			else
