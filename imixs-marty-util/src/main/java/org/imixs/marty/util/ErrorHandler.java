@@ -90,7 +90,10 @@ public class ErrorHandler {
 		try {
 			Locale browserLocale = FacesContext.getCurrentInstance().getViewRoot().getLocale();
 			ResourceBundle rb = ResourceBundle.getBundle("bundle.app", browserLocale);
-			errorCode = rb.getString(pe.getErrorCode());
+			String messageFromBundle = rb.getString(pe.getErrorCode());
+			if (messageFromBundle!=null && !messageFromBundle.isEmpty()) {
+				message=messageFromBundle;
+			}
 		} catch (MissingResourceException mre) {
 			logger.warning("ErrorHandler: " + mre.getMessage());
 		}
