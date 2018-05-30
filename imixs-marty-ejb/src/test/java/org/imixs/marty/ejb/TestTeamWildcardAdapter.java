@@ -3,6 +3,7 @@ package org.imixs.marty.ejb;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.imixs.marty.plugins.TeamPlugin;
@@ -123,6 +124,7 @@ public class TestTeamWildcardAdapter {
 		TextEvent event = new TextEvent(testRole, documentContext);
 		teamRoleWildcardAdapter.onEvent(event);
 		String roleResult = event.getText();
+		
 		Assert.assertEquals(roleResult, "{space:S0000-00002:team}");
 
 		// test member role
@@ -133,4 +135,52 @@ public class TestTeamWildcardAdapter {
 		Assert.assertEquals(roleResult, "{process:P0000-00003:member}");
 
 	}
+
+
+
+
+	/**
+	 * This test validates the wildcard orgunit role as a ACL notation:
+	 * 
+	 * {process:?:team}
+	 * 
+	 * The Plugin should compute the orgunit bas"{space:?:team}"ed on the assigement
+	 * to the current workitem.
+	 * 
+	 * 
+	 * @throws PluginException
+	 * 
+	 */
+	@Test
+	public void testWildcardMultiOrgunitRole() throws PluginException {
+
+		// test two space team roles...
+		documentContext.replaceItemValue("txtSpaceRef", "S0000-00002");
+		documentContext.appendItemValue("txtSpaceRef", "S0000-00003");
+		
+		
+		documentContext.replaceItemValue("txtProcessRef", "P0000-00003");
+
+		String testRole = "{space:?:team}";
+		TextEvent event = new TextEvent(testRole, documentContext);
+		teamRoleWildcardAdapter.onEvent(event);
+		String roleResult = event.getText();
+		
+		List<String> listResult=event.getTextList();
+		
+		Assert.assertEquals(2,listResult.size());
+		
+		Assert.assertEquals(listResult.get(0), "{space:S0000-00002:team}");
+		Assert.assertEquals(listResult.get(1), "{space:S0000-00003:team}");
+
+		// test member role
+		testRole = "{process:?:member}";
+		event = new TextEvent(testRole, documentContext);
+		teamRoleWildcardAdapter.onEvent(event);
+		roleResult = event.getText();
+		Assert.assertEquals(roleResult, "{process:P0000-00003:member}");
+
+	}
+
+
 }

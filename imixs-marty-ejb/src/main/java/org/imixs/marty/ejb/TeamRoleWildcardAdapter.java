@@ -1,5 +1,6 @@
 package org.imixs.marty.ejb;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -48,6 +49,9 @@ public class TeamRoleWildcardAdapter {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public void onEvent(@Observes TextEvent event) {
+
+		List<String> textList = new ArrayList<String>();
+
 		String role = event.getText();
 		ItemCollection documentContext = event.getDocument();
 
@@ -59,7 +63,7 @@ public class TeamRoleWildcardAdapter {
 			for (String id : orgunitIDs) {
 				ItemCollection orgunit = documentService.load(id);
 				if (orgunit != null) {
-					role = role.replace("{space:?:", "{space:" + id + ":");
+					textList.add(role.replace(":?:", ":" + id + ":"));
 				}
 			}
 		}
@@ -70,12 +74,14 @@ public class TeamRoleWildcardAdapter {
 			for (String id : orgunitIDs) {
 				ItemCollection orgunit = documentService.load(id);
 				if (orgunit != null) {
-					role = role.replace("{process:?:", "{process:" + id + ":");
+					textList.add(role.replace(":?:", ":" + id + ":"));
 				}
 			}
 		}
 
-		event.setText(role);
+		event.setTextList(textList);
+		// set default behavior for text field (see TextEvent.getText())
+		event.setText(null);
 	}
 
 }
