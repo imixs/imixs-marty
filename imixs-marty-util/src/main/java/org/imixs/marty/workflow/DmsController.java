@@ -47,7 +47,6 @@ import javax.inject.Named;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.faces.fileupload.FileUploadController;
 import org.imixs.workflow.faces.util.LoginController;
 
 /**
@@ -73,12 +72,9 @@ import org.imixs.workflow.faces.util.LoginController;
 public class DmsController implements Serializable {
 
 	public final static String DMS_ITEM = "dms";
-	
-	@Inject
-	protected LoginController loginController = null;
 
 	@Inject
-	protected FileUploadController fileUploadController;
+	protected LoginController loginController = null;
 
 	@Inject
 	protected WorkflowController workflowController;
@@ -99,51 +95,42 @@ public class DmsController implements Serializable {
 	}
 
 	/**
-	 * WorkflowEvent listener to update the DMS property if a WorkItem has
-	 * changed, processed or saved.
-	 *  
+	 * WorkflowEvent listener to update the DMS property if a WorkItem has changed,
+	 * processed or saved.
+	 * 
 	 * The read and write access for a BlobWorkitem will be updated by the
 	 * org.imixs.marty.plugins.BlobPlugin.
 	 * 
 	 * The DMSController also updates the file Properties after a workItem was
 	 * processed. This is because a plug-in can add a new file (like the
-	 * reportPlugIn), and so the plug-in also updates the $file information of
-	 * the parent WorkItem. For that reason the DMS property will be updated by
-	 * the DmsController on the WorkflowEvent WORKITEM_AFTER_PROCESS
+	 * reportPlugIn), and so the plug-in also updates the $file information of the
+	 * parent WorkItem. For that reason the DMS property will be updated by the
+	 * DmsController on the WorkflowEvent WORKITEM_AFTER_PROCESS
 	 * 
 	 * @param workflowEvent
 	 * @throws AccessDeniedException
 	 */
-	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent)
-			throws AccessDeniedException {
+	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) throws AccessDeniedException {
 		if (workflowEvent == null)
 			return;
 
 		// skip if not a workItem...
 		if (workflowEvent.getWorkitem() != null
-				&& !workflowEvent.getWorkitem().getItemValueString("type")
-						.startsWith("workitem"))
+				&& !workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
 			return;
 
 		int eventType = workflowEvent.getEventType();
 
-		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == eventType
-				|| WorkflowEvent.WORKITEM_BEFORE_SAVE == eventType) {
+		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == eventType || WorkflowEvent.WORKITEM_BEFORE_SAVE == eventType) {
 			// reconvert the List<ItemCollection> into a List<Map>
-			if (dmsList!=null) {
+			if (dmsList != null) {
 				putDmsList(workflowEvent.getWorkitem(), dmsList);
 			}
-			
-			// add files
-			fileUploadController.updateWorkitem(workflowEvent.getWorkitem());
 		}
 
 		// if workItem has changed, then update the dms list
-		if (WorkflowEvent.WORKITEM_CHANGED == eventType
-				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == eventType
+		if (WorkflowEvent.WORKITEM_CHANGED == eventType || WorkflowEvent.WORKITEM_AFTER_PROCESS == eventType
 				|| WorkflowEvent.WORKITEM_AFTER_SAVE == eventType) {
-
-			fileUploadController.reset();
 			// convert dms property into a list of ItemCollection
 			dmsList = getDmsListByWorkitem(workflowEvent.getWorkitem());
 		}
@@ -175,7 +162,7 @@ public class DmsController implements Serializable {
 		// update the workitem
 		workitem.replaceItemValue(DMS_ITEM, vDMSnew);
 	}
-	
+
 	/**
 	 * this method returns a list of all attached files and the file meta data
 	 * provided in a list of ItemCollection.
@@ -188,7 +175,7 @@ public class DmsController implements Serializable {
 		return dmsList;
 
 	}
-	
+
 	/**
 	 * This method returns a list of ItemCollections for all DMS elements attached
 	 * to the current workitem. The DMS meta data is read from the property 'dms'.
@@ -224,10 +211,6 @@ public class DmsController implements Serializable {
 		return dmsList;
 	}
 
-	
-	
-	
-	
 	/**
 	 * This method removes a file form the current dms list and also from the
 	 * workitem
@@ -235,7 +218,6 @@ public class DmsController implements Serializable {
 	 * @param aFile
 	 */
 	public void removeFile(String aFile) {
-
 		// remove file from dms list
 		for (ItemCollection aEntry : dmsList) {
 			if (aFile.equals(aEntry.getItemValueString("txtname"))) {
@@ -244,12 +226,7 @@ public class DmsController implements Serializable {
 			}
 		}
 
-		// now remove the entry also from the $file property
-		fileUploadController.removeAttachedFile(
-				workflowController.getWorkitem(), aFile);
-		// .removeAttachmentAction(aFile);
-		// workflowController.getWorkitem().removeFile(aFile);
-
+		workflowController.getWorkitem().removeFile(aFile);
 	}
 
 	/**
@@ -278,8 +255,7 @@ public class DmsController implements Serializable {
 			dmsEntry.replaceItemValue("namCreator", remoteUser);
 			dmsEntry.replaceItemValue("txtName", sLink);
 
-			dmsList = addDMSEntry(workflowController.getWorkitem(),
-					dmsEntry);
+			dmsList = addDMSEntry(workflowController.getWorkitem(), dmsEntry);
 
 			// clear link
 			setLink("");
@@ -287,11 +263,10 @@ public class DmsController implements Serializable {
 		}
 
 	}
-	
-	
+
 	/**
-	 * This method adds a new entry into the dms property. The method returns
-	 * the updated DMS List.
+	 * This method adds a new entry into the dms property. The method returns the
+	 * updated DMS List.
 	 * 
 	 * The method is used by the DMSController to add links.
 	 * 
