@@ -49,6 +49,7 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.security.UserGroupService;
 import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.marty.workflow.WorkflowEvent;
+import org.imixs.workflow.FileData;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.PropertyService;
 import org.imixs.workflow.engine.WorkflowService;
@@ -56,8 +57,6 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
-import org.imixs.workflow.faces.fileupload.FileData;
-import org.imixs.workflow.faces.fileupload.FileUploadController;
 import org.imixs.workflow.faces.util.LoginController;
 
 /**
@@ -105,9 +104,6 @@ public class UserController implements Serializable {
 	@Inject
 	protected WorkflowController workflowController;
 
-	@Inject
-	protected FileUploadController fileUploadController;
-
 	private static final long serialVersionUID = 1L;
 	private ItemCollection workitem = null;
 	private ItemCollection currentProfile = null;
@@ -121,13 +117,13 @@ public class UserController implements Serializable {
 	}
 
 	/**
-	 * The init method is used to load a user profile or automatically create a
-	 * new one if no profile for the user is available. A new Profile will be
-	 * filled with default values.
+	 * The init method is used to load a user profile or automatically create a new
+	 * one if no profile for the user is available. A new Profile will be filled
+	 * with default values.
 	 * 
-	 * This method did not use the internal cache of the ProfileService to
-	 * lookup the user profile, to make sure that the entity is uptodate when a
-	 * user logs in.
+	 * This method did not use the internal cache of the ProfileService to lookup
+	 * the user profile, to make sure that the entity is uptodate when a user logs
+	 * in.
 	 * 
 	 * @throws ProcessingErrorException
 	 * @throws AccessDeniedException
@@ -162,16 +158,16 @@ public class UserController implements Serializable {
 					if (sAutoProcessID != null) {
 						int iActiviyID = Integer.valueOf(sAutoProcessID);
 						profile.replaceItemValue("$ActivityID", iActiviyID);
-						logger.fine("[UserController] autoprocess profile with autoProcessOnLogin=" + iActiviyID);
+						logger.finest("......autoprocess profile with autoProcessOnLogin=" + iActiviyID);
 						try {
 							profile = workflowService.processWorkItem(profile);
 						} catch (PluginException e) {
-							logger.severe("[UserController] unable to process new profile entity!");
+							logger.severe("unable to process new profile entity!");
 							throw new ProcessingErrorException(UserController.class.getName(),
 									ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!",
 									e);
 						} catch (ModelException e) {
-							logger.severe("[UserController] unable to process new profile entity!");
+							logger.severe("unable to process new profile entity!");
 							throw new ProcessingErrorException(UserController.class.getName(),
 									ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!",
 									e);
@@ -179,8 +175,7 @@ public class UserController implements Serializable {
 
 					}
 				} catch (NumberFormatException nfe) {
-					logger.warning(
-							"[UserController] unable to autoprocess profile with autoProcessOnLogin=" + sAutoProcessID);
+					logger.warning("unable to autoprocess profile with autoProcessOnLogin=" + sAutoProcessID);
 				}
 
 			}
@@ -198,9 +193,9 @@ public class UserController implements Serializable {
 	}
 
 	/**
-	 * This method returns the current users userprofile entity. The method
-	 * verifies if the profile was yet loaded. if not the method tries to
-	 * initiate the profile - see method init();
+	 * This method returns the current users userprofile entity. The method verifies
+	 * if the profile was yet loaded. if not the method tries to initiate the
+	 * profile - see method init();
 	 * 
 	 * @return
 	 * @throws ProcessingErrorException
@@ -220,9 +215,9 @@ public class UserController implements Serializable {
 	}
 
 	/**
-	 * This method returns the current user locale. If the user is not logged in
-	 * the method try to get the locale out from the cookie. If no cockie is set
-	 * the method defaults to "de_DE"
+	 * This method returns the current user locale. If the user is not logged in the
+	 * method try to get the locale out from the cookie. If no cockie is set the
+	 * method defaults to "de_DE"
 	 * 
 	 * @return - ISO Locale format
 	 */
@@ -386,35 +381,26 @@ public class UserController implements Serializable {
 		if (!sType.startsWith("profile"))
 			return;
 
-		if ("profile".equals(sType) && WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
-			fileUploadController.reset();
-		}
-
 		// Update usericon and initials
 		// test icon upload
 		if ("profile".equals(sType) && WorkflowEvent.WORKITEM_BEFORE_PROCESS == workflowEvent.getEventType()) {
 
-			if (fileUploadController != null) {
-				List<FileData> fileList = fileUploadController.getUploades();
-
-				if (fileList != null && fileList.size() > 0) {
-					while (fileList.size() > 1) {
-						fileList.remove(0);
-					}
-					// we take the first element
-					FileData file = fileList.get(0);
-
-					String filenametest = file.getName().toLowerCase();
-					if (filenametest.endsWith(".png") || filenametest.endsWith(".gif")
-							|| filenametest.endsWith(".jpg")) {
-						logger.info("UserController Icon Upload started: " + file.getName());
-						workflowEvent.getWorkitem().replaceItemValue("txtusericon", file.getName());
-					} else {
-						fileList.remove(0);
-						logger.info("UserController Icon Upload not supported for: " + file.getName());
-					}
+			List<FileData> fileList = workflowEvent.getWorkitem().getFileData();
+			if (fileList != null && fileList.size() > 0) {
+				while (fileList.size() > 1) {
+					fileList.remove(0);
 				}
-				fileUploadController.updateWorkitem(workflowEvent.getWorkitem());
+				// we take the first element
+				FileData file = fileList.get(0);
+
+				String filenametest = file.getName().toLowerCase();
+				if (filenametest.endsWith(".png") || filenametest.endsWith(".gif") || filenametest.endsWith(".jpg")) {
+					logger.finest("......UserController Icon Upload started: " + file.getName());
+					workflowEvent.getWorkitem().replaceItemValue("txtusericon", file.getName());
+				} else {
+					fileList.remove(0);
+					logger.warning("UserController Icon Upload not supported for file: " + file.getName());
+				}
 			}
 
 		}
@@ -425,7 +411,7 @@ public class UserController implements Serializable {
 			// check if current user profile was processed....
 			String sName = workflowEvent.getWorkitem().getItemValueString("txtName");
 			if (sName.equals(this.getWorkitem().getItemValueString("txtName"))) {
-				logger.info("[UserController] reload current user profile");
+				logger.finest("......reload current user profile");
 				setWorkitem(workflowEvent.getWorkitem());
 
 				// update locale
@@ -465,7 +451,7 @@ public class UserController implements Serializable {
 		List<String> list = getFavoriteIds();
 		// we expect that the id is in the list-..
 		if (!list.contains(id)) {
-			logger.fine("[UserController] add WorkitemRef:" + id);
+			logger.finest("......add WorkitemRef:" + id);
 			list.add(id);
 			workitem.replaceItemValue("txtWorkitemRef", list);
 			workitem = workflowService.getDocumentService().save(workitem);
@@ -479,7 +465,7 @@ public class UserController implements Serializable {
 		List<String> list = getFavoriteIds();
 		// we expect that the id is in the list-..
 		if (list.contains(id)) {
-			logger.fine("[UserController] remove WorkitemRef:" + id);
+			logger.finest("......remove WorkitemRef:" + id);
 			list.remove(id);
 			workitem.replaceItemValue("txtWorkitemRef", list);
 			workitem = workflowService.getDocumentService().save(workitem);
