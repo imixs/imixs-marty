@@ -80,8 +80,8 @@ public class TeamRoleWildcardAdapter {
 		}
 
 		event.setTextList(textList);
-		// set default behavior for text field (see TextEvent.getText())
-		event.setText(null);
+		// set unchanged text
+		event.setText(role);
 	}
 
 }

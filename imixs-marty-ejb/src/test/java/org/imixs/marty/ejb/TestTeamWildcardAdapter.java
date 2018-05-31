@@ -124,20 +124,30 @@ public class TestTeamWildcardAdapter {
 		TextEvent event = new TextEvent(testRole, documentContext);
 		teamRoleWildcardAdapter.onEvent(event);
 		String roleResult = event.getText();
-		
-		Assert.assertEquals(roleResult, "{space:S0000-00002:team}");
+		List<String> roleList = event.getTextList();
+
+		// text should not be changed..
+		Assert.assertEquals("{space:?:team}", roleResult);
+		// test role list...
+		Assert.assertNotNull(roleList);
+		Assert.assertEquals(1, roleList.size());
+		Assert.assertEquals(roleList.get(0), "{space:S0000-00002:team}");
 
 		// test member role
 		testRole = "{process:?:member}";
 		event = new TextEvent(testRole, documentContext);
 		teamRoleWildcardAdapter.onEvent(event);
 		roleResult = event.getText();
-		Assert.assertEquals(roleResult, "{process:P0000-00003:member}");
+		roleList = event.getTextList();
+
+		// text should not be changed..
+		Assert.assertEquals("{process:?:member}", roleResult);
+		// test role list...
+		Assert.assertNotNull(roleList);
+		Assert.assertEquals(1, roleList.size());
+		Assert.assertEquals(roleList.get(0), "{process:P0000-00003:member}");
 
 	}
-
-
-
 
 	/**
 	 * This test validates the wildcard orgunit role as a ACL notation:
@@ -157,19 +167,17 @@ public class TestTeamWildcardAdapter {
 		// test two space team roles...
 		documentContext.replaceItemValue("txtSpaceRef", "S0000-00002");
 		documentContext.appendItemValue("txtSpaceRef", "S0000-00003");
-		
-		
+
 		documentContext.replaceItemValue("txtProcessRef", "P0000-00003");
 
 		String testRole = "{space:?:team}";
 		TextEvent event = new TextEvent(testRole, documentContext);
 		teamRoleWildcardAdapter.onEvent(event);
-		String roleResult = event.getText();
 		
-		List<String> listResult=event.getTextList();
-		
-		Assert.assertEquals(2,listResult.size());
-		
+		List<String> listResult = event.getTextList();
+
+		Assert.assertEquals(2, listResult.size());
+
 		Assert.assertEquals(listResult.get(0), "{space:S0000-00002:team}");
 		Assert.assertEquals(listResult.get(1), "{space:S0000-00003:team}");
 
@@ -177,10 +185,32 @@ public class TestTeamWildcardAdapter {
 		testRole = "{process:?:member}";
 		event = new TextEvent(testRole, documentContext);
 		teamRoleWildcardAdapter.onEvent(event);
-		roleResult = event.getText();
-		Assert.assertEquals(roleResult, "{process:P0000-00003:member}");
+		listResult = event.getTextList();
+		Assert.assertEquals(listResult.get(0), "{process:P0000-00003:member}");
 
 	}
 
+	/**
+	 * This test validates a non role specific text fragment. The Adapter should not
+	 * change the text.
+	 * 
+	 * 
+	 * 
+	 * @throws PluginException
+	 * 
+	 */
+	@Test
+	public void testNonRoleSpecificText() throws PluginException {
+
+		// test some other text fragment
+		String testText = "<item name=\"comment\" ignore=\"true\"/>";
+		TextEvent event = new TextEvent(testText, documentContext);
+		teamRoleWildcardAdapter.onEvent(event);
+		String testResult = event.getText();
+
+		Assert.assertNotNull(testResult);
+		Assert.assertEquals(testText, testResult);
+
+	}
 
 }
