@@ -32,7 +32,7 @@ import javax.ejb.Singleton;
 public class TeamCache {
 
 	int DEFAULT_CACHE_SIZE = 500; // maximum 500 users
-	int DEFAULT_EXPIRES_TIME = 600000; // 10 minutes
+	int DEFAULT_EXPIRES_TIME = 3600000; // 60 minutes - just to cleanup wasted memory
 	long expiresTime = 0;
 	long lastReset = 0;
 	private Properties configurationProperties = null;
