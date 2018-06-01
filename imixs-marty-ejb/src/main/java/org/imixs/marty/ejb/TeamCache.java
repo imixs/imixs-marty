@@ -32,7 +32,7 @@ import javax.ejb.Singleton;
 public class TeamCache {
 
 	int DEFAULT_CACHE_SIZE = 500; // maximum 500 users
-	int DEFAULT_EXPIRES_TIME = 60000; // 10 minutes
+	int DEFAULT_EXPIRES_TIME = 600000; // 10 minutes
 	long expiresTime = 0;
 	long lastReset = 0;
 	private Properties configurationProperties = null;
@@ -43,7 +43,6 @@ public class TeamCache {
 	@PostConstruct
 	void init() {
 		try {
-
 			configurationProperties = new Properties();
 			try {
 				configurationProperties.load(
@@ -52,7 +51,6 @@ public class TeamCache {
 				logger.warning("unable to find imixs.properties in current classpath");
 				e.printStackTrace();
 			}
-
 			resetCache();
 		} catch (Exception e) {
 			logger.severe("unable to initalize cache");
@@ -63,11 +61,10 @@ public class TeamCache {
 	/**
 	 * resets the cache object and reads the config params....
 	 * 
-	 * 
 	 */
 	public void resetCache() {
 		// determine the cache size....
-		logger.finest("......resetCache - initalizing settings....");
+		logger.finest("......resetCache....");
 		int iCacheSize = DEFAULT_CACHE_SIZE;
 		try {
 			iCacheSize = Integer
@@ -79,6 +76,7 @@ public class TeamCache {
 			iCacheSize = DEFAULT_CACHE_SIZE;
 
 		// initialize cache
+		logger.finest("......resetCache - cache size = " + iCacheSize);
 		cache = new Cache(iCacheSize);
 
 		// read expires time...
@@ -92,6 +90,7 @@ public class TeamCache {
 		if (expiresTime <= 0)
 			expiresTime = DEFAULT_EXPIRES_TIME;
 
+		logger.finest("......resetCache - cache expires after = " + expiresTime + "ms");
 		lastReset = System.currentTimeMillis();
 
 	}
@@ -101,7 +100,7 @@ public class TeamCache {
 		if (expiresTime > 0) {
 			Long now = System.currentTimeMillis();
 			if ((now - lastReset) > expiresTime) {
-				logger.fine("cache expired!");
+				logger.finest("......cache expired!");
 				resetCache();
 			}
 		}
