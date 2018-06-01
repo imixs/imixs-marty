@@ -47,6 +47,7 @@ import javax.inject.Named;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.imixs.marty.ejb.SetupService;
+import org.imixs.workflow.FileData;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Model;
 import org.imixs.workflow.bpmn.BPMNModel;
@@ -57,8 +58,6 @@ import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.faces.fileupload.FileData;
-import org.imixs.workflow.faces.fileupload.FileUploadController;
 import org.xml.sax.SAXException;
 
 /**
@@ -81,7 +80,7 @@ public class ModelController implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Inject
-	protected FileUploadController fileUploadController;
+	protected ModelUploadHandler modelUploadHandler;
 
 	@EJB
 	protected ModelService modelService;
@@ -94,9 +93,8 @@ public class ModelController implements Serializable {
 
 	@EJB
 	protected PropertyService propertyService;
-	
-	
-	private Map<String, ItemCollection> modelEntityCache=new HashMap<String, ItemCollection>();
+
+	private Map<String, ItemCollection> modelEntityCache = new HashMap<String, ItemCollection>();
 
 	private static Logger logger = Logger.getLogger(ModelController.class.getName());
 
@@ -259,13 +257,13 @@ public class ModelController implements Serializable {
 	}
 
 	public ItemCollection getModelEntity(String version) {
-		
-		ItemCollection result=modelEntityCache.get(version);
-		if (result==null) {
-			 result=modelService.loadModelEntity(version);
-			 modelEntityCache.put(version, result);
+
+		ItemCollection result = modelEntityCache.get(version);
+		if (result == null) {
+			result = modelService.loadModelEntity(version);
+			modelEntityCache.put(version, result);
 		}
-		
+
 		return result;
 	}
 
@@ -284,7 +282,8 @@ public class ModelController implements Serializable {
 	 */
 	public void doUploadModel(ActionEvent event)
 			throws ModelException, ParseException, ParserConfigurationException, SAXException, IOException {
-		List<FileData> fileList = fileUploadController.getUploades();
+		List<FileData> fileList = modelUploadHandler.getModelUploads().getFileData();
+
 		if (fileList == null) {
 			return;
 		}
@@ -293,13 +292,13 @@ public class ModelController implements Serializable {
 
 			// test if bpmn model?
 			if (file.getName().endsWith(".bpmn")) {
-				BPMNModel model = BPMNParser.parseModel(file.getData(), "UTF-8");
+				BPMNModel model = BPMNParser.parseModel(file.getContent(), "UTF-8");
 				modelService.saveModel(model);
 				continue;
 			}
 
 			if (file.getName().endsWith(".ixm")) {
-				setupService.importXmlEntityData(file.getData());
+				setupService.importXmlEntityData(file.getContent());
 				continue;
 			}
 
@@ -307,7 +306,7 @@ public class ModelController implements Serializable {
 			logger.warning("Invalid Model Type. Model can't be imported!");
 
 		}
-		fileUploadController.reset();
+		modelUploadHandler.reset();
 	}
 
 	/**
