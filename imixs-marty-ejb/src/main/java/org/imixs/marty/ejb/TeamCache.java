@@ -67,7 +67,7 @@ public class TeamCache {
 	 */
 	public void resetCache() {
 		// determine the cache size....
-		logger.fine("resetCache - initalizing settings....");
+		logger.finest("......resetCache - initalizing settings....");
 		int iCacheSize = DEFAULT_CACHE_SIZE;
 		try {
 			iCacheSize = Integer

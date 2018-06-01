@@ -31,6 +31,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.ejb.EJB;
+
+import org.imixs.marty.ejb.TeamCache;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
@@ -39,9 +42,10 @@ import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.QueryException;
 
 /**
- * This system model plug-in supports additional business logic for space
- * entities. The plug-in updates the properties txtName and txtSpaceName. It
- * also compute the parent team members and the team members of subspaces.
+ * This system model plug-in supports additional business logic for space and
+ * process entities. The case of a 'space' the plug-in updates the properties
+ * txtName and txtSpaceName. It also compute the parent team members and the
+ * team members of subspaces.
  * 
  * Model: system
  * 
@@ -55,6 +59,9 @@ public class SpacePlugin extends AbstractPlugin {
 	private static Logger logger = Logger.getLogger(SpacePlugin.class.getName());
 	private ItemCollection space = null;
 
+	@EJB
+	TeamCache teamCache;
+
 	/**
 	 * If a 'space' is processed, the method verifies if the space Information need
 	 * to be updated to the parent and subSpaces.
@@ -66,26 +73,31 @@ public class SpacePlugin extends AbstractPlugin {
 	@Override
 	public ItemCollection run(ItemCollection documentContext, ItemCollection event) throws PluginException {
 		space = null;
+		String type = documentContext.getType();
 
 		// verify type 'spacedeleted'
 		// in case of a deletion we test if parent nodes still exist! In this case
 		// deletion is not allowed
-		if ("spacedeleted".equals(documentContext.getItemValueString("type"))) {
-
+		if ("spacedeleted".equals(type)) {
 			List<ItemCollection> subspaces = findAllSubSpaces(documentContext.getUniqueID());
 			// if a parentSpace exist - stop deletion!
 			if (subspaces != null && subspaces.size() > 0) {
 				throw new PluginException(SpacePlugin.class.getName(), SPACE_DELETE_ERROR,
 						"Space object can not be deleted, because descendant space object(s) exist!");
 			}
-
 		}
 
-		// verify if sub spaces need to be renamed...
-		if ("space".equals(documentContext.getItemValueString("type"))) {
+		// verify if the space name and sub-spaces need to be updated...
+		if ("space".equals(type)) {
 			space = documentContext;
 			updateParentSpaceProperties();
 			updateSubSpaces();
+		}
+
+		// if a process or a space was processed, then we need to reset the TeamCache
+		if (type.startsWith("space") || type.startsWith("process")) {
+			logger.finest(".......trigger teamCache reset....");
+			teamCache.resetCache();
 		}
 
 		return documentContext;
@@ -124,16 +136,13 @@ public class SpacePlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * This method updates the parentName properties for all sub-spaces.
-	 * 
-	 * This is only necessary if sub-spaces are found.
+	 * This method updates the parentName properties for all sub-spaces. This is
+	 * only necessary if sub-spaces are found.
 	 * 
 	 * @param space
 	 */
 	private void updateSubSpaces() {
-
-		logger.fine("Updating Sub Space Informations for '" + space.getItemValueString("$Uniqueid") + "'");
-
+		logger.finest("......updating sub-space data for '" + space.getItemValueString("$Uniqueid") + "'");
 		List<ItemCollection> subSpaceList = findAllSubSpaces(space.getItemValueString("$Uniqueid"));
 		String sParentSpaceName = space.getItemValueString("txtName");
 		for (ItemCollection aSubSpace : subSpaceList) {
@@ -151,13 +160,17 @@ public class SpacePlugin extends AbstractPlugin {
 		}
 	}
 
+	/**
+	 * Helper method to find all sub-spaces for a given uniqueID.
+	 * 
+	 * @param sIDRef
+	 * @return
+	 */
 	private List<ItemCollection> findAllSubSpaces(String sIDRef) {
-
 		if (sIDRef == null) {
 			return null;
 		}
 		String sQuery = "(type:\"space\" AND $uniqueidref:\"" + sIDRef + "\")";
-
 		List<ItemCollection> subSpaceList;
 		try {
 			subSpaceList = getWorkflowService().getDocumentService().find(sQuery, 9999, 0);
@@ -167,7 +180,6 @@ public class SpacePlugin extends AbstractPlugin {
 
 		// sort by txtname
 		Collections.sort(subSpaceList, new ItemCollectionComparator("txtname", true));
-
 		return subSpaceList;
 	}
 }

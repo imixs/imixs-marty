@@ -8,7 +8,6 @@ import javax.ejb.SessionContext;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.InvocationContext;
 
-import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 
 /**
@@ -25,8 +24,8 @@ import org.imixs.workflow.engine.DocumentService;
  * 
  * {process:Finance:assist}
  * 
- * In addition if the user is member of one of the roles (team,manager, assist)
- * the general mapping is added <br />
+ * In addition, in case the user is member of one of the roles (team,manager, assist)
+ * a general mapping is added <br />
  * {process:Finance:member}
  * 
  * The interceptor can be enabled by the deployment descriptor of the
@@ -59,13 +58,11 @@ public class TeamInterceptor {
 	@Resource
 	SessionContext ejbCtx;
 
-	@EJB
-	TeamCache teamCache;
-
+	
 	private static Logger logger = Logger.getLogger(TeamInterceptor.class.getName());
 
 	/**
-	 * The interceptor method injects the LDAP groups into the contextData map. The
+	 * The interceptor method injects the orgunit roles into the contextData map. The
 	 * method only runs for the method calls 'findAllEntities', 'save' and 'load'
 	 * 
 	 * @param ctx
@@ -93,18 +90,6 @@ public class TeamInterceptor {
 		if ("getDocumentsByType".equals(sMethod) || sUserID == null || "anonymous".equals(sUserID)
 				|| sUserID.isEmpty()) {
 			return ctx.proceed();
-		}
-
-		// if a space or process entity is saved, then we need to reset the teamCache!
-		if ("save".equals(sMethod)) {
-			// get the itemcollection and lets see if we have a space or process entity....
-			ItemCollection document = (ItemCollection) ctx.getParameters()[0];
-			if (document != null && ("space".equals(document.getType()) || "process".equals(document.getType()))) {
-				Object result = ctx.proceed();
-				logger.fine("reset teamlookup cache....");
-				teamCache.resetCache();
-				return result;
-			}
 		}
 
 		// if we have not yet build a USER_GROUP_LIST lets start...

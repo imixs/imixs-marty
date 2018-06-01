@@ -65,7 +65,7 @@ public class TeamLookupService {
 			return groups;
 		}
 
-		// build an araa with all member strings...
+		// build an array with all member strings...
 		List<String> memberList = getMemberList("process", userId);
 		memberList.addAll(getMemberList("space", userId));
 		// convert list to array...
@@ -78,7 +78,7 @@ public class TeamLookupService {
 			String groupListe = "";
 			for (String aGroup : groups)
 				groupListe += "'" + aGroup + "' ";
-			logger.fine("resolved membership for '" + userId + " = " + groupListe);
+			logger.finest("......resolved membership for '" + userId + " = " + groupListe);
 		}
 
 		return groups;
