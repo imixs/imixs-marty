@@ -91,7 +91,7 @@ public class SpacePlugin extends AbstractPlugin {
 		if ("space".equals(type)) {
 			space = documentContext;
 			updateParentSpaceProperties();
-			updateSubSpaces();
+			updateSubSpaces(space);
 		}
 
 		// if a process or a space was processed, then we need to reset the TeamCache
@@ -141,10 +141,10 @@ public class SpacePlugin extends AbstractPlugin {
 	 * 
 	 * @param space
 	 */
-	private void updateSubSpaces() {
-		logger.finest("......updating sub-space data for '" + space.getItemValueString("$Uniqueid") + "'");
-		List<ItemCollection> subSpaceList = findAllSubSpaces(space.getItemValueString("$Uniqueid"));
-		String sParentSpaceName = space.getItemValueString("txtName");
+	private void updateSubSpaces(ItemCollection parentSpace)  {
+		logger.finest("......updating sub-space data for '" + parentSpace.getItemValueString("$Uniqueid") + "'");
+		List<ItemCollection> subSpaceList = findAllSubSpaces(parentSpace.getItemValueString("$Uniqueid"));
+		String sParentSpaceName = parentSpace.getItemValueString("txtName");
 		for (ItemCollection aSubSpace : subSpaceList) {
 
 			aSubSpace.replaceItemValue("txtparentname", sParentSpaceName);
@@ -152,11 +152,13 @@ public class SpacePlugin extends AbstractPlugin {
 					sParentSpaceName + "." + aSubSpace.getItemValueString("txtSpacename"));
 
 			// update parent team lists
-			aSubSpace.replaceItemValue("namParentTeam", space.getItemValue("namTeam"));
-			aSubSpace.replaceItemValue("namParentManager", space.getItemValue("namManager"));
-			aSubSpace.replaceItemValue("namParentAssist", space.getItemValue("namAssist"));
-
-			getWorkflowService().getDocumentService().save(aSubSpace);
+			aSubSpace.replaceItemValue("namParentTeam", parentSpace.getItemValue("namTeam"));
+			aSubSpace.replaceItemValue("namParentManager", parentSpace.getItemValue("namManager"));
+			aSubSpace.replaceItemValue("namParentAssist", parentSpace.getItemValue("namAssist"));
+			
+			aSubSpace=getWorkflowService().getDocumentService().save(aSubSpace);
+			// call recursive....
+			updateSubSpaces(aSubSpace);
 		}
 	}
 
