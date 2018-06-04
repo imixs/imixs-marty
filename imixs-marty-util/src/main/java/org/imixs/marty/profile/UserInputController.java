@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
@@ -213,6 +214,9 @@ public class UserInputController implements Serializable {
 				i.remove();
 			}
 		}
+		
+		// remove empty strings.
+		uniqueList(aList);
 	}
 
 	/**
@@ -260,6 +264,9 @@ public class UserInputController implements Serializable {
 				}
 			}
 		}
+		
+		// remove empty strings.
+		uniqueList(aList);
 	}
 
 	/**
@@ -308,6 +315,31 @@ public class UserInputController implements Serializable {
 		// reset state
 		reset();
 
+	}
+	/**
+	 * This method removes duplicates and null values from a vector.
+	 * 
+	 * @param valueList
+	 *            - list of elements
+	 */
+	public List<?> uniqueList(List<Object> valueList) {
+		int iVectorSize = valueList.size();
+		Vector<Object> cleanedVector = new Vector<Object>();
+
+		for (int i = 0; i < iVectorSize; i++) {
+			Object o = valueList.get(i);
+			if (o == null || cleanedVector.indexOf(o) > -1 || "".equals(o.toString()))
+				continue;
+
+			// add unique object
+			cleanedVector.add(o);
+		}
+		valueList = cleanedVector;
+		// do not work with empty vectors....
+		if (valueList.size() == 0)
+			valueList.add("");
+
+		return valueList;
 	}
 
 }
