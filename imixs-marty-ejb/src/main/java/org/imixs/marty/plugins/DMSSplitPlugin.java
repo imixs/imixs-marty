@@ -200,7 +200,7 @@ public class DMSSplitPlugin extends AbstractPlugin {
 						processData.getItemValueString("modelversion"));
 				workitemSubProcess.replaceItemValue(WorkflowKernel.PROCESSID,
 						new Integer(processData.getItemValueString("processid")));
-				workitemSubProcess.replaceItemValue(WorkflowKernel.ACTIVITYID,
+				workitemSubProcess.setEventID(
 						new Integer(processData.getItemValueString("activityid")));
 
 				// add the origin reference

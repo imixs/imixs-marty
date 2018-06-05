@@ -157,7 +157,7 @@ public class UserController implements Serializable {
 				try {
 					if (sAutoProcessID != null) {
 						int iActiviyID = Integer.valueOf(sAutoProcessID);
-						profile.replaceItemValue("$ActivityID", iActiviyID);
+						profile.setEventID(iActiviyID);
 						logger.finest("......autoprocess profile with autoProcessOnLogin=" + iActiviyID);
 						try {
 							profile = workflowService.processWorkItem(profile);

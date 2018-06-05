@@ -325,7 +325,7 @@ public class ProfileService {
 		// set default group
 		profile.replaceItemValue("txtgroups", "IMIXS-WORKFLOW-Author");
 		// process new profile...
-		profile.replaceItemValue("$ActivityID", CREATE_PROFILE_ACTIVITY_ID);
+		profile.setEventID(CREATE_PROFILE_ACTIVITY_ID);
 
 		profile = workflowService.processWorkItem(profile);
 
