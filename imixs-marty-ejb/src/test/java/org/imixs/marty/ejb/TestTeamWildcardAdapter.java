@@ -173,7 +173,7 @@ public class TestTeamWildcardAdapter {
 		String testRole = "{space:?:team}";
 		TextEvent event = new TextEvent(testRole, documentContext);
 		teamRoleWildcardAdapter.onEvent(event);
-		
+
 		List<String> listResult = event.getTextList();
 
 		Assert.assertEquals(2, listResult.size());
@@ -211,6 +211,64 @@ public class TestTeamWildcardAdapter {
 		Assert.assertNotNull(testResult);
 		Assert.assertEquals(testText, testResult);
 
+	}
+
+	/**
+	 * This test validates non wildcard roles
+	 * 
+	 * {process:team}
+	 * 
+	 * @throws PluginException
+	 * 
+	 */
+	@Test
+	public void testNonWildcardRole() throws PluginException {
+
+		// test two space team roles...
+		documentContext.replaceItemValue("txtSpaceRef", "S0000-00002");
+		documentContext.appendItemValue("txtSpaceRef", "S0000-00003");
+
+		documentContext.replaceItemValue("txtProcessRef", "P0000-00003");
+
+		String testRole = "{space:team}";
+		TextEvent event = new TextEvent(testRole, documentContext);
+		teamRoleWildcardAdapter.onEvent(event);
+
+		List<String> listResult = event.getTextList();
+		// no text list expected
+		Assert.assertEquals(1, listResult.size());
+		Assert.assertEquals("{space:team}", listResult.get(0));
+
+		String resultRole = event.getText();
+
+		Assert.assertEquals("{space:team}", resultRole);
+
+	}
+
+	/**
+	 * helper test.
+	 * 
+	 * See:
+	 * https://stackoverflow.com/questions/8061302/regex-to-check-with-starts-with-http-https-or-ftp
+	 */
+	@Test
+	public void testRegex() {
+
+		String regex = "^(http|https|ftp)://.*";
+		if (!"http://www.imixs.org".matches(regex)) {
+			Assert.fail();
+		}
+
+		regex = "^(http|https)://.*";
+		if (!"http://www.imixs.rog".matches(regex)) {
+			Assert.fail();
+		}
+
+		regex = "^(XYZ).*";
+
+		if (!"XYZ SUppi".matches(regex)) {
+			Assert.fail();
+		}
 	}
 
 }

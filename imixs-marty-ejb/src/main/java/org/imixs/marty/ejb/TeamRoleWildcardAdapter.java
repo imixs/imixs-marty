@@ -3,6 +3,7 @@ package org.imixs.marty.ejb;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -51,37 +52,45 @@ public class TeamRoleWildcardAdapter {
 	public void onEvent(@Observes TextEvent event) {
 
 		List<String> textList = new ArrayList<String>();
-
 		String role = event.getText();
 		ItemCollection documentContext = event.getDocument();
 
-		logger.fine("replace role wildcards ...");
-		List<String> orgunitIDs;
-		// lookup all the spaces.....
-		if (role.startsWith("{space:?:")) {
-			orgunitIDs = documentContext.getItemValue("txtspaceref");
-			for (String id : orgunitIDs) {
-				ItemCollection orgunit = documentService.load(id);
-				if (orgunit != null) {
-					textList.add(role.replace(":?:", ":" + id + ":"));
+		// verfiy if a wildcard is used?
+		// ^(\{space\:\?\:|\{process\:\?\:)
+		// we use quote method to escape the search pattern
+		String regex = "^(" + Pattern.quote("{space:?:") + ".*|" + Pattern.quote("{process:?:") + ".*)";
+		if (role.matches(regex)) {
+			logger.fine("replace role wildcards ...");
+			List<String> orgunitIDs;
+			// lookup all the spaces.....
+			if (role.startsWith("{space:?:")) {
+				orgunitIDs = documentContext.getItemValue("txtspaceref");
+				for (String id : orgunitIDs) {
+					ItemCollection orgunit = documentService.load(id);
+					if (orgunit != null) {
+						textList.add(role.replace(":?:", ":" + id + ":"));
+					}
 				}
 			}
-		}
 
-		// lookup all the processes.....
-		if (role.startsWith("{process:?:")) {
-			orgunitIDs = documentContext.getItemValue("txtprocessref");
-			for (String id : orgunitIDs) {
-				ItemCollection orgunit = documentService.load(id);
-				if (orgunit != null) {
-					textList.add(role.replace(":?:", ":" + id + ":"));
+			// lookup all the processes.....
+			if (role.startsWith("{process:?:")) {
+				orgunitIDs = documentContext.getItemValue("txtprocessref");
+				for (String id : orgunitIDs) {
+					ItemCollection orgunit = documentService.load(id);
+					if (orgunit != null) {
+						textList.add(role.replace(":?:", ":" + id + ":"));
+					}
 				}
 			}
-		}
 
-		event.setTextList(textList);
-		// set unchanged text
-		event.setText(role);
+			// set the result list
+			event.setTextList(textList);
+		} else {
+			// no wildcard found - no replacement needed.
+			// See also issue #254
+			event.setText(role);
+		}
 	}
 
 }
