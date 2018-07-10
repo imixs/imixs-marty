@@ -202,7 +202,7 @@ public class TeamPlugin extends AbstractPlugin {
 			spaceRefList = workItem.getItemValue("txtSpaceRef");
 			for (String aUniqueID : oldUnqiueIdRefList) {
 				ItemCollection entity = findEntity(aUniqueID);
-				if (entity != null && "space".equals(entity.getItemValueString("type"))) {
+				if (entity != null && ("space".equals(entity.getType()) || "spacearchive".equals(entity.getType()))) {
 					// update txtProcessRef
 					spaceRefList.add(entity.getItemValueString(WorkflowKernel.UNIQUEID));
 				}
@@ -229,7 +229,7 @@ public class TeamPlugin extends AbstractPlugin {
 						}
 					}
 
-					if (entity != null && "space".equals(entity.getItemValueString("type"))) {
+					if (entity != null && ("space".equals(entity.getType()) || "spacearchive".equals(entity.getType()))) {
 						// verified
 						verifiedRefList.add(aUniqueID);
 					}
@@ -271,12 +271,12 @@ public class TeamPlugin extends AbstractPlugin {
 		for (String aUniqueID : oldUnqiueIdRefList) {
 
 			ItemCollection entity = findEntity(aUniqueID);
-			// check if this is a deprecated process ref
+			// check if this is a deprecated process/space ref
 			if (entity != null && "process".equals(entity.getItemValueString("type"))
 					&& !processRefList.contains(aUniqueID)) {
 				logger.fine("[TeamPlugin] remove deprecated processRef " + aUniqueID);
 			} else {
-				if (entity != null && "space".equals(entity.getItemValueString("type"))
+				if (entity != null && ("space".equals(entity.getType()) || "spacearchive".equals(entity.getType()))
 						&& !spaceRefList.contains(aUniqueID)) {
 					logger.fine("[TeamPlugin] remove deprecated spaceRef " + aUniqueID);
 				} else {
@@ -320,7 +320,7 @@ public class TeamPlugin extends AbstractPlugin {
 					sProcessName = entity.getItemValueString("txtname");
 
 				}
-				if ("space".equals(parentType)) {
+				if ("space".equals(parentType) || "spacearchive".equals(parentType)) {
 					vSpaceTeam.addAll(entity.getItemValue("namTeam"));
 					vSpaceManager.addAll(entity.getItemValue("namManager"));
 					vSpaceAssist.addAll(entity.getItemValue("namAssist"));
@@ -434,8 +434,9 @@ public class TeamPlugin extends AbstractPlugin {
 		if (type == null || aName == null) {
 			return null;
 		}
-		String sQuery = "(type:\"" + type + "\" AND txtname:\"" + aName + "\")";
-
+		//String sQuery = "(type:\"" + type + "\" AND txtname:\"" + aName + "\")";
+		String sQuery = "((type:\"" + type + "\" OR type:\"" + type + "archive\") AND txtname:\"" + aName + "\")";
+		
 		// because of the fact that spaces can be ordered in a hirachical order
 		// we need to be a little more tricky if we seach for spaces....
 		// Important: to find ambigous space names we search for maxount=2!

@@ -55,6 +55,8 @@ import org.imixs.workflow.exceptions.QueryException;
 public class SpacePlugin extends AbstractPlugin {
 
 	public static String SPACE_DELETE_ERROR = "SPACE_DELETE_ERROR";
+	public static String SPACE_ARCHIVE_ERROR = "SPACE_ARCHIVE_ERROR";
+	public static String SPACE_NAME_ERROR = "SPACE_NAME_ERROR";
 
 	private static Logger logger = Logger.getLogger(SpacePlugin.class.getName());
 	private ItemCollection space = null;
@@ -76,21 +78,39 @@ public class SpacePlugin extends AbstractPlugin {
 		String type = documentContext.getType();
 
 		// verify type 'spacedeleted'
-		// in case of a deletion we test if parent nodes still exist! In this case
+		// in case of a deletion we test if subspaces still exist! In this case
 		// deletion is not allowed
 		if ("spacedeleted".equals(type)) {
-			List<ItemCollection> subspaces = findAllSubSpaces(documentContext.getUniqueID());
+			List<ItemCollection> subspaces = findAllSubSpaces(documentContext.getUniqueID(), "space", "spacearchive");
 			// if a parentSpace exist - stop deletion!
 			if (subspaces != null && subspaces.size() > 0) {
 				throw new PluginException(SpacePlugin.class.getName(), SPACE_DELETE_ERROR,
 						"Space object can not be deleted, because descendant space object(s) exist!");
 			}
+			return documentContext;
 		}
 
+		// verify type 'spacearchive'
+		// in this case we test if subspaces still exist! In this case
+		// archive is not allowed
+		if ("spacearchive".equals(type)) {
+			List<ItemCollection> subspaces = findAllSubSpaces(documentContext.getUniqueID(), "space");
+			// if a parentSpace exist - stop deletion!
+			if (subspaces != null && subspaces.size() > 0) {
+				throw new PluginException(SpacePlugin.class.getName(), SPACE_ARCHIVE_ERROR,
+						"Space object can not be archived, because active descendant space object(s) exist!");
+			}
+		}
+		
+
 		// verify if the space name and sub-spaces need to be updated...
-		if ("space".equals(type)) {
+		if ("space".equals(type) || "spacearchive".equals(type)) {
 			space = documentContext;
-			updateParentSpaceProperties();
+			inheritParentSpaceProperties();
+			
+			// verify txtname if still unique....
+			validateUniqueSpaceName(space);
+			
 			updateSubSpaces(space);
 		}
 
@@ -104,30 +124,40 @@ public class SpacePlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * This method updates the Space Name ('txtName') and team lists inherited from
-	 * a parent Space. A parent space is referenced by the $UniqueIDRef.
+	 * This method inherits the Space Name ('txtName') and team lists from a parent
+	 * Space. A parent space is referenced by the $UniqueIDRef.
+	 * 
+	 * If the parent is archived or deleted, the method throws a pluginExcepiton
+	 * 
+	 * @throws PluginException
 	 * 
 	 */
-	private void updateParentSpaceProperties() {
+	private void inheritParentSpaceProperties() throws PluginException {
 		ItemCollection parentProject = null;
 		// test if the project has a subproject..
 		String sParentProjectID = space.getItemValueString("$uniqueidRef");
+
 		if (!sParentProjectID.isEmpty())
 			parentProject = getWorkflowService().getDocumentService().load(sParentProjectID);
 
-		if (parentProject != null && "space".equals(parentProject.getType())) {
-			logger.fine("Updating Parent Project Informations for '" + sParentProjectID + "'");
+		if (parentProject != null) {
+			if ("space".equals(parentProject.getType())) {
+				logger.fine("Updating Parent Project Informations for '" + sParentProjectID + "'");
 
-			String sName = space.getItemValueString("txtSpaceName");
-			String sParentName = parentProject.getItemValueString("txtName");
+				String sName = space.getItemValueString("txtSpaceName");
+				String sParentName = parentProject.getItemValueString("txtName");
 
-			space.replaceItemValue("txtName", sParentName + "." + sName);
-			space.replaceItemValue("txtParentName", sParentName);
+				space.replaceItemValue("txtName", sParentName + "." + sName);
+				space.replaceItemValue("txtParentName", sParentName);
 
-			// update parent team lists
-			space.replaceItemValue("namParentTeam", parentProject.getItemValue("namTeam"));
-			space.replaceItemValue("namParentManager", parentProject.getItemValue("namManager"));
-			space.replaceItemValue("namParentAssist", parentProject.getItemValue("namAssist"));
+				// update parent team lists
+				space.replaceItemValue("namParentTeam", parentProject.getItemValue("namTeam"));
+				space.replaceItemValue("namParentManager", parentProject.getItemValue("namManager"));
+				space.replaceItemValue("namParentAssist", parentProject.getItemValue("namAssist"));
+			} else {
+				throw new PluginException(SpacePlugin.class.getName(), SPACE_ARCHIVE_ERROR,
+						"Space object can not be updated, because parent space object is archived!");
+			}
 		} else {
 			// root project - update txtName
 			space.replaceItemValue("txtName", space.getItemValueString("txtSpaceName"));
@@ -136,14 +166,15 @@ public class SpacePlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * This method updates the parentName properties for all sub-spaces. This is
-	 * only necessary if sub-spaces are found.
+	 * This method updates the parentName and the parent team properties for all
+	 * sub-spaces. This is only necessary if sub-spaces are found.
 	 * 
 	 * @param space
 	 */
-	private void updateSubSpaces(ItemCollection parentSpace)  {
+	private void updateSubSpaces(ItemCollection parentSpace) {
 		logger.finest("......updating sub-space data for '" + parentSpace.getItemValueString("$Uniqueid") + "'");
-		List<ItemCollection> subSpaceList = findAllSubSpaces(parentSpace.getItemValueString("$Uniqueid"));
+		List<ItemCollection> subSpaceList = findAllSubSpaces(parentSpace.getItemValueString("$Uniqueid"), "space",
+				"spacearchive");
 		String sParentSpaceName = parentSpace.getItemValueString("txtName");
 		for (ItemCollection aSubSpace : subSpaceList) {
 
@@ -155,8 +186,8 @@ public class SpacePlugin extends AbstractPlugin {
 			aSubSpace.replaceItemValue("namParentTeam", parentSpace.getItemValue("namTeam"));
 			aSubSpace.replaceItemValue("namParentManager", parentSpace.getItemValue("namManager"));
 			aSubSpace.replaceItemValue("namParentAssist", parentSpace.getItemValue("namAssist"));
-			
-			aSubSpace=getWorkflowService().getDocumentService().save(aSubSpace);
+
+			aSubSpace = getWorkflowService().getDocumentService().save(aSubSpace);
 			// call recursive....
 			updateSubSpaces(aSubSpace);
 		}
@@ -168,11 +199,24 @@ public class SpacePlugin extends AbstractPlugin {
 	 * @param sIDRef
 	 * @return
 	 */
-	private List<ItemCollection> findAllSubSpaces(String sIDRef) {
+	private List<ItemCollection> findAllSubSpaces(String sIDRef, String... types) {
 		if (sIDRef == null) {
 			return null;
 		}
-		String sQuery = "(type:\"space\" AND $uniqueidref:\"" + sIDRef + "\")";
+		String sQuery = "(";
+		// query type...
+		if (types != null && types.length > 0) {
+			sQuery += "(";
+			for (int i = 0; i < types.length; i++) {
+				sQuery += " type:\"" + types[i] + "\"";
+				if ((i + 1) < types.length) {
+					sQuery += " OR ";
+				}
+			}
+			sQuery += ") ";
+		}
+		sQuery += " AND $uniqueidref:\"" + sIDRef + "\")";
+
 		List<ItemCollection> subSpaceList;
 		try {
 			subSpaceList = getWorkflowService().getDocumentService().find(sQuery, 9999, 0);
@@ -183,5 +227,36 @@ public class SpacePlugin extends AbstractPlugin {
 		// sort by txtname
 		Collections.sort(subSpaceList, new ItemCollectionComparator("txtname", true));
 		return subSpaceList;
+	}
+
+	/**
+	 * Helper method to find all sub-spaces for a given txtname.
+	 * 
+	 * @param name     - current space name
+	 * @param unqiueid - current uniqueid
+	 * 
+	 * @throws PluginException if name is already taken
+	 */
+	private void validateUniqueSpaceName(ItemCollection space) throws PluginException {
+		String name=space.getItemValueString("txtname");
+		String unqiueid=space.getUniqueID();
+		
+		String sQuery = "((type:\"space\" OR type:\"spacearchive\") AND txtname:\"" + name + "\")";
+
+		List<ItemCollection> spaceList;
+		try {
+			spaceList = getWorkflowService().getDocumentService().find(sQuery, 9999, 0);
+
+			for (ItemCollection aspace : spaceList) {
+				if (!aspace.getUniqueID().equals(unqiueid)) {
+					throw new PluginException(SpacePlugin.class.getName(), SPACE_NAME_ERROR,
+							"Space object with this name already exists!");
+				}
+			}
+
+		} catch (QueryException e) {
+			throw new InvalidAccessException(InvalidAccessException.INVALID_ID, e.getMessage(), e);
+		}
+
 	}
 }

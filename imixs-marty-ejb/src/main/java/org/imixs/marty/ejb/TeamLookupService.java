@@ -51,7 +51,7 @@ public class TeamLookupService {
 	private static Logger logger = Logger.getLogger(TeamLookupService.class.getName());
 
 	/**
-	 * Returns a string array containing all orgunit names a given UID is member of.
+	 * Returns a string array containing all orgunit names a given userID is member of.
 	 * 
 	 * 
 	 * @param aUID
