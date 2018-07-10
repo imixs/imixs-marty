@@ -42,3 +42,9 @@ Example:
 	<item name="space">...</item>
 	<item name="process">...</item>
 
+
+## Archived Spaces
+
+Spaces can optional be archived. Archived spaces can be still managed by the orgunit owner. 
+
+The teamlist of an archived space is still updated into the workitem. But the [Team Interceptor](../concepts/teaminterceptor.html) will ignore archived spaces.  

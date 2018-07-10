@@ -56,7 +56,7 @@ public class SpacePlugin extends AbstractPlugin {
 
 	public static String SPACE_DELETE_ERROR = "SPACE_DELETE_ERROR";
 	public static String SPACE_ARCHIVE_ERROR = "SPACE_ARCHIVE_ERROR";
-	public static String SPACE_NAME_ERROR = "SPACE_NAME_ERROR";
+	public static String ORGUNIT_NAME_ERROR = "ORGUNIT_NAME_ERROR";
 
 	private static Logger logger = Logger.getLogger(SpacePlugin.class.getName());
 	private ItemCollection space = null;
@@ -107,13 +107,20 @@ public class SpacePlugin extends AbstractPlugin {
 		if ("space".equals(type) || "spacearchive".equals(type)) {
 			space = documentContext;
 			inheritParentSpaceProperties();
-			
 			// verify txtname if still unique....
-			validateUniqueSpaceName(space);
-			
+			validateUniqueOrgunitName(space,"space");
 			updateSubSpaces(space);
 		}
 
+		// verify if the space name and sub-spaces need to be updated...
+		if ("process".equals(type) ) {
+			// verify txtname if still unique....
+			validateUniqueOrgunitName(documentContext,"process");
+		}
+
+		
+		
+		
 		// if a process or a space was processed, then we need to reset the TeamCache
 		if (type.startsWith("space") || type.startsWith("process")) {
 			logger.finest(".......trigger teamCache reset....");
@@ -230,18 +237,18 @@ public class SpacePlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * Helper method to find all sub-spaces for a given txtname.
+	 * This method validates the uniqueness of the item txtname of an orgunit.
 	 * 
-	 * @param name     - current space name
-	 * @param unqiueid - current uniqueid
+	 * @param orgunit
+	 * @param type - space or process
 	 * 
 	 * @throws PluginException if name is already taken
 	 */
-	private void validateUniqueSpaceName(ItemCollection space) throws PluginException {
-		String name=space.getItemValueString("txtname");
-		String unqiueid=space.getUniqueID();
+	private void validateUniqueOrgunitName(ItemCollection orgunit, String type) throws PluginException {
+		String name=orgunit.getItemValueString("txtname");
+		String unqiueid=orgunit.getUniqueID();
 		
-		String sQuery = "((type:\"space\" OR type:\"spacearchive\") AND txtname:\"" + name + "\")";
+		String sQuery = "((type:\"" +type + "\" OR type:\"" + type + "archive\") AND txtname:\"" + name + "\")";
 
 		List<ItemCollection> spaceList;
 		try {
@@ -249,8 +256,8 @@ public class SpacePlugin extends AbstractPlugin {
 
 			for (ItemCollection aspace : spaceList) {
 				if (!aspace.getUniqueID().equals(unqiueid)) {
-					throw new PluginException(SpacePlugin.class.getName(), SPACE_NAME_ERROR,
-							"Space object with this name already exists!");
+					throw new PluginException(SpacePlugin.class.getName(), ORGUNIT_NAME_ERROR,
+							type + " with this name already exists!");
 				}
 			}
 

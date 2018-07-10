@@ -1,8 +1,8 @@
-#The SpacePlugin Guide WildFly
+# The SpacePlugin
 
-The SpacePlugin is a system plugin running only in the system workflow group 'space'.
+The SpacePlugin is a system plugin running only in the system workflow groups 'space' and 'process'.
 
-The plugin computes and updates the child and parent information of a space within his hierarchical order.
+The plugin computes and updates the attributes of a space with in a hierarchical order.
 
     org.imixs.marty.plugins.SpacePlugin
 
@@ -10,8 +10,18 @@ The hierarchical order of a space is defined by the property "$uniqueidref" whic
 The plugin updates the following properties of a space entity:
 
 
- * txtparentname = name of the parent space in case the space entity is a supspace
+ * txtname = combined name of the parent space name and the own name separated by a '.'
+ * txtparentname = name of the parent space in case the space entity is a subspace
  * namParentTeam = team-list of the parent space (if assigned)
  * namParentManager = manager-list of the parent space (if assigned)
  * namParentAssist = assist-list of the parent space (if assigned)
+
+
+## Unique Name
+
+A process or a space has a unique name attribute 'txtname'. If the name provided by the user is already taken the plugin throws a PluginException. 
+
+## Archived Spaces
+
+Spaces can optional be archived. Archived spaces can be still managed by the orgunit owner. 
  
