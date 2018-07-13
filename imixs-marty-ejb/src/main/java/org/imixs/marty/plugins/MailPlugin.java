@@ -227,18 +227,26 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 		String sFilePattern = null;
 
 		while ((sFilePattern = getAttachmentName()) != null) {
-			logger.fine("MailPlugin attach file pattern: \"" + sFilePattern + "\"");
+			logger.finest("......MailPlugin attach file pattern: \"" + sFilePattern + "\"");
 			// get all fileNames....
 			List<String> fileNames = blobWorkitem.getFileNames();
+
+			// build a regex pattern if a pattern exists....
+			Pattern pattern=null;
+			if (!sFilePattern.isEmpty()) {
+				pattern = Pattern.compile(sFilePattern);
+			}
+			
 			// iterate over all files ....
 			for (String aFileName : fileNames) {
-				// test if aFilename matches the pattern
-				if (sFilePattern.isEmpty() || Pattern.matches(sFilePattern, aFileName)) {
+				
+				// test if aFilename matches the pattern or the pattern is null
+				if (pattern==null || pattern.matcher(aFileName).find()) {
 
 					// fetch the file content
 					FileInfo fileInfo = getFileFromWorkItem(aFileName, blobWorkitem);
 
-					logger.fine("MailPlugin - attach : " + aFileName);
+					logger.finest("......MailPlugin - attach : " + aFileName);
 
 					// get Mulitpart Message
 					Multipart multipart = super.getMultipart();
