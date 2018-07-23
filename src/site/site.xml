@@ -64,6 +64,7 @@
 				<item name="CommentPlugin" href="plugins/commentplugin.html" />
 				<item name="DeputyPlugin" href="plugins/deputyplugin.html" />
 				<item name="DMSSplitPlugin" href="plugins/dmssplitplugin.html" />
+				<item name="GDPRErasurePlugin" href="plugins/gdprerasureplugin.html" />
 				<item name="MinutePlugin" href="plugins/minuteplugin.html" />
 				<item name="ProfilePlugin" href="plugins/profileplugin.html" />
 				<item name="ResultPlugin" href="plugins/resultplugin.html" />
