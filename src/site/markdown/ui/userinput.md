@@ -47,14 +47,11 @@ If a part of a form should be rendered when the userIdList changed, the optional
  
 There are a set of CSS classes that can be used for the layout of the component. 
 
+ * imixs-username -  input field to search for a users
  * marty-userlistinput - outer div
-
  * marty-userlistinput-list - div containing the current user list
-
- * marty-userlistinput-inputbox - the input box to search for profiles containing a suggest feature
-
+ * marty-userlistinput-inputbox - the input container to search for profiles containing a suggest feature
  * marty-userlistinput-suggestresultlist - the result list of a search
-
  * marty-userlistinput-suggestresultlist-entry - a result list entry
 
 # UserInput widget
@@ -66,21 +63,17 @@ The custom widget '_userInput_' can be used to handle the input of one userId. T
  The custom tag 'userInput' provides the following attributes:
 
  * value : defines the workitem value to store the usernames (do not use itemList here!)
-
  * editmode : default = true - if false no input and changes are allowed (read only mode)
-
  * render : defines an optional component id to be rendered if the userlist changed. (see UserListInput)
 
  
 ### Layout the UserInputList
 There are a set of CSS classes that can be used for the layout of the component. 
 
+ * imixs-usergroup - input field to search for users
  * marty-userinput - outer div
-
  * marty-userinput-inputbox - the input box to search for profiles containing a suggest feature
-
  * marty-userinput-suggestresultlist - the result list of a search
- 
  * marty-userinput-suggestresultlist-entry - a result list entry
  
 
