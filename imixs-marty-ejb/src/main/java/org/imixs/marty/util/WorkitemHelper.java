@@ -27,48 +27,49 @@ public class WorkitemHelper {
 		// clone the standard WorkItem properties
 		clone.replaceItemValue("Type", aWorkitem.getItemValue("Type"));
 		clone.replaceItemValue("$UniqueID", aWorkitem.getItemValue("$UniqueID"));
-		clone.replaceItemValue("$UniqueIDRef",
-				aWorkitem.getItemValue("$UniqueIDRef"));
-		clone.replaceItemValue("$ModelVersion",
-				aWorkitem.getItemValue("$ModelVersion"));
-		clone.replaceItemValue("$ProcessID",
-				aWorkitem.getItemValue("$ProcessID"));
+		clone.replaceItemValue("$UniqueIDRef", aWorkitem.getItemValue("$UniqueIDRef"));
+		clone.replaceItemValue("$ModelVersion", aWorkitem.getItemValue("$ModelVersion"));
+		clone.replaceItemValue("$ProcessID", aWorkitem.getItemValue("$ProcessID"));
 		clone.replaceItemValue("$Created", aWorkitem.getItemValue("$Created"));
 		clone.replaceItemValue("$Modified", aWorkitem.getItemValue("$Modified"));
 		clone.replaceItemValue("$isAuthor", aWorkitem.getItemValue("$isAuthor"));
+		clone.replaceItemValue("$creator", aWorkitem.getItemValue("$creator"));
+		clone.replaceItemValue("$editor", aWorkitem.getItemValue("$editor"));
+		
+		clone.replaceItemValue("$TaskID", aWorkitem.getItemValue("$TaskID"));
+		clone.replaceItemValue("$EventID", aWorkitem.getItemValue("$EventID"));
+		clone.replaceItemValue("$workflowGroup", aWorkitem.getItemValue("$workflowGroup"));
+		clone.replaceItemValue("$workflowStatus", aWorkitem.getItemValue("$workflowStatus"));
+		clone.replaceItemValue("$lastTask", aWorkitem.getItemValue("$lastTask"));
+		clone.replaceItemValue("$lastEvent", aWorkitem.getItemValue("$lastEvent"));
+		clone.replaceItemValue("$lastEventDate", aWorkitem.getItemValue("$lastEventDate"));
+		clone.replaceItemValue("$eventLog", aWorkitem.getItemValue("$eventLog"));
+		clone.replaceItemValue("$lasteditor", aWorkitem.getItemValue("$lasteditor"));
+
 
 		clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
 
-		clone.replaceItemValue("txtWorkflowStatus",
-				aWorkitem.getItemValue("txtWorkflowStatus"));
-		clone.replaceItemValue("txtWorkflowGroup",
-				aWorkitem.getItemValue("txtWorkflowGroup"));
-		clone.replaceItemValue("namCreator",
-				aWorkitem.getItemValue("namCreator"));
-		clone.replaceItemValue("namCurrentEditor",
-				aWorkitem.getItemValue("namCurrentEditor"));
+		clone.replaceItemValue("txtWorkflowStatus", aWorkitem.getItemValue("txtWorkflowStatus"));
+		clone.replaceItemValue("txtWorkflowGroup", aWorkitem.getItemValue("txtWorkflowGroup"));
+		clone.replaceItemValue("namCreator", aWorkitem.getItemValue("namCreator"));
+		clone.replaceItemValue("namCurrentEditor", aWorkitem.getItemValue("namCurrentEditor"));
 		clone.replaceItemValue("namOwner", aWorkitem.getItemValue("namOwner"));
 		clone.replaceItemValue("namTeam", aWorkitem.getItemValue("namTeam"));
 		clone.replaceItemValue("namManager", aWorkitem.getItemValue("namManager"));
 		clone.replaceItemValue("namassist", aWorkitem.getItemValue("namassist"));
 
-		clone.replaceItemValue("txtWorkflowSummary",
-				aWorkitem.getItemValue("txtWorkflowSummary"));
-		clone.replaceItemValue("txtWorkflowAbstract",
-				aWorkitem.getItemValue("txtWorkflowAbstract"));
-		clone.replaceItemValue("txtWorkflowImageURL",
-				aWorkitem.getItemValue("txtWorkflowImageURL"));
+		clone.replaceItemValue("txtWorkflowSummary", aWorkitem.getItemValue("txtWorkflowSummary"));
+		clone.replaceItemValue("txtWorkflowAbstract", aWorkitem.getItemValue("txtWorkflowAbstract"));
+		clone.replaceItemValue("txtWorkflowImageURL", aWorkitem.getItemValue("txtWorkflowImageURL"));
 
 		// clone the marty WorkItem properties....
 		if (aWorkitem.hasItem("txtName"))
 			clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
 
 		if (aWorkitem.hasItem("txtProcessName"))
-			clone.replaceItemValue("txtProcessName",
-					aWorkitem.getItemValue("txtProcessName"));
+			clone.replaceItemValue("txtProcessName", aWorkitem.getItemValue("txtProcessName"));
 		if (aWorkitem.hasItem("txtSpaceName"))
-			clone.replaceItemValue("txtSpaceName",
-					aWorkitem.getItemValue("txtSpaceName"));
+			clone.replaceItemValue("txtSpaceName", aWorkitem.getItemValue("txtSpaceName"));
 		if (aWorkitem.hasItem("datdate"))
 			clone.replaceItemValue("datdate", aWorkitem.getItemValue("datdate"));
 
@@ -79,8 +80,7 @@ public class WorkitemHelper {
 			clone.replaceItemValue("datTo", aWorkitem.getItemValue("datTo"));
 
 		if (aWorkitem.hasItem("numsequencenumber"))
-			clone.replaceItemValue("numsequencenumber",
-					aWorkitem.getItemValue("numsequencenumber"));
+			clone.replaceItemValue("numsequencenumber", aWorkitem.getItemValue("numsequencenumber"));
 
 		return clone;
 
@@ -93,10 +93,8 @@ public class WorkitemHelper {
 	 * 
 	 * <code>(txtWorkflowGroup:Invoice)($ProcessID:1...)</code>
 	 * 
-	 * @param workitem
-	 *            - workItem to be tested
-	 * @param filter
-	 *            - combined regex to test different fields
+	 * @param workitem - workItem to be tested
+	 * @param filter   - combined regex to test different fields
 	 * @return - true if filter matches filter expression.
 	 */
 	public static boolean matches(ItemCollection workitem, String filter) {
@@ -121,8 +119,7 @@ public class WorkitemHelper {
 				List<Object> itemValues = workitem.getItemValue(itemName);
 				for (Object aValue : itemValues) {
 					if (!aValue.toString().matches(regEx)) {
-						logger.fine("Value '" + aValue + "' did not match : "
-								+ regEx);
+						logger.fine("Value '" + aValue + "' did not match : " + regEx);
 						return false;
 					}
 				}

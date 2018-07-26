@@ -253,6 +253,7 @@ public class DmsController implements Serializable {
 			dmsEntry.replaceItemValue("$created", new Date());
 			dmsEntry.replaceItemValue("$modified", new Date());
 			dmsEntry.replaceItemValue("namCreator", remoteUser);
+			dmsEntry.replaceItemValue("$Creator", remoteUser);
 			dmsEntry.replaceItemValue("txtName", sLink);
 
 			dmsList = addDMSEntry(workflowController.getWorkitem(), dmsEntry);
