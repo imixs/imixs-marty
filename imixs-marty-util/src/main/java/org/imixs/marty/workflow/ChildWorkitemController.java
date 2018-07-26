@@ -51,11 +51,11 @@ import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 
 /**
- * This Bean acts as a front controller for child workitems to be controlled by
+ * This Bean acts as a front controller for child WorkItems to be controlled by
  * the imxis-workflow engine. A child workitem references another workitem. Each
- * workitem can have a list of child workitems.
+ * WorkItem can have a list of child WorkItems.
  * 
- * The default type of a new child worktiem is 'workitemchild'. The type can be
+ * The default type of a new child WorkItems is 'workitemchild'. The type can be
  * changed and controlled by the workflow model
  * 
  * @author rsoika
@@ -65,13 +65,6 @@ import org.imixs.workflow.exceptions.ProcessingErrorException;
 @ConversationScoped
 public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.WorkflowController
 		implements Serializable {
-
-	/* Services */
-	// @EJB
-	// protected org.imixs.workflow.jee.ejb.WorkflowService workflowService;
-	//
-	// @EJB
-	// protected org.imixs.marty.ejb.WorkitemService workitemService;
 
 	@Inject
 	private Conversation conversation;
