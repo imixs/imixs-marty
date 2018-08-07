@@ -55,15 +55,11 @@ import org.imixs.workflow.engine.DocumentService;
  * @author rsoika
  */
 
-@DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS",
-		"org.imixs.ACCESSLEVEL.READERACCESS",
-		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
-		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+@DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS", "org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
-@RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS",
-		"org.imixs.ACCESSLEVEL.READERACCESS",
-		"org.imixs.ACCESSLEVEL.AUTHORACCESS",
-		"org.imixs.ACCESSLEVEL.EDITORACCESS",
+@RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS", "org.imixs.ACCESSLEVEL.READERACCESS",
+		"org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Stateless
 @LocalBean
@@ -73,8 +69,7 @@ public class ProcessService {
 
 	final int MAX_SEARCH_COUNT = 1;
 
-	private static Logger logger = Logger.getLogger(ProcessService.class
-			.getName());
+	private static Logger logger = Logger.getLogger(ProcessService.class.getName());
 
 	@EJB
 	private DocumentService documentService;
@@ -91,10 +86,9 @@ public class ProcessService {
 	}
 
 	/**
-	 * This method returns all process entities for the current user. This list
-	 * can be used to display process information. The returned
-	 * process list is optimized and provides additional the following
-	 * attributes
+	 * This method returns all process entities for the current user. This list can
+	 * be used to display process information. The returned process list is
+	 * optimized and provides additional the following attributes
 	 * <p>
 	 * isMember, isTeam, isOwner, isManager, isAssist
 	 * 
@@ -106,20 +100,19 @@ public class ProcessService {
 		Collection<ItemCollection> col = documentService.getDocumentsByType("process");
 		// create optimized list
 		for (ItemCollection process : col) {
-			ItemCollection clone =cloneOrgItemCollection(process);
+			ItemCollection clone = cloneOrgItemCollection(process);
 			processList.add(clone);
 		}
 		// sort by txtname
 		Collections.sort(processList, new ItemCollectionComparator("txtname", true));
-	
+
 		return processList;
 	}
 
 	/**
-	 * This method returns all space entities for the current user. This list
-	 * can be used to display space information. The returned
-	 * space list is optimized and provides additional the following
-	 * attributes
+	 * This method returns all space entities for the current user. This list can be
+	 * used to display space information. The returned space list is optimized and
+	 * provides additional the following attributes
 	 * <p>
 	 * isMember, isTeam, isOwner, isManager, isAssist
 	 * 
@@ -132,18 +125,20 @@ public class ProcessService {
 
 		// create optimized list
 		for (ItemCollection space : col) {
-			ItemCollection clone =cloneOrgItemCollection(space);
+			ItemCollection clone = cloneOrgItemCollection(space);
 			spaces.add(clone);
 		}
 		// sort by txtname
 		Collections.sort(spaces, new ItemCollectionComparator("txtname", true));
-		return spaces; 
+		return spaces;
 	}
 
-	
 	/**
-	 * This method clones a given process or space ItemCollection.
-	 * The method also verifies if the current user is manager, teammember or assist
+	 * This method clones a given process or space ItemCollection. The method also
+	 * verifies if the current user is manager, teamMember, assist or general
+	 * membership within this orgunit. THe membership is computed based on the
+	 * username-list for the current user.
+	 * 
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -154,8 +149,7 @@ public class ProcessService {
 		clone.replaceItemValue("isAssist", false);
 
 		// check the isTeam status for the current user
-		Vector<String> vNameList = (Vector<String>) orgunit
-				.getItemValue("namTeam");
+		Vector<String> vNameList = (Vector<String>) orgunit.getItemValue("namTeam");
 		if (documentService.isUserContained(vNameList)) {
 			clone.replaceItemValue("isTeam", true);
 		}
@@ -174,24 +168,18 @@ public class ProcessService {
 
 		// check if user is member of team or manager list
 		boolean bMember = false;
-		if (clone.getItemValueBoolean("isTeam")
-				|| clone.getItemValueBoolean("isManager")
+		if (clone.getItemValueBoolean("isTeam") || clone.getItemValueBoolean("isManager")
 				|| clone.getItemValueBoolean("isAssist"))
 			bMember = true;
 		clone.replaceItemValue("isMember", bMember);
 
 		// add custom fields into clone...
-		clone.replaceItemValue("txtWorkflowList",
-				orgunit.getItemValue("txtWorkflowList"));
-		clone.replaceItemValue("txtReportList",
-				orgunit.getItemValue("txtReportList"));
-		clone.replaceItemValue("txtdescription",
-				orgunit.getItemValue("txtdescription"));
+		clone.replaceItemValue("txtWorkflowList", orgunit.getItemValue("txtWorkflowList"));
+		clone.replaceItemValue("txtReportList", orgunit.getItemValue("txtReportList"));
+		clone.replaceItemValue("txtdescription", orgunit.getItemValue("txtdescription"));
 		clone.replaceItemValue("namTeam", orgunit.getItemValue("namTeam"));
-		clone.replaceItemValue("namManager",
-				orgunit.getItemValue("namManager"));
-		clone.replaceItemValue("namAssist",
-				orgunit.getItemValue("namAssist"));
+		clone.replaceItemValue("namManager", orgunit.getItemValue("namManager"));
+		clone.replaceItemValue("namAssist", orgunit.getItemValue("namAssist"));
 
 		return clone;
 	}

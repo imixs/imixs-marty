@@ -119,8 +119,7 @@ public class ProcessController implements Serializable {
 	 * Loads a process entity by its UniqueID from the internal cache and updates
 	 * the current process entity.
 	 * 
-	 * @param uniqueid
-	 *            - of process entity
+	 * @param uniqueid - of process entity
 	 * 
 	 * @return current process entity
 	 */
@@ -199,14 +198,14 @@ public class ProcessController implements Serializable {
 		// get the process list form local cache
 		List<ItemCollection> alist = getProcessList();
 		for (ItemCollection aProcess : alist) {
-			if (uniqueid.equals(aProcess.getItemValueString(WorkflowKernel.UNIQUEID)))
+			if (uniqueid.equals(aProcess.getUniqueID()))
 				return aProcess;
 		}
 
 		// get the space list form local cache
 		alist = getSpaces();
 		for (ItemCollection aSpace : alist) {
-			if (uniqueid.equals(aSpace.getItemValueString(WorkflowKernel.UNIQUEID)))
+			if (uniqueid.equals(aSpace.getUniqueID()))
 				return aSpace;
 		}
 		return null;
@@ -279,8 +278,7 @@ public class ProcessController implements Serializable {
 	/**
 	 * Returns a list of all spaces which are assigned to a given process entity.
 	 * 
-	 * @param uniqueId
-	 *            of a processEntity
+	 * @param uniqueId of a processEntity
 	 * @return
 	 */
 	public List<ItemCollection> getSpacesByProcessId(String uniqueId) {
@@ -296,8 +294,7 @@ public class ProcessController implements Serializable {
 	/**
 	 * Returns a list of all spaces which are assigned to a given process entity.
 	 * 
-	 * @param uniqueId
-	 *            of a processEntity
+	 * @param uniqueId of a processEntity
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -435,58 +432,68 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
-	 * Returns true if current user is manager of a given space or process entity.
-	 * Therefore the method checks the cloned field 'isManager'
+	 * Returns true if current user is manager of a given orgunit. Therefore the
+	 * method checks the cloned field 'isManager' computed by the ProcessService
 	 * 
 	 * @return
 	 */
 	public boolean isManagerOf(String aUniqueID) {
-		// find Process/Space entity
+		// find orgunit....
 		ItemCollection entity = getEntityById(aUniqueID);
-		if (entity != null)
+		if (entity != null) {
 			return entity.getItemValueBoolean("isManager");
-		else
+		} else {
 			return false;
+		}
 	}
 
 	/**
-	 * Returns true if current user is member of the teamList of a given project
-	 * Therefore the method checks the cloned field 'isTeam'
+	 * Returns true if current user is team member of a given orgunit. Therefore the
+	 * method checks the cloned field 'isTeam' computed by the ProcessService
 	 * 
 	 * @return
 	 */
 	public boolean isTeamMemberOf(String aUniqueID) {
-		// find project
+		// find orgunit...
 		ItemCollection entity = getEntityById(aUniqueID);
-		if (entity != null)
+		if (entity != null) {
 			return entity.getItemValueBoolean("isTeam");
-		else
+		} else {
 			return false;
-
+		}
 	}
 
 	/**
-	 * Returns true if current user is teamMember or manager of a given space or
-	 * process
+	 * Returns true if current user is assist of a given orgunit. Therefore the
+	 * method checks the cloned field 'isTeam' computed by the ProcessService
 	 * 
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public boolean isMemberOf(String aUniqueID) {
-
-		// find project
+	public boolean isAssitOf(String aUniqueID) {
+		// find orgunit...
 		ItemCollection entity = getEntityById(aUniqueID);
 		if (entity != null) {
-			String remoteUser = loginController.getUserPrincipal();
-			List<String> vTeam = entity.getItemValue("namTeam");
-			List<String> vManager = entity.getItemValue("namManager");
-
-			if (vTeam.indexOf(remoteUser) > -1 || vManager.indexOf(remoteUser) > -1)
-				return true;
+			return entity.getItemValueBoolean("isAssist");
+		} else {
+			return false;
 		}
+	}
 
-		return false;
-
+	/**
+	 * Returns true if current user is teamMember, manager or assist of a given
+	 * orgunit. Therefore the method checks the cloned field 'isMember' computed by
+	 * the ProcessService
+	 * 
+	 * @return
+	 */
+	public boolean isMemberOf(String aUniqueID) {
+		// find orgunit..
+		ItemCollection entity = getEntityById(aUniqueID);
+		if (entity != null) {
+			return entity.getItemValueBoolean("isMember");
+		} else {
+			return false;
+		}
 	}
 
 	/**
@@ -517,8 +524,8 @@ public class ProcessController implements Serializable {
 	 * Returns a unique sorted list of profile itemCollections for a team list in a
 	 * project. The returned list contains cloned user profile entities.
 	 * 
-	 * @param listType
-	 *            - the member field of the project (namTeam, namManager, namAssist)
+	 * @param listType - the member field of the project (namTeam, namManager,
+	 *                 namAssist)
 	 * @return list of team profiles
 	 */
 	@SuppressWarnings("unchecked")
