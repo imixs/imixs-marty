@@ -106,7 +106,6 @@ public class UserController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private ItemCollection workitem = null;
-	private ItemCollection currentProfile = null;
 	private boolean profileLoaded = false;
 	private Locale locale;
 
@@ -310,12 +309,10 @@ public class UserController implements Serializable {
 	 * @return
 	 */
 	public ItemCollection getProfile(String aAccount) {
-		if (currentProfile == null || !currentProfile.getItemValueString("txtname").equals(aAccount)) {
-			currentProfile = profileService.findProfileById(aAccount);
-		}
-		return currentProfile;
+		return profileService.findProfileById(aAccount);
 	}
-
+	
+	
 	/**
 	 * This method returns the username (displayname) for a useraccount. If no
 	 * Username is set in the profile then we return the useraccount.
@@ -325,11 +322,11 @@ public class UserController implements Serializable {
 	 */
 	public String getUserName(String aAccount) {
 		// use internal cache
-		currentProfile = getProfile(aAccount);
-		if (currentProfile == null) {
+		ItemCollection profile = getProfile(aAccount);
+		if (profile == null) {
 			return null;
 		} else {
-			return currentProfile.getItemValueString("txtuserName");
+			return profile.getItemValueString("txtuserName");
 		}
 	}
 
@@ -341,11 +338,11 @@ public class UserController implements Serializable {
 	 */
 	public String getEmail(String aAccount) {
 		// use internal cache
-		currentProfile = getProfile(aAccount);
-		if (currentProfile == null) {
+		ItemCollection profile = getProfile(aAccount);
+		if (profile == null) {
 			return null;
 		} else {
-			return currentProfile.getItemValueString("txtemail");
+			return profile.getItemValueString("txtemail");
 		}
 	}
 

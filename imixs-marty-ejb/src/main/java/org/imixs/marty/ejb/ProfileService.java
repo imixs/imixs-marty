@@ -112,18 +112,15 @@ public class ProfileService {
 		cache = new Cache(iCacheSize);
 	}
 
-	
-
 	/**
-	 * This method returns a profile by its id. The method uses an internal
-	 * cache. The method returns null if no Profile for this name was found
+	 * This method returns a profile by its id. The method uses an internal cache.
+	 * The method returns null if no Profile for this name was found
 	 * 
-	 * The returned workitem is a cloned version of the profile entity and can
-	 * not be processed or updated. Use lookupProfile to get the full entity of
-	 * a profile.
+	 * The returned workitem is a cloned version of the profile entity and can not
+	 * be processed or updated. Use lookupProfile to get the full entity of a
+	 * profile.
 	 * 
-	 * @param userid
-	 *            - the profile id
+	 * @param userid - the profile id
 	 * @return cloned workitem
 	 */
 	public ItemCollection findProfileById(String userid) {
@@ -132,21 +129,19 @@ public class ProfileService {
 	}
 
 	/**
-	 * This method returns a profile by its id. The method uses an internal
-	 * cache. The method returns null if no Profile for this name was found.
-	 * The userid is case sensitive.
+	 * This method returns a profile by its id. The method uses an internal cache.
+	 * The method returns null if no Profile for this name was found. The userid is
+	 * case sensitive.
 	 * 
-	 * The returned workitem is a cloned version of the profile entity and can
-	 * not be processed or updated. Use lookupProfile to get the full entity of
-	 * a profile.
+	 * The returned workitem is a cloned version of the profile entity and can not
+	 * be processed or updated. Use lookupProfile to get the full entity of a
+	 * profile.
 	 * 
-	 * If the boolean 'refresh' is true the method lookup the user in any case
-	 * with a search query and updates the cache.
+	 * If the boolean 'refresh' is true the method lookup the user in any case with
+	 * a search query and updates the cache.
 	 * 
-	 * @param userid
-	 *            - the profile id
-	 * @param refresh
-	 *            - boolean indicates if the internal cache should be used
+	 * @param userid  - the profile id
+	 * @param refresh - boolean indicates if the internal cache should be used
 	 * @return cloned workitem
 	 */
 	public ItemCollection findProfileById(String userid, boolean refresh) {
@@ -185,16 +180,14 @@ public class ProfileService {
 	}
 
 	/**
-	 * This method returns a profile by its id. In different to the
-	 * findProfileById method this method lookups the profile and returns the
-	 * full entity. The returned workItem can be processed.
-	 * THe userid is case sensitive.
+	 * This method returns a profile by its id. In different to the findProfileById
+	 * method this method lookups the profile and returns the full entity. The
+	 * returned workItem can be processed. THe userid is case sensitive.
 	 * 
-	 * Use findProfileById to work with the internal cache if there is no need
-	 * to update the profile.
+	 * Use findProfileById to work with the internal cache if there is no need to
+	 * update the profile.
 	 * 
-	 * @param userid
-	 *            - the profile id
+	 * @param userid - the profile id
 	 * @return profile workitem
 	 */
 	public ItemCollection lookupProfileById(String userid) {
@@ -228,6 +221,25 @@ public class ProfileService {
 	}
 
 	/**
+	 * This method is used to put a profile into the cache. A profile should be
+	 * cloned before by calling the method 'cloneWorkitem'. The profile must have at
+	 * least the attribute 'txtname'.
+	 * 
+	 * @param profile
+	 */
+	public void putProfile(ItemCollection userProfile) {
+		if (userProfile != null) {
+			String userid = userProfile.getItemValueString("txtname");
+			if (userid.isEmpty()) {
+				logger.warning("put profile into cache failed - no item value txtname!");
+				return;
+			}
+			cache.put(userid, userProfile);
+			logger.finest("......put profile '" + userid + "' into cache");
+		}
+	}
+
+	/**
 	 * This method removes a profile from the cache.
 	 * 
 	 * @param userid
@@ -237,8 +249,8 @@ public class ProfileService {
 	}
 
 	/**
-	 * This method closes a profile entity and computes the attributes
-	 * txtUsername and txtInitials
+	 * This method closes a profile entity and computes the attributes txtUsername
+	 * and txtInitials
 	 * 
 	 * @param aWorkitem
 	 * @return
