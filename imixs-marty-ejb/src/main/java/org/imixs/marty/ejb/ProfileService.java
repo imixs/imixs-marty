@@ -221,25 +221,6 @@ public class ProfileService {
 	}
 
 	/**
-	 * This method is used to put a profile into the cache. A profile should be
-	 * cloned before by calling the method 'cloneWorkitem'. The profile must have at
-	 * least the attribute 'txtname'.
-	 * 
-	 * @param profile
-	 */
-	public void putProfile(ItemCollection userProfile) {
-		if (userProfile != null) {
-			String userid = userProfile.getItemValueString("txtname");
-			if (userid.isEmpty()) {
-				logger.warning("put profile into cache failed - no item value txtname!");
-				return;
-			}
-			cache.put(userid, userProfile);
-			logger.finest("......put profile '" + userid + "' into cache");
-		}
-	}
-
-	/**
 	 * This method removes a profile from the cache.
 	 * 
 	 * @param userid
