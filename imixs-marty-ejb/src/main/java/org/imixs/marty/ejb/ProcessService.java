@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -149,19 +148,19 @@ public class ProcessService {
 		clone.replaceItemValue("isAssist", false);
 
 		// check the isTeam status for the current user
-		Vector<String> vNameList = (Vector<String>) orgunit.getItemValue("namTeam");
+		List<String> vNameList = orgunit.getItemValue("namTeam");
 		if (documentService.isUserContained(vNameList)) {
 			clone.replaceItemValue("isTeam", true);
 		}
 
 		// check the isManager status for the current user
-		vNameList = (Vector<String>) orgunit.getItemValue("namManager");
+		vNameList =  orgunit.getItemValue("namManager");
 		if (documentService.isUserContained(vNameList)) {
 			clone.replaceItemValue("isManager", true);
 		}
 
 		// check the isAssist status for the current user
-		vNameList = (Vector<String>) orgunit.getItemValue("namAssist");
+		vNameList = orgunit.getItemValue("namAssist");
 		if (documentService.isUserContained(vNameList)) {
 			clone.replaceItemValue("isAssist", true);
 		}
