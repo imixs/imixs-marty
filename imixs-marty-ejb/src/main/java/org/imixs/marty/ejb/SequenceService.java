@@ -98,11 +98,11 @@ public class SequenceService {
 	DocumentService documentService;
 
 	/**
-	 * This method computes the sequence number based on a configuration entity
-	 * with the name "BASIC". The configuration provides a property
-	 * 'sequencenumbers' with the current number range for each workflowGroup.
-	 * If a Workitem have a WorkflowGroup with no corresponding entry the method
-	 * will not compute a new number.
+	 * This method computes the sequence number based on a configuration entity with
+	 * the name "BASIC". The configuration provides a property 'sequencenumbers'
+	 * with the current number range for each workflowGroup. If a Workitem have a
+	 * WorkflowGroup with no corresponding entry the method will not compute a new
+	 * number.
 	 * 
 	 * This method loads the configuration via the propertyService and uses the
 	 * internal caching mechnism.
@@ -120,25 +120,58 @@ public class SequenceService {
 			String sWorkflowGroup = aworkitem.getItemValueString(WorkflowKernel.WORKFLOWGROUP);
 			@SuppressWarnings("unchecked")
 			List<String> vNumbers = configItemCollection.getItemValue("sequencenumbers");
-			for (int i = 0; i < vNumbers.size(); i++) {
-				String aNumber = vNumbers.get(i);
-				if (aNumber.startsWith(sWorkflowGroup + "=")) {
-					// we got the next number....
-					String sequcenceNumber = aNumber.substring(aNumber.indexOf('=') + 1);
-					//
-					long currentSequenceNumber = Long.parseLong(sequcenceNumber);
-					long newSequenceNumber = currentSequenceNumber + 1;
-					// Save the new Number back into the config entity
-					aNumber = sWorkflowGroup + "=" + newSequenceNumber;
-					vNumbers.set(i, sWorkflowGroup + "=" + newSequenceNumber);
+
+			// find a matching identifier
+			String groupIdentifier = null;
+			String generalIdentifier = null;
+			int identifierPosition=-1;
+			// test if we have a group identifier...
+			for (String aIdentifier : vNumbers) {
+				// test for group identifier...
+				if (aIdentifier.startsWith(sWorkflowGroup + "=")) {
+					groupIdentifier = aIdentifier;
+				}
+				// test for general identifier...
+				if (aIdentifier.startsWith("[GENERAL]=")) {
+					generalIdentifier = aIdentifier;
+				}
+			}
+
+			// if we did not find a group identifier we choose the GroupIdentifier if
+			// available...
+			if (groupIdentifier == null && generalIdentifier != null) {
+				// select the general identifier...
+				groupIdentifier = generalIdentifier;
+				sWorkflowGroup = "[GENERAL]";
+			}
+
+			// did we found an identifier?
+			if (groupIdentifier != null) {
+				// we got the next number....
+				String sequcenceNumber = groupIdentifier.substring(groupIdentifier.indexOf('=') + 1);
+				long currentSequenceNumber = Long.parseLong(sequcenceNumber);
+				long newSequenceNumber = currentSequenceNumber + 1;
+				// Save the new Number back into the config entity
+				groupIdentifier = sWorkflowGroup + "=" + newSequenceNumber;
+
+				// update identifier....
+				for (int i = 0; i < vNumbers.size(); i++) {
+					if (vNumbers.get(i).startsWith(sWorkflowGroup + "=")) {
+						identifierPosition = i;
+						break;
+					}
+				}
+				if (identifierPosition > -1) {
+					vNumbers.set(identifierPosition, sWorkflowGroup + "=" + newSequenceNumber);
 					configItemCollection.replaceItemValue("sequencenumbers", vNumbers);
 					// do not use documentService here - cache need to be
 					// updated!
 					configService.save(configItemCollection);
 					// return the new number
 					return currentSequenceNumber;
+				} else {
+					return 0;
 				}
-
 			}
 
 		} else {
@@ -149,8 +182,8 @@ public class SequenceService {
 	}
 
 	/**
-	 * this method computes the next sequence number and updates the parent
-	 * workitem where the last sequence number will be stored.
+	 * this method computes the next sequence number and updates the parent workitem
+	 * where the last sequence number will be stored.
 	 * 
 	 * @throws AccessDeniedException
 	 * @throws PluginException

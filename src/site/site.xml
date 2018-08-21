@@ -43,6 +43,7 @@
 				<item name="TextUsernameAdapter" href="services/textusernameadapter.html" />
 				<item name="TeamRoleWildcardAdapter" href="services/teamrolewildcardadapter.html" />
 				<item name="ImageInterceptor" href="services/imageinterceptor.html" />
+				<item name="SequenceService" href="services/sequencenumberservice.html" />
 			</item>
 
 			<item name="Controller" href="controller/index.html" collapse="true">
@@ -69,6 +70,7 @@
 				<item name="ProfilePlugin" href="plugins/profileplugin.html" />
 				<item name="ResultPlugin" href="plugins/resultplugin.html" />
 				<item name="SpacePlugin" href="plugins/spaceplugin.html" />
+				<item name="SequenceNumberPlugin" href="plugins/sequencenumberplugin.html" />
 				<item name="TeamPlugin" href="plugins/teamplugin.html" />
 			</item>
 
