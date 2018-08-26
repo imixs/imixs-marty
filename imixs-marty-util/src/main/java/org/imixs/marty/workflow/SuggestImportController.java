@@ -25,7 +25,6 @@ package org.imixs.marty.workflow;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -37,10 +36,8 @@ import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.faces.event.AjaxBehaviorEvent;
-import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.marty.workflow.WorkflowController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.DocumentService;
@@ -59,11 +56,7 @@ import org.imixs.workflow.engine.lucene.LuceneSearchService;
 public class SuggestImportController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-//	private String input = null;
 	private List<ItemCollection> searchResult = null;
-
-//	@Inject
-//	WorkflowController workflowController;
 
 	@EJB
 	DocumentService documentService = null;
@@ -79,20 +72,11 @@ public class SuggestImportController implements Serializable {
 		return searchResult;
 	}
 
-	/*
-	 * 
-	 * public String getInput() { return input; }
-	 * 
-	 * public void setInput(String input) { this.input = input; }
-	 * 
-	 *
-	 */
 	/**
 	 * This method reset the search and input state.
 	 */
 	public void reset() {
 		searchResult = new ArrayList<ItemCollection>();
-		// input = "";
 		logger.fine("reset");
 	}
 
@@ -113,14 +97,13 @@ public class SuggestImportController implements Serializable {
 	 * @param itemList - item names to be updated. 
 	 */
 	public void update(ItemCollection workitem,ItemCollection suggest, String itemList) {
-		
-		logger.info("......update "+ itemList + "...");
+		logger.finest("......update "+ itemList + "...");
 		String[] itemNames = itemList.split("[\\s,;]+");
 		for (String itemName: itemNames) {
-			logger.info("......update item " + itemName);
+			logger.finest("......update item " + itemName);
 			workitem.replaceItemValue(itemName, suggest.getItemValue(itemName));
 			
-			logger.info("......new value=" +suggest.getItemValue(itemName) );
+			logger.finest("......new value=" +suggest.getItemValue(itemName) );
 		}
 	}
 
@@ -180,7 +163,7 @@ public class SuggestImportController implements Serializable {
 			sQuery = sQuery.substring(0, sQuery.length() - 3);
 			sQuery += ")";
 
-			logger.info("......search: " + sQuery);
+			logger.finest("......search: " + sQuery);
 
 			col = documentService.find(sQuery, 999, 0, "$modified", true);
 			logger.finest("......found: " + col.size());
