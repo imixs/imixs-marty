@@ -27,8 +27,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
@@ -125,14 +129,16 @@ public class SuggestImportController implements Serializable {
 	 * events from the userInput.xhtml page. The minimum length of a given input
 	 * search phrase have to be at least 3 characters
 	 * 
+	 * @param keyItemName - itemName to identify the unique itemCollection
+	 * @param input - search phrase
+	 * @param searchItemList - itemName list to serach for
+	 * 
 	 */
-	public void search(String input,String searchField, String workflowGroup) {
-		logger.info("search input= " + input);
-
+	public void search(String keyItemName,String input, String searchItemList, String workflowGroup) {
 		if (input == null || input.length() < 3)
 			return;
-		logger.fine("search for=" + input);
-		searchResult = searchEntity(searchField, workflowGroup, input);
+		logger.finest("......search for=" + input);
+		searchResult = searchEntity(keyItemName,searchItemList, workflowGroup, input);
 
 	}
 
@@ -148,40 +154,70 @@ public class SuggestImportController implements Serializable {
 	 * @param phrase - search phrase
 	 * @return - list of matching requests
 	 */
-	public List<ItemCollection> searchEntity(String searchField, String workflowGroup, String phrase) {
-
+	private List<ItemCollection> searchEntity(String keyItemName,String searccItemList, String workflowGroup, String phrase) {
+		long l = System.currentTimeMillis();
 		List<ItemCollection> searchResult = new ArrayList<ItemCollection>();
 
 		if (phrase == null || phrase.isEmpty())
 			return searchResult;
 
-		Collection<ItemCollection> col = null;
+		List<ItemCollection> col = null;
 		try {
 			phrase = phrase.trim();
 			// phrase = LuceneSearchService.escapeSearchTerm(phrase);
 			phrase = LuceneSearchService.normalizeSearchTerm(phrase);
 			String sQuery = "(type:\"workitem\" OR type:\"workitearchivem\") AND ($workflowgroup:\"" + workflowGroup
-					+ "\") AND (" + searchField + ":" + phrase + "*)";
+					+ "\") ";
 
-			logger.info("search: " + sQuery);
+			// build query for each search item...
+			String[] itemNames = searccItemList.split("[\\s,;]+");
+			sQuery += " AND (";
+			
+			for (String itemName : itemNames) {
+				sQuery += "(" + itemName + ":(" + phrase + "*)) OR ";
+			}
+			// cut last or...
+			sQuery = sQuery.substring(0, sQuery.length() - 3);
+			sQuery += ")";
 
-			// start lucene search
+			logger.info("......search: " + sQuery);
 
-			logger.fine("searchWorkitems: " + sQuery);
-			col = documentService.find(sQuery, 999, 0);
-			logger.info("found: " + col.size());
+			col = documentService.find(sQuery, 999, 0, "$modified", true);
+			logger.finest("......found: " + col.size());
 		} catch (Exception e) {
 			logger.warning("  lucene error - " + e.getMessage());
 		}
 
-		for (ItemCollection kreditor : col) {
-			searchResult.add(kreditor);
-		}
+		// Removing the Elements by assigning list to TreeSet
+		long l1 = System.currentTimeMillis();
+
+		Set<ItemCollection> uniqueResultList = col.stream()
+		.collect(Collectors.toCollection(() -> new TreeSet<>(new SuggestItemCollectionComparator(keyItemName))));
+		logger.finest("...filtert result list in " + (System.currentTimeMillis() - l1) + "ms");
+
+		searchResult.addAll(uniqueResultList);
+
 		// sort by txtname..
-		Collections.sort(searchResult, new ItemCollectionComparator("txtname", true));
+		Collections.sort(searchResult, new ItemCollectionComparator(keyItemName, true));
+
+		logger.info("...computed suggestion result in " + (System.currentTimeMillis() - l) + "ms");
 
 		return searchResult;
 
+	}
+	
+	
+	 class SuggestItemCollectionComparator implements Comparator<ItemCollection> {
+		 String itemName;
+		 public SuggestItemCollectionComparator(String aItemName) {
+				this.itemName = aItemName;
+			}
+		 
+		@Override
+		public int compare(ItemCollection e1, ItemCollection e2) {
+			return e1.getItemValueString(itemName).compareTo(e2.getItemValueString(itemName));
+		}
+		
 	}
 
 }
