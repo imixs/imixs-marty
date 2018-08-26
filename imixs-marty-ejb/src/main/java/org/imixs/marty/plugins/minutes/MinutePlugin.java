@@ -7,11 +7,14 @@ import java.util.logging.Logger;
 
 import javax.mail.internet.AddressException;
 
+import org.imixs.marty.plugins.TeamPlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.PluginDependency;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.engine.plugins.AccessPlugin;
 import org.imixs.workflow.exceptions.PluginException;
 
 /**
@@ -41,7 +44,7 @@ import org.imixs.workflow.exceptions.PluginException;
  * @version 2.0
  * 
  */
-public class MinutePlugin extends AbstractPlugin {
+public class MinutePlugin extends AbstractPlugin implements PluginDependency {
 	private static Logger logger = Logger.getLogger(MinutePlugin.class.getName());
 
 	public final static String MINUTE_TYPE_PARENT = "minuteparent";
@@ -231,5 +234,16 @@ public class MinutePlugin extends AbstractPlugin {
 
 		}
 
+	}
+
+	/**
+	 * This plugin depends on the AccessPlugin
+	 */
+	@Override
+	public List<String> dependsOn() {
+		List<String> dependencies=new ArrayList<>();
+		dependencies.add(TeamPlugin.class.getName());
+		dependencies.add(AccessPlugin.class.getName());
+		return dependencies;
 	}
 }
