@@ -14,6 +14,7 @@ $(document).ready(function() {
 	initWorkitemLinkInput(document.body);
 	initUserListInput(document.body);
 	initUserInput(document.body);
+	initSuggestInput(document.body);
 
 });
 
@@ -78,6 +79,36 @@ function initUserInput(context) {
 
 }
 
+
+
+/*
+ * This method initializes all marty suggestInput widgets. The method can also be
+ * used in ajax events to refresh a specific form section.
+ * 
+ * @param context
+ */
+function initSuggestInput(context) {
+	// this is the support for the marty suggestinput widget
+	$(".marty-suggestinput-inputbox [id$=\\:suggest_input]", context).each(
+			function(index, input) {
+				var onblur = input.onblur;
+				input.onblur = null;
+				// reset the suggest input on blur event
+				$(input).on("blur", function(event) {
+					delayEvent(function() {
+						onblur.call(input, event);
+					}, 300);
+
+				});
+				// turn autocomplete of
+				$(this).attr('autocomplete', 'off');
+
+			});
+
+}
+
+
+
 /*
  * This method initializes all marty userListInput widgets. The method can also
  * be used in ajax events to refresh a specific form section.
@@ -140,8 +171,20 @@ function updateUserID(inputBox, id, displayname) {
 	var inputfield_name = $(inputBox).find('[id$=\\:username_input]');
 	var inputfield_id = $(inputBox).find('[id$=\\:userid_input]');
 	var inputfield_display = $(inputfield_id).next();
-	// alert(inputfield_id.val());
 	inputfield_id.val(id);
 	inputfield_name.val(displayname);
 	inputfield_display.val(displayname);
 }
+
+
+/*
+ * This method updates the suggest input field for the mary suggest widget.
+ * The method expects the jquery object of the user input box and the value to  
+ * update. The method finds the input fields and updates the
+ * values.
+ */
+function updateSuggestID(inputBox, name) {
+	var inputfield_id = $(inputBox).find('[id$=\\:suggest_input]');
+	inputfield_id.val(name);
+}
+
