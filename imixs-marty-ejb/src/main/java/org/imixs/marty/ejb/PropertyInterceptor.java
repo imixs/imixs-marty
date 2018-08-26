@@ -1,8 +1,8 @@
 package org.imixs.marty.ejb;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.interceptor.AroundInvoke;
@@ -76,7 +76,7 @@ public class PropertyInterceptor {
 					ItemCollection basicConfig = getBasicConfigurationDocument();
 					if (basicConfig != null) {
 						// read properties
-						Vector<?> v = (Vector<?>) basicConfig
+						List<?> v = (List<?>) basicConfig
 								.getItemValue("properties");
 						if (v.size() > 0) {
 							logger.info("Update imixs.properties");
