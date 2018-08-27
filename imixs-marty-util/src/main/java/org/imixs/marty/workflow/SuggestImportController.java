@@ -44,8 +44,8 @@ import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.lucene.LuceneSearchService;
 
 /**
- * The SuggestInputController can be used to suggest inputs from earlier request
- * within the same workflowGroup.
+ * The SuggestInputController can be used to suggest inputs from earlier
+ * requests within the same workflowGroup.
  * 
  * @author rsoika
  * @version 1.0
@@ -55,13 +55,15 @@ import org.imixs.workflow.engine.lucene.LuceneSearchService;
 @SessionScoped
 public class SuggestImportController implements Serializable {
 
-	private static final long serialVersionUID = 1L;
-	private List<ItemCollection> searchResult = null;
+	public static final int MAX_RESULT = 30;
+
+	static Logger logger = Logger.getLogger(SuggestImportController.class.getName());
 
 	@EJB
 	DocumentService documentService = null;
 
-	public static Logger logger = Logger.getLogger(SuggestImportController.class.getName());
+	private static final long serialVersionUID = 1L;
+	private List<ItemCollection> searchResult = null;
 
 	public SuggestImportController() {
 		super();
@@ -93,17 +95,17 @@ public class SuggestImportController implements Serializable {
 	 * This method updates the current workitem with the values defined by teh
 	 * itemList from the given suggest workitem.
 	 * 
-	 * @param suggest - ItemColleciton with data to suggest
-	 * @param itemList - item names to be updated. 
+	 * @param suggest  - ItemColleciton with data to suggest
+	 * @param itemList - item names to be updated.
 	 */
-	public void update(ItemCollection workitem,ItemCollection suggest, String itemList) {
-		logger.finest("......update "+ itemList + "...");
+	public void update(ItemCollection workitem, ItemCollection suggest, String itemList) {
+		logger.finest("......update " + itemList + "...");
 		String[] itemNames = itemList.split("[\\s,;]+");
-		for (String itemName: itemNames) {
+		for (String itemName : itemNames) {
 			logger.finest("......update item " + itemName);
 			workitem.replaceItemValue(itemName, suggest.getItemValue(itemName));
-			
-			logger.finest("......new value=" +suggest.getItemValue(itemName) );
+
+			logger.finest("......new value=" + suggest.getItemValue(itemName));
 		}
 	}
 
@@ -112,16 +114,16 @@ public class SuggestImportController implements Serializable {
 	 * events from the userInput.xhtml page. The minimum length of a given input
 	 * search phrase have to be at least 3 characters
 	 * 
-	 * @param keyItemName - itemName to identify the unique itemCollection
-	 * @param input - search phrase
+	 * @param keyItemName    - itemName to identify the unique itemCollection
+	 * @param input          - search phrase
 	 * @param searchItemList - itemName list to serach for
 	 * 
 	 */
-	public void search(String keyItemName,String input, String searchItemList, String workflowGroup) {
+	public void search(String keyItemName, String input, String searchItemList, String workflowGroup) {
 		if (input == null || input.length() < 3)
 			return;
 		logger.finest("......search for=" + input);
-		searchResult = searchEntity(keyItemName,searchItemList, workflowGroup, input);
+		searchResult = searchEntity(keyItemName, searchItemList, workflowGroup, input);
 
 	}
 
@@ -137,7 +139,8 @@ public class SuggestImportController implements Serializable {
 	 * @param phrase - search phrase
 	 * @return - list of matching requests
 	 */
-	private List<ItemCollection> searchEntity(String keyItemName,String searccItemList, String workflowGroup, String phrase) {
+	private List<ItemCollection> searchEntity(String keyItemName, String searccItemList, String workflowGroup,
+			String phrase) {
 		long l = System.currentTimeMillis();
 		List<ItemCollection> searchResult = new ArrayList<ItemCollection>();
 
@@ -155,7 +158,7 @@ public class SuggestImportController implements Serializable {
 			// build query for each search item...
 			String[] itemNames = searccItemList.split("[\\s,;]+");
 			sQuery += " AND (";
-			
+
 			for (String itemName : itemNames) {
 				sQuery += "(" + itemName + ":(" + phrase + "*)) OR ";
 			}
@@ -165,7 +168,7 @@ public class SuggestImportController implements Serializable {
 
 			logger.finest("......search: " + sQuery);
 
-			col = documentService.find(sQuery, 999, 0, "$modified", true);
+			col = documentService.find(sQuery, MAX_RESULT, 0, "$modified", true);
 			logger.finest("......found: " + col.size());
 		} catch (Exception e) {
 			logger.warning("  lucene error - " + e.getMessage());
@@ -174,8 +177,8 @@ public class SuggestImportController implements Serializable {
 		// Removing the Elements by assigning list to TreeSet
 		long l1 = System.currentTimeMillis();
 
-		Set<ItemCollection> uniqueResultList = col.stream()
-		.collect(Collectors.toCollection(() -> new TreeSet<>(new SuggestItemCollectionComparator(keyItemName))));
+		Set<ItemCollection> uniqueResultList = col.stream().collect(
+				Collectors.toCollection(() -> new TreeSet<>(new SuggestItemCollectionComparator(keyItemName))));
 		logger.finest("...filtert result list in " + (System.currentTimeMillis() - l1) + "ms");
 
 		searchResult.addAll(uniqueResultList);
@@ -188,19 +191,19 @@ public class SuggestImportController implements Serializable {
 		return searchResult;
 
 	}
-	
-	
-	 class SuggestItemCollectionComparator implements Comparator<ItemCollection> {
-		 String itemName;
-		 public SuggestItemCollectionComparator(String aItemName) {
-				this.itemName = aItemName;
-			}
-		 
+
+	class SuggestItemCollectionComparator implements Comparator<ItemCollection> {
+		String itemName;
+
+		public SuggestItemCollectionComparator(String aItemName) {
+			this.itemName = aItemName;
+		}
+
 		@Override
 		public int compare(ItemCollection e1, ItemCollection e2) {
 			return e1.getItemValueString(itemName).compareTo(e2.getItemValueString(itemName));
 		}
-		
+
 	}
 
 }
