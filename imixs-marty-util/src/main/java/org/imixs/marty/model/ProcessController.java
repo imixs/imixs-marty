@@ -31,7 +31,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -301,7 +300,7 @@ public class ProcessController implements Serializable {
 	public List<ItemCollection> getSpacesByProcess(ItemCollection process) {
 		List<ItemCollection> result = new ArrayList<ItemCollection>();
 		if (process != null) {
-			Vector<String> refs = (Vector<String>) process.getItemValue("$UniqueIDRef");
+			List<String> refs = process.getItemValue("$UniqueIDRef");
 			if (refs != null && !refs.isEmpty()) {
 				// iterate over all spaces and compare the $UniqueIDRef
 				List<ItemCollection> list = getSpaces();
