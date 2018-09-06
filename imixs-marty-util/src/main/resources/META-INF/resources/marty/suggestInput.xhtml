@@ -24,7 +24,7 @@
 		<!-- Input Field -->
 		<h:panelGroup id="input_box" layout="block"
 			class="marty-suggestinput-inputbox">
-			<h:inputText value="#{cc.attrs.value}" autocomplete="off"  id="suggest_input" class="imixs-username" requiredMessage="#{app.ERROR_REQUIRED}" >
+			<h:inputText value="#{cc.attrs.value}" autocomplete="off"  id="suggest_input" class="imixs-suggest" requiredMessage="#{app.ERROR_REQUIRED}" >
 				<f:ajax event="keyup" render="suggest_box" delay="600"
 					listener="#{suggestImportController.search(cc.attrs.itemname,cc.attrs.value,cc.attrs.searchitemlist,cc.attrs.workflowgroup)}" />
 				<f:ajax event="blur" render="suggest_box" listener="#{suggestImportController.reset}" />
