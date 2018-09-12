@@ -37,8 +37,8 @@ import org.imixs.workflow.exceptions.PluginException;
  * a $uniqueID for the corresponding parent or minute entity.
  * 
  * <p>
- * If the Event sets the item 'resetminuteversionhistory' to the boolean value 'true', the plugin
- * will reset the version history. 
+ * If the Event sets the item 'resetminuteversionhistory' to the boolean value
+ * 'true', the plugin will reset the version history.
  * 
  * @author rsoika
  * @version 2.0
@@ -51,9 +51,8 @@ public class MinutePlugin extends AbstractPlugin implements PluginDependency {
 	public final static String MINUTE_TYPE_ITEM = "minuteitem";
 	public final static String SEQUENCENUMBER = "numsequencenumber";
 	public final static String MINUTETYPE = "minutetype";
-	
+
 	public final static String RESET_MINUTE_VERSION_HISTORY = "resetminuteversionhistory";
-	
 
 	/**
 	 * The method verifies if a sequencenumber is set. If not a new sequencenumber
@@ -124,14 +123,14 @@ public class MinutePlugin extends AbstractPlugin implements PluginDependency {
 				logger.fine("reset itemvalue $CREATED for new version...");
 				documentContext.removeItem("$created");
 
-			
-				ItemCollection evalResult=this.getWorkflowService().evalWorkflowResult(documentActivity, documentContext);
-				if (evalResult!=null && evalResult.getItemValueBoolean(RESET_MINUTE_VERSION_HISTORY)) {
-					logger.fine("reset version history...."); 
+				ItemCollection evalResult = this.getWorkflowService().evalWorkflowResult(documentActivity,
+						documentContext);
+				if (evalResult != null && evalResult.getItemValueBoolean(RESET_MINUTE_VERSION_HISTORY)) {
+					logger.fine("reset version history....");
 					documentContext.replaceItemValue("$WorkItemID", WorkflowKernel.generateUniqueID());
 					documentContext.removeItem(RESET_MINUTE_VERSION_HISTORY);
 				}
-				
+
 			}
 		}
 
@@ -184,9 +183,11 @@ public class MinutePlugin extends AbstractPlugin implements PluginDependency {
 			// before the parent was saved the first time (first process step), a lookup for
 			// this parent later did not return the parent.
 			// The DocumentService is clever enough to handle this case :-)
+			// But we need to avoid the creation of a snapshot as we did not know the new
+			// ACL yet. For this reason we set the $nosnapshot flag temporally to true
 			documentContext.setItemValue("$nosnapshot", true);
 			this.getWorkflowService().getDocumentService().save(documentContext);
-			// remoe the nosnapshot flage
+			// remove the nosnapshot flag!
 			documentContext.removeItem("$nosnapshot");
 			return MINUTE_TYPE_PARENT;
 		}
@@ -203,17 +204,17 @@ public class MinutePlugin extends AbstractPlugin implements PluginDependency {
 		// test if minute parent workitem exits
 		ItemCollection parent = this.getWorkflowService()
 				.getWorkItem(documentContext.getItemValueString("minuteParentRef"));
-		int bestNumber=1;
+		int bestNumber = 1;
 		if (parent != null) {
 			// find all minute itmes and comptue the next Number...
 			List<ItemCollection> childs = this.getWorkflowService().getWorkListByRef(parent.getUniqueID(), null, 999, 0,
-					null,false);
+					null, false);
 			for (ItemCollection minute : childs) {
 				if (minute != null && MINUTE_TYPE_ITEM.equals(minute.getItemValueString(MINUTETYPE))
 						&& minute.getItemValueInteger(SEQUENCENUMBER) > 0) {
-					int currentNumber=  minute.getItemValueInteger(SEQUENCENUMBER);
-					if (currentNumber>=bestNumber) {
-						bestNumber=currentNumber+1;
+					int currentNumber = minute.getItemValueInteger(SEQUENCENUMBER);
+					if (currentNumber >= bestNumber) {
+						bestNumber = currentNumber + 1;
 					}
 				}
 			}
@@ -244,7 +245,7 @@ public class MinutePlugin extends AbstractPlugin implements PluginDependency {
 	 */
 	@Override
 	public List<String> dependsOn() {
-		List<String> dependencies=new ArrayList<>();
+		List<String> dependencies = new ArrayList<>();
 		dependencies.add(TeamPlugin.class.getName());
 		dependencies.add(AccessPlugin.class.getName());
 		return dependencies;
