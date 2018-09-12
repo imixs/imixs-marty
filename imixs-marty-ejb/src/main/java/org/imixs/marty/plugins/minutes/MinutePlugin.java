@@ -184,7 +184,10 @@ public class MinutePlugin extends AbstractPlugin implements PluginDependency {
 			// before the parent was saved the first time (first process step), a lookup for
 			// this parent later did not return the parent.
 			// The DocumentService is clever enough to handle this case :-)
+			documentContext.setItemValue("$nosnapshot", true);
 			this.getWorkflowService().getDocumentService().save(documentContext);
+			// remoe the nosnapshot flage
+			documentContext.removeItem("$nosnapshot");
 			return MINUTE_TYPE_PARENT;
 		}
 	}
