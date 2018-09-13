@@ -152,7 +152,7 @@ public class SuggestImportController implements Serializable {
 			phrase = phrase.trim();
 			// phrase = LuceneSearchService.escapeSearchTerm(phrase);
 			phrase = LuceneSearchService.normalizeSearchTerm(phrase);
-			String sQuery = "(type:\"workitem\" OR type:\"workitearchivem\") AND ($workflowgroup:\"" + workflowGroup
+			String sQuery = "(type:\"workitem\" OR type:\"workitemarchive\") AND ($workflowgroup:\"" + workflowGroup
 					+ "\") ";
 
 			// build query for each search item...
