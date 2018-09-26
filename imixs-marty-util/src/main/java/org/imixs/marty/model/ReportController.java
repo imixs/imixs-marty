@@ -1,5 +1,8 @@
 package org.imixs.marty.model;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -7,19 +10,28 @@ import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.faces.event.ActionEvent;
 import javax.inject.Named;
+import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
 
+import org.imixs.workflow.FileData;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.ReportService;
+import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.faces.workitem.DocumentController;
+import org.imixs.workflow.xml.XMLDocumentAdapter;
+import org.xml.sax.SAXException;
 
 @Named
 @SessionScoped
 public class ReportController extends DocumentController {
 
+	private ItemCollection reportUploads;
+	
 	@EJB
 	protected ReportService reportService;
-
+	
 	Map<String, String> params;
 
 	private static final long serialVersionUID = 1L;
@@ -28,8 +40,21 @@ public class ReportController extends DocumentController {
 	public ReportController() {
 		super();
 		setDefaultType("report");
+		reportUploads=new ItemCollection();
 	}
 	
+
+
+	public ItemCollection getReportUploads() {
+		return reportUploads;
+	}
+
+
+
+	public void setReportUploads(ItemCollection reportUploads) {
+		this.reportUploads = reportUploads;
+	}
+
 
 
 	/**
@@ -38,7 +63,7 @@ public class ReportController extends DocumentController {
 	 * @return list of report names
 	 */
 	public List<ItemCollection> getReports() {
-		return reportService.getReportList();
+		return reportService.findAllReports();
 	}
 
 	/**
@@ -79,5 +104,47 @@ public class ReportController extends DocumentController {
 		return params;
 	}
 
+	
+	
+	/**
+	 * This method adds all uploaded imixs-report files. 
+	 * 
+	 * @param event
+	 * @throws IOException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
+	 * @throws ParseException
+	 * @throws ModelException
+	 * @throws JAXBException 
+	 * 
+	 */
+	public void doUploadReport(ActionEvent event)
+			throws ModelException, ParseException, ParserConfigurationException, SAXException, IOException, JAXBException {
+		List<FileData> fileList = getReportUploads().getFileData();
+
+		if (fileList == null) {
+			return;
+		}
+		for (FileData file : fileList) {
+			logger.info("Import report: " + file.getName());
+
+			// test if imxis-report?
+			if (file.getName().endsWith(".imixs-report")) {
+				ByteArrayInputStream input = new ByteArrayInputStream(file.getContent());
+				ItemCollection report=XMLDocumentAdapter.readItemCollectionFromInputStream(input);
+				reportService.updateReport(report);
+				
+				continue;
+			}
+
+			// model type not supported!
+			logger.warning("Invalid Report Type. Report can't be imported!");
+
+		}
+		
+		// reset upploads
+		reportUploads=new ItemCollection();
+		
+	}
 
 }
