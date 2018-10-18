@@ -340,6 +340,29 @@ public class ProcessController implements Serializable {
 	}
 
 	/**
+	 * Returns a list of all spaces on the root level.
+	 * 
+	 * @param uniqueId
+	 * @return
+	 */
+	public List<ItemCollection> getRootSpaces() {
+
+		List<ItemCollection> result = new ArrayList<ItemCollection>();
+
+		// iterate over all spaces and select those without a $UniqueIDRef
+		List<ItemCollection> list = getSpaces();
+		for (ItemCollection space : list) {
+			logger.fine("Spacename= " + space.getItemValueString("txtName") + " uniquidref= "
+					+ space.getItemValueString(WorkflowService.UNIQUEIDREF));
+			if (space.getItemValueString(WorkflowService.UNIQUEIDREF).isEmpty()) {
+				result.add(space);
+			}
+		}
+
+		return result;
+	}
+
+	/**
 	 * Returns a unique sorted list of managers for the current project. The
 	 * returned list contains cloned user profile entities.
 	 * 
