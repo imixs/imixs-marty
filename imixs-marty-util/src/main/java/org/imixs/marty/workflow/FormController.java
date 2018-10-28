@@ -67,7 +67,7 @@ public class FormController implements Serializable {
 
 	@Inject
 	protected ProcessController processController;
-	
+
 	@Inject
 	protected UserController userController;
 
@@ -91,7 +91,7 @@ public class FormController implements Serializable {
 			logger.warning("formDefinition is null - verify model definition and the workitem 'type' attribute'.");
 			formDefinition = new FormDefinition();
 			computeFormDefinition(new ItemCollection());
-			
+
 		}
 		return formDefinition;
 	}
@@ -261,26 +261,41 @@ public class FormController implements Serializable {
 	 * @return
 	 */
 	private String findResourceNameByPath(String path) {
+		Locale locale = null;
+		ResourceBundle rb_app = null;
+		ResourceBundle rb_custom = null;
 
 		String sName = "";
+		String sResouceURL = path.replace('/', '_');
 		// compute name from ressource Bundle....
 		try {
-			Locale locale = null;
-			ResourceBundle rb = null;
+
 			// get locale from profile
-			if (userController!=null) {
+			if (userController != null) {
 				locale = userController.getLocale();
 			}
-			if (locale != null)
-				rb = ResourceBundle.getBundle("bundle.app", locale);
-			else
-				rb = ResourceBundle.getBundle("bundle.app");
+			if (locale != null) {
+				rb_app = ResourceBundle.getBundle("bundle.app", locale);
+			} else {
+				rb_app = ResourceBundle.getBundle("bundle.app");
+			}
 
-			String sResouceURL = path.replace('/', '_');
-			sName = rb.getString(sResouceURL);
+			sName = rb_app.getString(sResouceURL);
 		} catch (java.util.MissingResourceException eb) {
-			sName = "";
-			logger.warning("Form-label not found: "+eb.getMessage());
+
+			// now let's check the custom bundle...
+			try {
+				if (locale != null) {
+					rb_custom = ResourceBundle.getBundle("bundle.custom", locale);
+				} else {
+					rb_custom = ResourceBundle.getBundle("bundle.custom");
+				}
+				sName = rb_custom.getString(sResouceURL);
+			} catch (java.util.MissingResourceException eb2) {
+
+				sName = "";
+				logger.warning("Form-label not found: " + eb2.getMessage());
+			}
 		}
 		return sName;
 	}
