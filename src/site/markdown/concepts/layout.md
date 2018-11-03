@@ -37,6 +37,8 @@ Each of these containers can contain
  * imixs-body - the body section
  * imixs-footer - the footer section  
 
+Example:
+
 	<div class="imixs-form> 
 	  <div class="imixs-header"> 
 	    ....
