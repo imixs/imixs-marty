@@ -93,8 +93,8 @@ public class TextBlockService {
 
 	@EJB
 	private DocumentService documentService;
-	
-	@EJB 
+
+	@EJB
 	private WorkflowService workflowService;
 
 	@Resource
@@ -205,6 +205,11 @@ public class TextBlockService {
 		// update write and read access
 		textBlockItemCollection.replaceItemValue("$writeAccess", "org.imixs.ACCESSLEVEL.MANAGERACCESS");
 		textBlockItemCollection.replaceItemValue("$readAccess", "");
+		// trim txtname
+		textBlockItemCollection.replaceItemValue("txtname",
+				textBlockItemCollection.getItemValueString("txtName").trim());
+		// editor...
+		textBlockItemCollection.replaceItemValue("$Editor", ctx.getCallerPrincipal().getName().toString());
 		textBlockItemCollection.replaceItemValue("namcurrentEditor", ctx.getCallerPrincipal().getName().toString());
 
 		// save entity
@@ -215,51 +220,49 @@ public class TextBlockService {
 		return textBlockItemCollection;
 	}
 
-
 	/**
 	 * This method reacts on CDI events of the type TextEvent and parses a string
-	 * for xml tag <textblock>. Those tags will be replaced with the
-	 * corresponding system property value.
+	 * for xml tag <textblock>. Those tags will be replaced with the corresponding
+	 * system property value.
 	 * 
 	 * 
 	 */
 	public void onEvent(@Observes TextEvent event) {
 		String text = event.getText();
-	
+
 		// lower case <textBlock> into <textblock>
 		if (text.contains("<textBlock") || text.contains("</textBlock>")) {
 			logger.warning("Deprecated <textBlock> tag should be lowercase <textblock> !");
 			text = text.replace("<textBlock", "<textblock");
 			text = text.replace("</textBlock>", "</textblock>");
 		}
-	
+
 		List<String> tagList = XMLParser.findTags(text, "textblock");
 		logger.finest(tagList.size() + " tags found");
 		// test if a <value> tag exists...
 		for (String tag : tagList) {
-	
-	
+
 			// read the textblock Value
 			String sTextBlockKey = XMLParser.findTagValue(tag, "textblock");
-			
+
 			ItemCollection textBlockItemCollection = loadTextBlock(sTextBlockKey);
-			if (textBlockItemCollection!=null) {
-				
-				String sValue=textBlockItemCollection.getItemValueString("txtcontent");
+			if (textBlockItemCollection != null) {
+
+				String sValue = textBlockItemCollection.getItemValueString("txtcontent");
 				// now replace the tag with the result string
 				int iStartPos = text.indexOf(tag);
 				int iEndPos = text.indexOf(tag) + tag.length();
-		
+
 				// now replace the tag with the result string
 				text = text.substring(0, iStartPos) + sValue + text.substring(iEndPos);
-				
+
 			} else {
 				logger.warning("text-block '" + sTextBlockKey + "' is not defined!");
 			}
 		}
-	
+
 		event.setText(text);
-	
+
 	}
 
 	/**
@@ -281,6 +284,5 @@ public class TextBlockService {
 			return size() > capacity;
 		}
 	}
-	
-	
+
 }
