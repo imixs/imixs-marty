@@ -230,7 +230,12 @@ public class UserGroupService {
 		}
 
 		logger.finest("......init UserIDs...");
-		// default admin account
+		
+		// verfiy existing profiles
+		verifyExistingProfileData();
+		
+		
+		// create default admin account if missing
 		String sAdminAccount = DEFAULT_ACCOUNT;
 		String userInputMode = propertyService.getProperties().getProperty("security.userid.input.mode",
 				ProfilePlugin.DEFAULT_USER_INPUT_MODE);
@@ -265,8 +270,7 @@ public class UserGroupService {
 
 			try {
 				updateUser(profile);
-				documentService.save(profile);
-				verifyExistingProfileData();
+				documentService.save(profile);				
 			} catch (AccessDeniedException e) {
 				logger.warning("UserGroupService - unable to initialize default admin account");
 				logger.severe(e.getMessage());
@@ -279,8 +283,7 @@ public class UserGroupService {
 	}
 
 	/**
-	 * This method is called by the initUserIDs method in case an admin profile was
-	 * not found.
+	 * This method is called by the initUserIDs method.
 	 * <p>
 	 * The method trys to update the userdata based on existing profiles data and
 	 * restore groups and encrypted passwords.
