@@ -5,9 +5,9 @@
 		<version>3.4.0-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>imixs-marty-util</artifactId>
-	<name>imixs-marty-util</name>
-	<description>Utility Classes</description>
+	<artifactId>imixs-marty-ui</artifactId>
+	<name>imixs-marty-ui</name>
+	<description>JSF UI resouces</description>
 
 	<dependencies>
 	    <dependency>

@@ -4,10 +4,16 @@
 	<artifactId>imixs-marty</artifactId>
 	<packaging>pom</packaging>
 	<name>Imixs Workflow - Marty</name>
-	<version>3.3.8-SNAPSHOT</version>
+	<version>3.4.0-SNAPSHOT</version>
 	<description>'Marty' is a sub project of 'Imixs Workflow'. The project provides several business process management solutions. The goal of this project is to simplify the development of workflow management applications by providing a robust and flexible application framework with a set of Java Enterprise components. All the results of this project are subject to the GPL licensing model.</description>
 	<url>https://github.com/imixs/imixs-marty</url>
 
+	<modules>
+		<module>imixs-marty-ejb</module>
+		<module>imixs-marty-util</module>
+		<module>imixs-marty-ui</module>
+	</modules>
+	
 	<organization>
 		<name>Imixs Software Solutions GmbH</name>
 		<url>http://www.imixs.com</url>
@@ -63,10 +69,7 @@
 		</license>
 	</licenses>
 
-	<modules>
-		<module>imixs-marty-ejb</module>
-		<module>imixs-marty-util</module>
-	</modules>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<org.imixs.workflow.version>4.4.5</org.imixs.workflow.version>
