@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
 import javax.faces.event.ActionEvent;
@@ -36,6 +37,7 @@ import javax.inject.Named;
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
+import org.imixs.workflow.engine.DocumentService;
 
 /**
  * The HistoryController provides a history navigation over workItems the user
@@ -49,13 +51,16 @@ import org.imixs.workflow.WorkflowKernel;
  * 
  */
 
-@Named("historyController")
+@Named
 @SessionScoped
 public class HistoryController implements Serializable {
 
 	@Inject
 	protected WorkflowController workflowController;
 
+	@EJB
+	protected DocumentService documentService;
+	
 	private static final long serialVersionUID = 1L;
 	private List<ItemCollection> workitems = null;
 	private String currentId = null;
@@ -115,7 +120,8 @@ public class HistoryController implements Serializable {
 					ItemCollection current = workitems.get(iPos);
 					if (current != null) {
 						currentId = current.getItemValueString("$UniqueID");
-						workflowController.load(currentId, null);
+						workflowController.setWorkitem(documentService.load(currentId));
+						
 					} else {
 						// set workflowController to null
 						workflowController.setWorkitem(null);
