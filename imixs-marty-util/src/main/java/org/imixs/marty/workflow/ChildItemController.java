@@ -57,25 +57,41 @@ public class ChildItemController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	
-	private List<ItemCollection> childItems = null;
 
 	private static Logger logger = Logger.getLogger(ChildItemController.class.getName());
 
-	public static final String CHILD_ITEM_PROPERTY="_ChildItems"; 
+	protected List<ItemCollection> childItems = null;
+
+	public static final String CHILD_ITEM_PROPERTY = "_ChildItems";
+
 	
-	
+	public void setChildItems(List<ItemCollection> childItems) {
+		this.childItems = childItems;
+	}
 
 	/**
-	 * WorkflowEvent listener to convert embeded HashMaps into ItemCollections
-	 * and reconvert them before processing
+	 * This methd returns a ItemCollections for each orderItem stored in the
+	 * property txtOrderItems.
+	 * 
+	 * Example: <code>
+	 *   #{childController.childItems}
+	 * </code>
+	 * 
+	 * @return
+	 */
+	public List<ItemCollection> getChildItems() {
+		return childItems;
+	}
+
+	/**
+	 * WorkflowEvent listener to convert embeded HashMaps into ItemCollections and
+	 * reconvert them before processing
 	 * 
 	 * @param workflowEvent
 	 * @throws AccessDeniedException
 	 */
 	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) throws AccessDeniedException {
 
-	
 		int eventType = workflowEvent.getEventType();
 		ItemCollection workitem = workflowEvent.getWorkitem();
 		if (workitem == null) {
@@ -105,38 +121,24 @@ public class ChildItemController implements Serializable {
 	 */
 	public void add() {
 		if (childItems != null) {
-			ItemCollection itemCol=new ItemCollection();
-			itemCol.replaceItemValue("numPos", childItems.size()+1);
+			ItemCollection itemCol = new ItemCollection();
+			itemCol.replaceItemValue("numPos", childItems.size() + 1);
 			childItems.add(itemCol);
 		}
 	}
-	
+
 	public void remove(int pos) {
 		if (childItems != null) {
-			childItems.remove(pos-1);
+			childItems.remove(pos - 1);
 		}
-		
+
 		// now we need to reorder the numPos attribute for all existing childs..
-		int iPos=1;
-		for (ItemCollection item: childItems) {
+		int iPos = 1;
+		for (ItemCollection item : childItems) {
 			item.replaceItemValue("numPos", iPos);
 			iPos++;
 		}
-		
-	}
 
-	/**
-	 * This methd returns a ItemCollections for each orderItem stored in the
-	 * property txtOrderItems.
-	 * 
-	 * Example: <code>
-	 *   #{childController.childItems}
-	 * </code>
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getChildItems() {
-		return childItems;
 	}
 
 	public double convertDouble(String aValue) {
@@ -152,7 +154,7 @@ public class ChildItemController implements Serializable {
 	 * @param workitem
 	 */
 	@SuppressWarnings({ "rawtypes" })
-	private void implodeChildList(ItemCollection workitem) {
+	protected void implodeChildList(ItemCollection workitem) {
 		List<Map> mapOrderItems = new ArrayList<Map>();
 		// convert the child ItemCollection elements into a List of Map
 		if (childItems != null) {
@@ -169,17 +171,17 @@ public class ChildItemController implements Serializable {
 	 * converts the Map List of a workitem into a List of ItemCollectons
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private void explodeChildList(ItemCollection workitem) {
+	protected void explodeChildList(ItemCollection workitem) {
 		// convert current list of childItems into ItemCollection elements
 		childItems = new ArrayList<ItemCollection>();
-	
+
 		List<Object> mapOrderItems = workitem.getItemValue(CHILD_ITEM_PROPERTY);
-		int pos=1;
+		int pos = 1;
 		for (Object mapOderItem : mapOrderItems) {
-	
+
 			if (mapOderItem instanceof Map) {
-				ItemCollection itemCol=new ItemCollection((Map) mapOderItem);
-				itemCol.replaceItemValue("numPos",pos);
+				ItemCollection itemCol = new ItemCollection((Map) mapOderItem);
+				itemCol.replaceItemValue("numPos", pos);
 				childItems.add(itemCol);
 				pos++;
 			}
