@@ -48,6 +48,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.faces.util.LoginController;
+import org.imixs.workflow.faces.workitem.WorkflowController;
 
 /**
  * This Bean acts a a front controller for the DMS feature. The Bean provides

@@ -44,8 +44,8 @@ package org.imixs.marty.workflow;
  *      
  * </code>
  * 
- * @see WorkflowController.getEditorSections
- * @see WorkflowController.getEditorSection
+ * @see VersionController.getEditorSections
+ * @see VersionController.getEditorSection
  * 
  * @author rsoika
  *

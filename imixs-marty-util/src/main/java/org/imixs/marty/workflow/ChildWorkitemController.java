@@ -32,12 +32,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.ejb.EJB;
 import javax.enterprise.context.Conversation;
 import javax.enterprise.context.ConversationScoped;
-import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.faces.context.FacesContext;
-import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
@@ -45,10 +44,12 @@ import javax.servlet.http.HttpServletRequest;
 import org.imixs.marty.model.ModelController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
+import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.faces.workitem.WorkflowController;
 
 /**
  * This Bean acts as a front controller for child WorkItems to be controlled by
@@ -63,8 +64,7 @@ import org.imixs.workflow.exceptions.ProcessingErrorException;
  */
 @Named
 @ConversationScoped
-public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.WorkflowController
-		implements Serializable {
+public class ChildWorkitemController implements Serializable {
 
 	@Inject
 	private Conversation conversation;
@@ -75,8 +75,9 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 	@Inject
 	protected WorkflowController workflowController;
 
-	@Inject
-	protected Event<WorkflowEvent> events;
+	@EJB
+	WorkflowService workflowService;
+	
 
 	public static Logger logger = Logger.getLogger(ChildWorkitemController.class.getName());
 
@@ -92,7 +93,6 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 	 * @return
 	 */
 	public int getSortOrder() {
-		this.getWorkitem();
 		return sortOrder;
 	}
 
@@ -111,19 +111,12 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 
 	/**
 	 * Override process to reset the child list
-	 * @throws ModelException 
+	 * 
+	 * @throws ModelException
 	 */
-	@Override
+	
 	public String process() throws AccessDeniedException, ProcessingErrorException, PluginException, ModelException {
-
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_BEFORE_PROCESS));
-
-		String result = super.process();
-
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_AFTER_PROCESS));
-		this.reset();
+		String result = workflowController.process();
 		return result;
 	}
 
@@ -144,14 +137,13 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 				&& !workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
 			return;
 
-		
-		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent
-				.getEventType()) {
+		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
 			reset();
 			// start now the new conversation
 			if (conversation.isTransient()) {
-				conversation.setTimeout(((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext()
-						.getRequest()).getSession().getMaxInactiveInterval()*1000);
+				conversation.setTimeout(
+						((HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest())
+								.getSession().getMaxInactiveInterval() * 1000);
 				conversation.begin();
 				logger.fine("start new conversation, id=" + conversation.getId());
 			}
@@ -160,9 +152,9 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 	}
 
 	/**
-	 * this method returns a list of all child workitems for the current
-	 * workitem. The workitem list is cached. Subclasses can overwrite the
-	 * method loadWorkitems() to return a custom result set.
+	 * this method returns a list of all child workitems for the current workitem.
+	 * The workitem list is cached. Subclasses can overwrite the method
+	 * loadWorkitems() to return a custom result set.
 	 * 
 	 * @return - list of file meta data objects
 	 */
@@ -185,8 +177,10 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 
 		if (getParentWorkitem() != null) {
 			String uniqueIdRef = getParentWorkitem().getItemValueString(WorkflowKernel.UNIQUEID);
-			//  getWorkListByRef(String aref, String type, int pageSize, int pageIndex, int sortorder) {
-			List<ItemCollection> col = workflowController.getWorkflowService().getWorkListByRef(uniqueIdRef, "workitemchild",0, -1,null,false);
+			// getWorkListByRef(String aref, String type, int pageSize, int pageIndex, int
+			// sortorder) {
+			List<ItemCollection> col = workflowService.getWorkListByRef(uniqueIdRef,
+					"workitemchild", 0, -1, null, false);
 			for (ItemCollection aWorkitem : col) {
 				resultList.add(cloneWorkitem(aWorkitem));
 			}
@@ -199,77 +193,15 @@ public class ChildWorkitemController extends org.imixs.workflow.faces.workitem.W
 	/**
 	 * reset the current childlist
 	 */
-	@Override
+	
 	public void reset() {
-		super.reset();
+		
 		childList = null;
 	}
 
-	/**
-	 * create a new childWorkItem with type='childworkitem'
-	 */
-	@Override
-	public void create(ActionEvent event) {
-		super.create(event);
+	
+	
 
-		// start now the new conversation
-//		if (conversation.isTransient()) {
-//			conversation.setTimeout(((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext()
-//					.getRequest()).getSession().getMaxInactiveInterval()*1000);
-//			conversation.begin();
-//			logger.fine("start new conversation, id=" + conversation.getId());
-//		}
-
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_CREATED));
-	}
-
-	/**
-	 * Method to create a new workitem with inital values. The method fires a
-	 * WorkfowEvent
-	 * 
-	 * @param modelVersion
-	 *            - model version
-	 * @param processID
-	 *            - processID
-	 * @param processRef
-	 *            - uniqueid ref
-	 */
-
-	public void create(String modelVersion, int processID, String parentRef) {
-		super.create(null);
-
-		getWorkitem().replaceItemValue("$ModelVersion", modelVersion);
-		getWorkitem().replaceItemValue("$ProcessID", processID);
-		getWorkitem().replaceItemValue("$UniqueIDRef", parentRef);
-
-		// start now the new conversation
-//		if (conversation.isTransient()) {
-//			conversation.setTimeout(((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext()
-//					.getRequest()).getSession().getMaxInactiveInterval()*1000);
-//			conversation.begin();
-//			logger.fine("start new conversation, id=" + conversation.getId());
-//		}
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_CREATED));
-
-	}
-
-	/**
-	 * This method overwrites the default init() and fires a WorkflowEvent.
-	 * 
-	 * @throws ModelException
-	 * 
-	 */
-	@Override
-	public String init(String action) throws ModelException {
-		String actionResult = super.init(action);
-
-		// fire event
-		events.fire(new WorkflowEvent(getWorkitem(), WorkflowEvent.CHILDWORKITEM_INITIALIZED));
-
-		return actionResult;
-	}
 
 	/**
 	 * This method is a placeholder which can be used by a subclass to clone

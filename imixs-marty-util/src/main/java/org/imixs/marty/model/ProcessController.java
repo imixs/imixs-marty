@@ -530,6 +530,19 @@ public class ProcessController implements Serializable {
 		if (workflowEvent == null)
 			return;
 
+		if (WorkflowEvent.WORKITEM_CREATED == workflowEvent.getEventType()) {
+			String processRef=workflowEvent.getWorkitem().getItemValueString("$UniqueIDRef");
+			ItemCollection process = getProcessById(processRef);
+			if (process != null) {
+				workflowEvent.getWorkitem().replaceItemValue("txtProcessName", process.getItemValueString("txtName"));
+				workflowEvent.getWorkitem().replaceItemValue("txtProcessRef", process.getItemValueString(WorkflowKernel.UNIQUEID));
+
+			} else {
+				logger.warning("[create] - unable to find process entity '" + processRef + "'!");
+			}
+		}
+		
+		
 		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
 			// test if a space or process entity was processed
 			String sType = workflowEvent.getWorkitem().getItemValueString("type");

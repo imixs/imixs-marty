@@ -2,6 +2,7 @@ package org.imixs.marty.model;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
@@ -9,8 +10,9 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
-import javax.enterprise.context.SessionScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.faces.event.ActionEvent;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -24,13 +26,16 @@ import org.imixs.workflow.xml.XMLDocumentAdapter;
 import org.xml.sax.SAXException;
 
 @Named
-@SessionScoped
-public class ReportController extends DocumentController {
+@RequestScoped
+public class ReportController implements Serializable  {
 
 	private ItemCollection reportUploads;
 	
 	@EJB
 	protected ReportService reportService;
+	
+	@Inject 
+	DocumentController documentController;
 	
 	Map<String, String> params;
 
@@ -39,7 +44,7 @@ public class ReportController extends DocumentController {
 
 	public ReportController() {
 		super();
-		setDefaultType("report");
+		documentController.setDefaultType("report");
 		reportUploads=new ItemCollection();
 	}
 	
@@ -69,15 +74,16 @@ public class ReportController extends DocumentController {
 	/**
 	 * Reset the params if a new report was loaded
 	 */
-	@Override
+	
 	public String load(String uniqueID, String action) {
 		params = null;
-		return super.load(uniqueID, action);
+		 documentController.load(uniqueID);
+		 return action;
 	}
 
 	public Map<String, String> getParams() {
 		logger.fine("parsing params...");
-		ItemCollection report = this.getWorkitem();
+		ItemCollection report = documentController.getDocument();
 		if (params == null && report != null) {
 			params = new HashMap<String, String>();
 
