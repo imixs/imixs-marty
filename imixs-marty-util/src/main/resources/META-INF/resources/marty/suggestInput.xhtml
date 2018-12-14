@@ -15,6 +15,7 @@
 	<cc:attribute name="searchitemlist"></cc:attribute>
 	<cc:attribute name="updateitemlist"></cc:attribute>
 	<cc:attribute name="render"></cc:attribute>
+	<cc:attribute name="execute"></cc:attribute>
 </cc:interface>
 
 <cc:implementation>
@@ -44,7 +45,8 @@
 								actionListener="#{suggestImportController.update(workitem,suggest,cc.attrs.updateitemlist)}">
 								<h:outputText style="font-weight: bold;"
 									value="#{suggest.item[cc.attrs.itemname]}" />
-								<f:ajax render="suggest_box #{cc.attrs.render}" />
+								<f:ajax render="suggest_box #{cc.attrs.render}" 
+										execute="#{cc.attrs.execute}" />
 							</h:commandLink>
 
 						</div>
