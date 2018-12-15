@@ -45,6 +45,7 @@ import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.lucene.LuceneSearchService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.QueryException;
+import org.imixs.workflow.faces.data.WorkflowEvent;
 
 /**
  * The WorkitemLinkController provides suggest-box behavior based on the JSF 2.0

@@ -50,6 +50,7 @@ import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.faces.data.WorkflowController;
+import org.imixs.workflow.faces.data.WorkflowEvent;
 
 /**
  * This Bean acts as a front controller for child WorkItems to be controlled by

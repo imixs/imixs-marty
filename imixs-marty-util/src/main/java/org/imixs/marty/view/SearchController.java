@@ -47,11 +47,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.config.SetupController;
-import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.lucene.LuceneSearchService;
 import org.imixs.workflow.exceptions.QueryException;
 import org.imixs.workflow.faces.data.ViewController;
+import org.imixs.workflow.faces.data.WorkflowEvent;
 
 /**
  * The Marty SearchController extends the Imixs ViewController and provides

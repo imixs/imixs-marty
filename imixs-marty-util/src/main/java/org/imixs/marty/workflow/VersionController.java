@@ -39,6 +39,7 @@ import javax.inject.Named;
 import org.imixs.marty.ejb.WorkitemService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.faces.data.WorkflowEvent;
 
 /**
  * The marty VersionController provides the list of versions to the current

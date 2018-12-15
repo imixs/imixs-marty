@@ -44,6 +44,7 @@ import org.imixs.marty.model.ProcessController;
 import org.imixs.marty.profile.UserController;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.faces.data.WorkflowEvent;
 
 /**
  * The FormController provides information about the Form, FormSections and
@@ -118,8 +119,7 @@ public class FormController implements Serializable {
 		int eventType = workflowEvent.getEventType();
 
 		// if workItem has changed, then update the dms list
-		if (WorkflowEvent.WORKITEM_CHANGED == eventType || WorkflowEvent.WORKITEM_AFTER_PROCESS == eventType
-				|| WorkflowEvent.WORKITEM_INITIALIZED == eventType || WorkflowEvent.WORKITEM_AFTER_SAVE == eventType) {
+		if (WorkflowEvent.WORKITEM_CHANGED == eventType || WorkflowEvent.WORKITEM_AFTER_PROCESS == eventType) {
 
 			computeFormDefinition(workflowEvent.getWorkitem());
 			// formDefinition = new FormDefinition();

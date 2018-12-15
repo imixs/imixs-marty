@@ -39,6 +39,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.faces.data.WorkflowController;
+import org.imixs.workflow.faces.data.WorkflowEvent;
 
 /**
  * The HistoryController provides a history navigation over workItems the user

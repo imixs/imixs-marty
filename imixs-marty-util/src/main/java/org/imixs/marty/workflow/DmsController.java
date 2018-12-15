@@ -48,6 +48,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.faces.data.WorkflowController;
+import org.imixs.workflow.faces.data.WorkflowEvent;
 import org.imixs.workflow.faces.util.LoginController;
 
 /**
@@ -122,7 +123,7 @@ public class DmsController implements Serializable {
 
 		int eventType = workflowEvent.getEventType();
 
-		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == eventType || WorkflowEvent.WORKITEM_BEFORE_SAVE == eventType) {
+		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == eventType) {
 			// reconvert the List<ItemCollection> into a List<Map>
 			if (dmsList != null) {
 				putDmsList(workflowEvent.getWorkitem(), dmsList);
@@ -130,8 +131,7 @@ public class DmsController implements Serializable {
 		}
 
 		// if workItem has changed, then update the dms list
-		if (WorkflowEvent.WORKITEM_CHANGED == eventType || WorkflowEvent.WORKITEM_AFTER_PROCESS == eventType
-				|| WorkflowEvent.WORKITEM_AFTER_SAVE == eventType) {
+		if (WorkflowEvent.WORKITEM_CHANGED == eventType || WorkflowEvent.WORKITEM_AFTER_PROCESS == eventType) {
 			// convert dms property into a list of ItemCollection
 			dmsList = getDmsListByWorkitem(workflowEvent.getWorkitem());
 		}
@@ -145,10 +145,8 @@ public class DmsController implements Serializable {
 	 * The method is used by the DmsController to update dms data provided by the
 	 * user.
 	 * 
-	 * @param workitem
-	 *            - the workitem to be updated
-	 * @param dmsList
-	 *            - the dms metha data to be put into the workitem
+	 * @param workitem - the workitem to be updated
+	 * @param dmsList  - the dms metha data to be put into the workitem
 	 * @version 1.0
 	 */
 	@SuppressWarnings("rawtypes")
@@ -185,8 +183,7 @@ public class DmsController implements Serializable {
 	 * 
 	 * The method is used by the DmsController to display the dms meta data.
 	 * 
-	 * @param workitem
-	 *            - source of meta data, sorted by $creation
+	 * @param workitem - source of meta data, sorted by $creation
 	 * @version 1.0
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -272,10 +269,8 @@ public class DmsController implements Serializable {
 	 * 
 	 * The method is used by the DMSController to add links.
 	 * 
-	 * @param aworkitem
-	 *            - the workitem to be updated
-	 * @param dmsEntity
-	 *            - the metha data to be added into the dms item
+	 * @param aworkitem - the workitem to be updated
+	 * @param dmsEntity - the metha data to be added into the dms item
 	 * @version 1.0
 	 */
 	public static List<ItemCollection> addDMSEntry(ItemCollection aworkitem, ItemCollection dmsEntity) {

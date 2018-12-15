@@ -35,6 +35,7 @@ import javax.inject.Named;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.faces.data.WorkflowEvent;
 
 /**
  * The CDI ChildItemController provides methods to display and edit sub items in
@@ -103,7 +104,7 @@ public class ChildItemController implements Serializable {
 		}
 
 		// before the workitem is saved we update the field txtOrderItems
-		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == eventType || WorkflowEvent.WORKITEM_BEFORE_SAVE == eventType) {
+		if (WorkflowEvent.WORKITEM_BEFORE_PROCESS == eventType ) {
 			implodeChildList(workitem);
 		}
 

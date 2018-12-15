@@ -47,7 +47,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.security.UserGroupService;
-import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.FileData;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.PropertyService;
@@ -57,6 +56,7 @@ import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.faces.data.WorkflowController;
+import org.imixs.workflow.faces.data.WorkflowEvent;
 import org.imixs.workflow.faces.util.LoginController;
 
 /**

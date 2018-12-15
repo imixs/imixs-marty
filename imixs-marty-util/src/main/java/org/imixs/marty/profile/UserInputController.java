@@ -41,12 +41,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProfileService;
-import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.lucene.LuceneSearchService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.faces.data.WorkflowEvent;
 
 /**
  * The UserInputController provides suggest-box behavior based on the JSF 2.0
