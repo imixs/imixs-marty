@@ -38,8 +38,8 @@ import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.QueryException;
-import org.imixs.workflow.faces.workitem.DocumentController;
-import org.imixs.workflow.faces.workitem.ViewController;
+import org.imixs.workflow.faces.data.DocumentController;
+import org.imixs.workflow.faces.data.ViewController;
 
 /**
  * This backing bean provides different custom configuration documents. The type
@@ -84,24 +84,7 @@ public class ConfigMultiController extends DocumentController {
 	@EJB
 	private DocumentService documentService;
 
-	ViewController viewController = null;
-
-	public ConfigMultiController() {
-		super();
-		sortBy="txtname";
-	}
-
-	/**
-	 * The init method is used to add necessary indices to the entity index list if
-	 * index still exists the method did change any data
-	 */
-	@PostConstruct
-	public void init() {
-		viewController = new ViewController();
-		viewController.setType(this.getDefaultType());
-		// viewController.setView("worklist.modified.desc");
-	}
-
+	
 	public String getSortBy() {
 		return sortBy;
 	}
@@ -119,8 +102,8 @@ public class ConfigMultiController extends DocumentController {
 	@Override
 	public void save() throws AccessDeniedException {
 		// update write and read access
-		this.getWorkitem().replaceItemValue("$writeAccess", "org.imixs.ACCESSLEVEL.MANAGERACCESS");
-		this.getWorkitem().replaceItemValue("$readAccess", "");
+		this.getDocument().replaceItemValue("$writeAccess", "org.imixs.ACCESSLEVEL.MANAGERACCESS");
+		this.getDocument().replaceItemValue("$readAccess", "");
 		// save entity
 		super.save();
 

@@ -47,7 +47,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.security.UserGroupService;
-import org.imixs.marty.workflow.VersionController;
 import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.FileData;
 import org.imixs.workflow.ItemCollection;
@@ -57,6 +56,7 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.faces.data.WorkflowController;
 import org.imixs.workflow.faces.util.LoginController;
 
 /**
@@ -102,7 +102,7 @@ public class UserController implements Serializable {
 	protected LoginController loginController;
 
 	@Inject
-	protected VersionController workflowController;
+	protected WorkflowController workflowController;
 
 	private static final long serialVersionUID = 1L;
 	private ItemCollection workitem = null;

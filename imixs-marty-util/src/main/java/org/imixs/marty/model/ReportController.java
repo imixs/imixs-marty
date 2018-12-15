@@ -21,7 +21,7 @@ import org.imixs.workflow.FileData;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.ReportService;
 import org.imixs.workflow.exceptions.ModelException;
-import org.imixs.workflow.faces.workitem.DocumentController;
+import org.imixs.workflow.faces.data.DocumentController;
 import org.imixs.workflow.xml.XMLDocumentAdapter;
 import org.xml.sax.SAXException;
 

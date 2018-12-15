@@ -51,6 +51,7 @@ import org.imixs.marty.workflow.WorkflowEvent;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.lucene.LuceneSearchService;
 import org.imixs.workflow.exceptions.QueryException;
+import org.imixs.workflow.faces.data.ViewController;
 
 /**
  * The Marty SearchController extends the Imixs ViewController and provides
@@ -75,7 +76,7 @@ import org.imixs.workflow.exceptions.QueryException;
 
 @Named("searchController")
 @SessionScoped
-public class SearchController extends org.imixs.workflow.faces.workitem.ViewController implements Serializable {
+public class SearchController extends ViewController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private static Logger logger = Logger.getLogger(SearchController.class.getName());
@@ -101,17 +102,10 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 	 * @param event
 	 */
 	@Override
-	public void doReset(ActionEvent event) {
+	public void reset() {
 		searchFilter = new ItemCollection();
 		searchFilter.replaceItemValue("type", "workitem");
-		super.doReset(event);
-	}
-
-	@Override
-	public void doReset() {
-		searchFilter = new ItemCollection();
-		searchFilter.replaceItemValue("type", "workitem");
-		super.doReset();
+		super.reset();
 	}
 
 	/**
@@ -121,7 +115,7 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 	 * @return
 	 */
 	public void doResetSearchResult() {
-		super.doReset();
+		super.reset();
 	}
 
 	/**
@@ -149,7 +143,7 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 		String searchPhrase = searchFilter.getItemValueString("txtSearch");
 		searchFilter = new ItemCollection();
 		searchFilter.replaceItemValue("type", "workitem");
-		super.doReset(event);
+		super.reset();
 		// restore search phrase
 		searchFilter.replaceItemValue("txtSearch", searchPhrase);
 	}
@@ -183,7 +177,7 @@ public class SearchController extends org.imixs.workflow.faces.workitem.ViewCont
 		if (!workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
 			return;
 		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
-			doRefresh();
+			refresh();
 		}
 	}
 

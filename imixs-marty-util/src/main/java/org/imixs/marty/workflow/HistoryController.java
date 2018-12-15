@@ -38,7 +38,7 @@ import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.DocumentService;
-import org.imixs.workflow.faces.workitem.WorkflowController;
+import org.imixs.workflow.faces.data.WorkflowController;
 
 /**
  * The HistoryController provides a history navigation over workItems the user
@@ -149,7 +149,7 @@ public class HistoryController implements Serializable {
 			workitems.remove(iPos);
 		}
 		currentId = null;
-		workflowController.stopConversation();
+		workflowController.close();
 	}
 
 	/**

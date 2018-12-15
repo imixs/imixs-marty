@@ -5,7 +5,7 @@ import java.util.List;
 import javax.faces.bean.ViewScoped;
 import javax.inject.Inject;
 
-import org.imixs.workflow.faces.workitem.ViewController;
+import org.imixs.workflow.faces.data.ViewController;
 
 /**
  * This View Controller extends the default viewController and provides a custom
