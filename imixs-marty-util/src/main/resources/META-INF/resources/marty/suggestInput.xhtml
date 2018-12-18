@@ -40,7 +40,7 @@
 						items="#{suggestImportController.searchResult}">
 						<div class="marty-userinput-suggestresultlist-entry"
 							style="width: 100%;">
-							<h:commandLink
+							<h:commandLink immediate="true"
 								onclick="updateSuggestID($(this).parents('[id$=input_box]')[0],'#{suggest.item[cc.attrs.itemname]}')"
 								actionListener="#{suggestImportController.update(workitem,suggest,cc.attrs.updateitemlist)}">
 								<h:outputText style="font-weight: bold;"
