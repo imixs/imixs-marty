@@ -113,13 +113,15 @@ public class FormController implements Serializable {
 
 		// skip if not a workItem...
 		if (workflowEvent.getWorkitem() != null
-				&& !workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
+				&& !workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem")) {
 			return;
+		}
 
 		int eventType = workflowEvent.getEventType();
 
 		// if workItem has changed, then update the dms list
-		if (WorkflowEvent.WORKITEM_CHANGED == eventType || WorkflowEvent.WORKITEM_AFTER_PROCESS == eventType) {
+		if (WorkflowEvent.WORKITEM_CHANGED == eventType || WorkflowEvent.WORKITEM_CREATED == eventType
+				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == eventType) {
 
 			computeFormDefinition(workflowEvent.getWorkitem());
 			// formDefinition = new FormDefinition();
