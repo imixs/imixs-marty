@@ -44,11 +44,9 @@ public class ReportController implements Serializable  {
 
 	public ReportController() {
 		super();
-		documentController.setDefaultType("report");
 		reportUploads=new ItemCollection();
 	}
 	
-
 
 	public ItemCollection getReportUploads() {
 		return reportUploads;
@@ -74,7 +72,6 @@ public class ReportController implements Serializable  {
 	/**
 	 * Reset the params if a new report was loaded
 	 */
-	
 	public String load(String uniqueID, String action) {
 		params = null;
 		 documentController.load(uniqueID);
