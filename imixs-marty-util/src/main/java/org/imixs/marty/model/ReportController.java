@@ -10,8 +10,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
-import javax.enterprise.context.RequestScoped;
-import javax.faces.event.ActionEvent;
+import javax.enterprise.context.SessionScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.xml.bind.JAXBException;
@@ -26,17 +25,17 @@ import org.imixs.workflow.xml.XMLDocumentAdapter;
 import org.xml.sax.SAXException;
 
 @Named
-@RequestScoped
-public class ReportController implements Serializable  {
+@SessionScoped
+public class ReportController implements Serializable {
 
 	private ItemCollection reportUploads;
-	
+
 	@EJB
 	protected ReportService reportService;
-	
-	@Inject 
+
+	@Inject
 	DocumentController documentController;
-	
+
 	Map<String, String> params;
 
 	private static final long serialVersionUID = 1L;
@@ -44,21 +43,16 @@ public class ReportController implements Serializable  {
 
 	public ReportController() {
 		super();
-		reportUploads=new ItemCollection();
+		reportUploads = new ItemCollection();
 	}
-	
 
 	public ItemCollection getReportUploads() {
 		return reportUploads;
 	}
 
-
-
 	public void setReportUploads(ItemCollection reportUploads) {
 		this.reportUploads = reportUploads;
 	}
-
-
 
 	/**
 	 * Returns a String sorted list of all report names.
@@ -74,8 +68,8 @@ public class ReportController implements Serializable  {
 	 */
 	public String load(String uniqueID, String action) {
 		params = null;
-		 documentController.load(uniqueID);
-		 return action;
+		documentController.load(uniqueID);
+		return action;
 	}
 
 	public Map<String, String> getParams() {
@@ -100,17 +94,13 @@ public class ReportController implements Serializable  {
 						break;
 					}
 				}
-
 			}
 		}
-
 		return params;
 	}
 
-	
-	
 	/**
-	 * This method adds all uploaded imixs-report files. 
+	 * This method adds all uploaded imixs-report files.
 	 * 
 	 * @param event
 	 * @throws IOException
@@ -118,11 +108,11 @@ public class ReportController implements Serializable  {
 	 * @throws ParserConfigurationException
 	 * @throws ParseException
 	 * @throws ModelException
-	 * @throws JAXBException 
+	 * @throws JAXBException
 	 * 
 	 */
-	public void doUploadReport(ActionEvent event)
-			throws ModelException, ParseException, ParserConfigurationException, SAXException, IOException, JAXBException {
+	public void uploadReport() throws ModelException, ParseException, ParserConfigurationException, SAXException,
+			IOException, JAXBException {
 		List<FileData> fileList = getReportUploads().getFileData();
 
 		if (fileList == null) {
@@ -134,20 +124,15 @@ public class ReportController implements Serializable  {
 			// test if imxis-report?
 			if (file.getName().endsWith(".imixs-report")) {
 				ByteArrayInputStream input = new ByteArrayInputStream(file.getContent());
-				ItemCollection report=XMLDocumentAdapter.readItemCollectionFromInputStream(input);
+				ItemCollection report = XMLDocumentAdapter.readItemCollectionFromInputStream(input);
 				reportService.updateReport(report);
-				
 				continue;
 			}
-
 			// model type not supported!
 			logger.warning("Invalid Report Type. Report can't be imported!");
-
 		}
-		
-		// reset upploads
-		reportUploads=new ItemCollection();
-		
-	}
 
+		// reset upploads
+		reportUploads = new ItemCollection();
+	}
 }

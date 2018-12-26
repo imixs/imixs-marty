@@ -73,7 +73,7 @@ import org.xml.sax.SAXException;
  * @author rsoika
  * 
  */
-@Named()
+@Named
 @RequestScoped
 public class ModelController implements Serializable {
 
