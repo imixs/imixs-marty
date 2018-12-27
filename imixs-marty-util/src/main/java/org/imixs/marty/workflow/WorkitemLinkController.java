@@ -355,7 +355,7 @@ public class WorkitemLinkController implements Serializable {
 			// build a new workitem list for that filter....
 			filterResult = new ArrayList<ItemCollection>();
 
-			String uniqueid = workitem.getItemValueString("$uniqueid");
+			String uniqueid = workitem.getUniqueID();
 
 			// return an empty list if still no $uniqueid is defined for the
 			// current workitem

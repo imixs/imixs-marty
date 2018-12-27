@@ -300,7 +300,7 @@ public class ProcessController implements Serializable {
 	public List<ItemCollection> getSpacesByProcess(ItemCollection process) {
 		List<ItemCollection> result = new ArrayList<ItemCollection>();
 		if (process != null) {
-			List<String> refs = process.getItemValue("$UniqueIDRef");
+			List<String> refs = process.getItemValue(WorkflowService.UNIQUEIDREF);
 			if (refs != null && !refs.isEmpty()) {
 				// iterate over all spaces and compare the $UniqueIDRef
 				List<ItemCollection> list = getSpaces();
@@ -531,14 +531,14 @@ public class ProcessController implements Serializable {
 			return;
 
 		if (WorkflowEvent.WORKITEM_CREATED == workflowEvent.getEventType()) {
-			String processRef=workflowEvent.getWorkitem().getItemValueString("$UniqueIDRef");
+			String processRef=workflowEvent.getWorkitem().getItemValueString(WorkflowService.UNIQUEIDREF);
 			ItemCollection process = getProcessById(processRef);
 			if (process != null) {
 				workflowEvent.getWorkitem().replaceItemValue("txtProcessName", process.getItemValueString("txtName"));
 				workflowEvent.getWorkitem().replaceItemValue("txtProcessRef", process.getItemValueString(WorkflowKernel.UNIQUEID));
 
 			} else {
-				logger.warning("[create] - unable to find process entity '" + processRef + "'!");
+				logger.warning("[WORKITEM_CREATED] - unable to find process entity '" + processRef + "'!");
 			}
 		}
 		

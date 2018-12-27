@@ -121,7 +121,7 @@ public class HistoryController implements Serializable {
 					// select the next
 					ItemCollection current = workitems.get(iPos);
 					if (current != null) {
-						currentId = current.getItemValueString("$UniqueID");
+						currentId = current.getUniqueID();
 						workflowController.setWorkitem(documentService.load(currentId));
 						
 					} else {
@@ -204,7 +204,7 @@ public class HistoryController implements Serializable {
 	private void addWorkItem(ItemCollection aWorkitem) {
 
 		if (aWorkitem == null || !aWorkitem.getItemValueString("type").startsWith("workitem")
-				|| aWorkitem.getItemValueString("$UniqueID").isEmpty()) {
+				|| aWorkitem.getUniqueID().isEmpty()) {
 			currentId = null;
 			return;
 		}
@@ -212,7 +212,7 @@ public class HistoryController implements Serializable {
 		ItemCollection clone = WorkitemHelper.clone(aWorkitem);
 
 		// test if exits
-		int iPos = findWorkItem(aWorkitem.getItemValueString("$UniqueID"));
+		int iPos = findWorkItem(aWorkitem.getUniqueID());
 		if (iPos > -1) {
 			// update workitem
 			workitems.set(iPos, clone);
@@ -220,7 +220,7 @@ public class HistoryController implements Serializable {
 			// add the new workitem into the history
 			workitems.add(clone);
 		}
-		currentId = clone.getItemValueString("$UniqueID");
+		currentId = clone.getUniqueID();
 
 	}
 
@@ -238,7 +238,7 @@ public class HistoryController implements Serializable {
 		// try to find the woritem in the history list
 		for (int i = 0; i < workitems.size(); i++) {
 			ItemCollection historyWorkitem = workitems.get(i);
-			String sHistoryUnqiueID = historyWorkitem.getItemValueString("$Uniqueid");
+			String sHistoryUnqiueID = historyWorkitem.getUniqueID();
 			if (sHistoryUnqiueID.equals(aID)) {
 				// Found! - remove it and return..
 				return i;
