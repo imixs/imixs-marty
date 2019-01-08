@@ -40,7 +40,7 @@ With the imixs.property '_security.userid.input.mode_' the userID can be forced 
 
     security.userid.input.mode=
     
-Possible values are: '_lowercase_', '_uppercase_' and '_none_'
+Possible values are: '_LOWERCASE_', '_UPPERCASE_' and '_NONE_'
 
 ### Email Validation
 
