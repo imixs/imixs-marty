@@ -32,9 +32,9 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
-import javax.enterprise.context.ConversationScoped;
-import javax.enterprise.event.Observes;
 import javax.faces.event.AjaxBehaviorEvent;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
 
@@ -43,9 +43,8 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.lucene.LuceneSearchService;
-import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.QueryException;
-import org.imixs.workflow.faces.data.WorkflowEvent;
+import org.imixs.workflow.faces.data.WorkflowController;
 
 /**
  * The WorkitemLinkController provides suggest-box behavior based on the JSF 2.0
@@ -62,7 +61,10 @@ import org.imixs.workflow.faces.data.WorkflowEvent;
  */
 
 @Named
-@ConversationScoped
+//@ConversationScoped
+//@RequestScoped
+@ViewScoped
+//@SessionScoped
 public class WorkitemLinkController implements Serializable {
 
 	public static final String LINK_PROPERTY = "txtworkitemref";
@@ -70,10 +72,13 @@ public class WorkitemLinkController implements Serializable {
 
 	public static Logger logger = Logger.getLogger(WorkitemLinkController.class.getName());
 
-	private ItemCollection workitem = null;
+	//private ItemCollection workitem = null;
 
 	@EJB
 	protected WorkflowService workflowService;
+	
+	@Inject
+	protected WorkflowController workflowController;	
 
 	private static final long serialVersionUID = 1L;
 	private List<ItemCollection> searchResult = null;
@@ -186,12 +191,12 @@ public class WorkitemLinkController implements Serializable {
 	/**
 	 * This methods adds a new workItem reference
 	 */
-	public void add(String aUniqueID, ItemCollection workitem) {
+	public void add(String aUniqueID) {
 
 		logger.fine("LinkController add workitem reference: " + aUniqueID);
 
 		@SuppressWarnings("unchecked")
-		List<String> refList = workitem.getItemValue(LINK_PROPERTY);
+		List<String> refList = workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
 
 		// clear empty entry if set
 		if (refList.size() == 1 && "".equals(refList.get(0)))
@@ -200,7 +205,7 @@ public class WorkitemLinkController implements Serializable {
 		// test if not yet a member of
 		if (refList.indexOf(aUniqueID) == -1) {
 			refList.add(aUniqueID);
-			workitem.replaceItemValue(LINK_PROPERTY, refList);
+			workflowController.getWorkitem().replaceItemValue(LINK_PROPERTY, refList);
 		}
 
 		// reset
@@ -211,17 +216,17 @@ public class WorkitemLinkController implements Serializable {
 	/**
 	 * This methods removes a workItem reference
 	 */
-	public void remove(String aUniqueID, ItemCollection workitem) {
+	public void remove(String aUniqueID) {
 
 		logger.fine("LinkController remove workitem reference: " + aUniqueID);
 
 		@SuppressWarnings("unchecked")
-		List<String> refList = workitem.getItemValue(LINK_PROPERTY);
+		List<String> refList = workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
 
 		// test if a member of
 		if (refList.indexOf(aUniqueID) > -1) {
 			refList.remove(aUniqueID);
-			workitem.replaceItemValue(LINK_PROPERTY, refList);
+			workflowController.getWorkitem().replaceItemValue(LINK_PROPERTY, refList);
 		}
 		// reset
 		reset(null);
@@ -255,7 +260,7 @@ public class WorkitemLinkController implements Serializable {
 	public List<ItemCollection> getReferences(String filter) {
 		List<ItemCollection> filterResult = null;
 
-		if (workitem == null) {
+		if (workflowController.getWorkitem() == null) {
 			return filterResult;
 		}
 
@@ -271,7 +276,7 @@ public class WorkitemLinkController implements Serializable {
 			logger.fine("lookup references for: " + filter);
 
 			// lookup the references...
-			List<String> list = workitem.getItemValue(LINK_PROPERTY);
+			List<String> list = workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
 			// empty list?
 
 			if (references == null)
@@ -341,7 +346,7 @@ public class WorkitemLinkController implements Serializable {
 	public List<ItemCollection> getExternalReferences(String filter) {
 		List<ItemCollection> filterResult = null;
 
-		if (workitem == null) {
+		if (workflowController.getWorkitem() == null) {
 			return filterResult;
 		}
 
@@ -355,7 +360,7 @@ public class WorkitemLinkController implements Serializable {
 			// build a new workitem list for that filter....
 			filterResult = new ArrayList<ItemCollection>();
 
-			String uniqueid = workitem.getUniqueID();
+			String uniqueid = workflowController.getWorkitem().getUniqueID();
 
 			// return an empty list if still no $uniqueid is defined for the
 			// current workitem
@@ -404,25 +409,25 @@ public class WorkitemLinkController implements Serializable {
 	 * @param workflowEvent
 	 * @throws AccessDeniedException
 	 */
-	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) throws AccessDeniedException {
-
-		if (workflowEvent == null)
-			return;
-
-		// skip if not a workItem...
-		if (workflowEvent.getWorkitem() != null
-				&& !workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
-			return;
-
-		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()
-				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
-			externalReferences = null;
-			references = null;
-			workitem = workflowEvent.getWorkitem();
-			// reset suggest list state
-			reset();
-
-		}
-
-	}
+//	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) throws AccessDeniedException {
+//
+//		if (workflowEvent == null)
+//			return;
+//
+//		// skip if not a workItem...
+//		if (workflowEvent.getWorkitem() != null
+//				&& !workflowEvent.getWorkitem().getItemValueString("type").startsWith("workitem"))
+//			return;
+//
+//		if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()
+//				|| WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
+//			externalReferences = null;
+//			references = null;
+//		//	workitem = workflowEvent.getWorkitem();
+//			// reset suggest list state
+//			reset();
+//
+//		}
+//
+//	}
 }

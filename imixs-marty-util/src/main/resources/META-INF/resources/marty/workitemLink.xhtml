@@ -47,7 +47,7 @@
 
 
 					<h:commandLink class="marty-workitemlink-entry-remove" rendered="#{!cc.attrs.readonly}"
-						actionListener="#{workitemLinkController.remove(workitem.item['$uniqueid'],cc.attrs.workitem)}">
+						actionListener="#{workitemLinkController.remove(workitem.item['$uniqueid'])}">
 						<h:outputText value=" [#{message.remove}]" />
 						<f:ajax render="reference_box" />
 
@@ -75,7 +75,7 @@
 					<c:forEach var="suggest" items="#{workitemLinkController.searchResult}">
 						<div class="marty-workitemlink-suggestresultlist-entry">
 							<h:commandLink
-								actionListener="#{workitemLinkController.add(suggest.item['$uniqueid'],cc.attrs.workitem)}">
+								actionListener="#{workitemLinkController.add(suggest.item['$uniqueid'])}">
 								<h:outputText style="font-weight: bold;"
 									value="#{suggest.item['txtWorkflowSummary']}" escape="false"
 									rendered="#{!empty suggest.item['txtWorkflowSummary']}" />
