@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.imixs.marty</groupId>
 	<artifactId>imixs-marty</artifactId>
@@ -69,7 +71,7 @@
 	</modules>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<org.imixs.workflow.version>4.4.5</org.imixs.workflow.version>
+		<org.imixs.workflow.version>4.4.7-SNAPSHOT</org.imixs.workflow.version>
 		<!-- imixs-github-repo on github - see ~/.m2/settings.xml -->
 		<github.global.server>imixs-github-repo</github.global.server>
 	</properties>
@@ -207,16 +209,16 @@
 					</execution>
 				</executions>
 			</plugin>
-			
-			<!--  temporarily fix issue imixs-workflow #442  -->
+
+			<!-- temporarily fix issue imixs-workflow #442 -->
 			<plugin>
-	            <groupId>org.apache.maven.plugins</groupId>
-	            <artifactId>maven-surefire-plugin</artifactId>
-	            <configuration>
-	                <useSystemClassLoader>false</useSystemClassLoader>
-	            </configuration>
-	            <version>2.22.1</version>
-	        </plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<useSystemClassLoader>false</useSystemClassLoader>
+				</configuration>
+				<version>2.22.1</version>
+			</plugin>
 
 		</plugins>
 	</build>
@@ -245,6 +247,14 @@
 				<artifactId>imixs-workflow-faces</artifactId>
 				<version>${org.imixs.workflow.version}</version>
 				<scope>provided</scope>
+			</dependency>
+
+
+			<dependency>
+				<groupId>org.imixs.workflow</groupId>
+				<artifactId>imixs-mock</artifactId>
+				<version>4.4.0</version>
+				<scope>test</scope>
 			</dependency>
 
 		</dependencies>

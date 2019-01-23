@@ -75,7 +75,7 @@ public class TestApproverPlugin {
 		Assert.assertNotNull(documentContext);
 
 		Assert.assertEquals(3, documentContext.getItemValue("namProcessManagerApprovers").size());
-		Assert.assertEquals(0, documentContext.getItemValue("namProcessManagerApprovedByBy").size());
+		Assert.assertEquals(0, documentContext.getItemValue("namProcessManagerApprovedby").size());
 
 	}
 
@@ -121,7 +121,7 @@ public class TestApproverPlugin {
 
 		List<String> approvers = documentContext.getItemValue("namProcessManagerApprovers");
 		Assert.assertEquals(4, approvers.size());
-		Assert.assertEquals(0, documentContext.getItemValue("namProcessManagerApprovedByBy").size());
+		Assert.assertEquals(0, documentContext.getItemValue("namProcessManagerApprovedby").size());
 
 		Assert.assertTrue(approvers.contains("anna"));
 		Assert.assertTrue(approvers.contains("manfred"));
