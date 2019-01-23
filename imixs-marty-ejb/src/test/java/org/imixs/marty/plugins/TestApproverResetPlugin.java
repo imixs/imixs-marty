@@ -28,7 +28,7 @@ public class TestApproverResetPlugin {
 
 	ItemCollection workitem = null;
  
-	@Before
+	@Before 
 	public void setup() throws PluginException, ModelException {
 
 
