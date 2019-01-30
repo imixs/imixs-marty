@@ -37,6 +37,9 @@ var delayEvent = (function() {
  * @param context
  */
 function initUserInput(context) {
+	
+	// clear all display values first....
+	$(".marty-userinput-inputbox [id$=\\:username_input]",context).val('');
 	// this is the support for the marty userinput widget
 	$(".marty-userinput-inputbox [id$=\\:username_input]", context).each(
 			function(index, input) {
