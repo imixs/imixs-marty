@@ -118,7 +118,8 @@ public class ProcessController implements Serializable {
 	 * Loads a process entity by its UniqueID from the internal cache and updates
 	 * the current process entity.
 	 * 
-	 * @param uniqueid - of process entity
+	 * @param uniqueid
+	 *            - of process entity
 	 * 
 	 * @return current process entity
 	 */
@@ -277,7 +278,8 @@ public class ProcessController implements Serializable {
 	/**
 	 * Returns a list of all spaces which are assigned to a given process entity.
 	 * 
-	 * @param uniqueId of a processEntity
+	 * @param uniqueId
+	 *            of a processEntity
 	 * @return
 	 */
 	public List<ItemCollection> getSpacesByProcessId(String uniqueId) {
@@ -293,7 +295,8 @@ public class ProcessController implements Serializable {
 	/**
 	 * Returns a list of all spaces which are assigned to a given process entity.
 	 * 
-	 * @param uniqueId of a processEntity
+	 * @param uniqueId
+	 *            of a processEntity
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -531,36 +534,33 @@ public class ProcessController implements Serializable {
 			return;
 
 		if (WorkflowEvent.WORKITEM_CREATED == workflowEvent.getEventType()) {
-			String processRef=workflowEvent.getWorkitem().getItemValueString(WorkflowService.UNIQUEIDREF);
+			String processRef = workflowEvent.getWorkitem().getItemValueString(WorkflowService.UNIQUEIDREF);
 			ItemCollection process = getProcessById(processRef);
 			if (process != null) {
 				workflowEvent.getWorkitem().replaceItemValue("txtProcessName", process.getItemValueString("txtName"));
-				workflowEvent.getWorkitem().replaceItemValue("txtProcessRef", process.getItemValueString(WorkflowKernel.UNIQUEID));
-
+				workflowEvent.getWorkitem().replaceItemValue("txtProcessRef",
+						process.getItemValueString(WorkflowKernel.UNIQUEID));
 			} else {
-				logger.warning("[WORKITEM_CREATED] - unable to find process entity '" + processRef + "'!");
+				logger.fine("[WORKITEM_CREATED] - unable to find process entity '" + processRef + "'!");
 			}
 		}
-		
-		
+
 		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
 			// test if a space or process entity was processed
 			String sType = workflowEvent.getWorkitem().getItemValueString("type");
 			if (sType.startsWith("space") || sType.startsWith("process")) {
 				reset();
 				logger.fine("ModelController:WorkflowEvent=" + workflowEvent.getEventType());
-
 			}
 		}
-
 	}
 
 	/**
 	 * Returns a unique sorted list of profile itemCollections for a team list in a
 	 * project. The returned list contains cloned user profile entities.
 	 * 
-	 * @param listType - the member field of the project (namTeam, namManager,
-	 *                 namAssist)
+	 * @param listType
+	 *            - the member field of the project (namTeam, namManager, namAssist)
 	 * @return list of team profiles
 	 */
 	@SuppressWarnings("unchecked")
