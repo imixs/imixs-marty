@@ -29,7 +29,8 @@ package org.imixs.marty.ejb;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Map.Entry;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -123,7 +124,8 @@ public class ProfileService {
 	 * be processed or updated. Use lookupProfile to get the full entity of a
 	 * profile.
 	 * 
-	 * @param userid - the profile id
+	 * @param userid
+	 *            - the profile id
 	 * @return cloned workitem
 	 */
 	public ItemCollection findProfileById(String userid) {
@@ -133,18 +135,21 @@ public class ProfileService {
 
 	/**
 	 * This method returns a profile by its id. The method uses an internal cache.
-	 * The method returns null if no Profile for this name was found. The userid is
+	 * The method returns in any case a user profile, even if no Profile for this
+	 * name was found. In this case a dummy profile will be created. The userid is
 	 * case sensitive.
-	 * 
+	 * <p>
 	 * The returned workitem is a cloned version of the profile entity and can not
 	 * be processed or updated. Use lookupProfile to get the full entity of a
 	 * profile.
-	 * 
+	 * <p>
 	 * If the boolean 'refresh' is true the method lookup the user in any case with
 	 * a search query and updates the cache.
 	 * 
-	 * @param userid  - the profile id
-	 * @param refresh - boolean indicates if the internal cache should be used
+	 * @param userid
+	 *            - the profile id
+	 * @param refresh
+	 *            - boolean indicates if the internal cache should be used
 	 * @return cloned workitem
 	 */
 	public ItemCollection findProfileById(String userid, boolean refresh) {
@@ -158,26 +163,31 @@ public class ProfileService {
 
 		// use cache?
 		if (!refresh) {
-			logger.finest("......lookup profile '" + userid + "' in cache...");
-			userProfile = (ItemCollection) cache.get(userid);
-		}
-		// not yet cached?
-		if (userProfile == null && !cache.containsKey(userid)) {
-			userProfile = lookupProfileById(userid);
-			if (userProfile != null) {
-				// put a clone workitem into the cahe
-				userProfile = cloneWorkitem(userProfile);
-				// cache profile
-				cache.put(userid, userProfile);
-				logger.finest("......put profile '" + userid + "' into cache");
-			} else {
-				logger.finest("......profile '" + userid + "' not found, put 'null' into cache");
-				// put null entry into cache to avoid next lookup!
-				cache.put(userid, null);
+			logger.finest("......lookup profile '" + userid + "' from cache...");
+			Map<String, List<Object>> profileMap = cache.get(userid);
+			if (profileMap != null) {
+				userProfile = new ItemCollection(profileMap);
+				logger.finest("......return profile '" + userid + "' from cache");
+				return userProfile;
 			}
-		} else {
-			logger.finest("......get profile '" + userid + "' from cache");
 		}
+		// no profile found or refresh==true
+		userProfile = lookupProfileById(userid);
+		if (userProfile != null) {
+			// clone workitem....
+			userProfile = cloneWorkitem(userProfile);
+		} else {
+			logger.finest("......profile '" + userid + "' not found, create a 'default' profile...");
+			// put dummy entry into cache to avoid next lookup!
+			userProfile = new ItemCollection();
+			userProfile.replaceItemValue("txtname", userid);
+			userProfile.replaceItemValue("txtusername", userid);
+		}
+
+		// cache profile
+		logger.finest("......put profile '" + userid + "' into cache");
+		cache.put(userid, userProfile.getAllItems());
+
 		return userProfile;
 
 	}
@@ -190,7 +200,8 @@ public class ProfileService {
 	 * Use findProfileById to work with the internal cache if there is no need to
 	 * update the profile.
 	 * 
-	 * @param userid - the profile id
+	 * @param userid
+	 *            - the profile id
 	 * @return profile workitem
 	 */
 	public ItemCollection lookupProfileById(String userid) {
@@ -336,7 +347,7 @@ public class ProfileService {
 	 * @author rsoika
 	 * 
 	 */
-	class Cache extends ConcurrentHashMap<String, ItemCollection> implements Serializable {
+	class Cache extends ConcurrentHashMap<String, Map<String, List<Object>>> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private final int capacity;
 
