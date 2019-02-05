@@ -37,8 +37,10 @@ import javax.naming.NamingException;
 import org.imixs.marty.ejb.SequenceService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowContext;
+import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
 
 /**
@@ -105,11 +107,11 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * This method loads a sequence number object and increases the sequence
-	 * number in the workItem. If the workItem is form type'workitem' then the
-	 * next sequecnenumer is computed based on the workflowGroup. If the
-	 * workItem is from type='childworkitem' then the next sequencenumber is
-	 * computed on the parent workItem.
+	 * This method loads a sequence number object and increases the sequence number
+	 * in the workItem. If the workItem is form type'workitem' then the next
+	 * sequecnenumer is computed based on the workflowGroup. If the workItem is from
+	 * type='childworkitem' then the next sequencenumber is computed on the parent
+	 * workItem.
 	 * 
 	 * @return
 	 * @throws AddressException
@@ -122,9 +124,9 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 		// check type
 
 		/*
-		 * The plugin will only run for type='worktiem'. Childworkitems are no
-		 * longer supported as a optimistic locking exception will be forced in
-		 * the frontend (because of updated version id)
+		 * The plugin will only run for type='worktiem'. Childworkitems are no longer
+		 * supported as a optimistic locking exception will be forced in the frontend
+		 * (because of updated version id)
 		 * 
 		 * || "childworkitem".equals(sType)
 		 */
@@ -138,6 +140,17 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 			logger.fine(
 					"SequenceNumberPlugin calculating next sequencenumber: '" + documentContext.getUniqueID() + "'");
 			try {
+				// test if $WorkflowGorup is already available.....
+				if (documentContext.getItemValueString(WorkflowKernel.WORKFLOWGROUP).isEmpty()) {
+					// set temporary workflow group, will be updated by the WorkflowKernel later...
+					ItemCollection itemColNextTask = this.getWorkflowService().evalNextTask(documentContext,
+							documentActivity);
+					if (itemColNextTask != null) {
+						documentContext.replaceItemValue(WorkflowKernel.WORKFLOWGROUP,
+								itemColNextTask.getItemValueString("txtworkflowgroup"));
+					}
+				}
+
 				// load next Number based on the type of workitem
 				if (sType.startsWith("workitem"))
 					sequenceNumber = sequenceService.getNextSequenceNumberByGroup(documentContext);
@@ -145,6 +158,8 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 					sequenceNumber = sequenceService.getNextSequenceNumberByParent(documentContext);
 
 			} catch (AccessDeniedException e) {
+				throw new PluginException(e.getErrorContext(), e.getErrorCode(), "[SequenceNumberPlugin] error ", e);
+			} catch (ModelException e) {
 				throw new PluginException(e.getErrorContext(), e.getErrorCode(), "[SequenceNumberPlugin] error ", e);
 			}
 			if (sequenceNumber > 0)
@@ -159,7 +174,5 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 
 		return workitem;
 	}
-
-	
 
 }
