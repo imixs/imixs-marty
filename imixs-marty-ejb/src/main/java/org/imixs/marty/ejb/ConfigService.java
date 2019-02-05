@@ -31,13 +31,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 
@@ -69,6 +70,7 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
 		"org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ConfigService {
 
 	int DEFAULT_CACHE_SIZE = 30;
@@ -214,12 +216,12 @@ public class ConfigService {
 	 * @author rsoika
 	 * 
 	 */
-	class Cache extends LinkedHashMap<String, ItemCollection> implements Serializable {
+	class Cache extends ConcurrentHashMap<String, ItemCollection> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private final int capacity;
 
 		public Cache(int capacity) {
-			super(capacity + 1, 1.1f, true);
+			super(capacity + 1, 1.1f);
 			this.capacity = capacity;
 		}
 

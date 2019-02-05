@@ -1,12 +1,13 @@
 package org.imixs.marty.ejb;
 
 import java.io.Serializable;
-import java.util.LinkedHashMap;
-import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Singleton;
 
 /**
@@ -29,6 +30,7 @@ import javax.ejb.Singleton;
  * 
  */
 @Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class TeamCache {
 
 	int DEFAULT_CACHE_SIZE = 500; // maximum 500 users
@@ -125,12 +127,12 @@ public class TeamCache {
 	 * @author rsoika
 	 * 
 	 */
-	class Cache extends LinkedHashMap<String, Object> implements Serializable {
+	class Cache extends ConcurrentHashMap<String, Object> implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private final int capacity;
 
 		public Cache(int capacity) {
-			super(capacity + 1, 1.1f, true);
+			super(capacity + 1, 1.1f);
 			this.capacity = capacity;
 		}
 
