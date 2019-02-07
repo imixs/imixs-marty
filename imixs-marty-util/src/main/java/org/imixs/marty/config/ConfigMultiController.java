@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 
@@ -39,7 +38,6 @@ import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.QueryException;
 import org.imixs.workflow.faces.data.DocumentController;
-import org.imixs.workflow.faces.data.ViewController;
 
 /**
  * This backing bean provides different custom configuration documents. The type
