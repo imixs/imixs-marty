@@ -45,6 +45,7 @@ import javax.ejb.Singleton;
 import javax.enterprise.event.Observes;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.engine.DocumentEvent;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.TextEvent;
 import org.imixs.workflow.engine.WorkflowService;
@@ -229,7 +230,7 @@ public class TextBlockService {
 	 * 
 	 * 
 	 */
-	public void onEvent(@Observes TextEvent event) {
+	public void onTextEvent(@Observes TextEvent event) {
 		String text = event.getText();
 
 		// lower case <textBlock> into <textblock>
@@ -264,6 +265,20 @@ public class TextBlockService {
 		}
 
 		event.setText(text);
+
+	}
+
+	/**
+	 * This method refreshes the cache if a textblock was saved.
+	 * 
+	 * @param event
+	 */
+	public void onDocumentEvent(@Observes DocumentEvent event) {
+
+		if (TYPE.equals(event.getDocument().getType()) && (event.getEventType() == DocumentEvent.ON_DOCUMENT_SAVE
+				|| event.getEventType() == DocumentEvent.ON_DOCUMENT_DELETE)) {
+			cache = new Cache(DEFAULT_CACHE_SIZE);
+		}
 
 	}
 
