@@ -34,42 +34,31 @@ import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.annotation.security.RunAs;
 import javax.ejb.EJB;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.DocumentService;
-import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.exceptions.PluginException;
 
 /**
- * This EJB handles a unique Sequence Number over a group of workitems.
- * Therefore the ejb loads the parent Workitem for a given Workitem to load and
- * update a unique sequence number. If the given workitem has no $unqiueIDRef
- * the ejb will throw an exception!
- * 
- * The Method getNextSequenceNumberByGroup computes the sequence number based on
- * a configuration entity with the name "BASIC". The configuration provides a
- * property 'sequencenumbers' with the current number range for each
- * workflowGroup.
- * 
- * This EJB should only run with manager access !
- * 
- * sun-ejb-jar.xml
+ * The SequcneceService is a singleton EJB which handles continuous
+ * sequenceNumbers for a workitem separated for each workflowGroup.
  * <p>
- * <code>
- <ejb>
- <ejb-name>ScheduledWorkflowServiceImplementation</ejb-name>
- <jndi-name>
- ejb/ReklamationsmanagementScheduledWorkflowServiceImplementation
- </jndi-name>
- <principal><name>Glassfish</name></principal>
- </ejb>
-
- * </code>
- * 
+ * The sequence numbers are stored in the item 'sequencenumbers' of the
+ * configuration entity with the name "BASIC" in in the following format
+ * <p>
+ * <code>[GROUP]=123</code>
+ * <p>
+ * <strong>Optimistic Locking Problem</strong>
+ * <p>
+ * In earlier versions, the method runs in a OptimisticLockException in case
+ * that multiple processes run in parallel. To fix this the service is changed
+ * into a singleton. See issue #290.
+ * <p>
+ *
  * @author rsoika
  * 
  */
@@ -80,16 +69,11 @@ import org.imixs.workflow.exceptions.PluginException;
 @RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS", "org.imixs.ACCESSLEVEL.READERACCESS",
 		"org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
-@Stateless
-@LocalBean
+@Singleton
 @RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
 public class SequenceService {
 
 	private static Logger logger = Logger.getLogger(SequenceService.class.getName());
-
-	public final static String SEQUENCE_NAME = "numLastSequenceNummer";
-
-	public final static String SEQUENCE_ERROR = "MISSING_UNIQUEIDREF";
 
 	@EJB
 	ConfigService configService;
@@ -103,28 +87,36 @@ public class SequenceService {
 	 * with the current number range for each workflowGroup. If a Workitem have a
 	 * WorkflowGroup with no corresponding entry the method will not compute a new
 	 * number.
+	 * <p>
+	 * This method loads and updates the configuration entity in a new transaction.
+	 * In combination with the
 	 * 
-	 * This method loads the configuration via the propertyService and uses the
-	 * internal caching mechnism.
+	 * @Singleton pattern a conflict of multipl running processing steps is no
+	 *            longer possible. See issue #290.
 	 * 
 	 * @throws InvalidWorkitemException
 	 * @throws AccessDeniedException
-	 * 
 	 */
-	public long getNextSequenceNumberByGroup(ItemCollection aworkitem) throws AccessDeniedException {
+	@TransactionAttribute(value = TransactionAttributeType.REQUIRES_NEW)
+	public void computeSequenceNumber(ItemCollection documentContext) throws AccessDeniedException {
 
-		ItemCollection configItemCollection = configService.loadConfiguration("BASIC");
+		// if the worktitem already have a sequence number than skip!
+		if (documentContext.getItemValueInteger("numsequencenumber") > 0) {
+			return;
+		}
+
+		ItemCollection configItemCollection = configService.loadConfiguration("BASIC", true);
 		if (configItemCollection != null) {
 			// read configuration and test if a corresponding configuration
 			// exists
-			String sWorkflowGroup = aworkitem.getItemValueString(WorkflowKernel.WORKFLOWGROUP);
+			String sWorkflowGroup = documentContext.getItemValueString(WorkflowKernel.WORKFLOWGROUP);
 			@SuppressWarnings("unchecked")
 			List<String> vNumbers = configItemCollection.getItemValue("sequencenumbers");
 
 			// find a matching identifier
 			String groupIdentifier = null;
 			String generalIdentifier = null;
-			int identifierPosition=-1;
+			int identifierPosition = -1;
 			// test if we have a group identifier...
 			for (String aIdentifier : vNumbers) {
 				// test for group identifier...
@@ -150,6 +142,8 @@ public class SequenceService {
 				// we got the next number....
 				String sequcenceNumber = groupIdentifier.substring(groupIdentifier.indexOf('=') + 1);
 				long currentSequenceNumber = Long.parseLong(sequcenceNumber);
+				documentContext.replaceItemValue("numsequencenumber",currentSequenceNumber); 
+				
 				long newSequenceNumber = currentSequenceNumber + 1;
 				// Save the new Number back into the config entity
 				groupIdentifier = sWorkflowGroup + "=" + newSequenceNumber;
@@ -167,51 +161,16 @@ public class SequenceService {
 					// do not use documentService here - cache need to be
 					// updated!
 					configService.save(configItemCollection);
-					// return the new number
-					return currentSequenceNumber;
-				} else {
-					return 0;
 				}
+			} else {
+				// to avoid problems with incorrect data values we remove the
+				// property numsequencenumber in this case
+				documentContext.removeItem("numsequencenumber");
 			}
 
 		} else {
 			logger.warning("No BASIC configuration found!");
 		}
-
-		return 0;
-	}
-
-	/**
-	 * this method computes the next sequence number and updates the parent workitem
-	 * where the last sequence number will be stored.
-	 * 
-	 * @throws AccessDeniedException
-	 * @throws PluginException
-	 */
-	public long getNextSequenceNumberByParent(ItemCollection aworkitem) throws AccessDeniedException, PluginException {
-		// load current Number
-		String sParentID = aworkitem.getItemValueString(WorkflowService.UNIQUEIDREF);
-		if ("".equals(sParentID))
-			throw new PluginException(SequenceService.class.getName(), SEQUENCE_ERROR,
-					"WARNING: No $UniqueIDRef defined");
-
-		ItemCollection sequenceNumberObject = documentService.load(sParentID);
-		if (sequenceNumberObject == null) {
-			throw new AccessDeniedException(SequenceService.class.getName(), "WARNING: Parent Document not found!");
-		}
-
-		long currentSequenceNumber = sequenceNumberObject.getItemValueLong(SEQUENCE_NAME);
-
-		// skip number 0
-		if (currentSequenceNumber == 0)
-			currentSequenceNumber = 1;
-
-		long sequenceNumber = currentSequenceNumber;
-		sequenceNumber++;
-		// Save new Number
-		sequenceNumberObject.replaceItemValue(SEQUENCE_NAME, new Long(sequenceNumber));
-		documentService.save(sequenceNumberObject);
-		return currentSequenceNumber;
 
 	}
 
