@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
 
 import org.imixs.marty.ejb.TextBlockService;
@@ -50,7 +50,7 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
  * 
  */
 @Named
-@ApplicationScoped
+@SessionScoped
 public class TextBlockController implements Serializable {
 
 	public static final String DOCUMENT_TYPE = "textblock";
