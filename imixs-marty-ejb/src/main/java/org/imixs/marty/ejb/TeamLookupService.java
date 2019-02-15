@@ -1,6 +1,7 @@
 package org.imixs.marty.ejb;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
@@ -10,9 +11,12 @@ import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.enterprise.event.Observes;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.engine.DocumentEvent;
 import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.engine.UserGroupEvent;
 
 /**
  * This EJB provides a lookup service for orgunit member information.
@@ -51,7 +55,8 @@ public class TeamLookupService {
 	private static Logger logger = Logger.getLogger(TeamLookupService.class.getName());
 
 	/**
-	 * Returns a string array containing all orgunit names a given userID is member of.
+	 * Returns a string array containing all orgunit names a given userID is member
+	 * of.
 	 * 
 	 * 
 	 * @param aUID
@@ -83,6 +88,51 @@ public class TeamLookupService {
 
 		return groups;
 
+	}
+
+	/**
+	 * This method updates the UserGroup List be reaction on the CDI event
+	 * UserGroupEvent. The method uses an internal caching mechanism to avoid
+	 * multiple database lookups.
+	 */
+	public void onUserGroupEvent(@Observes UserGroupEvent userGroupEvent) {
+
+		long l = System.currentTimeMillis();
+		// avoid recursive call form getDocumetnsByType...
+		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+
+		for (StackTraceElement caller : stackTraceElements) {
+			String classname = caller.getClassName();
+			String methodName = caller.getMethodName();
+			if (classname.equals(TeamLookupService.class.getName()) && "findOrgunits".equals(methodName)) {
+				logger.finest("......found recursion from findOrgunits...");
+				return;
+			}
+		}
+
+		String[] groups = findOrgunits(userGroupEvent.getUserId());
+		userGroupEvent.setGroups(Arrays.asList(groups));
+		logger.finest("......finished in " + (System.currentTimeMillis() - l) + "ms");
+
+	}
+
+	/**
+	 * This method reset the intern group cache in case a space or process entity is
+	 * updated or deleted.
+	 * 
+	 * @see DocumentEvent
+	 * @param documentEvent
+	 */
+	public void onDocumentEvent(@Observes DocumentEvent documentEvent) {
+		if (documentEvent.getEventType() == DocumentEvent.ON_DOCUMENT_SAVE
+				|| documentEvent.getEventType() == DocumentEvent.ON_DOCUMENT_DELETE) {
+			String type = documentEvent.getDocument().getType();
+			// test document type
+			if (type.startsWith("space") || type.startsWith("process")) {
+				logger.info("...reset teamCache");
+				teamCache.resetCache();
+			}
+		}
 	}
 
 	/**
@@ -125,7 +175,7 @@ public class TeamLookupService {
 			String orgunitName = orgunit.getItemValueString("txtname");
 
 			members = orgunit.getItemValue("nammanager");
-			//if (members.contains(userId)) {
+			// if (members.contains(userId)) {
 			if (members.stream().anyMatch(userId::equalsIgnoreCase)) {
 				memberList.add("{" + type + ":" + orgunitName + ":manager}");
 				memberList.add("{" + type + ":" + orgunit.getUniqueID() + ":manager}");
@@ -133,7 +183,7 @@ public class TeamLookupService {
 				isGeneralManager = true;
 			}
 			members = orgunit.getItemValue("namteam");
-			//if (members.contains(userId)) {
+			// if (members.contains(userId)) {
 			if (members.stream().anyMatch(userId::equalsIgnoreCase)) {
 				memberList.add("{" + type + ":" + orgunitName + ":team}");
 				memberList.add("{" + type + ":" + orgunit.getUniqueID() + ":team}");
@@ -141,7 +191,7 @@ public class TeamLookupService {
 				isGeneralTeam = true;
 			}
 			members = orgunit.getItemValue("namassist");
-			//if (members.contains(userId)) {
+			// if (members.contains(userId)) {
 			if (members.stream().anyMatch(userId::equalsIgnoreCase)) {
 				memberList.add("{" + type + ":" + orgunitName + ":assist}");
 				memberList.add("{" + type + ":" + orgunit.getUniqueID() + ":assist}");

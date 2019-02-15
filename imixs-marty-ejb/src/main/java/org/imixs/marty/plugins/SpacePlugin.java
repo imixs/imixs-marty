@@ -117,16 +117,7 @@ public class SpacePlugin extends AbstractPlugin {
 			// verify txtname if still unique....
 			validateUniqueOrgunitName(documentContext,"process");
 		}
-
-		
-		
-		
-		// if a process or a space was processed, then we need to reset the TeamCache
-		if (type.startsWith("space") || type.startsWith("process")) {
-			logger.finest(".......trigger teamCache reset....");
-			teamCache.resetCache();
-		}
-
+	
 		return documentContext;
 	}
 
