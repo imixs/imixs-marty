@@ -74,6 +74,7 @@ public class SetupController extends ConfigController {
 	private static final long serialVersionUID = 1L;
 
 	public final static String CONFIGURATION_NAME = "BASIC";
+	public final static int DEFAULT_PORTLET_SIZE=5;
 
 	@Resource(lookup = "java:module/ModuleName")
 	private String moduleName;
@@ -143,11 +144,23 @@ public class SetupController extends ConfigController {
 	public String getSortBy() {
 		String result=getWorkitem().getItemValueString("sortby");
 		if (result.isEmpty()) {
-			return "$modified";
+			return "$lasteventdate";
 		} else {
 			return result;
 		}
 		
+	}
+	
+	/**
+	 * Returns the max count of entries for a front-end protlet
+	 * @return
+	 */
+	public int getPortletSize() {
+		int count= getWorkitem().getItemValueInteger("portletViewCount");
+		if (count<=0) {
+			count=DEFAULT_PORTLET_SIZE;
+		}
+		return count;
 	}
 
 	/**
