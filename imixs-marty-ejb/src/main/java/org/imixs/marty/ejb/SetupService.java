@@ -34,11 +34,14 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RunAs;
 import javax.ejb.EJB;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -73,11 +76,13 @@ import org.xml.sax.SAXException;
  * 
  */
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.MANAGERACCESS" })
-@Stateless
+// @Stateless
 @RunAs("org.imixs.ACCESSLEVEL.MANAGERACCESS")
-@LocalBean
+// @LocalBean
 @Produces({ MediaType.TEXT_HTML, MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 @Path("/setup")
+@Startup
+@Singleton
 public class SetupService {
 
 	public static String USERDB_OK = "USERDB_OK";
@@ -100,18 +105,32 @@ public class SetupService {
 	@EJB
 	private UserGroupService userGroupService;
 
+	@Inject
+	protected Event<SetupEvent> setupEvents;
+
 	private static Logger logger = Logger.getLogger(SetupService.class.getName());
 
 	/**
-	 * This method verifies the default configuration and initiates a import of
-	 * default data
+	 * This method start the system setup during deployment
 	 * 
 	 * @throws AccessDeniedException
+	 */
+	@PostConstruct
+	public void startup() {
+		init();
+	}
+
+	/**
+	 * This method performs the system setup. After the setup is completed the CDI
+	 * event 'SetupEvent' will be fired. An observer of this CDI event can extend
+	 * the setup process.
+	 * 
+	 * @return
 	 */
 	@GET
 	public String init() {
 		String result = "";
-		logger.info("starting System Setup...");
+		logger.info("...starting System Setup...");
 
 		// read setup mode...
 		Properties properties = loadProperties();
@@ -147,7 +166,20 @@ public class SetupService {
 			}
 		}
 
-		logger.info("SystemSetup: " + result);
+		// To extend UserGroups we fire the CDI Event UserGroupEvent...
+		if (setupEvents != null) {
+			// create Group Event
+			SetupEvent setupEvent = new SetupEvent(result);
+			setupEvents.fire(setupEvent);
+			if (setupEvent.getResult() != null) {
+				result = setupEvent.getResult();
+			}
+
+		} else {
+			logger.warning("Missing CDI support for Event<SetupEvent> !");
+		}
+
+		logger.info("...SystemSetup: " + result);
 		return result;
 
 	}

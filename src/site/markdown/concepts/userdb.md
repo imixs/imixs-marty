@@ -26,11 +26,7 @@ After the first deployment the connected database contains three tables:
 
 When the Imxis-Marty components are deployed the first time and the imixs.properties 'setup.mode=auto' is set, a default admin account with the UserID='admin' and the password 'adminadmin' will be created automatically. The password for this account should be changed after the first login!
 
-The initialization of the userdb is triggered by the *InitController*. To activate the InitController the following JSF expression can be placed into a start JSF page:
-
-	<!-- SystemSetupStatus=#{initController.initStatus} -->
-
-This will call the *UserGroupService* EJB method *initUserIDs()* which is responsible for the creation of the admin account.
+The initialization of the userdb is triggered by the *[SetupService](./install/setup.html)*. This service will call the *UserGroupService* EJB method *initUserIDs()* which is responsible for the creation of the admin account.
 
 **Note:** 
 
@@ -77,3 +73,9 @@ To synchronize the user profiles with the user database it is necessary to add t
 
 **Note:** If you did not add this plugin into the system model the user profiles will not be synchronized with the 
  user database! 
+ 
+## Adapt the Setup Phase
+
+You can adapt the setup by observing the CDI Event _SetupEvent_
+
+ 

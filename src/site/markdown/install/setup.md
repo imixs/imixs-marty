@@ -11,11 +11,8 @@ imixs.property 'setup.mode':
 |auto	| no action 														|
 
 ## Integration
-The Setup Service can either be called by the Rest API or by integration into a JSP page.
+The Setup Service is automatically started on deployment. You can also call the setup by the Rest API.
 
-### Rest API 
-The SetupService can be triggered by the Rest API:
-The GET method is used to trigger the system setup:
 
 
 | URI                                           | Method| Description                                                           | 
@@ -24,12 +21,10 @@ The GET method is used to trigger the system setup:
 
 
 
-### JSF Integration
+### CDI Support 
 
-The SetupService can also be triggered by the CDI bean InitController. This bean will trigger the setup service and 
-can be placed into a page as followed:
 
-	<!-- SystemSetupStatus=#{initController.initStatus} -->
+You can adapt the setup by observing the CDI Event _SetupEvent_
 
 
 
