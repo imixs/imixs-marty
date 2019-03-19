@@ -4,7 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.text.ParseException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -46,6 +46,11 @@ public class ReportController implements Serializable {
 		reportUploads = new ItemCollection();
 	}
 
+	public void reset() {
+		params=null;
+		reportUploads = new ItemCollection();
+	}
+	
 	public ItemCollection getReportUploads() {
 		return reportUploads;
 	}
@@ -63,24 +68,31 @@ public class ReportController implements Serializable {
 		return reportService.findAllReports();
 	}
 
-	/**
-	 * Reset the params if a new report was loaded
-	 */
-	public String load(String uniqueID, String action) {
-		params = null;
-		documentController.load(uniqueID);
-		return action;
-	}
 
 	public Map<String, String> getParams() {
 		logger.fine("parsing params...");
 		ItemCollection report = documentController.getDocument();
 		if (params == null && report != null) {
-			params = new HashMap<String, String>();
+			params = new LinkedHashMap<String, String>();
 
 			// parse query
 			String query = report.getItemValueString("txtquery");
 			int i = 0;
+			while ((i = query.indexOf('{', i)) > -1) {
+				// cut next } :
+				int j = query.indexOf('}', i);
+				if (j > -1) {
+					// cut here!
+					String sKey = query.substring(i + 1, j);
+					params.put(sKey, "");
+					i = j;
+				}
+				
+			}
+
+			// provide old param setting with ?
+			// parse query
+			i = 0;
 			while ((i = query.indexOf('?', i)) > -1) {
 				String sTest = query.substring(i + 1);
 				// cut next space or ' or " or ] or :
@@ -89,12 +101,14 @@ public class ReportController implements Serializable {
 					if (c == '\'' || c == '"' || c == ']' || c == ':' || c == ' ') {
 						// cut here!
 						String sKey = query.substring(i + 1, i + j + 1);
+						logger.warning("...detected old report param format. Replace ?xxx with {xxx}");
 						params.put(sKey, "");
 						i++;
 						break;
 					}
 				}
 			}
+
 		}
 		return params;
 	}
