@@ -284,8 +284,11 @@ public class UserController implements Serializable {
 		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
 				.getRequest();
 		Cookie cookieLocale = new Cookie(COOKIE_LOCALE, locale.toString());
-		cookieLocale.setPath(request.getContextPath());
-
+		if (request.getContextPath().isEmpty()) {
+			cookieLocale.setPath("/");
+		} else {
+			cookieLocale.setPath(request.getContextPath());
+		}
 		// 30 days
 		cookieLocale.setMaxAge(2592000);
 		response.addCookie(cookieLocale);
@@ -311,8 +314,7 @@ public class UserController implements Serializable {
 	public ItemCollection getProfile(String aAccount) {
 		return profileService.findProfileById(aAccount);
 	}
-	
-	
+
 	/**
 	 * This method returns the username (displayname) for a useraccount. If no
 	 * Username is set in the profile then we return the useraccount.
