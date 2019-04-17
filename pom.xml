@@ -13,7 +13,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<org.imixs.workflow.version>4.5.4</org.imixs.workflow.version>
+		<org.imixs.workflow.version>4.5.5</org.imixs.workflow.version>
 	</properties>
 
 
