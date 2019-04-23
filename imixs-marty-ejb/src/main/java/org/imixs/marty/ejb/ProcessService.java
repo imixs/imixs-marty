@@ -46,6 +46,7 @@ import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * The Marty ProcessService provides access to the mary process and space
@@ -132,6 +133,54 @@ public class ProcessService {
 		return spaces;
 	}
 
+	
+	
+	/**
+	 * Returns a space by its name
+	 * 
+	 * @param name
+	 * @return itemCollection of process or null if not process with the specified
+	 *         id exists
+	 */
+	public ItemCollection getSpaceByName(String name) {
+		String query="type:\"space\" AND txtname:\"" + name + "\"";
+		List<ItemCollection> spaces;
+		try {
+			spaces = documentService.find(query, 1, 0);
+		} catch (QueryException e) {
+			logger.warning("Failed to lookup space name '" + name + "'!");
+			return null;
+		}
+		if (spaces.size()>=1) {
+			return spaces.get(0);
+		}
+		return null;
+	}
+	
+	
+	/**
+	 * Returns a space by its name
+	 * 
+	 * @param name
+	 * @return itemCollection of process or null if not process with the specified
+	 *         id exists
+	 */
+	public ItemCollection getProcessByName(String name) {
+		String query="type:\"process\" AND txtname:\"" + name + "\"";
+		List<ItemCollection> spaces;
+		try {
+			spaces = documentService.find(query, 1, 0);
+		} catch (QueryException e) {
+			logger.warning("Failed to lookup space name '" + name + "'!");
+			return null;
+		}
+		if (spaces.size()>=1) {
+			return spaces.get(0);
+		}
+		return null;
+	}
+	
+	
 	/**
 	 * This method clones a given process or space ItemCollection. The method also
 	 * verifies if the current user is manager, teamMember, assist or general
