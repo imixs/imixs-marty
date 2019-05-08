@@ -16,6 +16,7 @@
 	<cc:attribute name="updateitemlist"></cc:attribute>
 	<cc:attribute name="render"></cc:attribute>
 	<cc:attribute name="execute"></cc:attribute>
+	<cc:attribute name="onevent"></cc:attribute>
 	<cc:attribute name="required" default="false" type="java.lang.Boolean"></cc:attribute>
 </cc:interface>
 
@@ -47,6 +48,7 @@
 								<h:outputText style="font-weight: bold;"
 									value="#{suggest.item[cc.attrs.itemname]}" />
 								<f:ajax render="suggest_box #{cc.attrs.render}" 
+										onevent="#{cc.attrs.onevent}"
 										execute="#{cc.attrs.execute}" />
 							</h:commandLink>
 
