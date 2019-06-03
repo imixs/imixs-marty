@@ -23,40 +23,7 @@
 	<h:panelGroup id="workitemlink_box" layout="block"
 		class="marty-workitemlink">
 
-		<!-- Process references -->
-		<h:panelGroup id="reference_box" layout="block"
-			rendered="#{! cc.attrs.hidereferences}" class="marty-workitemlink-referencebox">
-			<c:forEach var="workitem"
-				items="#{workitemLinkController.getReferences(cc.attrs.filter)}">
-				<div class="marty-workitemlink-referencebox-entry">
-					<h:link outcome="/pages/workitems/workitem">
-						<h:outputText value="#{workitem.item['txtWorkflowSummary']}"
-							rendered="#{!empty workitem.item['txtWorkflowSummary']}" />
-						<h:outputText value="#{suggest.item['$created']}"
-							rendered="#{empty workitem.item['txtWorkflowSummary']}">
-							<f:convertDateTime timeZone="#{message.timeZone}"
-								pattern="#{message.dateTimePatternShort}" />
-						</h:outputText>
-						<f:param name="id" value="#{workitem.item['$uniqueid']}" />
-					</h:link>
-					<br />
-					<span class="marty-workitemlink-entry-abstract">
-						<h:outputText value="#{workitem.item['txtworkflowgroup']}: " />
-						<h:outputText value="#{workitem.item['txtworkflowstatus']}" />
-					</span>
 
-
-					<h:commandLink class="marty-workitemlink-entry-remove" rendered="#{!cc.attrs.readonly}"
-						actionListener="#{workitemLinkController.remove(workitem.item['$uniqueid'])}">
-						<h:outputText value=" [#{message.remove}]" />
-						<f:ajax render="reference_box" />
-
-					</h:commandLink>
-
-				</div>
-
-			</c:forEach>
-		</h:panelGroup>
 		<!-- Input Field -->
 		<h:panelGroup id="input_box" rendered="#{!cc.attrs.readonly}"
 			class="marty-workitemlink-inputbox" layout="block">
@@ -100,6 +67,42 @@
 
 				</h:panelGroup>
 			</h:panelGroup>
+		</h:panelGroup>
+		
+		
+		<!-- Process references -->
+		<h:panelGroup id="reference_box" layout="block"
+			rendered="#{! cc.attrs.hidereferences}" class="marty-workitemlink-referencebox" style="xxmargin-top:25px;">
+			<c:forEach var="workitem"
+				items="#{workitemLinkController.getReferences(cc.attrs.filter)}">
+				<div class="marty-workitemlink-referencebox-entry">
+					<h:link outcome="/pages/workitems/workitem">
+						<h:outputText escape="false" value="#{workitem.item['txtWorkflowSummary']}"
+							rendered="#{!empty workitem.item['txtWorkflowSummary']}" />
+						<h:outputText value="#{suggest.item['$created']}"
+							rendered="#{empty workitem.item['txtWorkflowSummary']}">
+							<f:convertDateTime timeZone="#{message.timeZone}"
+								pattern="#{message.dateTimePatternShort}" />
+						</h:outputText>
+						<f:param name="id" value="#{workitem.item['$uniqueid']}" />
+					</h:link>
+					<br />
+					<span class="marty-workitemlink-entry-abstract">
+						<h:outputText value="#{workitem.item['txtworkflowgroup']}: " />
+						<h:outputText value="#{workitem.item['txtworkflowstatus']}" />
+					</span>
+
+
+					<h:commandLink class="marty-workitemlink-entry-remove" rendered="#{!cc.attrs.readonly}"
+						actionListener="#{workitemLinkController.remove(workitem.item['$uniqueid'])}">
+						<h:outputText value=" [#{message.remove}]" />
+						<f:ajax render="reference_box" />
+
+					</h:commandLink>
+
+				</div>
+
+			</c:forEach>
 		</h:panelGroup>
 
 	</h:panelGroup>

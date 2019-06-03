@@ -23,24 +23,22 @@
 			class="marty-workitemlink-referencebox">
 			<c:forEach var="workitem"
 				items="#{workitemLinkController.getExternalReferences(cc.attrs.filter)}">
-				<div class="marty-workitemlink-referencebox-entry">
-					<h:commandLink class="marty-workitemlink-entry-link"
-						action="#{workflowController.load(workitem.item['$uniqueid'],'/pages/workitems/workitem')}">
-						<h:outputText value="#{workitem.item['txtWorkflowSummary']}"
+				<div class="marty-workitemlink-referencebox-entry">				
+					<h:link outcome="/pages/workitems/workitem">
+						<h:outputText escape="false" value="#{workitem.item['txtWorkflowSummary']}"
 							rendered="#{!empty workitem.item['txtWorkflowSummary']}" />
 						<h:outputText value="#{suggest.item['$created']}"
 							rendered="#{empty workitem.item['txtWorkflowSummary']}">
 							<f:convertDateTime timeZone="#{message.timeZone}"
 								pattern="#{message.dateTimePatternShort}" />
 						</h:outputText>
-					</h:commandLink>
+						<f:param name="id" value="#{workitem.item['$uniqueid']}" />
+					</h:link>
 					<br />
 					<span class="marty-workitemlink-entry-abstract">
 						<h:outputText value="#{workitem.item['txtworkflowgroup']}: " />
 						<h:outputText value="#{workitem.item['txtworkflowstatus']}" />
-					</span>
-
-				</div>
+					</span>				</div>
 
 			</c:forEach>
 		</h:panelGroup>
