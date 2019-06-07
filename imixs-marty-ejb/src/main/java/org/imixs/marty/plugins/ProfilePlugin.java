@@ -33,10 +33,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.ejb.EJB;
+import javax.inject.Inject;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowContext;
@@ -92,7 +94,21 @@ public class ProfilePlugin extends AbstractPlugin {
 	// adminP
 	@EJB
 	AdminPService adminPService;
+	
+	@Inject
+	@ConfigProperty(name = "security.userid.input.mode", defaultValue = "LOWERCASE")
+	String userInputMode;
+	
+	
+	@Inject
+	@ConfigProperty(name = "security.userid.input.pattern", defaultValue = "^[A-Za-z0-9.@\\-\\w]+")
+	String userInputPattern;
 
+	
+	@Inject
+	@ConfigProperty(name = "security.email.unique", defaultValue = "true")
+	String sUniqueEmailMode;
+	
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
@@ -199,8 +215,6 @@ public class ProfilePlugin extends AbstractPlugin {
 		}
 
 		// lower/upper case userid?
-		String userInputMode = this.getWorkflowService().getPropertyService().getProperties()
-				.getProperty("security.userid.input.mode", DEFAULT_USER_INPUT_MODE);
 		if ("lowercase".equalsIgnoreCase(userInputMode)) {
 			sName = sName.toLowerCase();
 			profile.replaceItemValue("txtName", sName);
@@ -212,8 +226,6 @@ public class ProfilePlugin extends AbstractPlugin {
 
 		// validate userid if pattern defined.
 		if (!isValidUserId(sName)) {
-			String userInputPattern = this.getWorkflowService().getPropertyService().getProperties()
-					.getProperty("security.userid.input.pattern", DEFAULT_USERID_PATTERN);
 			throw new PluginException(ProfilePlugin.class.getSimpleName(), INVALID_USERNAME,
 					"UserID did not match 'security.userid.input.pattern'=" + userInputPattern,
 					new Object[] { profile.getItemValueString("txtName") });
@@ -250,9 +262,7 @@ public class ProfilePlugin extends AbstractPlugin {
 	public boolean isValidUserId(final String userid) {
 		Pattern pattern;
 		Matcher matcher;
-		String userInputPattern = this.getWorkflowService().getPropertyService().getProperties()
-				.getProperty("security.userid.input.pattern", DEFAULT_USERID_PATTERN);
-
+		
 		if (userInputPattern != null && !userInputPattern.isEmpty()) {
 			pattern = Pattern.compile(userInputPattern);
 			matcher = pattern.matcher(userid);
@@ -342,8 +352,6 @@ public class ProfilePlugin extends AbstractPlugin {
 	boolean isEmailTaken(ItemCollection profile) {
 
 		// is the unique email mode activated?
-		String sUniqueEmailMode = this.getWorkflowService().getPropertyService().getProperties()
-				.getProperty("security.email.unique", "true");
 		if (!"true".equalsIgnoreCase(sUniqueEmailMode.trim())) {
 			// validation is deactivated
 			return false;

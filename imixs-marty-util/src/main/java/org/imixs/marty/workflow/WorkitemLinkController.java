@@ -77,6 +77,9 @@ public class WorkitemLinkController implements Serializable {
 	@EJB
 	protected WorkflowService workflowService;
 	
+	@EJB
+	protected LuceneSearchService luceneSearchService;
+	
 	@Inject
 	protected WorkflowController workflowController;	
 
@@ -160,7 +163,7 @@ public class WorkitemLinkController implements Serializable {
 			}
 			if (!"".equals(input)) {
 				// escape input..
-				input = LuceneSearchService.escapeSearchTerm(input);
+				input = luceneSearchService.escapeSearchTerm(input);
 				sSearchTerm += " (*" + input.toLowerCase() + "*)";
 			}
 

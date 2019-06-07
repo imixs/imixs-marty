@@ -35,14 +35,15 @@ import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.imixs.marty.plugins.ProfilePlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
-import org.imixs.workflow.engine.PropertyService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 
 /**
@@ -71,9 +72,18 @@ public class UserGroupService {
 	@EJB
 	DocumentService documentService;
 
-	@EJB
-	PropertyService propertyService;
+//	@EJB
+//	PropertyService propertyService;
+	
+	@Inject
+	@ConfigProperty(name = "setup.mode", defaultValue = "auto")
+	String setupMode;
 
+	
+	@Inject
+	@ConfigProperty(name = "security.userid.input.mode", defaultValue = "LOWERCASE")
+	String userInputMode;
+	
 	private static Logger logger = Logger.getLogger(UserGroupService.class.getName());
 
 	/**
@@ -222,7 +232,6 @@ public class UserGroupService {
 	@SuppressWarnings("unchecked")
 	public void initUserIDs() {
 
-		String setupMode = propertyService.getProperties().getProperty("setup.mode", "auto");
 		if (!"auto".equalsIgnoreCase(setupMode)) {
 			// init userdb is disabled
 			logger.finest("...... initUserIDs is disabled");
@@ -237,8 +246,6 @@ public class UserGroupService {
 		
 		// create default admin account if missing
 		String sAdminAccount = DEFAULT_ACCOUNT;
-		String userInputMode = propertyService.getProperties().getProperty("security.userid.input.mode",
-				ProfilePlugin.DEFAULT_USER_INPUT_MODE);
 
 		if ("uppercase".equalsIgnoreCase(userInputMode)) {
 			sAdminAccount = sAdminAccount.toUpperCase();

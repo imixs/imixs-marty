@@ -46,14 +46,15 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.imixs.marty.ejb.SetupService;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.imixs.marty.ejb.SetupUserDBService;
 import org.imixs.workflow.FileData;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Model;
 import org.imixs.workflow.bpmn.BPMNModel;
 import org.imixs.workflow.bpmn.BPMNParser;
 import org.imixs.workflow.engine.ModelService;
-import org.imixs.workflow.engine.PropertyService;
+import org.imixs.workflow.engine.SetupService;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
@@ -91,8 +92,13 @@ public class ModelController implements Serializable {
 	@EJB
 	protected SetupService setupService;
 
-	@EJB
-	protected PropertyService propertyService;
+//	@EJB
+//	protected PropertyService propertyService;
+	
+	
+	@Inject
+	@ConfigProperty(name = "system.model.version", defaultValue = "")
+	String systemModelVersion;
 
 	private Map<String, ItemCollection> modelEntityCache = new HashMap<String, ItemCollection>();
 
@@ -110,12 +116,10 @@ public class ModelController implements Serializable {
 	 * @return the system Model version.
 	 */
 	public String getSystemWorkflowVersion() {
-		String version = null;
-		version = this.propertyService.getProperties().getProperty("system.model.version", "");
-		if (version.isEmpty()) {
+		if (systemModelVersion.isEmpty()) {
 			logger.warning("property 'system.model.version' is not defined!");
 		}
-		return version;
+		return systemModelVersion;
 	}
 
 	/**

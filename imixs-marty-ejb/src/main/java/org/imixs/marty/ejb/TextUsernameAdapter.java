@@ -91,7 +91,8 @@ public class TextUsernameAdapter {
 			}
 
 			// format field value
-			String sResult = TextItemValueAdapter.formatItemValues(vUserIDs, sSeparator, "");
+			TextItemValueAdapter textItemValueAdapter=new TextItemValueAdapter();
+			String sResult = textItemValueAdapter.formatItemValues(vUserIDs, sSeparator, "");
 
 			// now replace the tag with the result string
 			int iStartPos = text.indexOf(tag);

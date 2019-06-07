@@ -49,8 +49,8 @@ public class ModelUploadHandler implements Serializable {
 	private ItemCollection modelUploads;
 
 	public ModelUploadHandler() {
-		super();
-		reset();
+		super(); 
+		reset(); 
 	}
 
 	public ItemCollection getModelUploads() {

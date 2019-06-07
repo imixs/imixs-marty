@@ -37,33 +37,25 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.imixs.marty.ejb.PropertiesConfigSource;
+import org.imixs.marty.ejb.PropertiesLoader;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.model.ModelController;
 import org.imixs.marty.model.ProcessController;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.ModelService;
-import org.imixs.workflow.engine.PropertyService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 
 /**
  * This Marty SetupController extends the Marty ConfigController and holds the
  * data from the configuration entity 'BASIC'. This is the general configuration
- * entity.
+ * entity used by the Marty framework.
+ * <p>
+ * The item 'properties' managed by the 'BASIC' configuration entity is also
+ * used by the MartyConfigSource to provide optional config parameters.
  * 
- * In addition the CDI bean verifies the setup of userDB and system models and
- * calls a init method if the system is not setup and the imixs.property param
- * 'setup.mode' is set to 'auto'.
- * 
- * The bean is triggered in the index.xhtml page
- * 
- * 
- * NOTE: A configuration entity provides a common way to manage application
- * specific complex config data. The configuration entity is database controlled
- * and more flexible as the file based imixs.properties provided by the Imixs
- * Workflow Engine.
- * 
- * 
+ * @see PropertiesConfigSource
  * @author rsoika
  * 
  */
@@ -74,7 +66,7 @@ public class SetupController extends ConfigController {
 	private static final long serialVersionUID = 1L;
 
 	public final static String CONFIGURATION_NAME = "BASIC";
-	public final static int DEFAULT_PORTLET_SIZE=5;
+	public final static int DEFAULT_PORTLET_SIZE = 5;
 
 	@Resource(lookup = "java:module/ModuleName")
 	private String moduleName;
@@ -95,7 +87,7 @@ public class SetupController extends ConfigController {
 	protected ModelService modelService;
 
 	@EJB
-	protected PropertyService propertyService;
+	protected PropertiesLoader martyPropertyLoader;
 
 	@EJB
 	protected ProfileService profileService;
@@ -142,30 +134,31 @@ public class SetupController extends ConfigController {
 	 * @return
 	 */
 	public String getSortBy() {
-		String result=getWorkitem().getItemValueString("sortby");
+		String result = getWorkitem().getItemValueString("sortby");
 		if (result.isEmpty()) {
 			return "$lasteventdate";
 		} else {
 			return result;
 		}
-		
+
 	}
-	
+
 	/**
 	 * Returns the max count of entries for a front-end protlet
+	 * 
 	 * @return
 	 */
 	public int getPortletSize() {
-		int count= getWorkitem().getItemValueInteger("portletViewCount");
-		if (count<=0) {
-			count=DEFAULT_PORTLET_SIZE;
+		int count = getWorkitem().getItemValueInteger("portletViewCount");
+		if (count <= 0) {
+			count = DEFAULT_PORTLET_SIZE;
 		}
 		return count;
 	}
 
 	/**
-	 * Returns the sortorder form the config workitem or the default value
-	 * 'true' if not yet defined.
+	 * Returns the sortorder form the config workitem or the default value 'true' if
+	 * not yet defined.
 	 * 
 	 * @return
 	 */
@@ -178,7 +171,6 @@ public class SetupController extends ConfigController {
 		}
 	}
 
-	
 	/**
 	 * Returns the EAR application name. Useful for JNDI lookups
 	 * 
@@ -206,23 +198,22 @@ public class SetupController extends ConfigController {
 	public void reset() {
 		// reset services....
 		logger.info("Reset application cache...");
-		propertyService.reset();
+		martyPropertyLoader.reset();
 		profileService.reset();
 		processController.reset();
 	}
-	
-	
+
 	/**
-	 * After save the application property cache is reset automatically. 
+	 * After save the application property cache is reset automatically.
 	 */
 	@Override
 	public void save() throws AccessDeniedException {
 		super.save();
-		propertyService.reset();		
+		martyPropertyLoader.reset();
 	}
 
-	public PropertyService getPropertyService() {
-		return propertyService;
-	}
+	// public PropertyService getPropertyService() {
+	// return propertyService;
+	// }
 
 }

@@ -10,20 +10,19 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Logger;
 
-import javax.ejb.EJB;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+import javax.inject.Inject;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.InvocationContext;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.engine.PropertyService;
 
 /**
  * This Intercepter class provides a mechanism to resize new uploaded images
@@ -45,11 +44,18 @@ public class ImageInterceptor {
 	private static Logger logger = Logger.getLogger(ImageInterceptor.class.getName());
 	private int imageMaxWidth;
 	
-	@EJB
-	PropertyService propertyService;
+//	@EJB
+//	PropertyService propertyService;
+ 
+	@Inject
+	@ConfigProperty(name = "image.maxWidth", defaultValue = "1024")
+	String sMaxWidth ;
+
+	@Inject
+	@ConfigProperty(name = "image.fileExtension", defaultValue = "jpg,JPEG")
+	String fileExtentions ;
 
 	
-
 	/**
 	 * The interceptor method tests if new files were uploaded.
 	 * 
@@ -73,9 +79,7 @@ public class ImageInterceptor {
 					&& "workitemlob"
 							.equals(workitem.getItemValueString("Type"))) {
 
-				Properties prop =  propertyService.getProperties();
-				String sMaxWidth = prop.getProperty("image.maxWidth",
-						"1024");
+				
 				try {
 					imageMaxWidth = Integer.parseInt(sMaxWidth);
 				} catch (NumberFormatException ne) {
@@ -148,10 +152,6 @@ public class ImageInterceptor {
 		if (aname == null)
 			return false;
 
-		Properties prop =  propertyService.getProperties();
-		
-		String fileExtentions = prop.getProperty("image.fileExtension",
-				"jpg,JPEG");
 		StringTokenizer st = new StringTokenizer(fileExtentions, ",");
 		while (st.hasMoreElements()) {
 			String sExtention = st.nextToken().toLowerCase();

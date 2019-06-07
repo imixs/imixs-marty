@@ -61,7 +61,7 @@ import org.imixs.workflow.exceptions.AccessDeniedException;
  * faces-config.xml file. The managed-ban-name as the manged property 'name' can
  * be set to custom values:
  * 
- * <code>
+ * <code> 
   	<managed-bean>
 		<managed-bean-name>myConfigController</managed-bean-name>
 		<managed-bean-class>org.imixs.marty.config.ConfigController</managed-bean-class>

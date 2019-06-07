@@ -75,6 +75,9 @@ public class UserInputController implements Serializable {
 	@EJB
 	protected WorkflowService workflowService;
 
+	@EJB
+	protected LuceneSearchService luceneSearchService;
+	
 	private List<ItemCollection> searchResult = null;
 
 	private String input = null;
@@ -161,9 +164,9 @@ public class UserInputController implements Serializable {
 
 		try {
 			phrase = phrase.trim().toLowerCase();
-			phrase = LuceneSearchService.escapeSearchTerm(phrase);
+			phrase = luceneSearchService.escapeSearchTerm(phrase);
 			// issue #170
-			phrase = LuceneSearchService.normalizeSearchTerm(phrase);
+			phrase = luceneSearchService.normalizeSearchTerm(phrase);
 
 			String sQuery = "(type:profile) AND ($processid:[210 TO 249]) AND  ((txtname:" + phrase
 					+ "*) OR (txtusername:" + phrase + "*) OR (txtemail:" + phrase + "*))";

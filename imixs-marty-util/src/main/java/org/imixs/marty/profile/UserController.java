@@ -45,11 +45,11 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.ejb.security.UserGroupService;
 import org.imixs.workflow.FileData;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.engine.PropertyService;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.ModelException;
@@ -89,8 +89,8 @@ public class UserController implements Serializable {
 	@EJB
 	protected ProfileService profileService;
 
-	@EJB
-	protected PropertyService propertyService;
+//	@EJB
+//	protected PropertyService propertyService;
 
 	@EJB
 	protected UserGroupService userGroupService;
@@ -100,7 +100,14 @@ public class UserController implements Serializable {
 
 	@Inject
 	protected LoginController loginController;
-
+	
+	
+	@Inject
+	@ConfigProperty(name = "profile.autoProcessOnLogin", defaultValue = "")
+	String sAutoProcessID;
+	
+	
+	
 	@Inject
 	protected WorkflowController workflowController;
 
@@ -150,7 +157,6 @@ public class UserController implements Serializable {
 				}
 			} else {
 				// check if profile.autoProcessOnLogin is defined
-				String sAutoProcessID = propertyService.getProperties().getProperty("profile.autoProcessOnLogin");
 				logger.fine("profile.autoProcessOnLogin=" + sAutoProcessID);
 
 				try {

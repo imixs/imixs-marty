@@ -43,10 +43,11 @@ import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.SessionContext;
 import javax.ejb.Singleton;
+import javax.inject.Inject;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
-import org.imixs.workflow.engine.PropertyService;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.InvalidAccessException;
@@ -85,9 +86,14 @@ public class ProfileService {
 	@EJB
 	private DocumentService documentService;
 
-	@EJB
-	private PropertyService propertyService;
+//	@EJB
+//	private PropertyService propertyService;
 
+	@Inject
+	@ConfigProperty(name = "system.model.version", defaultValue = "")
+	String modelVersion;
+
+	
 	@EJB
 	protected WorkflowService workflowService;
 
@@ -323,7 +329,7 @@ public class ProfileService {
 		profile.replaceItemValue("type", "profile");
 		profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
 		// get system model version from imixs.properties
-		String modelVersion = this.propertyService.getProperties().getProperty("system.model.version", "");
+		//String modelVersion = this.propertyService.getProperties().getProperty("system.model.version", "");
 		profile.replaceItemValue("$modelversion", modelVersion);
 		// the workflow group can not be guessed here...
 		// profile.replaceItemValue("$workflowgroup", "Profil");

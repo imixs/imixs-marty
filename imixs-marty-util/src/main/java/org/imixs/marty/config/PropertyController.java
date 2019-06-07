@@ -29,17 +29,16 @@ package org.imixs.marty.config;
 
 import java.io.Serializable;
 
-import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.workflow.engine.PropertyService;
+import org.eclipse.microprofile.config.Config;
 
 /**
- * This PropertyController provides access to the PropertyService EJB.
+ * This PropertyController provides access to the Microprofile config api.
  * 
  * @author rsoika
- * 
  */
 @Named
 @ApplicationScoped
@@ -47,20 +46,16 @@ public class PropertyController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	@EJB
-	PropertyService propertyService;
-
-	public PropertyController() {
-		super();
-	}
+	@Inject Config config;
 
 	/**
-	 * Returns a property valuer
+	 * Returns a property value
 	 * 
 	 * @param key
 	 * @return
 	 */
 	public String getProperty(String key) {
-		return propertyService.getProperties().getProperty(key);
+		return config.getOptionalValue(key, String.class)
+                .orElse("");
 	}
 }

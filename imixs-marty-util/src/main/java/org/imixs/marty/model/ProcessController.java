@@ -62,7 +62,7 @@ import org.imixs.workflow.faces.util.LoginController;
  * @author rsoika
  * 
  */
-@Named("processController")
+@Named
 @SessionScoped
 public class ProcessController implements Serializable {
 
