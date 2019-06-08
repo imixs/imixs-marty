@@ -47,7 +47,6 @@ import javax.inject.Named;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.imixs.marty.ejb.SetupUserDBService;
 import org.imixs.workflow.FileData;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.Model;
