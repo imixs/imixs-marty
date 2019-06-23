@@ -89,9 +89,6 @@ public class UserController implements Serializable {
 	@EJB
 	protected ProfileService profileService;
 
-//	@EJB
-//	protected PropertyService propertyService;
-
 	@EJB
 	protected UserGroupService userGroupService;
 
@@ -100,14 +97,11 @@ public class UserController implements Serializable {
 
 	@Inject
 	protected LoginController loginController;
-	
-	
+
 	@Inject
-	@ConfigProperty(name = "profile.autoProcessOnLogin", defaultValue = "")
-	String sAutoProcessID;
-	
-	
-	
+	@ConfigProperty(name = "profile.login.event", defaultValue = "")
+	int profileLoginEvent;
+
 	@Inject
 	protected WorkflowController workflowController;
 
@@ -156,42 +150,28 @@ public class UserController implements Serializable {
 							ProcessingErrorException.INVALID_WORKITEM, " unable to create profile!", e);
 				}
 			} else {
-				// check if profile.autoProcessOnLogin is defined
-				logger.fine("profile.autoProcessOnLogin=" + sAutoProcessID);
-
-				try {
-					if (sAutoProcessID != null) {
-						int iActiviyID = Integer.valueOf(sAutoProcessID);
-						profile.setEventID(iActiviyID);
-						logger.finest("......autoprocess profile with autoProcessOnLogin=" + iActiviyID);
-						try {
-							profile = workflowService.processWorkItem(profile);
-						} catch (PluginException e) {
-							logger.severe("unable to process new profile entity!");
-							throw new ProcessingErrorException(UserController.class.getName(),
-									ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!",
-									e);
-						} catch (ModelException e) {
-							logger.severe("unable to process new profile entity!");
-							throw new ProcessingErrorException(UserController.class.getName(),
-									ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!",
-									e);
-						}
-
+				// check if profile.login.event is defined
+				logger.fine("profile.login.event=" + profileLoginEvent);
+				if (profileLoginEvent > 0) {
+					profile.setEventID(profileLoginEvent);
+					try {
+						profile = workflowService.processWorkItem(profile);
+					} catch (PluginException e) {
+						throw new ProcessingErrorException(UserController.class.getName(),
+								ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!", e);
+					} catch (ModelException e) {
+						throw new ProcessingErrorException(UserController.class.getName(),
+								ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!", e);
 					}
-				} catch (NumberFormatException nfe) {
-					logger.warning("unable to autoprocess profile with autoProcessOnLogin=" + sAutoProcessID);
 				}
 
 			}
 
 			this.setWorkitem(profile);
-
 			profileLoaded = true;
 
 			// Now reset current locale based on the profile information
 			updateLocaleFromProfile();
-
 			logger.info("profile '" + loginController.getUserPrincipal() + "' initialized.");
 		}
 

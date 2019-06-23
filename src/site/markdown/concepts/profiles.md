@@ -13,9 +13,9 @@ The System Model files *system-de.bpmn* and *system-en.bpmn* provide a valid BPM
 
 ### Autoprocess a User Profile During the Login
 When a user profile is created the first time, additional the user profile can be processed by the Imixs-Workflow engine. 
-To enable this 'auto process mode'  the system property *'profile.autoProcessOnLogin'* can be set with a BPMN Event ID:
+To enable this 'auto process mode'  the system property *'profile.login.event'* can be set with a BPMN Event ID:
 
-	profile.autoProcessOnLogin=10
+	profile.login.event=10
 	
 
 
