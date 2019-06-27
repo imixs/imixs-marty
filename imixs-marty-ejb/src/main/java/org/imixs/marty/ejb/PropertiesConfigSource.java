@@ -28,7 +28,7 @@ public class PropertiesConfigSource implements ConfigSource {
 
 	@Override
 	public int getOrdinal() {
-		return 890;
+		return 910;
 	}
 
 	@Override
