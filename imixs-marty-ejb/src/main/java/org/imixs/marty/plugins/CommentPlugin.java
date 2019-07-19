@@ -27,14 +27,14 @@
 
 package org.imixs.marty.plugins;
 
-import java.util.Calendar;
-import java.util.Date;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.PluginException;
 
@@ -88,9 +88,8 @@ public class CommentPlugin extends AbstractPlugin {
 		// case
 		List<Map<String, Object>> vCommentList = documentContext.getItemValue("txtCommentLog");
 		Map<String, Object> log = new HashMap<String, Object>();
-		Date dt = Calendar.getInstance().getTime();
 		String remoteUser = this.getWorkflowService().getUserName();
-		log.put("datcomment", dt);
+		log.put("datcomment", documentContext.getItemValueDate(WorkflowKernel.LASTEVENTDATE));
 		log.put("nameditor", remoteUser);
 
 		// test for fixed comment
