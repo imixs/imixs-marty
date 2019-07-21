@@ -173,7 +173,7 @@ public class WorkitemService {
 		String refQuery = "( (type:\"workitem\" OR type:\"workitemarchive\" OR type:\"workitemversion\") AND $workitemid:\""
 				+ sRefID + "\")";
 		try {
-			col = workflowService.getDocumentService().find(refQuery, 999, 0);
+			col = workflowService.getDocumentService().findStubs(refQuery, 999, 0,WorkflowKernel.LASTEVENTDATE,true);
 			// sort by $modified
 			Collections.sort(col, new ItemCollectionComparator("$modified", true));
 			// Only return version list if more than one version was found!

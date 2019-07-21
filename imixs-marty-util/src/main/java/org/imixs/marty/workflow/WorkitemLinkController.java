@@ -41,6 +41,7 @@ import javax.naming.NamingException;
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.lucene.LuceneSearchService;
 import org.imixs.workflow.exceptions.QueryException;
@@ -167,7 +168,7 @@ public class WorkitemLinkController implements Serializable {
 				sSearchTerm += " (*" + input.toLowerCase() + "*)";
 			}
 
-			searchResult = workflowService.getDocumentService().find(sSearchTerm, MAX_SEARCH_RESULT, 0);
+			searchResult = workflowService.getDocumentService().findStubs(sSearchTerm, MAX_SEARCH_RESULT, 0,WorkflowKernel.LASTEVENTDATE,true);
 			// clone result list
 			for (int i = 0; i < searchResult.size(); i++) {
 				searchResult.set(i, WorkitemHelper.clone(searchResult.get(i)));
@@ -303,7 +304,7 @@ public class WorkitemLinkController implements Serializable {
 
 			List<ItemCollection> workitems;
 			try {
-				workitems = workflowService.getDocumentService().find(sQuery, MAX_SEARCH_RESULT, 0);
+				workitems = workflowService.getDocumentService().findStubs(sQuery, MAX_SEARCH_RESULT, 0,WorkflowKernel.LASTEVENTDATE,true);
 				// sort by modified
 				Collections.sort(workitems, new ItemCollectionComparator("$created", true));
 
@@ -377,7 +378,7 @@ public class WorkitemLinkController implements Serializable {
 
 			List<ItemCollection> workitems = null;
 			try {
-				workitems = workflowService.getDocumentService().find(sQuery, MAX_SEARCH_RESULT, 0);
+				workitems = workflowService.getDocumentService().findStubs(sQuery, MAX_SEARCH_RESULT, 0,WorkflowKernel.LASTEVENTDATE,true);
 				// sort by modified
 				Collections.sort(workitems, new ItemCollectionComparator("$created", true));
 

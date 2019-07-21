@@ -58,6 +58,8 @@ public class WorkitemHelper {
 		clone.replaceItemValue("namManager", aWorkitem.getItemValue("namManager"));
 		clone.replaceItemValue("namassist", aWorkitem.getItemValue("namassist"));
 
+		clone.replaceItemValue("$workflowsummary", aWorkitem.getItemValue("$workflowsummary"));
+		clone.replaceItemValue("$WorkflowAbstract", aWorkitem.getItemValue("$WorkflowAbstract"));
 		clone.replaceItemValue("txtWorkflowSummary", aWorkitem.getItemValue("txtWorkflowSummary"));
 		clone.replaceItemValue("txtWorkflowAbstract", aWorkitem.getItemValue("txtWorkflowAbstract"));
 		clone.replaceItemValue("txtWorkflowImageURL", aWorkitem.getItemValue("txtWorkflowImageURL"));
