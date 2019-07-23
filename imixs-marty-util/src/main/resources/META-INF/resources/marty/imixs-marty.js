@@ -1,8 +1,8 @@
 /* This script initialize the marty input widgets with specific behavior.
  * 
- * The Suggest Input widgets are provided by a special deleay function during the blur event.
- * This is for to deley the blue event for SuggestInput fields a little bit, 
- * so the commandlink event can be fired before. 
+ * The Suggest Input widgets are provided by a special delay function during the blur event.
+ * This is for to delay the blue event for SuggestInput fields a little bit, 
+ * so the command link event can be fired before. 
  * This method is used by the worktiemLink.xhtml and userinputx.html
  * See: http://stackoverflow.com/questions/12677179/delay-a-jsf-ajax-listener-for-checkbox-group 
  * 
@@ -19,7 +19,7 @@ $(document).ready(function() {
 });
 
 /* 
- * Heper Fuction for onblur delay event for suggest lists
+ * Helper Function for onBlur delay event for suggest lists
  */
 var delayEvent = (function() {
 
@@ -57,7 +57,7 @@ function initUserInput(context) {
 					if ($(this).val() == '')
 						inputfield_id.val('');
 					else {
-						// if userid selcted then display the user display name
+						// if userid selected then display the user display name
 						if (!inputfield_id.val() == '')
 							$(this).val(inputfield_display.val());
 						else
