@@ -10,11 +10,10 @@
 <cc:interface>
 	<cc:attribute name="workitem"></cc:attribute>
 	<cc:attribute name="filter"></cc:attribute>
-	<cc:attribute name="minimumChars" type="java.lang.Integer" default="3" ></cc:attribute>
+	<cc:attribute name="minimumChars" type="java.lang.Integer" default="3"></cc:attribute>
 	<cc:attribute name="hidereferences" default="false"
 		type="java.lang.Boolean"></cc:attribute>
-	<cc:attribute name="readonly" default="false"
-		type="java.lang.Boolean"></cc:attribute>
+	<cc:attribute name="readonly" default="false" type="java.lang.Boolean"></cc:attribute>
 </cc:interface>
 
 <cc:implementation>
@@ -39,15 +38,16 @@
 				<h:panelGroup id="suggest_resultlist"
 					class="marty-workitemlink-suggestresultlist"
 					rendered="#{! empty workitemLinkController.searchResult}">
-					<c:forEach var="suggest" items="#{workitemLinkController.searchResult}">
+					<c:forEach var="suggest"
+						items="#{workitemLinkController.searchResult}">
 						<div class="marty-workitemlink-suggestresultlist-entry">
 							<h:commandLink
 								actionListener="#{workitemLinkController.add(suggest.item['$uniqueid'])}">
 								<h:outputText style="font-weight: bold;"
-									value="#{suggest.item['txtWorkflowSummary']}" escape="false"
-									rendered="#{!empty suggest.item['txtWorkflowSummary']}" />
-								<h:outputText value="#{suggest.item['$created']}"
-									rendered="#{empty suggest.item['txtWorkflowSummary']}">
+									value="#{suggest.item['$WorkflowSummary']}" escape="false"
+									rendered="#{!empty suggest.item['$WorkflowSummary']}" />
+								<h:outputText value="#{suggest.item['$lasteventdate']}"
+									rendered="#{empty suggest.item['$WorkflowSummary']}">
 									<f:convertDateTime timeZone="#{message.timeZone}"
 										pattern="#{message.dateTimePatternShort}" />
 
@@ -55,10 +55,10 @@
 								<f:ajax render="suggest_box reference_box" />
 							</h:commandLink>
 							<br />
-							<h:outputText value="#{suggest.item['txtworkflowgroup']}: " />
-							<h:outputText value="#{suggest.item['txtworkflowstatus']} " />
+							<h:outputText value="#{suggest.item['$workflowgroup']}: " />
+							<h:outputText value="#{suggest.item['$workflowstatus']} " />
 
-							<h:outputText value="#{suggest.item['$modified']}">
+							<h:outputText value="#{suggest.item['$lasteventdate']}">
 								<f:convertDateTime timeZone="#{message.timeZone}"
 									pattern="#{message.dateTimePatternShort}" />
 							</h:outputText>
@@ -68,32 +68,40 @@
 				</h:panelGroup>
 			</h:panelGroup>
 		</h:panelGroup>
-		
-		
+
 		<!-- Process references -->
 		<h:panelGroup id="reference_box" layout="block"
-			rendered="#{! cc.attrs.hidereferences}" class="marty-workitemlink-referencebox" style="xxmargin-top:25px;">
-			<c:forEach var="workitem"
-				items="#{workitemLinkController.getReferences(cc.attrs.filter)}">
+			rendered="#{! cc.attrs.hidereferences}"
+			class="marty-workitemlink-referencebox" style="xxmargin-top:25px;">
+
+
+
+			<c:set var="refs" scope="request"
+				value="#{workitemLinkController.getReferences(cc.attrs.filter)}" />
+
+
+
+			<c:forEach var="workitem" items="#{refs}">
 				<div class="marty-workitemlink-referencebox-entry">
 					<h:link outcome="/pages/workitems/workitem">
-						<h:outputText escape="false" value="#{workitem.item['txtWorkflowSummary']}"
-							rendered="#{!empty workitem.item['txtWorkflowSummary']}" />
-						<h:outputText value="#{suggest.item['$created']}"
-							rendered="#{empty workitem.item['txtWorkflowSummary']}">
+						<h:outputText escape="false"
+							value="#{workitem.item['$WorkflowSummary']}"
+							rendered="#{!empty workitem.item['$WorkflowSummary']}" />
+						<h:outputText value="#{suggest.item['$lasteventdate']}"
+							rendered="#{empty workitem.item['$WorkflowSummary']}">
 							<f:convertDateTime timeZone="#{message.timeZone}"
 								pattern="#{message.dateTimePatternShort}" />
 						</h:outputText>
 						<f:param name="id" value="#{workitem.item['$uniqueid']}" />
 					</h:link>
-					<br />
-					<span class="marty-workitemlink-entry-abstract">
-						<h:outputText value="#{workitem.item['txtworkflowgroup']}: " />
-						<h:outputText value="#{workitem.item['txtworkflowstatus']}" />
+					<br /> <span class="marty-workitemlink-entry-abstract"> <h:outputText
+							value="#{workitem.item['$workflowgroup']}: " /> <h:outputText
+							value="#{workitem.item['$workflowstatus']}" />
 					</span>
 
 
-					<h:commandLink class="marty-workitemlink-entry-remove" rendered="#{!cc.attrs.readonly}"
+					<h:commandLink class="marty-workitemlink-entry-remove"
+						rendered="#{!cc.attrs.readonly}"
 						actionListener="#{workitemLinkController.remove(workitem.item['$uniqueid'])}">
 						<h:outputText value=" [#{message.remove}]" />
 						<f:ajax render="reference_box" />
