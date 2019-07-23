@@ -53,6 +53,7 @@ public class WorkitemHelper {
 		clone.replaceItemValue("txtWorkflowGroup", aWorkitem.getItemValue("txtWorkflowGroup"));
 		clone.replaceItemValue("namCreator", aWorkitem.getItemValue("namCreator"));
 		clone.replaceItemValue("namCurrentEditor", aWorkitem.getItemValue("namCurrentEditor"));
+		clone.replaceItemValue("$Owner", aWorkitem.getItemValue("$Owner"));
 		clone.replaceItemValue("namOwner", aWorkitem.getItemValue("namOwner"));
 		clone.replaceItemValue("namTeam", aWorkitem.getItemValue("namTeam"));
 		clone.replaceItemValue("namManager", aWorkitem.getItemValue("namManager"));
@@ -115,6 +116,8 @@ public class WorkitemHelper {
 			// test if ':' found
 			if (regEx.indexOf(':') > -1) {
 				regEx = regEx.trim();
+				// test if regEx contains "
+				regEx=regEx.replace("\"", "");
 				String itemName = regEx.substring(0, regEx.indexOf(':'));
 				regEx = regEx.substring(regEx.indexOf(':') + 1);
 				@SuppressWarnings("unchecked")
