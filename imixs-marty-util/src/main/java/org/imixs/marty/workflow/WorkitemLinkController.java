@@ -259,7 +259,7 @@ public class WorkitemLinkController implements Serializable {
 			return result;
 		}
 
-		logger.fine("lookup references for: " + filter);
+		logger.finest("......lookup references for: " + filter);
 
 		// lookup the references...
 		List<String> refList = workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
@@ -303,7 +303,7 @@ public class WorkitemLinkController implements Serializable {
 			}
 		}
 
-		logger.info("lookup references for: " + filter + " in " + (System.currentTimeMillis()-l) + "ms");
+		logger.fine("...lookup references for: " + filter + " in " + (System.currentTimeMillis()-l) + "ms");
 		
 		return result;
 	}
