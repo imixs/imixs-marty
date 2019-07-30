@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Imixs IX Workflow Technology
+ *  Imixs Workflow Technology
  *  Copyright (C) 2001, 2008 Imixs Software Solutions GmbH,  
  *  http://www.imixs.com
  *  
@@ -41,7 +41,6 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.imixs.marty.plugins.ProfilePlugin;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
