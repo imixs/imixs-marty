@@ -37,6 +37,12 @@ import org.eclipse.microprofile.config.Config;
 
 /**
  * This PropertyController provides access to the Microprofile config api.
+ * <p>
+ * The PropertyController can be used in a JSF page to access a specific property by name:
+ * <p>
+ * <code>
+ *   #{propertyController.getProperty('system.model.version')}
+ * </code>
  * 
  * @author rsoika
  */
