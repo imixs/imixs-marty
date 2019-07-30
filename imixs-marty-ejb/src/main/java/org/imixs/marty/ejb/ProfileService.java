@@ -86,14 +86,13 @@ public class ProfileService {
 	@EJB
 	private DocumentService documentService;
 
-//	@EJB
-//	private PropertyService propertyService;
+	// @EJB
+	// private PropertyService propertyService;
 
 	@Inject
 	@ConfigProperty(name = "system.model.version", defaultValue = "")
 	String modelVersion;
 
-	
 	@EJB
 	protected WorkflowService workflowService;
 
@@ -188,6 +187,7 @@ public class ProfileService {
 			userProfile = new ItemCollection();
 			userProfile.replaceItemValue("txtname", userid);
 			userProfile.replaceItemValue("txtusername", userid);
+			computeInitials(userProfile);
 		}
 
 		// cache profile
@@ -274,6 +274,7 @@ public class ProfileService {
 		clone.replaceItemValue("txtEmail", aWorkitem.getItemValue("txtEmail"));
 		clone.replaceItemValue("namdeputy", aWorkitem.getItemValue("namdeputy"));
 		clone.replaceItemValue("txtusericon", aWorkitem.getItemValue("txtusericon"));
+		clone.replaceItemValue("txtinitials", aWorkitem.getItemValue("txtinitials"));
 
 		// get accountName
 		String sAccountName = aWorkitem.getItemValueString("txtName");
@@ -289,26 +290,44 @@ public class ProfileService {
 		}
 
 		// construct initials (2 digits)
-		String sInitials = aWorkitem.getItemValueString("txtinitials");
-		if (sInitials.isEmpty()) {
+		computeInitials(clone);
+		
+		return clone;
+	}
+
+	/**
+	 * Helper method to compute the user initials if no txtinitials exist.
+	 * <p>
+	 * The initials are computed by the 1st char of the first-last name
+	 * <p>
+	 * The initials are uppercased. 
+	 * 
+	 * @param profile
+	 */
+	private static void computeInitials(ItemCollection profile) {
+		// construct initials (2 digits)
+		if (profile.getItemValueString("txtinitials").isEmpty()) {
+			String sAccountName = profile.getItemValueString("txtName");
+			String sUserName = profile.getItemValueString("txtUserName");
 			// default
-			sInitials = "NO";
+			String sInitials = "-";
 			if (!sUserName.isEmpty() && sUserName.length() > 2) {
 				int iPos = sUserName.indexOf(' ');
 				if (iPos > -1) {
 					sInitials = sUserName.substring(0, 1);
 					sInitials = sInitials + sUserName.substring(iPos + 1, iPos + 2);
 				} else {
-					sInitials = sUserName.substring(0, 2);
+					sInitials = sUserName.substring(0, 1);
 				}
 			} else {
-				sInitials = sAccountName;
+				// if we do not have a initials, than we take the first letter of the account
+				// name
+				if (sAccountName != null && sAccountName.length() > 0) {
+					sInitials = sAccountName.substring(0, 1);
+				}
 			}
-			clone.replaceItemValue("txtinitials", sInitials);
-		} else {
-			clone.replaceItemValue("txtinitials", sInitials);
+			profile.replaceItemValue("txtinitials", sInitials.toUpperCase());
 		}
-		return clone;
 	}
 
 	/**
@@ -329,7 +348,8 @@ public class ProfileService {
 		profile.replaceItemValue("type", "profile");
 		profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
 		// get system model version from imixs.properties
-		//String modelVersion = this.propertyService.getProperties().getProperty("system.model.version", "");
+		// String modelVersion =
+		// this.propertyService.getProperties().getProperty("system.model.version", "");
 		profile.replaceItemValue("$modelversion", modelVersion);
 		// the workflow group can not be guessed here...
 		// profile.replaceItemValue("$workflowgroup", "Profil");
