@@ -41,7 +41,7 @@ import org.eclipse.microprofile.config.Config;
  * The PropertyController can be used in a JSF page to access a specific property by name:
  * <p>
  * <code>
- *   #{propertyController.getProperty('system.model.version')}
+ *   #{propertyController.getProperty('my-property')}
  * </code>
  * 
  * @author rsoika

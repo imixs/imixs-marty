@@ -86,11 +86,8 @@ public class ProfileService {
 	@EJB
 	private DocumentService documentService;
 
-	// @EJB
-	// private PropertyService propertyService;
-
 	@Inject
-	@ConfigProperty(name = "system.model.version", defaultValue = "")
+	@ConfigProperty(name = "setup.system.model", defaultValue = "")
 	String modelVersion;
 
 	@EJB
@@ -347,10 +344,10 @@ public class ProfileService {
 		ItemCollection profile = new ItemCollection();
 		profile.replaceItemValue("type", "profile");
 		profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
-		// get system model version from imixs.properties
-		// String modelVersion =
-		// this.propertyService.getProperties().getProperty("system.model.version", "");
 		profile.replaceItemValue("$modelversion", modelVersion);
+		
+		logger.info("..createing profile based on modelversion = " + modelVersion);
+		
 		// the workflow group can not be guessed here...
 		// profile.replaceItemValue("$workflowgroup", "Profil");
 		profile.replaceItemValue("txtName", userid);

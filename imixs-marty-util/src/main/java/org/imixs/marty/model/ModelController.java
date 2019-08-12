@@ -91,35 +91,10 @@ public class ModelController implements Serializable {
 	@EJB
 	protected SetupService setupService;
 
-//	@EJB
-//	protected PropertyService propertyService;
-	
-	
-	@Inject
-	@ConfigProperty(name = "system.model.version", defaultValue = "")
-	String systemModelVersion;
-
 	private Map<String, ItemCollection> modelEntityCache = new HashMap<String, ItemCollection>();
 
 	private static Logger logger = Logger.getLogger(ModelController.class.getName());
 
-	/**
-	 * Returns the system workflow version defined by the imixs.properties file
-	 * 
-	 * <pre>
-	 * {@code
-	 * system.model.version
-	 * }
-	 * </pre>
-	 * 
-	 * @return the system Model version.
-	 */
-	public String getSystemWorkflowVersion() {
-		if (systemModelVersion.isEmpty()) {
-			logger.warning("property 'system.model.version' is not defined!");
-		}
-		return systemModelVersion;
-	}
 
 	/**
 	 * returns all groups for a version

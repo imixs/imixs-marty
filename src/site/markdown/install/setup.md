@@ -9,6 +9,16 @@ imixs.property 'setup.mode':
 |auto (default)	| initializes the userDb default user and uploads the default models|
 |none			| no action 														|
 
+
+## System Model
+
+The model version for the Marty System model is mandatory and defined by the imixs property
+
+	setup.system.model=system-de-1.1
+
+
+
+
 ## Integration
 The Setup Service is automatically started on deployment. You can also call the setup by the Rest API.
 
