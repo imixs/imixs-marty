@@ -41,7 +41,7 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.WorkflowService;
-import org.imixs.workflow.engine.lucene.LuceneSearchService;
+import org.imixs.workflow.engine.index.SchemaService;
 import org.imixs.workflow.exceptions.QueryException;
 import org.imixs.workflow.faces.data.WorkflowController;
 
@@ -72,7 +72,7 @@ public class WorkitemLinkController implements Serializable {
 	protected WorkflowService workflowService;
 
 	@EJB
-	protected LuceneSearchService luceneSearchService;
+	protected SchemaService schemaService;
 
 	@Inject
 	protected WorkflowController workflowController;
@@ -159,7 +159,7 @@ public class WorkitemLinkController implements Serializable {
 			}
 			if (!"".equals(input)) {
 				// escape input..
-				input = luceneSearchService.escapeSearchTerm(input);
+				input = schemaService.escapeSearchTerm(input);
 				sSearchTerm += " (*" + input.toLowerCase() + "*)";
 			}
 

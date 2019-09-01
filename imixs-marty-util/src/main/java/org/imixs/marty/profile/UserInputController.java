@@ -44,7 +44,7 @@ import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.WorkflowService;
-import org.imixs.workflow.engine.lucene.LuceneSearchService;
+import org.imixs.workflow.engine.index.SchemaService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.faces.data.WorkflowEvent;
 
@@ -74,10 +74,11 @@ public class UserInputController implements Serializable {
 
 	@EJB
 	protected WorkflowService workflowService;
-
+ 
 	@EJB
-	protected LuceneSearchService luceneSearchService;
+	protected SchemaService schemaService;
 	
+
 	private List<ItemCollection> searchResult = null;
 
 	private String input = null;
@@ -164,9 +165,9 @@ public class UserInputController implements Serializable {
 
 		try {
 			phrase = phrase.trim().toLowerCase();
-			phrase = luceneSearchService.escapeSearchTerm(phrase);
+			phrase = schemaService.escapeSearchTerm(phrase);
 			// issue #170
-			phrase = luceneSearchService.normalizeSearchTerm(phrase);
+			phrase = schemaService.normalizeSearchTerm(phrase);
 
 			String sQuery = "(type:profile) AND ($processid:[210 TO 249]) AND  ((txtname:" + phrase
 					+ "*) OR (txtusername:" + phrase + "*) OR (txtemail:" + phrase + "*))";
