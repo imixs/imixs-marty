@@ -108,7 +108,7 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 			// test if $WorkflowGorup is already available.....
 			if (documentContext.getItemValueString(WorkflowKernel.WORKFLOWGROUP).isEmpty()) {
 				// set temporary workflow group, will be updated by the WorkflowKernel later...
-				ItemCollection itemColNextTask = this.getWorkflowService().evalNextTask(documentContext, event);
+				ItemCollection itemColNextTask = this.getWorkflowService().evalNextTask(documentContext);
 				if (itemColNextTask != null) {
 					documentContext.replaceItemValue(WorkflowKernel.WORKFLOWGROUP,
 							itemColNextTask.getItemValueString("txtworkflowgroup"));
@@ -116,9 +116,9 @@ public class SequenceNumberPlugin extends AbstractPlugin {
 			}
 			sequenceService.computeSequenceNumber(documentContext);
 		} catch (AccessDeniedException e) {
-			throw new PluginException(e.getErrorContext(), e.getErrorCode(), "[SequenceNumberPlugin] error ", e);
+			throw new PluginException(e.getErrorContext(), e.getErrorCode(), "calculating next sequencenumber failed: ", e);
 		} catch (ModelException e) {
-			throw new PluginException(e.getErrorContext(), e.getErrorCode(), "[SequenceNumberPlugin] error ", e);
+			throw new PluginException(e.getErrorContext(), e.getErrorCode(), "calculating next sequencenumber failed: ", e);
 		}
 
 		return documentContext;
