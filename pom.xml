@@ -14,7 +14,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<org.imixs.workflow.version>5.1.0-SNAPSHOT</org.imixs.workflow.version>
-		<org.imixs.mock.version>5.0.2</org.imixs.mock.version>
+		<org.imixs.mock.version>5.1.0-SNAPSHOT</org.imixs.mock.version>
 		<microprofile.version>2.2</microprofile.version>
 	</properties>
 
