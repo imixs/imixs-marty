@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowKernel;
@@ -27,6 +29,8 @@ import junit.framework.Assert;
  */
 public class TestTeamPlugin {
 	TeamPlugin teamPlugin = null;
+	Pattern pattern;
+	Matcher matcher;
 	ItemCollection documentActivity;
 	ItemCollection documentContext;
 	Map<String, ItemCollection> database = new HashMap<String, ItemCollection>();
@@ -99,6 +103,49 @@ public class TestTeamPlugin {
 		documentContext = new ItemCollection();
 
 	}
+	
+	/**
+	 * Test Email Regex pattern
+	 * 
+	 * @throws PluginException
+	 */
+	@Test
+	public void testEmail() throws PluginException {
+		pattern = Pattern.compile(ProfilePlugin.EMAIL_PATTERN);
+		matcher = pattern.matcher("hl+o@imixs.com");
+		Assert.assertTrue(matcher.matches());
+		
+		// subdomain with - issue #312
+		matcher = pattern.matcher("hl-o@office-workflow.sub-domain.com");
+		Assert.assertTrue(matcher.matches());
+	}
+
+	/**
+	 * Test UserID Pattern
+	 * 
+	 * @throws PluginException
+	 */
+	@Test
+	public void testUserid() throws PluginException {
+		pattern = Pattern.compile(ProfilePlugin.DEFAULT_USERID_PATTERN);
+		matcher = pattern.matcher("pin_gi-");
+		Assert.assertTrue(matcher.matches());
+
+		pattern = Pattern.compile(ProfilePlugin.DEFAULT_USERID_PATTERN);
+		matcher = pattern.matcher("pingiimixs.com");
+		Assert.assertTrue(matcher.matches());
+
+		pattern = Pattern.compile(ProfilePlugin.DEFAULT_USERID_PATTERN);
+		matcher = pattern.matcher("www.imixs.com");
+		Assert.assertTrue(matcher.matches());
+
+		pattern = Pattern.compile(ProfilePlugin.DEFAULT_USERID_PATTERN);
+		matcher = pattern.matcher("pingi@imixs.com");
+		Assert.assertTrue(matcher.matches());
+	}
+
+	
+	
 
 	/**
 	 * This simple test verifies if the txtProcessRef is transfered into

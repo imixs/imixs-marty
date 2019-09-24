@@ -86,29 +86,31 @@ public class ProfilePlugin extends AbstractPlugin {
 	public static String NO_PROFILE_SERVICE_FOUND = "NO_PROFILE_SERVICE_FOUND";
 
 	// input patterns
-	public static String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
-			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
-	public static String DEFAULT_USERID_PATTERN = "^[A-Za-z0-9.@\\-\\w]+";
-	public static String DEFAULT_USER_INPUT_MODE = "LOWERCASE";
+	//public final static String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+	public final static String EMAIL_PATTERN = "^[_A-Za-z0-9-\\\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[-A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+	public final static String DEFAULT_USERID_PATTERN = "^[A-Za-z0-9.@\\-\\w]+";
+	public final static String DEFAULT_USER_INPUT_MODE = "LOWERCASE";
 
 	// adminP
 	@EJB
 	AdminPService adminPService;
-	
+
 	@Inject
-	@ConfigProperty(name = "security.userid.input.mode", defaultValue = "LOWERCASE")
+	@ConfigProperty(name = "security.userid.input.mode", defaultValue = DEFAULT_USER_INPUT_MODE)
 	String userInputMode;
-	
-	
+
 	@Inject
-	@ConfigProperty(name = "security.userid.input.pattern", defaultValue = "^[A-Za-z0-9.@\\-\\w]+")
+	@ConfigProperty(name = "security.userid.input.pattern", defaultValue = DEFAULT_USERID_PATTERN)
 	String userInputPattern;
 
-	
+	@Inject
+	@ConfigProperty(name = "security.email.input.pattern", defaultValue = EMAIL_PATTERN)
+	String emailInputPattern;
+
 	@Inject
 	@ConfigProperty(name = "security.email.unique", defaultValue = "true")
 	String sUniqueEmailMode;
-	
+
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
 		super.init(actx);
@@ -125,7 +127,6 @@ public class ProfilePlugin extends AbstractPlugin {
 			throw new PluginException(ProfilePlugin.class.getSimpleName(), NO_PROFILE_SERVICE_FOUND,
 					"[ProfilePlugin] unable to lookup profileService: ", e);
 		}
-
 	}
 
 	/**
@@ -262,7 +263,7 @@ public class ProfilePlugin extends AbstractPlugin {
 	public boolean isValidUserId(final String userid) {
 		Pattern pattern;
 		Matcher matcher;
-		
+
 		if (userInputPattern != null && !userInputPattern.isEmpty()) {
 			pattern = Pattern.compile(userInputPattern);
 			matcher = pattern.matcher(userid);
@@ -285,7 +286,7 @@ public class ProfilePlugin extends AbstractPlugin {
 		// verify email pattern
 
 		if (email != null && !email.isEmpty()) {
-			pattern = Pattern.compile(EMAIL_PATTERN);
+			pattern = Pattern.compile(emailInputPattern);
 			matcher = pattern.matcher(email);
 			return matcher.matches();
 		}
