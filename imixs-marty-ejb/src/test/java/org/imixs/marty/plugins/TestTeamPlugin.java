@@ -118,6 +118,19 @@ public class TestTeamPlugin {
 		// subdomain with - issue #312
 		matcher = pattern.matcher("hl-o@office-workflow.sub-domain.com");
 		Assert.assertTrue(matcher.matches());
+		
+		
+		matcher = pattern.matcher("firstname.lastname@department.faculty.uni-giessen.de");
+		Assert.assertTrue(matcher.matches());
+		
+		matcher = pattern.matcher("firstname.lastname@department.faculty.uni-giessen-bonn.de");
+		Assert.assertTrue(matcher.matches());
+		
+		matcher = pattern.matcher("firstname.lastname-sufix@department.faculty.uni-giessen-bonn.de");
+		Assert.assertTrue(matcher.matches());
+		
+		matcher = pattern.matcher("firstname-sufix.lastname-sufix@department.faculty.uni-giessen-bonn.de");
+		Assert.assertTrue(matcher.matches());
 	}
 
 	/**

@@ -104,14 +104,14 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
-				<version>3.5.1</version>
+				<version>3.8.2</version>
 				<configuration>
 					<locales>en</locales>
 					<reportPlugins>
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-project-info-reports-plugin</artifactId>
-							<version>2.9</version>
+							<version>3.0.0</version>
 							<reports>
 								<report>index</report>
 								<report>project-team</report>
@@ -130,24 +130,15 @@
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-javadoc-plugin</artifactId>
-							<version>2.10.4</version>
+							<version>3.1.1</version>
 						</plugin>
 
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-jxr-plugin</artifactId>
-							<version>2.1</version>
+							<version>3.0.0</version>
 						</plugin>
-						<!-- Findbugs -->
-						<plugin>
-							<groupId>org.codehaus.mojo</groupId>
-							<artifactId>findbugs-maven-plugin</artifactId>
-							<version>3.0.4</version>
-							<configuration>
-								<effort>Default</effort><!-- Min, Default, Max -->
-								<threshold>Default</threshold><!-- High, Default, Low, Ignore -->
-							</configuration>
-						</plugin>
+						
 					</reportPlugins>
 				</configuration>
 			</plugin>
