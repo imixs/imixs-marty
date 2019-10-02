@@ -253,7 +253,7 @@ public class ProfileService {
 	 * @param aWorkitem
 	 * @return
 	 */
-	public static ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
+	public ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
 		ItemCollection clone = new ItemCollection();
 
 		// clone the standard WorkItem properties
