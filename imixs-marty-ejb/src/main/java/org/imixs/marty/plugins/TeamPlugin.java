@@ -303,6 +303,7 @@ public class TeamPlugin extends AbstractPlugin {
 		List vProcessManager = new Vector();
 		List vProcessAssist = new Vector();
 		String sSpaceName = "";
+		String sSpaceNameNode = "";
 		String sProcessName = "";
 
 		// interate over all refs if defined
@@ -325,6 +326,7 @@ public class TeamPlugin extends AbstractPlugin {
 					vSpaceManager.addAll(entity.getItemValue("namManager"));
 					vSpaceAssist.addAll(entity.getItemValue("namAssist"));
 					sSpaceName = entity.getItemValueString("txtname");
+					sSpaceNameNode = entity.getItemValueString("txtspacename");
 				}
 
 			}
@@ -351,9 +353,13 @@ public class TeamPlugin extends AbstractPlugin {
 		uniqueElements(workItem, "namProcessAssist");
 
 		logger.fine("[TeamPlugin] new ProcessName= " + sProcessName);
+		workItem.replaceItemValue("txtProcessName", sProcessName);
 		logger.fine("[TeamPlugin] new SpaceName= " + sSpaceName);
 		workItem.replaceItemValue("txtSpaceName", sSpaceName);
-		workItem.replaceItemValue("txtProcessName", sProcessName);
+		workItem.replaceItemValue("txtSpaceNameNode", sSpaceNameNode);
+		
+		
+		
 
 		documentContext.removeItem("space");
 		documentContext.removeItem("process");
