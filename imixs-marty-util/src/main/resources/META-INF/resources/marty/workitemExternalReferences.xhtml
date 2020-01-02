@@ -13,11 +13,8 @@
 </cc:interface>
 
 <cc:implementation>
-
-
 	<h:panelGroup id="workitemlink_box" layout="block"
 		class="marty-workitemlink">
-
 		<!-- show external references -->
 		<h:panelGroup id="reference_box" layout="block"
 			class="marty-workitemlink-referencebox">
@@ -25,10 +22,10 @@
 				items="#{workitemLinkController.getExternalReferences(cc.attrs.filter)}">
 				<div class="marty-workitemlink-referencebox-entry">				
 					<h:link outcome="/pages/workitems/workitem">
-						<h:outputText escape="false" value="#{workitem.item['txtWorkflowSummary']}"
-							rendered="#{!empty workitem.item['txtWorkflowSummary']}" />
+						<h:outputText escape="false" value="#{workitem.item['$WorkflowSummary']}"
+							rendered="#{!empty workitem.item['$WorkflowSummary']}" />
 						<h:outputText value="#{suggest.item['$created']}"
-							rendered="#{empty workitem.item['txtWorkflowSummary']}">
+							rendered="#{empty workitem.item['$WorkflowSummary']}">
 							<f:convertDateTime timeZone="#{message.timeZone}"
 								pattern="#{message.dateTimePatternShort}" />
 						</h:outputText>
@@ -36,10 +33,10 @@
 					</h:link>
 					<br />
 					<span class="marty-workitemlink-entry-abstract">
-						<h:outputText value="#{workitem.item['txtworkflowgroup']}: " />
-						<h:outputText value="#{workitem.item['txtworkflowstatus']}" />
-					</span>				</div>
-
+						<h:outputText value="#{workitem.item['$workflowgroup']}: " />
+						<h:outputText value="#{workitem.item['$workflowstatus']}" />
+					</span>				
+				</div>
 			</c:forEach>
 		</h:panelGroup>
 		
