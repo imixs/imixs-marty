@@ -39,6 +39,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.imixs.marty.ejb.ImageCompactor;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowContext;
@@ -91,9 +92,11 @@ public class ProfilePlugin extends AbstractPlugin {
 	public final static String DEFAULT_USERID_PATTERN = "^[A-Za-z0-9.@\\-\\w]+";
 	public final static String DEFAULT_USER_INPUT_MODE = "LOWERCASE";
 
-	// adminP
 	@EJB
 	AdminPService adminPService;
+	
+	@EJB
+	ImageCompactor imageCompactor;
 
 	@Inject
 	@ConfigProperty(name = "security.userid.input.mode", defaultValue = DEFAULT_USER_INPUT_MODE)
@@ -110,6 +113,11 @@ public class ProfilePlugin extends AbstractPlugin {
 	@Inject
 	@ConfigProperty(name = "security.email.unique", defaultValue = "true")
 	String sUniqueEmailMode;
+	
+	@Inject
+	@ConfigProperty(name = "profile.image.maxwith", defaultValue = "600")
+	int imageMaxWidth;
+
 
 	@Override
 	public void init(WorkflowContext actx) throws PluginException {
@@ -125,7 +133,7 @@ public class ProfilePlugin extends AbstractPlugin {
 			profileService = (ProfileService) ctx.lookup(jndiName);
 		} catch (NamingException e) {
 			throw new PluginException(ProfilePlugin.class.getSimpleName(), NO_PROFILE_SERVICE_FOUND,
-					"[ProfilePlugin] unable to lookup profileService: ", e);
+					"unable to lookup profileService: ", e);
 		}
 	}
 
@@ -141,6 +149,14 @@ public class ProfilePlugin extends AbstractPlugin {
 			// store userID local to discard the cache when close()...
 			userID = workItem.getItemValueString("txtName");
 
+			// resize profile image if necessary...
+			try {
+				imageCompactor.resize(workItem,imageMaxWidth);
+			} catch (Exception e) {
+				logger.warning("Unable to resize profile image - " + e.getMessage());
+			}
+			
+			
 			// load the old user profile
 			ItemCollection oldProfile = this.getWorkflowService().getDocumentService().load(workItem.getUniqueID());
 			if (oldProfile != null) {
