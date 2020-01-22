@@ -250,8 +250,25 @@ public class TextBlockService {
 
 			ItemCollection textBlockItemCollection = loadTextBlock(sTextBlockKey);
 			if (textBlockItemCollection != null) {
-
-				String sValue = textBlockItemCollection.getItemValueString("txtcontent");
+			    String sValue ="";
+			    // is the text block in mode 'FILE'
+			    if ("FILE".equals(textBlockItemCollection.getItemValueString("txtmode"))) {
+			        // take the 1st file name.....
+			        List<String> files = textBlockItemCollection.getFileNames();
+			        if (files!=null && files.size()>0) {
+			            sValue=files.get(0);
+			        }
+			        if (files.size()>1) {
+			            logger.warning("textblock '" +sTextBlockKey + "' contains more than one file!" );
+			        }
+			        if (sValue.trim().isEmpty()) {
+			            logger.warning("textblock '" +sTextBlockKey + "' type FILE contains no file!" );
+			            sValue=" - missing file - ";
+			        }
+			    } else {
+			        // default - read content mode TEXT|HTML
+			        sValue = textBlockItemCollection.getItemValueString("txtcontent");
+			    }
 				// now replace the tag with the result string
 				int iStartPos = text.indexOf(tag);
 				int iEndPos = text.indexOf(tag) + tag.length();
