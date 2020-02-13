@@ -27,15 +27,14 @@
 
 package org.imixs.marty.plugins;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 
+import org.imixs.marty.ejb.SpaceService;
 import org.imixs.marty.ejb.TeamCache;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
@@ -63,6 +62,9 @@ public class SpacePlugin extends AbstractPlugin {
 
 	@EJB
 	TeamCache teamCache;
+	
+	@EJB
+	SpaceService spaceService;
 
 	/**
 	 * If a 'space' is processed, the method verifies if the space Information need
@@ -81,7 +83,7 @@ public class SpacePlugin extends AbstractPlugin {
 		// in case of a deletion we test if subspaces still exist! In this case
 		// deletion is not allowed
 		if ("spacedeleted".equals(type)) {
-			List<ItemCollection> subspaces = findAllSubSpaces(documentContext.getUniqueID(), "space", "spacearchive");
+			List<ItemCollection> subspaces = spaceService.findAllSubSpaces(documentContext.getUniqueID(), "space", "spacearchive");
 			// if a parentSpace exist - stop deletion!
 			if (subspaces != null && subspaces.size() > 0) {
 				throw new PluginException(SpacePlugin.class.getName(), SPACE_DELETE_ERROR,
@@ -94,7 +96,7 @@ public class SpacePlugin extends AbstractPlugin {
 		// in this case we test if subspaces still exist! In this case
 		// archive is not allowed
 		if ("spacearchive".equals(type)) {
-			List<ItemCollection> subspaces = findAllSubSpaces(documentContext.getUniqueID(), "space");
+			List<ItemCollection> subspaces = spaceService.findAllSubSpaces(documentContext.getUniqueID(), "space");
 			// if a parentSpace exist - stop deletion!
 			if (subspaces != null && subspaces.size() > 0) {
 				throw new PluginException(SpacePlugin.class.getName(), SPACE_ARCHIVE_ERROR,
@@ -109,7 +111,7 @@ public class SpacePlugin extends AbstractPlugin {
 			inheritParentSpaceProperties();
 			// verify txtname if still unique....
 			validateUniqueOrgunitName(space,"space");
-			updateSubSpaces(space);
+			spaceService.updateSubSpaces(space);
 		}
 
 		// verify if the space name and sub-spaces need to be updated...
@@ -163,69 +165,6 @@ public class SpacePlugin extends AbstractPlugin {
 		}
 	}
 
-	/**
-	 * This method updates the parentName and the parent team properties for all
-	 * sub-spaces. This is only necessary if sub-spaces are found.
-	 * 
-	 * @param space
-	 */
-	private void updateSubSpaces(ItemCollection parentSpace) {
-		logger.finest("......updating sub-space data for '" + parentSpace.getItemValueString("$Uniqueid") + "'");
-		List<ItemCollection> subSpaceList = findAllSubSpaces(parentSpace.getItemValueString("$Uniqueid"), "space",
-				"spacearchive");
-		String sParentSpaceName = parentSpace.getItemValueString("txtName");
-		for (ItemCollection aSubSpace : subSpaceList) {
-
-			aSubSpace.replaceItemValue("txtparentname", sParentSpaceName);
-			aSubSpace.replaceItemValue("txtname",
-					sParentSpaceName + "." + aSubSpace.getItemValueString("txtSpacename"));
-
-			// update parent team lists
-			aSubSpace.replaceItemValue("namParentTeam", parentSpace.getItemValue("namTeam"));
-			aSubSpace.replaceItemValue("namParentManager", parentSpace.getItemValue("namManager"));
-			aSubSpace.replaceItemValue("namParentAssist", parentSpace.getItemValue("namAssist"));
-
-			aSubSpace = getWorkflowService().getDocumentService().save(aSubSpace);
-			// call recursive....
-			updateSubSpaces(aSubSpace);
-		}
-	}
-
-	/**
-	 * Helper method to find all sub-spaces for a given uniqueID.
-	 * 
-	 * @param sIDRef
-	 * @return
-	 */
-	private List<ItemCollection> findAllSubSpaces(String sIDRef, String... types) {
-		if (sIDRef == null) {
-			return null;
-		}
-		String sQuery = "(";
-		// query type...
-		if (types != null && types.length > 0) {
-			sQuery += "(";
-			for (int i = 0; i < types.length; i++) {
-				sQuery += " type:\"" + types[i] + "\"";
-				if ((i + 1) < types.length) {
-					sQuery += " OR ";
-				}
-			}
-			sQuery += ") ";
-		}
-		sQuery += " AND $uniqueidref:\"" + sIDRef + "\")";
-
-		List<ItemCollection> subSpaceList;
-		try {
-			subSpaceList = getWorkflowService().getDocumentService().find(sQuery, 9999, 0);
-		} catch (QueryException e) {
-			throw new InvalidAccessException(InvalidAccessException.INVALID_ID, e.getMessage(), e);
-		}
-
-		// sort by txtname
-		Collections.sort(subSpaceList, new ItemCollectionComparator("txtname", true));
-		return subSpaceList;
-	}
 
 	/**
 	 * This method validates the uniqueness of the item txtname of an orgunit.
