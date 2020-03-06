@@ -42,6 +42,7 @@ import javax.inject.Named;
 
 import org.imixs.marty.ejb.ProcessService;
 import org.imixs.marty.ejb.ProfileService;
+import org.imixs.marty.util.ResourceBundleHandler;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.WorkflowKernel;
@@ -66,526 +67,571 @@ import org.imixs.workflow.faces.util.LoginController;
 @SessionScoped
 public class ProcessController implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private List<ItemCollection> spaces = null;
-	private List<ItemCollection> processList = null;
-	private ItemCollection process = null;
+    private List<ItemCollection> spaces = null;
+    private List<ItemCollection> processList = null;
+    private ItemCollection process = null;
 
-	@Inject
-	protected LoginController loginController = null;
+    @Inject
+    protected LoginController loginController = null;
 
-	@EJB
-	protected DocumentService documentService;
+    @Inject
+    protected ResourceBundleHandler resourceBundleHandler = null;
 
-	@EJB
-	protected ProcessService processService;
+    @EJB
+    protected DocumentService documentService;
 
-	@EJB
-	protected ProfileService profileService;
+    @EJB
+    protected ProcessService processService;
 
-	private static Logger logger = Logger.getLogger(ProcessController.class.getName());
+    @EJB
+    protected ProfileService profileService;
 
-	/**
-	 * Reset the internal cache
-	 */
-	@PostConstruct
-	public void reset() {
-		spaces = null;
-		processList = null;
-		process = null;
-	}
+    private static Logger logger = Logger.getLogger(ProcessController.class.getName());
 
-	/**
-	 * Returns the current process entity
-	 * 
-	 * @return
-	 */
-	public ItemCollection getProcess() {
-		return process;
-	}
+    /**
+     * Reset the internal cache
+     */
+    @PostConstruct
+    public void reset() {
+        spaces = null;
+        processList = null;
+        process = null;
+    }
 
-	/**
-	 * Set the current process entity
-	 * 
-	 * @param process
-	 */
-	public void setProcess(ItemCollection process) {
-		this.process = process;
-	}
+    /**
+     * Returns the current process entity
+     * 
+     * @return
+     */
+    public ItemCollection getProcess() {
+        return process;
+    }
 
-	/**
-	 * Loads a process entity by its UniqueID from the internal cache and updates
-	 * the current process entity.
-	 * 
-	 * @param uniqueid
-	 *            - of process entity
-	 * 
-	 * @return current process entity
-	 */
-	public ItemCollection loadProcess(String uniqueid) {
-		if (this.process == null || !this.process.getItemValue(WorkflowKernel.UNIQUEID).equals(uniqueid)) {
-			setProcess(this.getProcessById(uniqueid));
-		}
-		return getProcess();
-	}
+    /**
+     * Set the current process entity
+     * 
+     * @param process
+     */
+    public void setProcess(ItemCollection process) {
+        this.process = process;
+    }
 
-	/**
-	 * Returns the process for a given uniqueID. The method uses the internal cache.
-	 * 
-	 * @param uniqueId
-	 * @return itemCollection of process or null if not process with the specified
-	 *         id exists
-	 */
-	public ItemCollection getProcessById(String uniqueId) {
+    /**
+     * Loads a process entity by its UniqueID from the internal cache and updates
+     * the current process entity.
+     * 
+     * @param uniqueid - of process entity
+     * 
+     * @return current process entity
+     */
+    public ItemCollection loadProcess(String uniqueid) {
+        if (this.process == null || !this.process.getItemValue(WorkflowKernel.UNIQUEID).equals(uniqueid)) {
+            setProcess(this.getProcessById(uniqueid));
+        }
+        return getProcess();
+    }
 
-		if (uniqueId != null && !uniqueId.isEmpty()) {
-			// iterate over all spaces and compare the $UniqueIDRef
-			List<ItemCollection> list = getProcessList();
-			for (ItemCollection process : list) {
-				if (uniqueId.equals(process.getItemValueString(WorkflowKernel.UNIQUEID))) {
-					return process;
-				}
-			}
-		}
-		return null;
-	}
+    /**
+     * Returns the process for a given uniqueID. The method uses the internal cache.
+     * 
+     * @param uniqueId
+     * @return itemCollection of process or null if not process with the specified
+     *         id exists
+     */
+    public ItemCollection getProcessById(String uniqueId) {
 
-	/**
-	 * This method returns a chached list of process entities for the current user.
-	 * This list can be used to display processs information. The returned process
-	 * list is optimized and provides additional the following attributes
-	 * <p>
-	 * isMember, isTeam, isOwner, isManager, isAssist
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getProcessList() {
-		if (processList == null) {
-			processList = processService.getProcessList();
-		}
-		return processList;
-	}
+        if (uniqueId != null && !uniqueId.isEmpty()) {
+            // iterate over all spaces and compare the $UniqueIDRef
+            List<ItemCollection> list = getProcessList();
+            for (ItemCollection process : list) {
+                if (uniqueId.equals(process.getItemValueString(WorkflowKernel.UNIQUEID))) {
+                    return process;
+                }
+            }
+        }
+        return null;
+    }
 
-	/**
-	 * This method returns a cached list of spaces for the current user. This list
-	 * can be used to display space information. The returned space list is
-	 * optimized and provides additional the following attributes
-	 * <p>
-	 * isMember, isTeam, isOwner, isManager, isAssist
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getSpaces() {
-		if (spaces == null) {
-			spaces = processService.getSpaces();
-			new ArrayList<ItemCollection>();
-		}
-		return spaces;
-	}
+    /**
+     * This method returns a chached list of process entities for the current user.
+     * This list can be used to display processs information. The returned process
+     * list is optimized and provides additional the following attributes
+     * <p>
+     * isMember, isTeam, isOwner, isManager, isAssist
+     * 
+     * @return
+     */
+    public List<ItemCollection> getProcessList() {
+        if (processList == null) {
+            processList = processService.getProcessList();
+        }
+        return processList;
+    }
 
-	/**
-	 * This method returns a space or process entity by its UniqueID. The space and
-	 * process entities are read from the internal cache.
-	 * 
-	 * @param uniqueid
-	 * @return
-	 */
-	public ItemCollection getEntityById(String uniqueid) {
-		if (uniqueid == null || uniqueid.isEmpty())
-			return null;
+    /**
+     * This method returns a cached list of spaces for the current user. This list
+     * can be used to display space information. The returned space list is
+     * optimized and provides additional the following attributes
+     * <p>
+     * isMember, isTeam, isOwner, isManager, isAssist
+     * 
+     * @return
+     */
+    public List<ItemCollection> getSpaces() {
+        if (spaces == null) {
+            spaces = processService.getSpaces();
+            new ArrayList<ItemCollection>();
+        }
+        return spaces;
+    }
 
-		// get the process list form local cache
-		List<ItemCollection> alist = getProcessList();
-		for (ItemCollection aProcess : alist) {
-			if (uniqueid.equals(aProcess.getUniqueID()))
-				return aProcess;
-		}
+    /**
+     * This method returns a space or process entity by its UniqueID. The space and
+     * process entities are read from the internal cache.
+     * 
+     * @param uniqueid
+     * @return
+     */
+    public ItemCollection getEntityById(String uniqueid) {
+        if (uniqueid == null || uniqueid.isEmpty())
+            return null;
 
-		// get the space list form local cache
-		alist = getSpaces();
-		for (ItemCollection aSpace : alist) {
-			if (uniqueid.equals(aSpace.getUniqueID()))
-				return aSpace;
-		}
-		return null;
+        // get the process list form local cache
+        List<ItemCollection> alist = getProcessList();
+        for (ItemCollection aProcess : alist) {
+            if (uniqueid.equals(aProcess.getUniqueID()))
+                return aProcess;
+        }
 
-	}
+        // get the space list form local cache
+        alist = getSpaces();
+        for (ItemCollection aSpace : alist) {
+            if (uniqueid.equals(aSpace.getUniqueID()))
+                return aSpace;
+        }
+        return null;
 
-	/**
-	 * Returns a Space for a given uniqueID.
-	 * 
-	 * @param uniqueId
-	 * @return itemCollection of process or null if not process with the specified
-	 *         id exists
-	 */
-	public ItemCollection getSpaceById(String uniqueId) {
+    }
 
-		if (uniqueId != null && !uniqueId.isEmpty()) {
-			// iterate over all spaces and compare the $UniqueIDRef
-			List<ItemCollection> list = getSpaces();
-			for (ItemCollection space : list) {
-				if (uniqueId.equals(space.getItemValueString(WorkflowKernel.UNIQUEID))) {
-					return space;
-				}
-			}
-		}
-		return null;
-	}
+    /**
+     * Returns a Space for a given uniqueID.
+     * 
+     * @param uniqueId
+     * @return itemCollection of process or null if not process with the specified
+     *         id exists
+     */
+    public ItemCollection getSpaceById(String uniqueId) {
 
-	/**
-	 * Returns a process by its name
-	 * 
-	 * @param name
-	 * @return itemCollection of process or null if not process with the specified
-	 *         id exists
-	 */
-	public ItemCollection getProcessByName(String name) {
+        if (uniqueId != null && !uniqueId.isEmpty()) {
+            // iterate over all spaces and compare the $UniqueIDRef
+            List<ItemCollection> list = getSpaces();
+            for (ItemCollection space : list) {
+                if (uniqueId.equals(space.getItemValueString(WorkflowKernel.UNIQUEID))) {
+                    return space;
+                }
+            }
+        }
+        return null;
+    }
 
-		if (name != null && !name.isEmpty()) {
-			// iterate over all processes and compare the txtname
-			List<ItemCollection> list = getProcessList();
-			for (ItemCollection process : list) {
-				if (name.equals(process.getItemValueString("txtName"))) {
-					return process;
-				}
-			}
-		}
-		return null;
-	}
+    /**
+     * Returns a process by its name
+     * 
+     * @param name
+     * @return itemCollection of process or null if not process with the specified
+     *         id exists
+     */
+    public ItemCollection getProcessByName(String name) {
 
-	/**
-	 * Returns a space by its name
-	 * 
-	 * @param name
-	 * @return itemCollection of process or null if not process with the specified
-	 *         id exists
-	 */
-	public ItemCollection getSpaceByName(String name) {
+        if (name != null && !name.isEmpty()) {
+            // iterate over all processes and compare the txtname
+            List<ItemCollection> list = getProcessList();
+            for (ItemCollection process : list) {
+                if (name.equals(process.getItemValueString("txtName"))) {
+                    return process;
+                }
+            }
+        }
+        return null;
+    }
 
-		if (name != null && !name.isEmpty()) {
-			// iterate over all processes and compare the txtname
-			List<ItemCollection> list = getSpaces();
-			for (ItemCollection process : list) {
-				if (name.equals(process.getItemValueString("txtName"))) {
-					return process;
-				}
-			}
-		}
-		return null;
-	}
+    /**
+     * Returns a space by its name
+     * 
+     * @param name
+     * @return itemCollection of process or null if not process with the specified
+     *         id exists
+     */
+    public ItemCollection getSpaceByName(String name) {
 
-	/**
-	 * Returns a list of all spaces which are assigned to a given process entity.
-	 * 
-	 * @param uniqueId
-	 *            of a processEntity
-	 * @return
-	 */
-	public List<ItemCollection> getSpacesByProcessId(String uniqueId) {
-		List<ItemCollection> result = new ArrayList<ItemCollection>();
-		if (uniqueId != null && !uniqueId.isEmpty()) {
-			// find project
-			ItemCollection process = getProcessById(uniqueId);
-			result = getSpacesByProcess(process);
-		}
-		return result;
-	}
+        if (name != null && !name.isEmpty()) {
+            // iterate over all processes and compare the txtname
+            List<ItemCollection> list = getSpaces();
+            for (ItemCollection process : list) {
+                if (name.equals(process.getItemValueString("txtName"))) {
+                    return process;
+                }
+            }
+        }
+        return null;
+    }
 
-	/**
-	 * Returns a list of all spaces which are assigned to a given process entity.
-	 * 
-	 * @param uniqueId
-	 *            of a processEntity
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public List<ItemCollection> getSpacesByProcess(ItemCollection process) {
-		List<ItemCollection> result = new ArrayList<ItemCollection>();
-		if (process != null) {
-			List<String> refs = process.getItemValue(WorkflowService.UNIQUEIDREF);
-			if (refs != null && !refs.isEmpty()) {
-				// iterate over all spaces and compare the $UniqueIDRef
-				List<ItemCollection> list = getSpaces();
-				for (ItemCollection space : list) {
+    /**
+     * Returns a list of all spaces which are assigned to a given process entity.
+     * 
+     * @param uniqueId of a processEntity
+     * @return
+     */
+    public List<ItemCollection> getSpacesByProcessId(String uniqueId) {
+        List<ItemCollection> result = new ArrayList<ItemCollection>();
+        if (uniqueId != null && !uniqueId.isEmpty()) {
+            // find project
+            ItemCollection process = getProcessById(uniqueId);
+            result = getSpacesByProcess(process);
+        }
+        return result;
+    }
 
-					if (refs.contains(space.getItemValueString(WorkflowKernel.UNIQUEID))) {
-						result.add(space);
-					}
-				}
-			}
-		}
-		return result;
-	}
+    /**
+     * Returns a list of all spaces which are assigned to a given process entity.
+     * 
+     * @param uniqueId of a processEntity
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public List<ItemCollection> getSpacesByProcess(ItemCollection process) {
+        List<ItemCollection> result = new ArrayList<ItemCollection>();
+        if (process != null) {
+            List<String> refs = process.getItemValue(WorkflowService.UNIQUEIDREF);
+            if (refs != null && !refs.isEmpty()) {
+                // iterate over all spaces and compare the $UniqueIDRef
+                List<ItemCollection> list = getSpaces();
+                for (ItemCollection space : list) {
 
-	/**
-	 * Returns a list of all spaces which are siblings to a given UniqueID.
-	 * 
-	 * @param uniqueId
-	 * @return
-	 */
-	public List<ItemCollection> getSpacesByRef(String uniqueId) {
+                    if (refs.contains(space.getItemValueString(WorkflowKernel.UNIQUEID))) {
+                        result.add(space);
+                    }
+                }
+            }
+        }
+        return result;
+    }
 
-		List<ItemCollection> result = new ArrayList<ItemCollection>();
+    /**
+     * Returns a list of all spaces which are siblings to a given UniqueID.
+     * 
+     * @param uniqueId
+     * @return
+     */
+    public List<ItemCollection> getSpacesByRef(String uniqueId) {
 
-		if (uniqueId != null && !uniqueId.isEmpty()) {
-			// iterate over all spaces and compare the $UniqueIDRef
-			List<ItemCollection> list = getSpaces();
-			for (ItemCollection space : list) {
-				logger.fine("Spacename= " + space.getItemValueString("txtName") + " uniquidref= "
-						+ space.getItemValueString(WorkflowService.UNIQUEIDREF));
-				if (uniqueId.equals(space.getItemValueString(WorkflowService.UNIQUEIDREF))) {
-					result.add(space);
-				}
-			}
-		}
-		return result;
-	}
+        List<ItemCollection> result = new ArrayList<ItemCollection>();
 
-	/**
-	 * Returns a list of all spaces on the root level.
-	 * 
-	 * @param uniqueId
-	 * @return
-	 */
-	public List<ItemCollection> getRootSpaces() {
+        if (uniqueId != null && !uniqueId.isEmpty()) {
+            // iterate over all spaces and compare the $UniqueIDRef
+            List<ItemCollection> list = getSpaces();
+            for (ItemCollection space : list) {
+                logger.fine("Spacename= " + space.getItemValueString("txtName") + " uniquidref= "
+                        + space.getItemValueString(WorkflowService.UNIQUEIDREF));
+                if (uniqueId.equals(space.getItemValueString(WorkflowService.UNIQUEIDREF))) {
+                    result.add(space);
+                }
+            }
+        }
+        return result;
+    }
 
-		List<ItemCollection> result = new ArrayList<ItemCollection>();
+    /**
+     * Returns a list of all spaces on the root level.
+     * 
+     * @param uniqueId
+     * @return
+     */
+    public List<ItemCollection> getRootSpaces() {
 
-		// iterate over all spaces and select those without a $UniqueIDRef
-		List<ItemCollection> list = getSpaces();
-		for (ItemCollection space : list) {
-			logger.fine("Spacename= " + space.getItemValueString("txtName") + " uniquidref= "
-					+ space.getItemValueString(WorkflowService.UNIQUEIDREF));
-			if (space.getItemValueString(WorkflowService.UNIQUEIDREF).isEmpty()) {
-				result.add(space);
-			}
-		}
+        List<ItemCollection> result = new ArrayList<ItemCollection>();
 
-		return result;
-	}
+        // iterate over all spaces and select those without a $UniqueIDRef
+        List<ItemCollection> list = getSpaces();
+        for (ItemCollection space : list) {
+            logger.fine("Spacename= " + space.getItemValueString("txtName") + " uniquidref= "
+                    + space.getItemValueString(WorkflowService.UNIQUEIDREF));
+            if (space.getItemValueString(WorkflowService.UNIQUEIDREF).isEmpty()) {
+                result.add(space);
+            }
+        }
 
-	/**
-	 * Returns a unique sorted list of managers for the current project. The
-	 * returned list contains cloned user profile entities.
-	 * 
-	 *
-	 * @return list of profile entities for the current team managers
-	 */
-	public List<ItemCollection> getManagers(String aUniqueID) {
-		List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "namManager");
+        return result;
+    }
 
-		// sort by username..
-		Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
+    /**
+     * Returns a unique sorted list of managers for the current project. The
+     * returned list contains cloned user profile entities.
+     * 
+     *
+     * @return list of profile entities for the current team managers
+     */
+    public List<ItemCollection> getManagers(String aUniqueID) {
+        List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "namManager");
 
-		return resultList;
-	}
+        // sort by username..
+        Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
 
-	/**
-	 * Returns a unique sorted list of team members for the current project. The
-	 * returned list contains cloned user profile entities.
-	 * 
-	 *
-	 * @return list of profile entities for the current team members
-	 */
-	public List<ItemCollection> getTeam(String aUniqueID) {
-		List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "namTeam");
+        return resultList;
+    }
 
-		// sort by username..
-		Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
+    /**
+     * Returns a unique sorted list of team members for the current project. The
+     * returned list contains cloned user profile entities.
+     * 
+     *
+     * @return list of profile entities for the current team members
+     */
+    public List<ItemCollection> getTeam(String aUniqueID) {
+        List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "namTeam");
 
-		return resultList;
-	}
+        // sort by username..
+        Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
 
-	/**
-	 * Returns a unique sorted list of assist members for the current project. The
-	 * returned list contains cloned user profile entities.
-	 * 
-	 *
-	 * @return list of profile entities for the current team members
-	 */
-	public List<ItemCollection> getAssist(String aUniqueID) {
-		List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "namAssist");
+        return resultList;
+    }
 
-		// sort by username..
-		Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
+    /**
+     * Returns a unique sorted list of assist members for the current project. The
+     * returned list contains cloned user profile entities.
+     * 
+     *
+     * @return list of profile entities for the current team members
+     */
+    public List<ItemCollection> getAssist(String aUniqueID) {
+        List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "namAssist");
 
-		return resultList;
-	}
+        // sort by username..
+        Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
 
-	/**
-	 * Returns a unique sorted list of all members (Managers, Team, Assist) for the
-	 * current project. The returned list contains cloned user profile entities.
-	 * 
-	 *
-	 * @return list of profile entities for the current team members
-	 */
-	public List<ItemCollection> getProcessMembers(String aUniqueID) {
-		List<ItemCollection> resultList = new ArrayList<ItemCollection>();
-		List<String> dupplicatedIds = new ArrayList<String>();
+        return resultList;
+    }
 
-		List<ItemCollection> assistList = getMemberListByRole(aUniqueID, "namAssist");
-		List<ItemCollection> teamList = getMemberListByRole(aUniqueID, "namTeam");
-		List<ItemCollection> managerList = getMemberListByRole(aUniqueID, "namManager");
+    /**
+     * Returns a unique sorted list of all members (Managers, Team, Assist) for the
+     * current project. The returned list contains cloned user profile entities.
+     * 
+     *
+     * @return list of profile entities for the current team members
+     */
+    public List<ItemCollection> getProcessMembers(String aUniqueID) {
+        List<ItemCollection> resultList = new ArrayList<ItemCollection>();
+        List<String> dupplicatedIds = new ArrayList<String>();
 
-		for (ItemCollection profile : teamList) {
-			// avoid duplicates..
-			if (!dupplicatedIds.contains(profile.getItemValueString(WorkflowKernel.UNIQUEID))) {
-				resultList.add(profile);
-			}
-			dupplicatedIds.add(profile.getItemValueString(WorkflowKernel.UNIQUEID));
-		}
-		for (ItemCollection profile : managerList) {
-			// avoid duplicates..
-			if (!dupplicatedIds.contains(profile.getItemValueString(WorkflowKernel.UNIQUEID))) {
-				resultList.add(profile);
-			}
-			dupplicatedIds.add(profile.getItemValueString(WorkflowKernel.UNIQUEID));
-		}
-		for (ItemCollection profile : assistList) {
-			// avoid duplicates..
-			if (!dupplicatedIds.contains(profile.getItemValueString(WorkflowKernel.UNIQUEID))) {
-				resultList.add(profile);
-			}
-			dupplicatedIds.add(profile.getItemValueString(WorkflowKernel.UNIQUEID));
-		}
+        List<ItemCollection> assistList = getMemberListByRole(aUniqueID, "namAssist");
+        List<ItemCollection> teamList = getMemberListByRole(aUniqueID, "namTeam");
+        List<ItemCollection> managerList = getMemberListByRole(aUniqueID, "namManager");
 
-		// sort by username..
-		Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
+        for (ItemCollection profile : teamList) {
+            // avoid duplicates..
+            if (!dupplicatedIds.contains(profile.getItemValueString(WorkflowKernel.UNIQUEID))) {
+                resultList.add(profile);
+            }
+            dupplicatedIds.add(profile.getItemValueString(WorkflowKernel.UNIQUEID));
+        }
+        for (ItemCollection profile : managerList) {
+            // avoid duplicates..
+            if (!dupplicatedIds.contains(profile.getItemValueString(WorkflowKernel.UNIQUEID))) {
+                resultList.add(profile);
+            }
+            dupplicatedIds.add(profile.getItemValueString(WorkflowKernel.UNIQUEID));
+        }
+        for (ItemCollection profile : assistList) {
+            // avoid duplicates..
+            if (!dupplicatedIds.contains(profile.getItemValueString(WorkflowKernel.UNIQUEID))) {
+                resultList.add(profile);
+            }
+            dupplicatedIds.add(profile.getItemValueString(WorkflowKernel.UNIQUEID));
+        }
 
-		return resultList;
-	}
+        // sort by username..
+        Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
 
-	/**
-	 * Returns true if current user is manager of a given orgunit. Therefore the
-	 * method checks the cloned field 'isManager' computed by the ProcessService
-	 * 
-	 * @return
-	 */
-	public boolean isManagerOf(String aUniqueID) {
-		// find orgunit....
-		ItemCollection entity = getEntityById(aUniqueID);
-		if (entity != null) {
-			return entity.getItemValueBoolean("isManager");
-		} else {
-			return false;
-		}
-	}
+        return resultList;
+    }
 
-	/**
-	 * Returns true if current user is team member of a given orgunit. Therefore the
-	 * method checks the cloned field 'isTeam' computed by the ProcessService
-	 * 
-	 * @return
-	 */
-	public boolean isTeamMemberOf(String aUniqueID) {
-		// find orgunit...
-		ItemCollection entity = getEntityById(aUniqueID);
-		if (entity != null) {
-			return entity.getItemValueBoolean("isTeam");
-		} else {
-			return false;
-		}
-	}
+    /**
+     * Returns true if current user is manager of a given orgunit. Therefore the
+     * method checks the cloned field 'isManager' computed by the ProcessService
+     * 
+     * @return
+     */
+    public boolean isManagerOf(String aUniqueID) {
+        // find orgunit....
+        ItemCollection entity = getEntityById(aUniqueID);
+        if (entity != null) {
+            return entity.getItemValueBoolean("isManager");
+        } else {
+            return false;
+        }
+    }
 
-	/**
-	 * Returns true if current user is assist of a given orgunit. Therefore the
-	 * method checks the cloned field 'isTeam' computed by the ProcessService
-	 * 
-	 * @return
-	 */
-	public boolean isAssitOf(String aUniqueID) {
-		// find orgunit...
-		ItemCollection entity = getEntityById(aUniqueID);
-		if (entity != null) {
-			return entity.getItemValueBoolean("isAssist");
-		} else {
-			return false;
-		}
-	}
+    /**
+     * Returns true if current user is team member of a given orgunit. Therefore the
+     * method checks the cloned field 'isTeam' computed by the ProcessService
+     * 
+     * @return
+     */
+    public boolean isTeamMemberOf(String aUniqueID) {
+        // find orgunit...
+        ItemCollection entity = getEntityById(aUniqueID);
+        if (entity != null) {
+            return entity.getItemValueBoolean("isTeam");
+        } else {
+            return false;
+        }
+    }
 
-	/**
-	 * Returns true if current user is teamMember, manager or assist of a given
-	 * orgunit. Therefore the method checks the cloned field 'isMember' computed by
-	 * the ProcessService
-	 * 
-	 * @return
-	 */
-	public boolean isMemberOf(String aUniqueID) {
-		// find orgunit..
-		ItemCollection entity = getEntityById(aUniqueID);
-		if (entity != null) {
-			return entity.getItemValueBoolean("isMember");
-		} else {
-			return false;
-		}
-	}
+    /**
+     * Returns true if current user is assist of a given orgunit. Therefore the
+     * method checks the cloned field 'isTeam' computed by the ProcessService
+     * 
+     * @return
+     */
+    public boolean isAssitOf(String aUniqueID) {
+        // find orgunit...
+        ItemCollection entity = getEntityById(aUniqueID);
+        if (entity != null) {
+            return entity.getItemValueBoolean("isAssist");
+        } else {
+            return false;
+        }
+    }
 
-	/**
-	 * WorkflowEvent listener
-	 * 
-	 * If a project WorkItem was processed the modellController will be reseted.
-	 * 
-	 * 
-	 * @param workflowEvent
-	 */
-	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
-		if (workflowEvent == null)
-			return;
+    /**
+     * Returns true if current user is teamMember, manager or assist of a given
+     * orgunit. Therefore the method checks the cloned field 'isMember' computed by
+     * the ProcessService
+     * 
+     * @return
+     */
+    public boolean isMemberOf(String aUniqueID) {
+        // find orgunit..
+        ItemCollection entity = getEntityById(aUniqueID);
+        if (entity != null) {
+            return entity.getItemValueBoolean("isMember");
+        } else {
+            return false;
+        }
+    }
 
-		if (WorkflowEvent.WORKITEM_CREATED == workflowEvent.getEventType()) {
-			String processRef = workflowEvent.getWorkitem().getItemValueString(WorkflowService.UNIQUEIDREF);
-			ItemCollection process = getProcessById(processRef);
-			if (process != null) {
-				workflowEvent.getWorkitem().replaceItemValue("txtProcessName", process.getItemValueString("txtName"));
-				workflowEvent.getWorkitem().replaceItemValue("txtProcessRef",
-						process.getItemValueString(WorkflowKernel.UNIQUEID));
-			} else {
-				logger.fine("[WORKITEM_CREATED] - unable to find process entity '" + processRef + "'!");
-			}
-		}
+    /**
+     * WorkflowEvent listener
+     * 
+     * If a process or space was created/loaded/processed the modellController will
+     * be reseted.
+     * 
+     * 
+     * @param workflowEvent
+     */
+    public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
+        if (workflowEvent == null) {
+            return;
+        }
 
-		if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
-			// test if a space or process entity was processed
-			String sType = workflowEvent.getWorkitem().getItemValueString("type");
-			if (sType.startsWith("space") || sType.startsWith("process")) {
-				reset();
-				logger.fine("ModelController:WorkflowEvent=" + workflowEvent.getEventType());
-			}
-		}
-	}
+        String type = workflowEvent.getWorkitem().getItemValueString("type");
+        if (!type.startsWith("space") && !type.startsWith("process")) {
+            // no process or space!
+            return;
+        }
 
-	/**
-	 * Returns a unique sorted list of profile itemCollections for a team list in a
-	 * project. The returned list contains cloned user profile entities.
-	 * 
-	 * @param listType
-	 *            - the member field of the project (namTeam, namManager, namAssist)
-	 * @return list of team profiles
-	 */
-	@SuppressWarnings("unchecked")
-	private List<ItemCollection> getMemberListByRole(String aUniqueID, String role) {
-		List<ItemCollection> resultList = new ArrayList<ItemCollection>();
-		List<String> dupplicatedIds = new ArrayList<String>();
+        // if created - update process name/ref...
+        if (WorkflowEvent.WORKITEM_CREATED == workflowEvent.getEventType()) {
+            String processRef = workflowEvent.getWorkitem().getItemValueString(WorkflowService.UNIQUEIDREF);
+            ItemCollection process = getProcessById(processRef);
+            if (process != null) {
+                workflowEvent.getWorkitem().replaceItemValue("txtProcessName", process.getItemValueString("txtName"));
+                workflowEvent.getWorkitem().replaceItemValue("txtProcessRef",
+                        process.getItemValueString(WorkflowKernel.UNIQUEID));
+            } else {
+                logger.fine("[WORKITEM_CREATED] - unable to find process entity '" + processRef + "'!");
+            }
+        }
 
-		// find Process/Space entity
-		ItemCollection entity = getEntityById(aUniqueID);
-		if (entity == null)
-			return resultList;
+        // set default labels for team/manager/assist if empty
+        if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
 
-		List<String> members = entity.getItemValue(role);
-		for (String member : members) {
-			// avoid duplicates..
-			if (!dupplicatedIds.contains(member)) {
-				ItemCollection profile = profileService.findProfileById(member);
-				if (profile != null) {
-					resultList.add(profile);
-				}
-				dupplicatedIds.add(member);
-			}
-		}
+            if (type.startsWith("space")) {
+                if (!workflowEvent.getWorkitem().hasItem("space.manager.label")) {
+                    workflowEvent.getWorkitem().setItemValue("space.manager.label",
+                            resourceBundleHandler.findMessage("space.manager"));
+                }
 
-		return resultList;
-	}
+                if (!workflowEvent.getWorkitem().hasItem("space.team.label")) {
+                    workflowEvent.getWorkitem().setItemValue("space.team.label",
+                            resourceBundleHandler.findMessage("space.team"));
+                }
+                if (!workflowEvent.getWorkitem().hasItem("space.assist.label")) {
+                    workflowEvent.getWorkitem().setItemValue("space.assist.label",
+                            resourceBundleHandler.findMessage("space.assist"));
+                }
+            }
+            if (type.startsWith("process")) {
+                if (!workflowEvent.getWorkitem().hasItem("process.manager.label")) {
+                    workflowEvent.getWorkitem().setItemValue("process.manager.label",
+                            resourceBundleHandler.findMessage("process.manager"));
+                }
+
+                if (!workflowEvent.getWorkitem().hasItem("process.team.label")) {
+                    workflowEvent.getWorkitem().setItemValue("process.team.label",
+                            resourceBundleHandler.findMessage("process.team"));
+                }
+                if (!workflowEvent.getWorkitem().hasItem("process.assist.label")) {
+                    workflowEvent.getWorkitem().setItemValue("process.assist.label",
+                            resourceBundleHandler.findMessage("process.assist"));
+                }
+            }
+
+        }
+
+        if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
+            // test if a space or process entity was processed
+            String sType = workflowEvent.getWorkitem().getItemValueString("type");
+            if (sType.startsWith("space") || sType.startsWith("process")) {
+                reset();
+                logger.fine("ModelController:WorkflowEvent=" + workflowEvent.getEventType());
+            }
+        }
+    }
+
+    /**
+     * Returns a unique sorted list of profile itemCollections for a team list in a
+     * project. The returned list contains cloned user profile entities.
+     * 
+     * @param listType - the member field of the project (namTeam, namManager,
+     *                 namAssist)
+     * @return list of team profiles
+     */
+    @SuppressWarnings("unchecked")
+    private List<ItemCollection> getMemberListByRole(String aUniqueID, String role) {
+        List<ItemCollection> resultList = new ArrayList<ItemCollection>();
+        List<String> dupplicatedIds = new ArrayList<String>();
+
+        // find Process/Space entity
+        ItemCollection entity = getEntityById(aUniqueID);
+        if (entity == null)
+            return resultList;
+
+        List<String> members = entity.getItemValue(role);
+        for (String member : members) {
+            // avoid duplicates..
+            if (!dupplicatedIds.contains(member)) {
+                ItemCollection profile = profileService.findProfileById(member);
+                if (profile != null) {
+                    resultList.add(profile);
+                }
+                dupplicatedIds.add(member);
+            }
+        }
+
+        return resultList;
+    }
 
 }
