@@ -53,144 +53,144 @@ import org.imixs.workflow.exceptions.QueryException;
  */
 public class SpacePlugin extends AbstractPlugin {
 
-	public static String SPACE_DELETE_ERROR = "SPACE_DELETE_ERROR";
-	public static String SPACE_ARCHIVE_ERROR = "SPACE_ARCHIVE_ERROR";
-	public static String ORGUNIT_NAME_ERROR = "ORGUNIT_NAME_ERROR";
+    public static String SPACE_DELETE_ERROR = "SPACE_DELETE_ERROR";
+    public static String SPACE_ARCHIVE_ERROR = "SPACE_ARCHIVE_ERROR";
+    public static String ORGUNIT_NAME_ERROR = "ORGUNIT_NAME_ERROR";
 
-	private static Logger logger = Logger.getLogger(SpacePlugin.class.getName());
-	private ItemCollection space = null;
+    private static Logger logger = Logger.getLogger(SpacePlugin.class.getName());
+    private ItemCollection space = null;
 
-	@EJB
-	TeamCache teamCache;
-	
-	@EJB
-	SpaceService spaceService;
+    @EJB
+    TeamCache teamCache;
 
-	/**
-	 * If a 'space' is processed, the method verifies if the space Information need
-	 * to be updated to the parent and subSpaces.
-	 * 
-	 * If a 'spacedeleted' is processed, the method verifies if a deletion is
-	 * allowed. This is not the case if subspaces exist!
-	 * 
-	 **/
-	@Override
-	public ItemCollection run(ItemCollection documentContext, ItemCollection event) throws PluginException {
-		space = null;
-		String type = documentContext.getType();
+    @EJB
+    SpaceService spaceService;
 
-		// verify type 'spacedeleted'
-		// in case of a deletion we test if subspaces still exist! In this case
-		// deletion is not allowed
-		if ("spacedeleted".equals(type)) {
-			List<ItemCollection> subspaces = spaceService.findAllSubSpaces(documentContext.getUniqueID(), "space", "spacearchive");
-			// if a parentSpace exist - stop deletion!
-			if (subspaces != null && subspaces.size() > 0) {
-				throw new PluginException(SpacePlugin.class.getName(), SPACE_DELETE_ERROR,
-						"Space object can not be deleted, because descendant space object(s) exist!");
-			}
-			return documentContext;
-		}
+    /**
+     * If a 'space' is processed, the method verifies if the space Information need
+     * to be updated to the parent and subSpaces.
+     * 
+     * If a 'spacedeleted' is processed, the method verifies if a deletion is
+     * allowed. This is not the case if subspaces exist!
+     * 
+     **/
+    @Override
+    public ItemCollection run(ItemCollection documentContext, ItemCollection event) throws PluginException {
+        space = null;
+        String type = documentContext.getType();
 
-		// verify type 'spacearchive'
-		// in this case we test if subspaces still exist! In this case
-		// archive is not allowed
-		if ("spacearchive".equals(type)) {
-			List<ItemCollection> subspaces = spaceService.findAllSubSpaces(documentContext.getUniqueID(), "space");
-			// if a parentSpace exist - stop deletion!
-			if (subspaces != null && subspaces.size() > 0) {
-				throw new PluginException(SpacePlugin.class.getName(), SPACE_ARCHIVE_ERROR,
-						"Space object can not be archived, because active descendant space object(s) exist!");
-			}
-		}
-		
+        // verify type 'spacedeleted'
+        // in case of a deletion we test if subspaces still exist! In this case
+        // deletion is not allowed
+        if ("spacedeleted".equals(type)) {
+            List<ItemCollection> subspaces = spaceService.findAllSubSpaces(documentContext.getUniqueID(), "space",
+                    "spacearchive");
+            // if a parentSpace exist - stop deletion!
+            if (subspaces != null && subspaces.size() > 0) {
+                throw new PluginException(SpacePlugin.class.getName(), SPACE_DELETE_ERROR,
+                        "Space object can not be deleted, because descendant space object(s) exist!");
+            }
+            return documentContext;
+        }
 
-		// verify if the space name and sub-spaces need to be updated...
-		if ("space".equals(type) || "spacearchive".equals(type)) {
-			space = documentContext;
-			inheritParentSpaceProperties();
-			// verify txtname if still unique....
-			validateUniqueOrgunitName(space,"space");
-			spaceService.updateSubSpaces(space);
-		}
+        // verify type 'spacearchive'
+        // in this case we test if subspaces still exist! In this case
+        // archive is not allowed
+        if ("spacearchive".equals(type)) {
+            List<ItemCollection> subspaces = spaceService.findAllSubSpaces(documentContext.getUniqueID(), "space");
+            // if a parentSpace exist - stop deletion!
+            if (subspaces != null && subspaces.size() > 0) {
+                throw new PluginException(SpacePlugin.class.getName(), SPACE_ARCHIVE_ERROR,
+                        "Space object can not be archived, because active descendant space object(s) exist!");
+            }
+        }
 
-		// verify if the space name and sub-spaces need to be updated...
-		if ("process".equals(type) ) {
-			// verify txtname if still unique....
-			validateUniqueOrgunitName(documentContext,"process");
-		}
-	
-		return documentContext;
-	}
+        // verify if the space name and sub-spaces need to be updated...
+        if ("space".equals(type) || "spacearchive".equals(type)) {
+            space = documentContext;
+            inheritParentSpaceProperties();
+            // verify txtname if still unique....
+            validateUniqueOrgunitName(space, "space");
+            spaceService.updateSubSpaces(space);
+        }
 
-	/**
-	 * This method inherits the Space Name ('txtName') and team lists from a parent
-	 * Space. A parent space is referenced by the $UniqueIDRef.
-	 * 
-	 * If the parent is archived or deleted, the method throws a pluginExcepiton
-	 * 
-	 * @throws PluginException
-	 * 
-	 */
-	private void inheritParentSpaceProperties() throws PluginException {
-		ItemCollection parentProject = null;
-		// test if the project has a subproject..
-		String sParentProjectID = space.getItemValueString("$uniqueidRef");
+        // verify if the space name and sub-spaces need to be updated...
+        if ("process".equals(type)) {
+            // verify txtname if still unique....
+            validateUniqueOrgunitName(documentContext, "process");
+        }
 
-		if (!sParentProjectID.isEmpty())
-			parentProject = getWorkflowService().getDocumentService().load(sParentProjectID);
+        return documentContext;
+    }
 
-		if (parentProject != null) {
-			if ("space".equals(parentProject.getType())) {
-				logger.fine("Updating Parent Project Informations for '" + sParentProjectID + "'");
+    /**
+     * This method inherits the Space Name ('txtName') and team lists from a parent
+     * Space. A parent space is referenced by the $UniqueIDRef.
+     * 
+     * If the parent is archived or deleted, the method throws a pluginExcepiton
+     * 
+     * @throws PluginException
+     * 
+     */
+    private void inheritParentSpaceProperties() throws PluginException {
+        ItemCollection parentProject = null;
+        // test if the project has a subproject..
+        String sParentProjectID = space.getItemValueString("$uniqueidRef");
 
-				String sName = space.getItemValueString("txtSpaceName");
-				String sParentName = parentProject.getItemValueString("name");
+        if (!sParentProjectID.isEmpty())
+            parentProject = getWorkflowService().getDocumentService().load(sParentProjectID);
 
-				space.replaceItemValue("name", sParentName + "." + sName);
-				space.replaceItemValue("space.parent.name", sParentName);
+        if (parentProject != null) {
+            if ("space".equals(parentProject.getType())) {
+                logger.fine("Updating Parent Project Informations for '" + sParentProjectID + "'");
 
-			} else {
-				throw new PluginException(SpacePlugin.class.getName(), SPACE_ARCHIVE_ERROR,
-						"Space object can not be updated, because parent space object is archived!");
-			}
-		} else {
-			// root project - update txtName
-			space.replaceItemValue("txtName", space.getItemValueString("txtSpaceName"));
+                String sName = space.getItemValueString("txtSpaceName");
+                String sParentName = parentProject.getItemValueString("name");
 
-		}
-	}
+                space.replaceItemValue("name", sParentName + "." + sName);
+                space.replaceItemValue("space.parent.name", sParentName);
 
+            } else {
+                throw new PluginException(SpacePlugin.class.getName(), SPACE_ARCHIVE_ERROR,
+                        "Space object can not be updated, because parent space object is archived!");
+            }
+        } else {
+            // root project - update txtName
+            space.replaceItemValue("txtName", space.getItemValueString("txtSpaceName"));
 
-	/**
-	 * This method validates the uniqueness of the item txtname of an orgunit.
-	 * 
-	 * @param orgunit
-	 * @param type - space or process
-	 * 
-	 * @throws PluginException if name is already taken
-	 */
-	private void validateUniqueOrgunitName(ItemCollection orgunit, String type) throws PluginException {
-		String name=orgunit.getItemValueString("name");
-		String unqiueid=orgunit.getUniqueID();
-		
-		// support deprecated item name 'txtname
-		String sQuery = "((type:\"" +type + "\" OR type:\"" + type + "archive\") AND (txtname:\"" + name + "\" OR name:\"" + name + "\"))";
+        }
+    }
 
-		List<ItemCollection> spaceList;
-		try {
-			spaceList = getWorkflowService().getDocumentService().find(sQuery, 9999, 0);
+    /**
+     * This method validates the uniqueness of the item txtname of an orgunit.
+     * 
+     * @param orgunit
+     * @param type    - space or process
+     * 
+     * @throws PluginException if name is already taken
+     */
+    private void validateUniqueOrgunitName(ItemCollection orgunit, String type) throws PluginException {
+        String name = orgunit.getItemValueString("name");
+        String unqiueid = orgunit.getUniqueID();
 
-			for (ItemCollection aspace : spaceList) {
-				if (!aspace.getUniqueID().equals(unqiueid)) {
-					throw new PluginException(SpacePlugin.class.getName(), ORGUNIT_NAME_ERROR,
-							type + " with this name already exists!");
-				}
-			}
+        // support deprecated item name 'txtname
+        String sQuery = "((type:\"" + type + "\" OR type:\"" + type + "archive\") AND (txtname:\"" + name
+                + "\" OR name:\"" + name + "\"))";
 
-		} catch (QueryException e) {
-			throw new InvalidAccessException(InvalidAccessException.INVALID_ID, e.getMessage(), e);
-		}
+        List<ItemCollection> spaceList;
+        try {
+            spaceList = getWorkflowService().getDocumentService().find(sQuery, 9999, 0);
 
-	}
+            for (ItemCollection aspace : spaceList) {
+                if (!aspace.getUniqueID().equals(unqiueid)) {
+                    throw new PluginException(SpacePlugin.class.getName(), ORGUNIT_NAME_ERROR,
+                            type + " with this name already exists!");
+                }
+            }
+
+        } catch (QueryException e) {
+            throw new InvalidAccessException(InvalidAccessException.INVALID_ID, e.getMessage(), e);
+        }
+
+    }
 }
