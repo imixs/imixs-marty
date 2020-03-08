@@ -58,6 +58,13 @@ public class WorkitemHelper {
 		clone.replaceItemValue("namTeam", aWorkitem.getItemValue("namTeam"));
 		clone.replaceItemValue("namManager", aWorkitem.getItemValue("namManager"));
 		clone.replaceItemValue("namassist", aWorkitem.getItemValue("namassist"));
+		
+		if (aWorkitem.getType().startsWith("space")) {
+		    cloneByPraefix("space",aWorkitem,clone);
+		}
+		if (aWorkitem.getType().startsWith("process")) {
+            cloneByPraefix("process",aWorkitem,clone);
+        }
 
 		clone.replaceItemValue("$workflowsummary", aWorkitem.getItemValue("$workflowsummary"));
 		clone.replaceItemValue("$WorkflowAbstract", aWorkitem.getItemValue("$WorkflowAbstract"));
@@ -88,6 +95,28 @@ public class WorkitemHelper {
 		return clone;
 
 	}
+	
+	
+	
+	/**
+	 * Clones all items by a given praefix
+	 * @param string
+	 * @param aWorkitem
+	 * @param clone
+	 */
+	private static void cloneByPraefix(String praefix, ItemCollection aWorkitem, ItemCollection clone) {
+	    List<String> itemNames = aWorkitem.getItemNames();
+	    String itempraefix="."+praefix;
+	    for (String itemName: itemNames) {
+	        if (itemName.startsWith(itempraefix)) {
+	            clone.replaceItemValue(itemName, aWorkitem.getItemValue(itemName));
+	        }
+	    }
+        
+    }
+
+
+
 
 	/**
 	 * This method tests if a given WorkItem matches a filter expression. The

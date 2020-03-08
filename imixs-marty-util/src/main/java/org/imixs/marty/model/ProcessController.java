@@ -40,7 +40,7 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.marty.ejb.ProcessService;
+import org.imixs.marty.ejb.TeamService;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.util.ResourceBundleHandler;
 import org.imixs.workflow.ItemCollection;
@@ -83,7 +83,7 @@ public class ProcessController implements Serializable {
     protected DocumentService documentService;
 
     @EJB
-    protected ProcessService processService;
+    protected TeamService processService;
 
     @EJB
     protected ProfileService profileService;
@@ -416,7 +416,7 @@ public class ProcessController implements Serializable {
 
     /**
      * Returns a unique sorted list of all members (Managers, Team, Assist) for the
-     * current project. The returned list contains cloned user profile entities.
+     * current process. The returned list contains cloned user profile entities.
      * 
      *
      * @return list of profile entities for the current team members

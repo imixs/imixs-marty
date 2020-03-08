@@ -41,7 +41,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.imixs.marty.ejb.ProcessService;
+import org.imixs.marty.ejb.TeamService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.ModelService;
@@ -50,7 +50,7 @@ import org.imixs.workflow.xml.XMLDataCollection;
 import org.imixs.workflow.xml.XMLDataCollectionAdapter;
 
 /**
- * The ProcessRestService provides methods to access the marty process and space
+ * The TeamRestService provides methods to access the marty process and space
  * entities. The Service extends the imixs-workflow-jaxrs api.
  * 
  * Additional the service provides a list of all workflow groups
@@ -59,14 +59,14 @@ import org.imixs.workflow.xml.XMLDataCollectionAdapter;
  * @author rsoika
  * 
  */
-@Named("processService")
+@Named
 @RequestScoped
-@Path("/process")
+@Path("/team")
 @Produces({ "text/html", "application/xml", "application/json" })
-public class ProcessRestService implements Serializable {
+public class TeamRestService implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private static Logger logger = Logger.getLogger(ProcessRestService.class.getSimpleName());
+	private static Logger logger = Logger.getLogger(TeamRestService.class.getSimpleName());
 
 
 	@EJB
@@ -76,14 +76,14 @@ public class ProcessRestService implements Serializable {
 	ModelService modelService;
 
 	@EJB
-	ProcessService processService;
+	TeamService teamService;
 
 	@GET
 	@Path("/processlist")
 	public XMLDataCollection getProcessList() {
 		Collection<ItemCollection> col = null;
 		try {
-			col = processService.getProcessList();
+			col = teamService.getProcessList();
 			logger.fine("getProcessList - " + col.size() + " entries found");
 			return XMLDataCollectionAdapter.getDataCollection(col);
 
@@ -99,7 +99,7 @@ public class ProcessRestService implements Serializable {
 	public XMLDataCollection getProcessListXML() {
 		Collection<ItemCollection> col = null;
 		try {
-			col = processService.getProcessList();
+			col = teamService.getProcessList();
 			logger.fine("getProcessList - " + col.size() + " entries found");
 			return XMLDataCollectionAdapter.getDataCollection(col);
 
@@ -115,7 +115,7 @@ public class ProcessRestService implements Serializable {
 	public XMLDataCollection getProcessListJSON() {
 		Collection<ItemCollection> col = null;
 		try {
-			col = processService.getProcessList();
+			col = teamService.getProcessList();
 			return XMLDataCollectionAdapter.getDataCollection(col);
 
 		} catch (Exception e) {
@@ -129,7 +129,7 @@ public class ProcessRestService implements Serializable {
 	public XMLDataCollection getSpaces() {
 		Collection<ItemCollection> col = null;
 		try {
-			col = processService.getSpaces();
+			col = teamService.getSpaces();
 			return XMLDataCollectionAdapter.getDataCollection(col);
 
 		} catch (Exception e) {
@@ -144,7 +144,7 @@ public class ProcessRestService implements Serializable {
 	public XMLDataCollection getSpacesXML() {
 		Collection<ItemCollection> col = null;
 		try {
-			col = processService.getSpaces();
+			col = teamService.getSpaces();
 			return XMLDataCollectionAdapter.getDataCollection(col);
 
 		} catch (Exception e) {
@@ -159,7 +159,7 @@ public class ProcessRestService implements Serializable {
 	public XMLDataCollection getSpacesJSON() {
 		Collection<ItemCollection> col = null;
 		try {
-			col = processService.getProcessList();
+			col = teamService.getProcessList();
 			return XMLDataCollectionAdapter.getDataCollection(col);
 
 		} catch (Exception e) {

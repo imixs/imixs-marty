@@ -172,9 +172,9 @@ public class TeamLookupService {
 		for (ItemCollection orgunit : col) {
 			boolean isMember = false;
 			List<String> members = null;
-			String orgunitName = orgunit.getItemValueString("txtname");
+			String orgunitName = orgunit.getItemValueString(type+".name");
 
-			members = orgunit.getItemValue("nammanager");
+			members = orgunit.getItemValue(type+".manager");
 			// if (members.contains(userId)) {
 			if (members.stream().anyMatch(userId::equalsIgnoreCase)) {
 				memberList.add("{" + type + ":" + orgunitName + ":manager}");
@@ -182,7 +182,7 @@ public class TeamLookupService {
 				isMember = true;
 				isGeneralManager = true;
 			}
-			members = orgunit.getItemValue("namteam");
+			members = orgunit.getItemValue(type+".team");
 			// if (members.contains(userId)) {
 			if (members.stream().anyMatch(userId::equalsIgnoreCase)) {
 				memberList.add("{" + type + ":" + orgunitName + ":team}");
@@ -190,7 +190,7 @@ public class TeamLookupService {
 				isMember = true;
 				isGeneralTeam = true;
 			}
-			members = orgunit.getItemValue("namassist");
+			members = orgunit.getItemValue(type+".assist");
 			// if (members.contains(userId)) {
 			if (members.stream().anyMatch(userId::equalsIgnoreCase)) {
 				memberList.add("{" + type + ":" + orgunitName + ":assist}");

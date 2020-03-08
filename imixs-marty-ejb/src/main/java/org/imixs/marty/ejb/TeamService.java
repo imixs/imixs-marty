@@ -49,7 +49,7 @@ import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.QueryException;
 
 /**
- * The Marty ProcessService provides access to the mary process and space
+ * The Marty TeamService provides access to the mary process and space
  * entities.
  * 
  * @author rsoika
@@ -63,13 +63,13 @@ import org.imixs.workflow.exceptions.QueryException;
 		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Stateless
 @LocalBean
-public class ProcessService {
+public class TeamService {
 
 	int DEFAULT_CACHE_SIZE = 30;
 
 	final int MAX_SEARCH_COUNT = 1;
 
-	private static Logger logger = Logger.getLogger(ProcessService.class.getName());
+	private static Logger logger = Logger.getLogger(TeamService.class.getName());
 
 	@EJB
 	private DocumentService documentService;
@@ -95,7 +95,6 @@ public class ProcessService {
 	 * @return
 	 */
 	public List<ItemCollection> getProcessList() {
-		logger.fine("[ProcessService] getProcessList");
 		List<ItemCollection> processList = new ArrayList<ItemCollection>();
 		Collection<ItemCollection> col = documentService.getDocumentsByType("process");
 		// create optimized list
@@ -119,7 +118,6 @@ public class ProcessService {
 	 * @return
 	 */
 	public List<ItemCollection> getSpaces() {
-		logger.fine("[ProcessService] getSpaces");
 		List<ItemCollection> spaces = new ArrayList<ItemCollection>();
 		Collection<ItemCollection> col = documentService.getDocumentsByType("space");
 
@@ -192,24 +190,26 @@ public class ProcessService {
 	@SuppressWarnings("unchecked")
 	private ItemCollection cloneOrgItemCollection(ItemCollection orgunit) {
 		ItemCollection clone = WorkitemHelper.clone(orgunit);
+		String type=orgunit.getType();
+		
 		clone.replaceItemValue("isTeam", false);
 		clone.replaceItemValue("isManager", false);
 		clone.replaceItemValue("isAssist", false);
 
 		// check the isTeam status for the current user
-		List<String> vNameList = orgunit.getItemValue("namTeam");
+		List<String> vNameList = orgunit.getItemValue(type+".team");
 		if (documentService.isUserContained(vNameList)) {
 			clone.replaceItemValue("isTeam", true);
 		}
 
 		// check the isManager status for the current user
-		vNameList =  orgunit.getItemValue("namManager");
+		vNameList =  orgunit.getItemValue(type+".manager");
 		if (documentService.isUserContained(vNameList)) {
 			clone.replaceItemValue("isManager", true);
 		}
 
 		// check the isAssist status for the current user
-		vNameList = orgunit.getItemValue("namAssist");
+		vNameList = orgunit.getItemValue(type+".assist");
 		if (documentService.isUserContained(vNameList)) {
 			clone.replaceItemValue("isAssist", true);
 		}
@@ -225,9 +225,6 @@ public class ProcessService {
 		clone.replaceItemValue("txtWorkflowList", orgunit.getItemValue("txtWorkflowList"));
 		clone.replaceItemValue("txtReportList", orgunit.getItemValue("txtReportList"));
 		clone.replaceItemValue("txtdescription", orgunit.getItemValue("txtdescription"));
-		clone.replaceItemValue("namTeam", orgunit.getItemValue("namTeam"));
-		clone.replaceItemValue("namManager", orgunit.getItemValue("namManager"));
-		clone.replaceItemValue("namAssist", orgunit.getItemValue("namAssist"));
 
 		return clone;
 	}
