@@ -45,6 +45,7 @@ public class ItemMigrationService {
                 migrate(documentEvent.getDocument(), "namassist", "space.assist");
                 migrate(documentEvent.getDocument(), "txtname", "name");
                 migrate(documentEvent.getDocument(), "txtspacename", "space.name");
+                migrate(documentEvent.getDocument(), "txtspaceref", "space.ref");
             }
 
         }
@@ -56,7 +57,7 @@ public class ItemMigrationService {
                 migrate(documentEvent.getDocument(), "namassist", "process.assist");
                 migrate(documentEvent.getDocument(), "txtname", "name");
                 migrate(documentEvent.getDocument(), "txtname", "process.name");
-
+                migrate(documentEvent.getDocument(), "txtprocessref", "process.ref");
             }
 
         }

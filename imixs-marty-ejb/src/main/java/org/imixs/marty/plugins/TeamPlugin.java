@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.WorkflowKernel;
+import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.QueryException;
@@ -45,9 +46,9 @@ import org.imixs.workflow.exceptions.QueryException;
  * processes, spaces and workitems. A WorkItem is typically assigned to a
  * process and a optional to one ore more space entities. These references are
  * stored in the $UniqueIDRef property of the WorkItem. In addition to the
- * $UniqueIDRef property the TeamPlugin manages the properties txtProcessRef and
- * txtSpaceRef which containing only uniqueIDs of the corresponding entity type.
- * The properties txtProcessRef and txtSpaceRef can be modified by an
+ * $UniqueIDRef property the TeamPlugin manages the properties process.ref and
+ * space.ref which containing only uniqueIDs of the corresponding entity type.
+ * The properties process.ref and space.ref can be modified by an
  * application to reassign the workitem.
  * 
  * This plug-in supports also additional workflow properties for further
@@ -61,16 +62,16 @@ import org.imixs.workflow.exceptions.QueryException;
  * <li>namSpaceManager
  * <li>namSpaceAssist
  * <li>namSpaceName
- * <li>txtSpaceRef
+ * <li>space.ref
  * <li>namProcessTeam
  * <li>namProcessManager
  * <li>namProcessAssist
  * <li>txtProcessName
- * <li>txtProcessRef
+ * <li>process.ref
  * 
  * The name properties are used in security and mail plug-ins.
  * 
- * The properties 'txtProcessRef' and 'txtSpaceRef' are optional and can provide
+ * The properties 'process.ref' and 'space.ref' are optional and can provide
  * the current $uniqueIDs for referenced space or process entities. The Plug-in
  * updates the $UniqueIDRef property if these properties are filled.
  * 
@@ -120,8 +121,8 @@ public class TeamPlugin extends AbstractPlugin {
 	 * The method updates information from the Process and Space entiy (optional)
 	 * stored in the attribute '$uniqueIdref'
 	 * <ul>
-	 * <li>txtProcessRef
-	 * <li>txtSpaceRef
+	 * <li>process.ref
+	 * <li>space.ref
 	 * <li>namTeam
 	 * <li>namManager
 	 * <li>namProcessTeam
@@ -142,36 +143,42 @@ public class TeamPlugin extends AbstractPlugin {
 	   </code>
 	 * 
 	 **/
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked"})
 	@Override
 	public ItemCollection run(ItemCollection workItem, ItemCollection documentActivity) throws PluginException {
 
 		documentContext = workItem;
 
-		List<String> oldUnqiueIdRefList = workItem.getItemValue("$UniqueIdRef");
+		List<String> oldUnqiueIdRefList = workItem.getItemValue(WorkflowService.UNIQUEIDREF);
 		List<String> newUnqiueIDRefList = null;
 		List<String> processRefList = null;
 		List<String> spaceRefList = null;
 
-		// 1.1) if txtProcessRef don't exists then search for process ids in
+		// 1.1) if process.ref don't exists then search for process ids in
 		// $UnqiueIDRef
-		if (!workItem.hasItem("txtProcessRef") && !oldUnqiueIdRefList.isEmpty()) {
-			processRefList = workItem.getItemValue("txtProcessRef");
+		if (!workItem.hasItem("process.ref") && !oldUnqiueIdRefList.isEmpty()) {
+			processRefList = workItem.getItemValue("process.ref");
 			for (String aUniqueID : oldUnqiueIdRefList) {
+			    if (aUniqueID==null || aUniqueID.isEmpty()) {
+                    continue;
+                }
 				ItemCollection entity = findEntity(aUniqueID);
 				if (entity != null && "process".equals(entity.getItemValueString("type"))) {
-					// update txtProcessRef
+					// update process.ref
 					processRefList.add(entity.getItemValueString(WorkflowKernel.UNIQUEID));
 				}
 			}
-			// update txtProcessRef
-			workItem.replaceItemValue("txtProcessRef", processRefList);
+			// update process.ref
+			workItem.setItemValueUnique("process.ref", processRefList);
 		} else {
-			// 1.1.1) validate content of txtProcessRef
-			if (workItem.hasItem("txtProcessRef")) {
-				processRefList = workItem.getItemValue("txtProcessRef");
+			// 1.1.1) validate content of process.ref
+			if (workItem.hasItem("process.ref")) {
+				processRefList = workItem.getItemValue("process.ref");
 				List<String> verifiedRefList = new ArrayList<String>();
 				for (String aUniqueID : processRefList) {
+				    if (aUniqueID==null || aUniqueID.isEmpty()) {
+				        continue;
+				    }
 					ItemCollection entity = findEntity(aUniqueID);
 					// if the entity was not found by id we test if we can catch
 					// it up by its name...
@@ -191,28 +198,28 @@ public class TeamPlugin extends AbstractPlugin {
 						verifiedRefList.add(aUniqueID);
 					}
 				}
-				// update txtProcessRef
-				workItem.replaceItemValue("txtProcessRef", verifiedRefList);
+				// update process.ref
+				workItem.setItemValueUnique("process.ref", verifiedRefList);
 			}
 		}
 
-		// 1.2) if txtSpaceRef don't exists then search for space ids in
+		// 1.2) if space.ref don't exists then search for space ids in
 		// $UnqiueIDRef
-		if (!workItem.hasItem("txtSpaceRef") && !oldUnqiueIdRefList.isEmpty()) {
-			spaceRefList = workItem.getItemValue("txtSpaceRef");
+		if (!workItem.hasItem("space.ref") && !oldUnqiueIdRefList.isEmpty()) {
+			spaceRefList = workItem.getItemValue("space.ref");
 			for (String aUniqueID : oldUnqiueIdRefList) {
 				ItemCollection entity = findEntity(aUniqueID);
 				if (entity != null && ("space".equals(entity.getType()) || "spacearchive".equals(entity.getType()))) {
-					// update txtProcessRef
+					// update space.ref
 					spaceRefList.add(entity.getItemValueString(WorkflowKernel.UNIQUEID));
 				}
 			}
-			// update txtProcessRef
-			workItem.replaceItemValue("txtSpaceRef", spaceRefList);
+			// update space.ref
+			workItem.setItemValueUnique("space.ref", spaceRefList);
 		} else {
-			// 1.2.1) validate content of txtSpaceRef
-			if (workItem.hasItem("txtSpaceRef")) {
-				processRefList = workItem.getItemValue("txtSpaceRef");
+			// 1.2.1) validate content of space.ref
+			if (workItem.hasItem("space.ref")) {
+				processRefList = workItem.getItemValue("space.ref");
 				List<String> verifiedRefList = new ArrayList<String>();
 				for (String aUniqueID : processRefList) {
 					ItemCollection entity = findEntity(aUniqueID);
@@ -235,8 +242,8 @@ public class TeamPlugin extends AbstractPlugin {
 					}
 
 				}
-				// update txtProcessRef
-				workItem.replaceItemValue("txtSpaceRef", verifiedRefList);
+				// update space.ref
+				workItem.setItemValueUnique("space.ref", verifiedRefList);
 			}
 		}
 
@@ -252,18 +259,18 @@ public class TeamPlugin extends AbstractPlugin {
 			String sRef = fetchRefFromActivity("process", evalItemCollection);
 			if (sRef != null && !sRef.isEmpty()) {
 				logger.fine("[TeamPlugin] Updating process reference based on model information: " + sRef);
-				workItem.replaceItemValue("txtProcessRef", sRef);
+				workItem.setItemValueUnique("process.ref", sRef);
 			}
 			sRef = fetchRefFromActivity("space", evalItemCollection);
 			if (sRef != null && !sRef.isEmpty()) {
 				logger.fine("[TeamPlugin] Updating space reference based on model information: " + sRef);
-				workItem.replaceItemValue("txtSpaceRef", sRef);
+				workItem.setItemValueUnique("space.ref", sRef);
 			}
 		}
 
-		// 3.) now synchronize txtProcessRef/txtSpaceRef with $UnqiueIDref
-		processRefList = workItem.getItemValue("txtProcessRef");
-		spaceRefList = workItem.getItemValue("txtSpaceRef");
+		// 3.) now synchronize process.ref/space.ref with $UnqiueIDref
+		processRefList = workItem.getItemValue("process.ref");
+		spaceRefList = workItem.getItemValue("space.ref");
 		newUnqiueIDRefList = new ArrayList<String>();
 		newUnqiueIDRefList.addAll(processRefList);
 		newUnqiueIDRefList.addAll(spaceRefList);
@@ -286,24 +293,48 @@ public class TeamPlugin extends AbstractPlugin {
 				}
 			}
 		}
+		
+
+        // clean old values
+        workItem.removeItem("space.team");
+        workItem.removeItem("space.manager");
+        workItem.removeItem("space.assist");
+        workItem.removeItem("space.team.label");
+        workItem.removeItem("space.manager.label");
+        workItem.removeItem("space.assist.label");
+        workItem.removeItem("process.team");
+        workItem.removeItem("process.manager");
+        workItem.removeItem("process.assist");
+        workItem.removeItem("process.team.label");
+        workItem.removeItem("process.manager.label");
+        workItem.removeItem("process.assist.label");
+        workItem.removeItem("process.name");
+        workItem.removeItem("space.name");
+       
+         
+        workItem.removeItem(WorkflowService.UNIQUEIDREF);
+         
+         
 
 		// 4.) finally we can now update the $UniqueIDRef property
-		workItem.replaceItemValue("$UniqueIdRef", newUnqiueIDRefList);
+		workItem.setItemValueUnique(WorkflowService.UNIQUEIDREF, newUnqiueIDRefList);
 		logger.fine("Updated $UniqueIdRef: " + newUnqiueIDRefList);
 
-		// and now $UnqiueIDref, txtProcessRef and txtSpaceRef are synchronized
-		// and verified!
+		
+		
+	        
+	        
 
 		// 6.) Now the team lists will be updated depending of the current
 		// $uniqueidref
-		List vSpaceTeam = new ArrayList<String>();
-		List vSpaceManager = new ArrayList<String>();
-		List vSpaceAssist = new ArrayList<String>();
-		List vProcessTeam = new ArrayList<String>();
-		List vProcessManager = new ArrayList<String>();
-		List vProcessAssist = new ArrayList<String>();
-		List<String> spaceNames = new ArrayList<String>();
-        List<String> processNames = new ArrayList<String>();
+//		List vSpaceTeam = new ArrayList<String>();
+//		List vSpaceManager = new ArrayList<String>();
+//		List vSpaceAssist = new ArrayList<String>();
+//		List vProcessTeam = new ArrayList<String>();
+//		List vProcessManager = new ArrayList<String>();
+//		List vProcessAssist = new ArrayList<String>();
+//		List<String> spaceNames = new ArrayList<String>();
+//        List<String> processNames = new ArrayList<String>();
 		//String sSpaceNameNode = "";
 
 		// interate over all refs if defined
@@ -315,44 +346,65 @@ public class TeamPlugin extends AbstractPlugin {
 
 				// Test type property....
 				if ("process".equals(parentType)) {
-					vProcessTeam.addAll(entity.getItemValue("process.team"));
-					vProcessManager.addAll(entity.getItemValue("process.manager"));
-					vProcessAssist.addAll(entity.getItemValue("process.assist"));
-					processNames.add(entity.getItemValueString("process.name"));
+				    workItem.appendItemValueUnique("process.assist", entity.getItemValue("process.assist"));
+                    workItem.appendItemValueUnique("process.team", entity.getItemValue("process.team"));
+                    workItem.appendItemValueUnique("process.manager", entity.getItemValue("process.manager"));
+
+                    workItem.appendItemValueUnique("process.assist.label", entity.getItemValue("process.assist.label"));
+                    workItem.appendItemValueUnique("process.team.label", entity.getItemValue("process.team.label"));
+                    workItem.appendItemValueUnique("process.manager.label", entity.getItemValue("process.manager.label"));
+
+                    workItem.appendItemValueUnique("process.name", entity.getItemValue("process.name"));
+				    
+//					vProcessTeam.addAll(entity.getItemValue("process.team"));
+//					vProcessManager.addAll(entity.getItemValue("process.manager"));
+//					vProcessAssist.addAll(entity.getItemValue("process.assist"));
+//					processNames.add(entity.getItemValueString("process.name"));
 
 				}
 				if ("space".equals(parentType) || "spacearchive".equals(parentType)) {
-					vSpaceTeam.addAll(entity.getItemValue("space.team"));
-					vSpaceManager.addAll(entity.getItemValue("space.manager"));
-					vSpaceAssist.addAll(entity.getItemValue("space.assist"));
-					spaceNames.add(entity.getItemValueString("space.name"));
+                    workItem.appendItemValueUnique("space.assist", entity.getItemValue("space.assist"));
+                    workItem.appendItemValueUnique("space.team", entity.getItemValue("space.team"));
+                    workItem.appendItemValueUnique("space.manager", entity.getItemValue("space.manager"));
+
+                    workItem.appendItemValueUnique("space.assist.label", entity.getItemValue("space.assist.label"));
+                    workItem.appendItemValueUnique("space.team.label", entity.getItemValue("space.team.label"));
+                    workItem.appendItemValueUnique("space.manager.label", entity.getItemValue("space.manager.label"));
+
+                    workItem.appendItemValueUnique("space.name", entity.getItemValue("space.name"));
+				    
+				    
+//					vSpaceTeam.addAll(entity.getItemValue("space.team"));
+//					vSpaceManager.addAll(entity.getItemValue("space.manager"));
+//					vSpaceAssist.addAll(entity.getItemValue("space.assist"));
+//					spaceNames.add(entity.getItemValueString("space.name"));
 				}
 
 			}
 		}
 
 		// update properties
-        workItem.replaceItemValue("space.name", spaceNames);
-		workItem.replaceItemValue("space.team", vSpaceTeam);
-		workItem.replaceItemValue("space.manager", vSpaceManager);
-		workItem.replaceItemValue("space.assist", vSpaceAssist);
-
-        workItem.replaceItemValue("process.name", processNames);
-        workItem.replaceItemValue("process.team", vProcessTeam);
-		workItem.replaceItemValue("process.manager", vProcessManager);
-		workItem.replaceItemValue("process.assist", vProcessAssist);
+//        workItem.replaceItemValue("space.name", spaceNames);
+//		workItem.replaceItemValue("space.team", vSpaceTeam);
+//		workItem.replaceItemValue("space.manager", vSpaceManager);
+//		workItem.replaceItemValue("space.assist", vSpaceAssist);
+//
+//        workItem.replaceItemValue("process.name", processNames);
+//        workItem.replaceItemValue("process.team", vProcessTeam);
+//		workItem.replaceItemValue("process.manager", vProcessManager);
+//		workItem.replaceItemValue("process.assist", vProcessAssist);
 
 		// removed duplicates...
-		uniqueElements(workItem, "$UniqueIdRef");
-		uniqueElements(workItem, "txtProcessRef");
-		uniqueElements(workItem, "txtSpaceRef");
+//		uniqueElements(workItem, "$UniqueIdRef");
+//		uniqueElements(workItem, "txtProcessRef");
+//		uniqueElements(workItem, "txtSpaceRef");
 
-		uniqueElements(workItem, "space.team");
-		uniqueElements(workItem, "space.manager");
-		uniqueElements(workItem, "space.assist");
-		uniqueElements(workItem, "process.team");
-		uniqueElements(workItem, "process.manager");
-		uniqueElements(workItem, "process.assist");
+//		uniqueElements(workItem, "space.team");
+//		uniqueElements(workItem, "space.manager");
+//		uniqueElements(workItem, "space.assist");
+//		uniqueElements(workItem, "process.team");
+//		uniqueElements(workItem, "process.manager");
+//		uniqueElements(workItem, "process.assist");
 		
 		// support deprecated item names... Issue #325
         workItem.replaceItemValue("namSpaceTeam", workItem.getItemValue("space.team"));
@@ -365,6 +417,9 @@ public class TeamPlugin extends AbstractPlugin {
 		workItem.replaceItemValue("txtSpaceName", workItem.getItemValue("space.name"));
 		workItem.replaceItemValue("txtSpaceNameNode", workItem.getItemValue("space.name"));
 		
+		
+        workItem.replaceItemValue("txtProcessRef", workItem.getItemValue("process.ref"));
+        workItem.replaceItemValue("txtSpaceRef", workItem.getItemValue("space.ref"));
 		
 		
 
@@ -486,16 +541,19 @@ public class TeamPlugin extends AbstractPlugin {
 	 * @param source
 	 * @return
 	 */
-	private void uniqueElements(ItemCollection entity, String field) {
-		List<String> target = new ArrayList<String>();
-		@SuppressWarnings("unchecked")
-		List<String> source = entity.getItemValue(field);
-
-		for (String entry : source) {
-			if (entry != null && !entry.isEmpty() && !target.contains(entry))
-				target.add(entry);
-		}
-		entity.replaceItemValue(field, target);
-	}
-
+//	private void uniqueElements(ItemCollection entity, String field) {
+//		List<String> target = new ArrayList<String>();
+//		@SuppressWarnings("unchecked")
+//		List<String> source = entity.getItemValue(field);
+//
+//		for (String entry : source) {
+//			if (entry != null && !entry.isEmpty() && !target.contains(entry))
+//				target.add(entry);
+//		}
+//		entity.replaceItemValue(field, target);
+//	}
+//	
+	
+	
+	
 }

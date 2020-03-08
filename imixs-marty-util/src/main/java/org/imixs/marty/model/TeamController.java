@@ -537,68 +537,68 @@ public class TeamController implements Serializable {
         }
 
         String type = workflowEvent.getWorkitem().getItemValueString("type");
-        if (!type.startsWith("space") && !type.startsWith("process")) {
-            // no process or space!
-            return;
-        }
 
-        // if created - update process name/ref...
-        if (WorkflowEvent.WORKITEM_CREATED == workflowEvent.getEventType()) {
-            String processRef = workflowEvent.getWorkitem().getItemValueString(WorkflowService.UNIQUEIDREF);
-            ItemCollection process = getProcessById(processRef);
-            if (process != null) {
-                workflowEvent.getWorkitem().replaceItemValue("txtProcessName", process.getItemValueString("txtName"));
-                workflowEvent.getWorkitem().replaceItemValue("txtProcessRef",
-                        process.getItemValueString(WorkflowKernel.UNIQUEID));
-            } else {
-                logger.fine("[WORKITEM_CREATED] - unable to find process entity '" + processRef + "'!");
-            }
-        }
-
-        // set default labels for team/manager/assist if empty
-        if (WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
-
-            if (type.startsWith("space")) {
-                if (!workflowEvent.getWorkitem().hasItem("space.manager.label")) {
-                    workflowEvent.getWorkitem().setItemValue("space.manager.label",
-                            resourceBundleHandler.findMessage("space.manager"));
-                }
-
-                if (!workflowEvent.getWorkitem().hasItem("space.team.label")) {
-                    workflowEvent.getWorkitem().setItemValue("space.team.label",
-                            resourceBundleHandler.findMessage("space.team"));
-                }
-                if (!workflowEvent.getWorkitem().hasItem("space.assist.label")) {
-                    workflowEvent.getWorkitem().setItemValue("space.assist.label",
-                            resourceBundleHandler.findMessage("space.assist"));
+        // WORKITEM
+        if (type.startsWith("workitem")) {
+            if (WorkflowEvent.WORKITEM_CREATED == workflowEvent.getEventType()) {
+                String processRef = workflowEvent.getWorkitem().getItemValueString(WorkflowService.UNIQUEIDREF);
+                ItemCollection process = getProcessById(processRef);
+                if (process != null) {
+                    workflowEvent.getWorkitem().replaceItemValue("txtProcessName", process.getItemValueString("name"));
+                    workflowEvent.getWorkitem().replaceItemValue("txtProcessRef",
+                            process.getItemValueString(WorkflowKernel.UNIQUEID));
+                } else {
+                    logger.fine("...unable to find process entity '" + processRef + "'!");
                 }
             }
-            if (type.startsWith("process")) {
-                if (!workflowEvent.getWorkitem().hasItem("process.manager.label")) {
-                    workflowEvent.getWorkitem().setItemValue("process.manager.label",
-                            resourceBundleHandler.findMessage("process.manager"));
-                }
+        }
 
-                if (!workflowEvent.getWorkitem().hasItem("process.team.label")) {
-                    workflowEvent.getWorkitem().setItemValue("process.team.label",
-                            resourceBundleHandler.findMessage("process.team"));
+        // PROCESS || SPACE
+        if (type.startsWith("space") || type.startsWith("process")) {
+            // set default labels for team/manager/assist if empty
+            if (WorkflowEvent.WORKITEM_CREATED == workflowEvent.getEventType()
+                    || WorkflowEvent.WORKITEM_CHANGED == workflowEvent.getEventType()) {
+
+                if (type.startsWith("space")) {
+                    if (!workflowEvent.getWorkitem().hasItem("space.manager.label")) {
+                        workflowEvent.getWorkitem().setItemValue("space.manager.label",
+                                resourceBundleHandler.findMessage("space.manager"));
+                    }
+
+                    if (!workflowEvent.getWorkitem().hasItem("space.team.label")) {
+                        workflowEvent.getWorkitem().setItemValue("space.team.label",
+                                resourceBundleHandler.findMessage("space.team"));
+                    }
+                    if (!workflowEvent.getWorkitem().hasItem("space.assist.label")) {
+                        workflowEvent.getWorkitem().setItemValue("space.assist.label",
+                                resourceBundleHandler.findMessage("space.assist"));
+                    }
                 }
-                if (!workflowEvent.getWorkitem().hasItem("process.assist.label")) {
-                    workflowEvent.getWorkitem().setItemValue("process.assist.label",
-                            resourceBundleHandler.findMessage("process.assist"));
+                if (type.startsWith("process")) {
+                    if (!workflowEvent.getWorkitem().hasItem("process.manager.label")) {
+                        workflowEvent.getWorkitem().setItemValue("process.manager.label",
+                                resourceBundleHandler.findMessage("process.manager"));
+                    }
+
+                    if (!workflowEvent.getWorkitem().hasItem("process.team.label")) {
+                        workflowEvent.getWorkitem().setItemValue("process.team.label",
+                                resourceBundleHandler.findMessage("process.team"));
+                    }
+                    if (!workflowEvent.getWorkitem().hasItem("process.assist.label")) {
+                        workflowEvent.getWorkitem().setItemValue("process.assist.label",
+                                resourceBundleHandler.findMessage("process.assist"));
+                    }
                 }
             }
 
-        }
-
-        if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
-            // test if a space or process entity was processed
-            String sType = workflowEvent.getWorkitem().getItemValueString("type");
-            if (sType.startsWith("space") || sType.startsWith("process")) {
+            // reset cache
+            if (WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
                 reset();
                 logger.fine("ModelController:WorkflowEvent=" + workflowEvent.getEventType());
             }
+
         }
+
     }
 
     /**
@@ -619,8 +619,8 @@ public class TeamController implements Serializable {
         if (orgUnit == null)
             return resultList;
 
-        String type=orgUnit.getType();
-        List<String> members = orgUnit.getItemValue(type + "."+role);
+        String type = orgUnit.getType();
+        List<String> members = orgUnit.getItemValue(type + "." + role);
         for (String member : members) {
             // avoid duplicates..
             if (!dupplicatedIds.contains(member)) {
