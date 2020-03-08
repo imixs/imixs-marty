@@ -65,7 +65,7 @@ import org.imixs.workflow.faces.util.LoginController;
  */
 @Named
 @SessionScoped
-public class ProcessController implements Serializable {
+public class TeamController implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -83,12 +83,12 @@ public class ProcessController implements Serializable {
     protected DocumentService documentService;
 
     @EJB
-    protected TeamService processService;
+    protected TeamService teamService;
 
     @EJB
     protected ProfileService profileService;
 
-    private static Logger logger = Logger.getLogger(ProcessController.class.getName());
+    private static Logger logger = Logger.getLogger(TeamController.class.getName());
 
     /**
      * Reset the internal cache
@@ -165,7 +165,7 @@ public class ProcessController implements Serializable {
      */
     public List<ItemCollection> getProcessList() {
         if (processList == null) {
-            processList = processService.getProcessList();
+            processList = teamService.getProcessList();
         }
         return processList;
     }
@@ -181,7 +181,7 @@ public class ProcessController implements Serializable {
      */
     public List<ItemCollection> getSpaces() {
         if (spaces == null) {
-            spaces = processService.getSpaces();
+            spaces = teamService.getSpaces();
             new ArrayList<ItemCollection>();
         }
         return spaces;
@@ -374,7 +374,7 @@ public class ProcessController implements Serializable {
      * @return list of profile entities for the current team managers
      */
     public List<ItemCollection> getManagers(String aUniqueID) {
-        List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "namManager");
+        List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "manager");
 
         // sort by username..
         Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
@@ -390,7 +390,7 @@ public class ProcessController implements Serializable {
      * @return list of profile entities for the current team members
      */
     public List<ItemCollection> getTeam(String aUniqueID) {
-        List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "namTeam");
+        List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "team");
 
         // sort by username..
         Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
@@ -406,7 +406,7 @@ public class ProcessController implements Serializable {
      * @return list of profile entities for the current team members
      */
     public List<ItemCollection> getAssist(String aUniqueID) {
-        List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "namAssist");
+        List<ItemCollection> resultList = getMemberListByRole(aUniqueID, "assist");
 
         // sort by username..
         Collections.sort(resultList, new ItemCollectionComparator("txtUserName", true));
@@ -425,9 +425,9 @@ public class ProcessController implements Serializable {
         List<ItemCollection> resultList = new ArrayList<ItemCollection>();
         List<String> dupplicatedIds = new ArrayList<String>();
 
-        List<ItemCollection> assistList = getMemberListByRole(aUniqueID, "namAssist");
-        List<ItemCollection> teamList = getMemberListByRole(aUniqueID, "namTeam");
-        List<ItemCollection> managerList = getMemberListByRole(aUniqueID, "namManager");
+        List<ItemCollection> assistList = getMemberListByRole(aUniqueID, "assist");
+        List<ItemCollection> teamList = getMemberListByRole(aUniqueID, "team");
+        List<ItemCollection> managerList = getMemberListByRole(aUniqueID, "manager");
 
         for (ItemCollection profile : teamList) {
             // avoid duplicates..
@@ -615,11 +615,12 @@ public class ProcessController implements Serializable {
         List<String> dupplicatedIds = new ArrayList<String>();
 
         // find Process/Space entity
-        ItemCollection entity = getEntityById(aUniqueID);
-        if (entity == null)
+        ItemCollection orgUnit = getEntityById(aUniqueID);
+        if (orgUnit == null)
             return resultList;
 
-        List<String> members = entity.getItemValue(role);
+        String type=orgUnit.getType();
+        List<String> members = orgUnit.getItemValue(type + "."+role);
         for (String member : members) {
             // avoid duplicates..
             if (!dupplicatedIds.contains(member)) {

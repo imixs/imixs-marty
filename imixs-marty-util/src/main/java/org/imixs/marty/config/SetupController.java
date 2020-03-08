@@ -41,7 +41,7 @@ import org.imixs.marty.ejb.PropertiesConfigSource;
 import org.imixs.marty.ejb.PropertiesLoader;
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.marty.model.ModelController;
-import org.imixs.marty.model.ProcessController;
+import org.imixs.marty.model.TeamController;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.ModelService;
@@ -78,7 +78,7 @@ public class SetupController extends ConfigController {
 	protected ModelController modelController;
 
 	@Inject
-	protected ProcessController processController;
+	protected TeamController teamController;
 
 	@EJB
 	protected DocumentService documentService;
@@ -200,7 +200,7 @@ public class SetupController extends ConfigController {
 		logger.info("Reset application cache...");
 		martyPropertyLoader.reset();
 		profileService.reset();
-		processController.reset();
+		teamController.reset();
 	}
 
 	/**

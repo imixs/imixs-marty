@@ -145,15 +145,11 @@ public class SpacePlugin extends AbstractPlugin {
 				logger.fine("Updating Parent Project Informations for '" + sParentProjectID + "'");
 
 				String sName = space.getItemValueString("txtSpaceName");
-				String sParentName = parentProject.getItemValueString("txtName");
+				String sParentName = parentProject.getItemValueString("name");
 
-				space.replaceItemValue("txtName", sParentName + "." + sName);
-				space.replaceItemValue("txtParentName", sParentName);
+				space.replaceItemValue("name", sParentName + "." + sName);
+				space.replaceItemValue("space.parent.name", sParentName);
 
-				// update parent team lists
-				space.replaceItemValue("namParentTeam", parentProject.getItemValue("namTeam"));
-				space.replaceItemValue("namParentManager", parentProject.getItemValue("namManager"));
-				space.replaceItemValue("namParentAssist", parentProject.getItemValue("namAssist"));
 			} else {
 				throw new PluginException(SpacePlugin.class.getName(), SPACE_ARCHIVE_ERROR,
 						"Space object can not be updated, because parent space object is archived!");
@@ -175,10 +171,11 @@ public class SpacePlugin extends AbstractPlugin {
 	 * @throws PluginException if name is already taken
 	 */
 	private void validateUniqueOrgunitName(ItemCollection orgunit, String type) throws PluginException {
-		String name=orgunit.getItemValueString("txtname");
+		String name=orgunit.getItemValueString("name");
 		String unqiueid=orgunit.getUniqueID();
 		
-		String sQuery = "((type:\"" +type + "\" OR type:\"" + type + "archive\") AND txtname:\"" + name + "\")";
+		// support deprecated item name 'txtname
+		String sQuery = "((type:\"" +type + "\" OR type:\"" + type + "archive\") AND (txtname:\"" + name + "\" OR name:\"" + name + "\"))";
 
 		List<ItemCollection> spaceList;
 		try {

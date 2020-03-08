@@ -41,191 +41,217 @@ import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.enterprise.event.Observes;
 
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.engine.DocumentEvent;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.QueryException;
 
 /**
- * The Marty TeamService provides access to the mary process and space
- * entities.
+ * The Marty TeamService provides access to the mary process and space entities.
  * 
  * @author rsoika
  */
 
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS", "org.imixs.ACCESSLEVEL.READERACCESS",
-		"org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
-		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
+        "org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
+        "org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @RolesAllowed({ "org.imixs.ACCESSLEVEL.NOACCESS", "org.imixs.ACCESSLEVEL.READERACCESS",
-		"org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
-		"org.imixs.ACCESSLEVEL.MANAGERACCESS" })
+        "org.imixs.ACCESSLEVEL.AUTHORACCESS", "org.imixs.ACCESSLEVEL.EDITORACCESS",
+        "org.imixs.ACCESSLEVEL.MANAGERACCESS" })
 @Stateless
 @LocalBean
 public class TeamService {
 
-	int DEFAULT_CACHE_SIZE = 30;
+    int DEFAULT_CACHE_SIZE = 30;
 
-	final int MAX_SEARCH_COUNT = 1;
+    final int MAX_SEARCH_COUNT = 1;
 
-	private static Logger logger = Logger.getLogger(TeamService.class.getName());
+    private static Logger logger = Logger.getLogger(TeamService.class.getName());
 
-	@EJB
-	private DocumentService documentService;
+    @EJB
+    private DocumentService documentService;
 
-	@Resource
-	private SessionContext ctx;
+    @Resource
+    private SessionContext ctx;
 
-	/**
-	 * PostContruct event
-	 */
-	@PostConstruct
-	void init() {
+    /**
+     * PostContruct event
+     */
+    @PostConstruct
+    void init() {
 
-	}
+    }
 
-	/**
-	 * This method returns all process entities for the current user. This list can
-	 * be used to display process information. The returned process list is
-	 * optimized and provides additional the following attributes
-	 * <p>
-	 * isMember, isTeam, isOwner, isManager, isAssist
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getProcessList() {
-		List<ItemCollection> processList = new ArrayList<ItemCollection>();
-		Collection<ItemCollection> col = documentService.getDocumentsByType("process");
-		// create optimized list
-		for (ItemCollection process : col) {
-			ItemCollection clone = cloneOrgItemCollection(process);
-			processList.add(clone);
-		}
-		// sort by txtname
-		Collections.sort(processList, new ItemCollectionComparator("txtname", true));
+    /**
+     * This method returns all process entities for the current user. This list can
+     * be used to display process information. The returned process list is
+     * optimized and provides additional the following attributes
+     * <p>
+     * isMember, isTeam, isOwner, isManager, isAssist
+     * 
+     * @return
+     */
+    public List<ItemCollection> getProcessList() {
+        List<ItemCollection> processList = new ArrayList<ItemCollection>();
+        Collection<ItemCollection> col = documentService.getDocumentsByType("process");
+        // create optimized list
+        for (ItemCollection process : col) {
+            ItemCollection clone = cloneOrgItemCollection(process);
+            processList.add(clone);
+        }
+        // sort by txtname
+        Collections.sort(processList, new ItemCollectionComparator("txtname", true));
 
-		return processList;
-	}
+        return processList;
+    }
 
-	/**
-	 * This method returns all space entities for the current user. This list can be
-	 * used to display space information. The returned space list is optimized and
-	 * provides additional the following attributes
-	 * <p>
-	 * isMember, isTeam, isOwner, isManager, isAssist
-	 * 
-	 * @return
-	 */
-	public List<ItemCollection> getSpaces() {
-		List<ItemCollection> spaces = new ArrayList<ItemCollection>();
-		Collection<ItemCollection> col = documentService.getDocumentsByType("space");
+    /**
+     * This method returns all space entities for the current user. This list can be
+     * used to display space information. The returned space list is optimized and
+     * provides additional the following attributes
+     * <p>
+     * isMember, isTeam, isOwner, isManager, isAssist
+     * 
+     * @return
+     */
+    public List<ItemCollection> getSpaces() {
+        List<ItemCollection> spaces = new ArrayList<ItemCollection>();
+        Collection<ItemCollection> col = documentService.getDocumentsByType("space");
 
-		// create optimized list
-		for (ItemCollection space : col) {
-			ItemCollection clone = cloneOrgItemCollection(space);
-			spaces.add(clone);
-		}
-		// sort by txtname
-		Collections.sort(spaces, new ItemCollectionComparator("txtname", true));
-		return spaces;
-	}
+        // create optimized list
+        for (ItemCollection space : col) {
+            ItemCollection clone = cloneOrgItemCollection(space);
+            spaces.add(clone);
+        }
+        // sort by txtname
+        Collections.sort(spaces, new ItemCollectionComparator("txtname", true));
+        return spaces;
+    }
 
-	
-	
-	/**
-	 * Returns a space by its name
-	 * 
-	 * @param name
-	 * @return itemCollection of process or null if not process with the specified
-	 *         id exists
-	 */
-	public ItemCollection getSpaceByName(String name) {
-		String query="type:\"space\" AND txtname:\"" + name + "\"";
-		List<ItemCollection> spaces;
-		try {
-			spaces = documentService.find(query, 1, 0);
-		} catch (QueryException e) {
-			logger.warning("Failed to lookup space name '" + name + "'!");
-			return null;
-		}
-		if (spaces.size()>=1) {
-			return spaces.get(0);
-		}
-		return null;
-	}
-	
-	
-	/**
-	 * Returns a space by its name
-	 * 
-	 * @param name
-	 * @return itemCollection of process or null if not process with the specified
-	 *         id exists
-	 */
-	public ItemCollection getProcessByName(String name) {
-		String query="type:\"process\" AND txtname:\"" + name + "\"";
-		List<ItemCollection> spaces;
-		try {
-			spaces = documentService.find(query, 1, 0);
-		} catch (QueryException e) {
-			logger.warning("Failed to lookup space name '" + name + "'!");
-			return null;
-		}
-		if (spaces.size()>=1) {
-			return spaces.get(0);
-		}
-		return null;
-	}
-	
-	
-	/**
-	 * This method clones a given process or space ItemCollection. The method also
-	 * verifies if the current user is manager, teamMember, assist or general
-	 * membership within this orgunit. THe membership is computed based on the
-	 * username-list for the current user.
-	 * 
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	private ItemCollection cloneOrgItemCollection(ItemCollection orgunit) {
-		ItemCollection clone = WorkitemHelper.clone(orgunit);
-		String type=orgunit.getType();
-		
-		clone.replaceItemValue("isTeam", false);
-		clone.replaceItemValue("isManager", false);
-		clone.replaceItemValue("isAssist", false);
+    /**
+     * Returns a space by its name
+     * 
+     * @param name
+     * @return itemCollection of process or null if not process with the specified
+     *         id exists
+     */
+    public ItemCollection getSpaceByName(String name) {
+        String query = "type:\"space\" AND txtname:\"" + name + "\"";
+        List<ItemCollection> spaces;
+        try {
+            spaces = documentService.find(query, 1, 0);
+        } catch (QueryException e) {
+            logger.warning("Failed to lookup space name '" + name + "'!");
+            return null;
+        }
+        if (spaces.size() >= 1) {
+            return spaces.get(0);
+        }
+        return null;
+    }
 
-		// check the isTeam status for the current user
-		List<String> vNameList = orgunit.getItemValue(type+".team");
-		if (documentService.isUserContained(vNameList)) {
-			clone.replaceItemValue("isTeam", true);
-		}
+    /**
+     * Returns a space by its name
+     * 
+     * @param name
+     * @return itemCollection of process or null if not process with the specified
+     *         id exists
+     */
+    public ItemCollection getProcessByName(String name) {
+        String query = "type:\"process\" AND txtname:\"" + name + "\"";
+        List<ItemCollection> spaces;
+        try {
+            spaces = documentService.find(query, 1, 0);
+        } catch (QueryException e) {
+            logger.warning("Failed to lookup space name '" + name + "'!");
+            return null;
+        }
+        if (spaces.size() >= 1) {
+            return spaces.get(0);
+        }
+        return null;
+    }
 
-		// check the isManager status for the current user
-		vNameList =  orgunit.getItemValue(type+".manager");
-		if (documentService.isUserContained(vNameList)) {
-			clone.replaceItemValue("isManager", true);
-		}
+    /**
+     * Reacts on ON_DOCUMENT_SAVE and updates the space.name | process.name fields
+     * 
+     * @see DocumentEvent
+     * @param documentEvent
+     */
+    public void onDocumentEvent(@Observes DocumentEvent documentEvent) {
 
-		// check the isAssist status for the current user
-		vNameList = orgunit.getItemValue(type+".assist");
-		if (documentService.isUserContained(vNameList)) {
-			clone.replaceItemValue("isAssist", true);
-		}
+        String type = documentEvent.getDocument().getType();
+        if ((type.startsWith("space") || type.startsWith("process"))
+                && documentEvent.getEventType() == DocumentEvent.ON_DOCUMENT_SAVE) {
+            if (type.startsWith("space")) {
+                documentEvent.getDocument().setItemValue("space.name",
+                        documentEvent.getDocument().getItemValue("name"));
+            }
+            if (type.startsWith("process")) {
+                documentEvent.getDocument().setItemValue("process.name",
+                        documentEvent.getDocument().getItemValue("name"));
+            }
+        }
 
-		// check if user is member of team or manager list
-		boolean bMember = false;
-		if (clone.getItemValueBoolean("isTeam") || clone.getItemValueBoolean("isManager")
-				|| clone.getItemValueBoolean("isAssist"))
-			bMember = true;
-		clone.replaceItemValue("isMember", bMember);
+    }
 
-		// add custom fields into clone...
-		clone.replaceItemValue("txtWorkflowList", orgunit.getItemValue("txtWorkflowList"));
-		clone.replaceItemValue("txtReportList", orgunit.getItemValue("txtReportList"));
-		clone.replaceItemValue("txtdescription", orgunit.getItemValue("txtdescription"));
+    /**
+     * This method clones a given process or space ItemCollection. The method also
+     * verifies if the current user is manager, teamMember, assist or general
+     * membership within this orgunit. THe membership is computed based on the
+     * username-list for the current user.
+     * 
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private ItemCollection cloneOrgItemCollection(ItemCollection orgunit) {
+        ItemCollection clone = WorkitemHelper.clone(orgunit);
+        String type= "";
+        if (orgunit.getType().startsWith("space")) {
+            type="space";
+        }
+        if (orgunit.getType().startsWith("process")) {
+            type="process";
+        }
 
-		return clone;
-	}
+        clone.replaceItemValue("isTeam", false);
+        clone.replaceItemValue("isManager", false);
+        clone.replaceItemValue("isAssist", false);
+
+        // check the isTeam status for the current user
+        List<String> vNameList = orgunit.getItemValue(type + ".team");
+        if (documentService.isUserContained(vNameList)) {
+            clone.replaceItemValue("isTeam", true);
+        }
+
+        // check the isManager status for the current user
+        vNameList = orgunit.getItemValue(type + ".manager");
+        if (documentService.isUserContained(vNameList)) {
+            clone.replaceItemValue("isManager", true);
+        }
+
+        // check the isAssist status for the current user
+        vNameList = orgunit.getItemValue(type + ".assist");
+        if (documentService.isUserContained(vNameList)) {
+            clone.replaceItemValue("isAssist", true);
+        }
+
+        // check if user is member of team or manager list
+        boolean bMember = false;
+        if (clone.getItemValueBoolean("isTeam") || clone.getItemValueBoolean("isManager")
+                || clone.getItemValueBoolean("isAssist"))
+            bMember = true;
+        clone.replaceItemValue("isMember", bMember);
+
+        // add custom fields into clone...
+        clone.replaceItemValue("txtWorkflowList", orgunit.getItemValue("txtWorkflowList"));
+        clone.replaceItemValue("txtReportList", orgunit.getItemValue("txtReportList"));
+        clone.replaceItemValue("txtdescription", orgunit.getItemValue("txtdescription"));
+
+        return clone;
+    }
 }

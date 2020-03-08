@@ -40,23 +40,23 @@ public class ItemMigrationService {
 
         if (type.startsWith("space")) {
             if (documentEvent.getEventType() == DocumentEvent.ON_DOCUMENT_LOAD) {
-                migrate (documentEvent.getDocument(),"nammanager","space.manager");
-                migrate (documentEvent.getDocument(),"namteam","space.team");
-                migrate (documentEvent.getDocument(),"namassist","space.assist");
-                migrate (documentEvent.getDocument(),"txtname","space.name");
+                migrate(documentEvent.getDocument(), "nammanager", "space.manager");
+                migrate(documentEvent.getDocument(), "namteam", "space.team");
+                migrate(documentEvent.getDocument(), "namassist", "space.assist");
+                migrate(documentEvent.getDocument(), "txtname", "name");
+                migrate(documentEvent.getDocument(), "txtspacename", "space.name");
             }
 
         }
 
-        
-        
         if (type.startsWith("process")) {
             if (documentEvent.getEventType() == DocumentEvent.ON_DOCUMENT_LOAD) {
-                migrate (documentEvent.getDocument(),"nammanager","process.manager");
-                migrate (documentEvent.getDocument(),"namteam","process.team");
-                migrate (documentEvent.getDocument(),"namassist","process.assist");
-                migrate (documentEvent.getDocument(),"txtname","process.name");
-                
+                migrate(documentEvent.getDocument(), "nammanager", "process.manager");
+                migrate(documentEvent.getDocument(), "namteam", "process.team");
+                migrate(documentEvent.getDocument(), "namassist", "process.assist");
+                migrate(documentEvent.getDocument(), "txtname", "name");
+                migrate(documentEvent.getDocument(), "txtname", "process.name");
+
             }
 
         }
@@ -74,14 +74,13 @@ public class ItemMigrationService {
      * @param newItem
      */
     private void migrate(ItemCollection document, String oldItem, String newItem) {
-        if (document.hasItem(newItem) ) {
+        if (document.hasItem(newItem)) {
             // no op
-            return; 
+            return;
         }
-        
+
         // migrate
         document.replaceItemValue(newItem, document.getItemValue(oldItem));
-        
 
     }
 

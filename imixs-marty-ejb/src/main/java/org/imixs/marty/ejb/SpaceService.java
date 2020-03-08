@@ -81,17 +81,17 @@ public class SpaceService {
 		logger.finest("......updating sub-space data for '" + parentSpace.getItemValueString("$Uniqueid") + "'");
 		List<ItemCollection> subSpaceList = findAllSubSpaces(parentSpace.getItemValueString("$Uniqueid"), "space",
 				"spacearchive");
-		String sParentSpaceName = parentSpace.getItemValueString("txtName");
+		String sParentSpaceName = parentSpace.getItemValueString("name");
 		for (ItemCollection aSubSpace : subSpaceList) {
 
-			aSubSpace.replaceItemValue("txtparentname", sParentSpaceName);
-			aSubSpace.replaceItemValue("txtname",
-					sParentSpaceName + "." + aSubSpace.getItemValueString("txtSpacename"));
+		    aSubSpace.replaceItemValue("space.parent.name", sParentSpaceName);
+		    
+			aSubSpace.replaceItemValue("name",
+					sParentSpaceName + "." + aSubSpace.getItemValueString("space.name"));
 
-			// update parent team lists
-			aSubSpace.replaceItemValue("namParentTeam", parentSpace.getItemValue("namTeam"));
-			aSubSpace.replaceItemValue("namParentManager", parentSpace.getItemValue("namManager"));
-			aSubSpace.replaceItemValue("namParentAssist", parentSpace.getItemValue("namAssist"));
+
+	         // deprecated item name
+            aSubSpace.replaceItemValue("txtparentname", sParentSpaceName);
 
 			aSubSpace =documentService.save(aSubSpace);
 			// call recursive....

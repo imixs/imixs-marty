@@ -10,12 +10,9 @@ The hierarchical order of a space is defined by the property "$uniqueidref" whic
 The plugin updates the following properties of a space entity:
 
 
- * txtname = combined name of the parent space name and the own name separated by a '.'
- * txtparentname = name of the parent space in case the space entity is a subspace
- * namParentTeam = team-list of the parent space (if assigned)
- * namParentManager = manager-list of the parent space (if assigned)
- * namParentAssist = assist-list of the parent space (if assigned)
-
+ * name = combined name of the parent space name and the own name separated by a '.'
+ * space.parent.name = name of the parent space in case the space entity is a subspace
+ 
 
 ## Unique Name
 
