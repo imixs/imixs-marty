@@ -47,6 +47,8 @@ public class DeputyPlugin extends AbstractPlugin {
 	ProfileService profileService = null;
 	private String[] ignoreList = { "$creator", "$editor", "$lasteditor", "namcreator", "namcurrenteditor", "namlasteditor", "$owner", "namowner", "nam+(?:[a-z0-9_]+)approvers",
 			"nam+(?:[a-z0-9_]+)approvedby" };
+	
+	private String[] supportList = { "\\.manager$", "\\.team$","\\.assist$"};
 
 	private static Logger logger = Logger.getLogger(DeputyPlugin.class.getName());
 
@@ -91,22 +93,23 @@ public class DeputyPlugin extends AbstractPlugin {
 
 		// iterate over name fields
 		Map<String, List<Object>> map = workitem.getAllItems();
-		for (String key : map.keySet()) {
-			if (matchIgnoreList(key))
+		for (String itemName : map.keySet()) {
+			if (ignoreItem(itemName)) {
 				continue;
+			}
 
 			// lookup deputies
-			logger.fine("[DeputyPlugin] lookup=" + key);
-			List<String> oldNameList = workitem.getItemValue(key);
+			logger.fine("... lookup=" + itemName);
+			List<String> oldNameList = workitem.getItemValue(itemName);
 			List<String> newNameList = updateDeputies(oldNameList);
 			if (logger.isLoggable(Level.FINE)) {
-				logger.fine("[DeputyPlugin] new list=");
+				logger.fine("... new list=");
 				for (String aentry : newNameList) {
 					logger.fine(aentry);
 				}
 			}
 			// update field
-			workitem.replaceItemValue(key, newNameList);
+			workitem.replaceItemValue(itemName, newNameList);
 		}
 
 		return workitem;
@@ -154,24 +157,34 @@ public class DeputyPlugin extends AbstractPlugin {
 	}
 
 	/**
-	 * This method returns true in case the given fieldName matches the
-	 * IgnoreList. Regular expressions are supported by the IgnoreList.
+	 * This method returns true in case the given itemName must not be modified.
+	 *  Regular expressions are supported by the ignoreList and supportList.
 	 * 
-	 * @param fieldName
+	 * @param itemName
 	 * @return true if fieldName matches the ignoreList
 	 */
-	public boolean matchIgnoreList(String fieldName) {
-		if (fieldName == null)
+	public boolean ignoreItem(String itemName) {
+		if (itemName == null)
 			return true;
 		
-		if (!fieldName.toLowerCase().startsWith("nam")) {
+		// contained in support list? 
+		for (String pattern : this.supportList) {
+            if (itemName.toLowerCase().matches(pattern)) {
+                return false;
+            }
+        }
+		// contained in ignore list? 
+		for (String pattern : this.ignoreList) {
+            if (itemName.toLowerCase().matches(pattern)) {
+                return true;
+            }
+        }
+		
+		// ignore all not starting with 'nam' (deprecated)
+		if (!itemName.toLowerCase().startsWith("nam")) {
 			return true;
 		}
-		for (String pattern : this.ignoreList) {
-			if (fieldName.toLowerCase().matches(pattern)) {
-				return true;
-			}
-		}
+		
 		return false;
 	}
 
