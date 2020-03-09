@@ -104,7 +104,7 @@ public class TeamService {
             processList.add(clone);
         }
         // sort by txtname
-        Collections.sort(processList, new ItemCollectionComparator("txtname", true));
+        Collections.sort(processList, new ItemCollectionComparator("name", true));
 
         return processList;
     }
@@ -128,7 +128,7 @@ public class TeamService {
             spaces.add(clone);
         }
         // sort by txtname
-        Collections.sort(spaces, new ItemCollectionComparator("txtname", true));
+        Collections.sort(spaces, new ItemCollectionComparator("name", true));
         return spaces;
     }
 
@@ -140,7 +140,7 @@ public class TeamService {
      *         id exists
      */
     public ItemCollection getSpaceByName(String name) {
-        String query = "type:\"space\" AND txtname:\"" + name + "\"";
+        String query = "type:\"space\" AND (txtname:\"" + name + "\" OR name:\"" + name + "\")";
         List<ItemCollection> spaces;
         try {
             spaces = documentService.find(query, 1, 0);
@@ -162,7 +162,7 @@ public class TeamService {
      *         id exists
      */
     public ItemCollection getProcessByName(String name) {
-        String query = "type:\"process\" AND txtname:\"" + name + "\"";
+        String query = "type:\"process\" AND (txtname:\"" + name + "\" OR name:\"" + name + "\")";
         List<ItemCollection> spaces;
         try {
             spaces = documentService.find(query, 1, 0);
@@ -177,29 +177,6 @@ public class TeamService {
     }
 
     /**
-     * Reacts on ON_DOCUMENT_SAVE and updates the space.name | process.name fields
-     * 
-     * @see DocumentEvent
-     * @param documentEvent
-     */
-    public void onDocumentEvent(@Observes DocumentEvent documentEvent) {
-
-        String type = documentEvent.getDocument().getType();
-        if ((type.startsWith("space") || type.startsWith("process"))
-                && documentEvent.getEventType() == DocumentEvent.ON_DOCUMENT_SAVE) {
-            if (type.startsWith("space")) {
-                documentEvent.getDocument().setItemValue("space.name",
-                        documentEvent.getDocument().getItemValue("name"));
-            }
-            if (type.startsWith("process")) {
-                documentEvent.getDocument().setItemValue("process.name",
-                        documentEvent.getDocument().getItemValue("name"));
-            }
-        }
-
-    }
-
-    /**
      * This method clones a given process or space ItemCollection. The method also
      * verifies if the current user is manager, teamMember, assist or general
      * membership within this orgunit. THe membership is computed based on the
@@ -210,12 +187,12 @@ public class TeamService {
     @SuppressWarnings("unchecked")
     private ItemCollection cloneOrgItemCollection(ItemCollection orgunit) {
         ItemCollection clone = WorkitemHelper.clone(orgunit);
-        String type= "";
+        String type = "";
         if (orgunit.getType().startsWith("space")) {
-            type="space";
+            type = "space";
         }
         if (orgunit.getType().startsWith("process")) {
-            type="process";
+            type = "process";
         }
 
         clone.replaceItemValue("isTeam", false);

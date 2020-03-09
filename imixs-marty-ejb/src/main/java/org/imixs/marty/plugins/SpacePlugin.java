@@ -144,7 +144,7 @@ public class SpacePlugin extends AbstractPlugin {
             if ("space".equals(parentProject.getType())) {
                 logger.fine("Updating Parent Project Informations for '" + sParentProjectID + "'");
 
-                String sName = space.getItemValueString("txtSpaceName");
+                String sName = space.getItemValueString("space.name");
                 String sParentName = parentProject.getItemValueString("name");
 
                 space.replaceItemValue("name", sParentName + "." + sName);
@@ -155,8 +155,8 @@ public class SpacePlugin extends AbstractPlugin {
                         "Space object can not be updated, because parent space object is archived!");
             }
         } else {
-            // root project - update txtName
-            space.replaceItemValue("txtName", space.getItemValueString("txtSpaceName"));
+            // root space - update name
+            space.replaceItemValue("name", space.getItemValueString("space.name"));
 
         }
     }

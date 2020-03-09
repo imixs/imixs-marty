@@ -75,6 +75,8 @@ public class WorkitemHelper {
 		// clone the marty WorkItem properties....
 		if (aWorkitem.hasItem("txtName"))
 			clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
+        if (aWorkitem.hasItem("Name"))
+            clone.replaceItemValue("Name", aWorkitem.getItemValue("Name"));
 
 		if (aWorkitem.hasItem("txtProcessName"))
 			clone.replaceItemValue("txtProcessName", aWorkitem.getItemValue("txtProcessName"));
