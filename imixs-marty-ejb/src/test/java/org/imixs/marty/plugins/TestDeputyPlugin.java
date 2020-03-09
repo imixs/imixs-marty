@@ -20,28 +20,28 @@ public class TestDeputyPlugin {
 	 * 
 	 */
 	@Test
-	public void testMatchIgnoreList() throws PluginException {
+	public void testignoreItem() throws PluginException {
 
 		deputyPlugin = new DeputyPlugin();
 
-		Assert.assertTrue(deputyPlugin.matchIgnoreList("namCreator"));
-		Assert.assertTrue(deputyPlugin.matchIgnoreList("namCurrentEditor"));
-		Assert.assertTrue(deputyPlugin.matchIgnoreList("namProcessManagerApprovers"));
-		Assert.assertTrue(deputyPlugin.matchIgnoreList("namSpaceTeamApprovedBy"));
-		Assert.assertTrue(deputyPlugin.matchIgnoreList("namProcessSuper_ManagerApprovers"));
-		Assert.assertTrue(deputyPlugin.matchIgnoreList("namProcessSuper_Manager123Approvers"));
+		Assert.assertTrue(deputyPlugin.ignoreItem("namCreator"));
+		Assert.assertTrue(deputyPlugin.ignoreItem("namCurrentEditor"));
+		Assert.assertTrue(deputyPlugin.ignoreItem("namProcessManagerApprovers"));
+		Assert.assertTrue(deputyPlugin.ignoreItem("namSpaceTeamApprovedBy"));
+		Assert.assertTrue(deputyPlugin.ignoreItem("namProcessSuper_ManagerApprovers"));
+		Assert.assertTrue(deputyPlugin.ignoreItem("namProcessSuper_Manager123Approvers"));
 
-		Assert.assertTrue(deputyPlugin.matchIgnoreList("_responsible"));
-		Assert.assertTrue(deputyPlugin.matchIgnoreList("txtNamOwner"));
-		Assert.assertTrue(deputyPlugin.matchIgnoreList("lnamProcessSuperManagerApprovers"));
-		Assert.assertTrue(deputyPlugin.matchIgnoreList("$activityid"));
-		Assert.assertTrue(deputyPlugin.matchIgnoreList("$readaccess"));
+		Assert.assertTrue(deputyPlugin.ignoreItem("_responsible"));
+		Assert.assertTrue(deputyPlugin.ignoreItem("txtNamOwner"));
+		Assert.assertTrue(deputyPlugin.ignoreItem("lnamProcessSuperManagerApprovers"));
+		Assert.assertTrue(deputyPlugin.ignoreItem("$activityid"));
+		Assert.assertTrue(deputyPlugin.ignoreItem("$readaccess"));
 
 		// negative tests
-		Assert.assertFalse(deputyPlugin.matchIgnoreList("namSpaceTeam"));
-		Assert.assertFalse(deputyPlugin.matchIgnoreList("namProcessSuper-ManagerApprovers"));
-		Assert.assertFalse(deputyPlugin.matchIgnoreList("namResponsible"));
-		Assert.assertFalse(deputyPlugin.matchIgnoreList("nam_Responsible"));
+		Assert.assertFalse(deputyPlugin.ignoreItem("namSpaceTeam"));
+		Assert.assertFalse(deputyPlugin.ignoreItem("namProcessSuper-ManagerApprovers"));
+		Assert.assertFalse(deputyPlugin.ignoreItem("namResponsible"));
+		Assert.assertFalse(deputyPlugin.ignoreItem("nam_Responsible"));
 
 	}
 
