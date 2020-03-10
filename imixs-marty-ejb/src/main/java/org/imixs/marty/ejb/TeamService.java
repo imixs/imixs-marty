@@ -41,12 +41,10 @@ import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
-import javax.enterprise.event.Observes;
 
 import org.imixs.marty.util.WorkitemHelper;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
-import org.imixs.workflow.engine.DocumentEvent;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.QueryException;
 
