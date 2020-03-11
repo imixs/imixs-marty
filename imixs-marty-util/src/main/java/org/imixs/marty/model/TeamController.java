@@ -333,7 +333,7 @@ public class TeamController implements Serializable {
             // iterate over all spaces and compare the $UniqueIDRef
             List<ItemCollection> list = getSpaces();
             for (ItemCollection space : list) {
-                logger.fine("Spacename= " + space.getItemValueString("txtName") + " uniquidref= "
+                logger.fine("Spacename= " + space.getItemValueString("Name") + " uniquidref= "
                         + space.getItemValueString(WorkflowService.UNIQUEIDREF));
                 if (uniqueId.equals(space.getItemValueString(WorkflowService.UNIQUEIDREF))) {
                     result.add(space);

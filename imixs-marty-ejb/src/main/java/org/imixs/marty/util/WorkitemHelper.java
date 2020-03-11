@@ -108,7 +108,7 @@ public class WorkitemHelper {
 	 */
 	private static void cloneByPraefix(String praefix, ItemCollection aWorkitem, ItemCollection clone) {
 	    List<String> itemNames = aWorkitem.getItemNames();
-	    String itempraefix="."+praefix;
+	    String itempraefix=praefix+".";
 	    for (String itemName: itemNames) {
 	        if (itemName.startsWith(itempraefix)) {
 	            clone.replaceItemValue(itemName, aWorkitem.getItemValue(itemName));
