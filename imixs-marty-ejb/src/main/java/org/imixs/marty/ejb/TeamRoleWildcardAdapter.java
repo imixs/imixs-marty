@@ -5,12 +5,10 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.enterprise.event.Observes;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.TextEvent;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 
@@ -40,9 +38,6 @@ public class TeamRoleWildcardAdapter {
 
 	private static Logger logger = Logger.getLogger(AbstractPlugin.class.getName());
 
-	@EJB
-	DocumentService documentService;
-
 	/**
 	 * This method reacts on CDI events of the type TextEvent and parses a role
 	 * string with wildcards like '{process:?:team}' with the corresponding uniqueid
@@ -64,23 +59,19 @@ public class TeamRoleWildcardAdapter {
 			List<String> orgunitIDs;
 			// lookup all the spaces.....
 			if (role.startsWith("{space:?:")) {
-				orgunitIDs = documentContext.getItemValue("txtspaceref");
+				orgunitIDs = documentContext.getItemValue("space.ref");
 				for (String id : orgunitIDs) {
-					ItemCollection orgunit = documentService.load(id);
-					if (orgunit != null) {
-						textList.add(role.replace(":?:", ":" + id + ":"));
-					}
+				    // we no longer verify the id - Issue #327
+					textList.add(role.replace(":?:", ":" + id + ":"));
 				}
 			}
 
 			// lookup all the processes.....
 			if (role.startsWith("{process:?:")) {
-				orgunitIDs = documentContext.getItemValue("txtprocessref");
+				orgunitIDs = documentContext.getItemValue("process.ref");
 				for (String id : orgunitIDs) {
-					ItemCollection orgunit = documentService.load(id);
-					if (orgunit != null) {
-						textList.add(role.replace(":?:", ":" + id + ":"));
-					}
+                    // we no longer verify the id - Issue #327
+					textList.add(role.replace(":?:", ":" + id + ":"));
 				}
 			}
 
