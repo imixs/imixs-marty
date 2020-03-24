@@ -129,7 +129,7 @@ public class TeamLookupService {
 			String type = documentEvent.getDocument().getType();
 			// test document type
 			if (type.startsWith("space") || type.startsWith("process")) {
-				logger.info("...reset teamCache");
+				logger.finest("......reset teamCache");
 				teamCache.resetCache();
 			}
 		}
