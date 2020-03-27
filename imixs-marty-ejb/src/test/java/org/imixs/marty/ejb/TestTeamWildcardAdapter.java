@@ -97,8 +97,6 @@ public class TestTeamWildcardAdapter {
 		documentActivity = new ItemCollection();
 		documentContext = new ItemCollection();
 
-		teamRoleWildcardAdapter.documentService = documentService;
-
 	}
 
 	/**
@@ -117,8 +115,8 @@ public class TestTeamWildcardAdapter {
 	public void testWildcardOrgunitRole() throws PluginException {
 
 		// test a space team role...
-		documentContext.replaceItemValue("txtSpaceRef", "S0000-00002");
-		documentContext.replaceItemValue("txtProcessRef", "P0000-00003");
+		documentContext.replaceItemValue("space.ref", "S0000-00002");
+		documentContext.replaceItemValue("process.ref", "P0000-00003");
 
 		String testRole = "{space:?:team}";
 		TextEvent event = new TextEvent(testRole, documentContext);
@@ -165,10 +163,10 @@ public class TestTeamWildcardAdapter {
 	public void testWildcardMultiOrgunitRole() throws PluginException {
 
 		// test two space team roles...
-		documentContext.replaceItemValue("txtSpaceRef", "S0000-00002");
-		documentContext.appendItemValue("txtSpaceRef", "S0000-00003");
+		documentContext.replaceItemValue("space.ref", "S0000-00002");
+		documentContext.appendItemValue("space.ref", "S0000-00003");
 
-		documentContext.replaceItemValue("txtProcessRef", "P0000-00003");
+		documentContext.replaceItemValue("process.ref", "P0000-00003");
 
 		String testRole = "{space:?:team}";
 		TextEvent event = new TextEvent(testRole, documentContext);
