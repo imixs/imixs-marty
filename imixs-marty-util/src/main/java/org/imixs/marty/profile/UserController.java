@@ -99,7 +99,7 @@ public class UserController implements Serializable {
 	protected LoginController loginController;
 
 	@Inject
-	@ConfigProperty(name = "profile.login.event", defaultValue = "")
+	@ConfigProperty(name = "profile.login.event", defaultValue = "0")
 	int profileLoginEvent;
 
 	@Inject
