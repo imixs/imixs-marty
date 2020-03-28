@@ -30,14 +30,10 @@ package org.imixs.marty.ejb.security;
 import java.util.Collection;
 import java.util.logging.Logger;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import javax.ejb.EJB;
 
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.engine.DocumentService;
-import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
@@ -56,106 +52,82 @@ import org.imixs.workflow.exceptions.QueryException;
  * 
  */
 public class UserGroupPlugin extends AbstractPlugin {
-	public static final String INVALID_CONTEXT = "INVALID_CONTEXT";
-	static final int EVENT_PROFILE_LOCK = 90;
-	static final int TASK_PPROFILE_ACTIVE = 210;
-	DocumentService documentService = null;
-	UserGroupService userGroupService = null;;
+    public static final String INVALID_CONTEXT = "INVALID_CONTEXT";
+    static final int EVENT_PROFILE_LOCK = 90;
+    static final int TASK_PPROFILE_ACTIVE = 210;
 
-	int sequenceNumber = -1;
-	ItemCollection workitem = null;
-	private static Logger logger = Logger.getLogger(UserGroupPlugin.class.getName());
+    @EJB
+    DocumentService documentService;
 
-	/**
-	 * Try to lookup the UserGroupService. If not availalbe the plugin will not run.
-	 */
-	public void init(WorkflowContext actx) throws PluginException {
-		super.init(actx);
+    @EJB
+    UserGroupService userGroupService = null;;
 
-		// check for an instance of WorkflowService
-		if (actx instanceof WorkflowService) {
-			// yes we are running in a WorkflowService EJB
-			WorkflowService ws = (WorkflowService) actx;
-			// get latest model version....
-			documentService = ws.getDocumentService();
-		}
+    int sequenceNumber = -1;
+    ItemCollection workitem = null;
+    private static Logger logger = Logger.getLogger(UserGroupPlugin.class.getName());
 
-		// lookup profile service EJB
-		String jndiName = "ejb/UserGroupService";
-		InitialContext ictx;
-		try {
-			ictx = new InitialContext();
-			Context ctx = (Context) ictx.lookup("java:comp/env");
-			userGroupService = (UserGroupService) ctx.lookup(jndiName);
-		} catch (NamingException e) {
-			logger.warning(
-					"[UserGroupPlugin] unable to lookup UserGroupService - check deployment or system model configuration!");
-			userGroupService = null;
-		}
-	}
+    /**
+     * This method updates the user object and the group relation ships
+     * 
+     * @return
+     * @throws PluginException
+     */
+    @Override
+    public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
 
-	/**
-	 * This method updates the user object and the group relation ships
-	 * 
-	 * @return
-	 * @throws PluginException
-	 */
-	@Override
-	public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
+        // skip if no userGroupService found
+        if (userGroupService == null)
+            return documentContext;
 
-		// skip if no userGroupService found
-		if (userGroupService == null)
-			return documentContext;
+        workitem = documentContext;
 
-		workitem = documentContext;
+        // check entity type....
+        String sType = workitem.getItemValueString("Type");
+        if (!("profile".equals(sType)))
+            return documentContext;
 
-		// check entity type....
-		String sType = workitem.getItemValueString("Type");
-		if (!("profile".equals(sType)))
-			return documentContext;
+        // skip if userDB support is not enabled
+        if (!isUserDBEnabled())
+            return documentContext;
 
-		// skip if userDB support is not enabled
-		if (!isUserDBEnabled())
-			return documentContext;
+        // if processid=210 and activity=20 - delete all groups
+        int iProcessID = workitem.getItemValueInteger("$ProcessID");
+        int iActivityID = documentActivity.getItemValueInteger("numActivityID");
 
-		// if processid=210 and activity=20 - delete all groups
-		int iProcessID = workitem.getItemValueInteger("$ProcessID");
-		int iActivityID = documentActivity.getItemValueInteger("numActivityID");
+        // we do not clear roles for 'admin' profile!
+        if (!"admin".equalsIgnoreCase(workitem.getItemValueString("txtname"))) {
+            if (iProcessID >= TASK_PPROFILE_ACTIVE && iActivityID == EVENT_PROFILE_LOCK) {
+                logger.info("Lock profile '" + workitem.getItemValueString("txtname") + "'");
+                workitem.replaceItemValue("txtGroups", UserGroupService.ACCESSLEVEL_NOACCESS);
+            }
+        }
 
-		// we do not clear roles for 'admin' profile!
-		if (!"admin".equalsIgnoreCase(workitem.getItemValueString("txtname"))) {
-			if (iProcessID >= TASK_PPROFILE_ACTIVE && iActivityID == EVENT_PROFILE_LOCK) {
-				logger.info("Lock profile '" + workitem.getItemValueString("txtname") + "'");
-				workitem.replaceItemValue("txtGroups", UserGroupService.ACCESSLEVEL_NOACCESS);
-			}
-		}
+        logger.fine("[UserGroupPlugin] update profile '" + workitem.getItemValueString("txtname") + "'....");
+        userGroupService.updateUser(workitem);
 
-		logger.fine("[UserGroupPlugin] update profile '" + workitem.getItemValueString("txtname") + "'....");
-		userGroupService.updateUser(workitem);
+        return documentContext;
+    }
 
-		return documentContext;
-	}
+    /**
+     * Returns true if the flag keyEnableUserDB is set to true.
+     * 
+     * @return
+     */
+    private boolean isUserDBEnabled() {
+        String searchterm = "(type:\"configuration\" AND txtname:\"BASIC\")";
+        Collection<ItemCollection> col;
+        try {
+            col = documentService.find(searchterm, 1, 0);
+        } catch (QueryException e) {
+            throw new InvalidAccessException(InvalidAccessException.INVALID_ID, e.getMessage(), e);
+        }
 
-	/**
-	 * Returns true if the flag keyEnableUserDB is set to true.
-	 * 
-	 * @return
-	 */
-	private boolean isUserDBEnabled() {
-		String searchterm = "(type:\"configuration\" AND txtname:\"BASIC\")";
-		Collection<ItemCollection> col;
-		try {
-			col = documentService.find(searchterm, 1, 0);
-		} catch (QueryException e) {
-			throw new InvalidAccessException(InvalidAccessException.INVALID_ID, e.getMessage(), e);
-		}
+        if (col.size() > 0) {
+            ItemCollection config = col.iterator().next();
+            return config.getItemValueBoolean("keyEnableUserDB");
+        }
 
-		if (col.size() > 0) {
-			ItemCollection config = col.iterator().next();
-			return config.getItemValueBoolean("keyEnableUserDB");
-		}
-
-		return false;
-	}
+        return false;
+    }
 
 }

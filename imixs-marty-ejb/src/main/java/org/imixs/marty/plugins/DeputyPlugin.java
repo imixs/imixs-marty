@@ -6,15 +6,11 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import javax.ejb.EJB;
 
 import org.imixs.marty.ejb.ProfileService;
 import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.WorkflowContext;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
-import org.imixs.workflow.exceptions.PluginException;
 
 /**
  * This plugin computes for each name field (prefix = 'nam') if the
@@ -34,158 +30,139 @@ import org.imixs.workflow.exceptions.PluginException;
  * ending with 'approvers' and 'approvedby'.
  * 
  * @see https://github.com/imixs/imixs-marty/issues/130
- *  
+ * 
  * 
  * @author rsoika
  * 
  */
 public class DeputyPlugin extends AbstractPlugin {
 
-	public static String PROFILESERVICE_NOT_BOUND = "PROFILESERVICE_NOT_BOUND";
+    public static String PROFILESERVICE_NOT_BOUND = "PROFILESERVICE_NOT_BOUND";
 
-	ItemCollection workitem = null;
-	ProfileService profileService = null;
-	private String[] ignoreList = { "$creator", "$editor", "$lasteditor", "namcreator", "namcurrenteditor", "namlasteditor", "$owner", "namowner", "nam+(?:[a-z0-9_]+)approvers",
-			"nam+(?:[a-z0-9_]+)approvedby" };
-	
-	private String[] supportList = { "\\.manager$", "\\.team$","\\.assist$"};
+    ItemCollection workitem = null;
 
-	private static Logger logger = Logger.getLogger(DeputyPlugin.class.getName());
+    private String[] ignoreList = { "$creator", "$editor", "$lasteditor", "namcreator", "namcurrenteditor",
+            "namlasteditor", "$owner", "namowner", "nam+(?:[a-z0-9_]+)approvers", "nam+(?:[a-z0-9_]+)approvedby" };
 
-	@Override
-	public void init(WorkflowContext actx) throws PluginException {
+    private String[] supportList = { "\\.manager$", "\\.team$", "\\.assist$" };
 
-		super.init(actx);
+    private static Logger logger = Logger.getLogger(DeputyPlugin.class.getName());
 
-		// lookup profile service EJB
-		String jndiName = "ejb/ProfileService";
-		InitialContext ictx;
-		try {
-			ictx = new InitialContext();
-			Context ctx = (Context) ictx.lookup("java:comp/env");
-			profileService = (ProfileService) ctx.lookup(jndiName);
-		} catch (NamingException e) {
+    @EJB
+    ProfileService profileService;
 
-			throw new PluginException(MailPlugin.class.getName(), PROFILESERVICE_NOT_BOUND, "ProfileService not bound",
-					e);
-		}
+    /**
+     * iterate over all fields with the prefix nam...
+     * 
+     * Skip if not a workitem
+     * 
+     **/
+    @SuppressWarnings("unchecked")
+    @Override
+    public ItemCollection run(ItemCollection aworkItem, ItemCollection documentActivity) {
 
-	}
+        workitem = aworkItem;
 
-	/**
-	 * iterate over all fields with the prefix nam...
-	 * 
-	 * Skip if not a workitem
-	 * 
-	 **/
-	@SuppressWarnings("unchecked")
-	@Override
-	public ItemCollection run(ItemCollection aworkItem, ItemCollection documentActivity) {
+        // skip if the workitem is from a different type (for example Teams
+        // may not be processed by this plugin)
+        String type = workitem.getItemValueString("type");
 
-		workitem = aworkItem;
+        if (!type.startsWith("workitem") && !type.startsWith("childworkitem"))
+            return workitem;
 
-		// skip if the workitem is from a different type (for example Teams
-		// may not be processed by this plugin)
-		String type = workitem.getItemValueString("type");
+        // iterate over name fields
+        Map<String, List<Object>> map = workitem.getAllItems();
+        for (String itemName : map.keySet()) {
+            if (ignoreItem(itemName)) {
+                continue;
+            }
 
-		if (!type.startsWith("workitem") && !type.startsWith("childworkitem"))
-			return workitem;
+            // lookup deputies
+            logger.fine("... lookup=" + itemName);
+            List<String> oldNameList = workitem.getItemValue(itemName);
+            List<String> newNameList = updateDeputies(oldNameList);
+            if (logger.isLoggable(Level.FINE)) {
+                logger.fine("... new list=");
+                for (String aentry : newNameList) {
+                    logger.fine(aentry);
+                }
+            }
+            // update field
+            workitem.replaceItemValue(itemName, newNameList);
+        }
 
-		// iterate over name fields
-		Map<String, List<Object>> map = workitem.getAllItems();
-		for (String itemName : map.keySet()) {
-			if (ignoreItem(itemName)) {
-				continue;
-			}
+        return workitem;
+    }
 
-			// lookup deputies
-			logger.fine("... lookup=" + itemName);
-			List<String> oldNameList = workitem.getItemValue(itemName);
-			List<String> newNameList = updateDeputies(oldNameList);
-			if (logger.isLoggable(Level.FINE)) {
-				logger.fine("... new list=");
-				for (String aentry : newNameList) {
-					logger.fine(aentry);
-				}
-			}
-			// update field
-			workitem.replaceItemValue(itemName, newNameList);
-		}
+    /**
+     * This method updates a given list of names. For each name the method lookups a
+     * deputy. If a deputy is defined but not par of the list he will be added to
+     * the new list.
+     * 
+     * @param sourceNameList - source list of names
+     * @return new list with all names plus deputies.
+     */
+    @SuppressWarnings("unchecked")
+    private List<String> updateDeputies(List<String> sourceNameList) {
+        Vector<String> resultNameList = new Vector<String>();
 
-		return workitem;
-	}
+        resultNameList.addAll(sourceNameList);
+        // test for each entry if a deputy is defined
+        for (String aName : sourceNameList) {
+            // now lookup the deputies
+            ItemCollection profile = profileService.findProfileById(aName);
+            if (profile != null) {
+                List<String> deputyList = profile.getItemValue("namdeputy");
+                // if we found deputies - we need to add them to the list
+                for (String deputy : deputyList) {
+                    if (deputy != null && !deputy.isEmpty() && resultNameList.indexOf(deputy) == -1) {
+                        // add new entry
+                        resultNameList.add(deputy);
+                    }
+                }
+            }
+        }
+        return resultNameList;
+    }
 
-	
-	/**
-	 * This method updates a given list of names. For each name the method
-	 * lookups a deputy. If a deputy is defined but not par of the list he will
-	 * be added to the new list.
-	 * 
-	 * @param sourceNameList
-	 *            - source list of names
-	 * @return new list with all names plus deputies.
-	 */
-	@SuppressWarnings("unchecked")
-	private List<String> updateDeputies(List<String> sourceNameList) {
-		Vector<String> resultNameList = new Vector<String>();
+    public String[] getIgnoreList() {
+        return ignoreList;
+    }
 
-		resultNameList.addAll(sourceNameList);
-		// test for each entry if a deputy is defined
-		for (String aName : sourceNameList) {
-			// now lookup the deputies
-			ItemCollection profile = profileService.findProfileById(aName);
-			if (profile != null) {
-				List<String> deputyList = profile.getItemValue("namdeputy");
-				// if we found deputies - we need to add them to the list
-				for (String deputy : deputyList) {
-					if (deputy != null && !deputy.isEmpty() && resultNameList.indexOf(deputy) == -1) {
-						// add new entry
-						resultNameList.add(deputy);
-					}
-				}
-			}
-		}
-		return resultNameList;
-	}
+    public void setIgnoreList(String[] ignoreList) {
+        this.ignoreList = ignoreList;
+    }
 
-	public String[] getIgnoreList() {
-		return ignoreList;
-	}
+    /**
+     * This method returns true in case the given itemName must not be modified.
+     * Regular expressions are supported by the ignoreList and supportList.
+     * 
+     * @param itemName
+     * @return true if fieldName matches the ignoreList
+     */
+    public boolean ignoreItem(String itemName) {
+        if (itemName == null)
+            return true;
 
-	public void setIgnoreList(String[] ignoreList) {
-		this.ignoreList = ignoreList;
-	}
-
-	/**
-	 * This method returns true in case the given itemName must not be modified.
-	 *  Regular expressions are supported by the ignoreList and supportList.
-	 * 
-	 * @param itemName
-	 * @return true if fieldName matches the ignoreList
-	 */
-	public boolean ignoreItem(String itemName) {
-		if (itemName == null)
-			return true;
-		
-		// contained in support list? 
-		for (String pattern : this.supportList) {
+        // contained in support list?
+        for (String pattern : this.supportList) {
             if (itemName.toLowerCase().matches(pattern)) {
                 return false;
             }
         }
-		// contained in ignore list? 
-		for (String pattern : this.ignoreList) {
+        // contained in ignore list?
+        for (String pattern : this.ignoreList) {
             if (itemName.toLowerCase().matches(pattern)) {
                 return true;
             }
         }
-		
-		// ignore all not starting with 'nam' (deprecated)
-		if (!itemName.toLowerCase().startsWith("nam")) {
-			return true;
-		}
-		
-		return false;
-	}
+
+        // ignore all not starting with 'nam' (deprecated)
+        if (!itemName.toLowerCase().startsWith("nam")) {
+            return true;
+        }
+
+        return false;
+    }
 
 }
