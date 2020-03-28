@@ -134,7 +134,7 @@ public class WorkitemService {
 
 		// assign ModelVersion, group and editor
 		workItem.replaceItemValue("$modelversion", sModelVersion);
-		workItem.replaceItemValue("txtworkflowgroup", sWorkflowGroup);
+		workItem.replaceItemValue("$workflowgroup", sWorkflowGroup);
 		workItem.replaceItemValue("txtworkfloweditorid", sEditorID);
 
 		return workItem;

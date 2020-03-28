@@ -266,7 +266,7 @@ public class UserGroupService {
 			profile.replaceItemValue("txtName", sAdminAccount);
 			// set default password
 			profile.replaceItemValue("txtPassword", DEFAULT_PASSWORD);
-			profile.replaceItemValue("txtWorkflowGroup", "Profile");
+			profile.replaceItemValue("$WorkflowGroup", "Profile");
 			profile.replaceItemValue("txtGroups", "IMIXS-WORKFLOW-Manager");
 
 			// hard coded version nummer!

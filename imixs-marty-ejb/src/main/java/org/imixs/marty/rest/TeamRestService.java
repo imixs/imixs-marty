@@ -190,7 +190,7 @@ public class TeamRestService implements Serializable {
 					if (!result.contains(group)) {
 						result.add(group);
 						ItemCollection itemCol=new ItemCollection();
-						itemCol.replaceItemValue("txtWorkflowGroup", group);
+						itemCol.replaceItemValue("$WorkflowGroup", group);
 						itemCol.replaceItemValue("txtName", group);
 						col.add(itemCol);
 					}

@@ -49,8 +49,8 @@ public class WorkitemHelper {
 
 		clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
 
-		clone.replaceItemValue("txtWorkflowStatus", aWorkitem.getItemValue("txtWorkflowStatus"));
-		clone.replaceItemValue("txtWorkflowGroup", aWorkitem.getItemValue("txtWorkflowGroup"));
+        clone.replaceItemValue("$WorkflowStatus", aWorkitem.getItemValue("$WorkflowStatus"));
+        clone.replaceItemValue("$WorkflowGroup", aWorkitem.getItemValue("$WorkflowGroup"));
 		clone.replaceItemValue("namCreator", aWorkitem.getItemValue("namCreator"));
 		clone.replaceItemValue("namCurrentEditor", aWorkitem.getItemValue("namCurrentEditor"));
 		clone.replaceItemValue("$Owner", aWorkitem.getItemValue("$Owner"));
@@ -59,6 +59,9 @@ public class WorkitemHelper {
 		clone.replaceItemValue("namManager", aWorkitem.getItemValue("namManager"));
 		clone.replaceItemValue("namassist", aWorkitem.getItemValue("namassist"));
 		
+        // deprecated fields
+        clone.replaceItemValue("txtWorkflowStatus", aWorkitem.getItemValue("txtWorkflowStatus"));
+        clone.replaceItemValue("txtWorkflowGroup", aWorkitem.getItemValue("txtWorkflowGroup"));
 		if (aWorkitem.getType().startsWith("space")) {
 		    cloneByPraefix("space",aWorkitem,clone);
 		}
