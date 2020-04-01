@@ -43,7 +43,8 @@ Before you can add the custom component in one of your JSF pages, make sure that
 
 	  <f:subview xmlns="http://www.w3.org/1999/xhtml"
 	  .....
-	  xmlns:marty="http://java.sun.com/jsf/composite/marty" 
+	  xmlns:i="http://xmlns.jcp.org/jsf/composite/imixs"
+	  xmlns:marty="http://xmlns.jcp.org/jsf/composite/marty
 	  .... >
 
 Also the marty javascript library and marty css definition need to be loaded in the 
