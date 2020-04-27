@@ -158,6 +158,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
      * @return
      * @throws AddressException
      */
+    @Override
     public InternetAddress getInternetAddress(String aAddr) throws AddressException {
 
         // is smtp address skip profile lookup?
