@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.ejb.EJBException;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
 import javax.faces.context.FacesContext;
@@ -156,12 +157,8 @@ public class UserController implements Serializable {
 					profile.setEventID(profileLoginEvent);
 					try {
 						profile = workflowService.processWorkItem(profile);
-					} catch (PluginException e) {
-						throw new ProcessingErrorException(UserController.class.getName(),
-								ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!", e);
-					} catch (ModelException e) {
-						throw new ProcessingErrorException(UserController.class.getName(),
-								ProcessingErrorException.INVALID_WORKITEM, " unable to process new profile entity!", e);
+					} catch (PluginException | ModelException | ProcessingErrorException | EJBException  e) {
+						logger.warning("Unable to process profile.login.event=" + profileLoginEvent + " - please check configuration!");
 					}
 				}
 
