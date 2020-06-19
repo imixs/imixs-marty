@@ -91,6 +91,9 @@ public class WorkitemLinkController implements Serializable {
 	}
 
 	public String getInput() {
+		if (input==null) {
+			input="";
+		}
 		return input;
 	}
 
