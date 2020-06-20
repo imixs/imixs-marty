@@ -61,11 +61,10 @@ import org.imixs.workflow.faces.data.WorkflowController;
 
 @Named
 @ViewScoped
-//@RequestScoped
 public class WorkitemLinkController implements Serializable {
 
 	public static final String LINK_PROPERTY = "txtworkitemref";
-	public static final int MAX_SEARCH_RESULT = 999;
+	public static final int MAX_SEARCH_RESULT = 20;
 	public static Logger logger = Logger.getLogger(WorkitemLinkController.class.getName());
 
 	@EJB
