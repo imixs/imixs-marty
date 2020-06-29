@@ -42,6 +42,7 @@ import org.eclipse.microprofile.config.Config;
  * <p>
  * <code>
  *   #{propertyController.getProperty('my-property')}
+ *   #{propertyController.getProperty('another-property','default value')}
  * </code>
  * 
  * @author rsoika
@@ -57,11 +58,23 @@ public class PropertyController implements Serializable {
 	/**
 	 * Returns a property value
 	 * 
-	 * @param key
-	 * @return
+	 * @param key - the property key
+	 * @return property value
 	 */
 	public String getProperty(String key) {
 		return config.getOptionalValue(key, String.class)
                 .orElse("");
 	}
+	
+	/**
+     * Returns a property value
+     * 
+     * @param key - the property key
+     * @param defaultValue - optional default value if property not defined
+     * @return property value
+     */
+    public String getProperty(String key,String defaultValue) {
+        return config.getOptionalValue(key, String.class)
+                .orElse(defaultValue);
+    }
 }
