@@ -50,6 +50,7 @@ import javax.ejb.Stateless;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
 
+import org.imixs.workflow.FileData;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.xml.XMLDocument;
@@ -488,8 +489,9 @@ public class DmsSchedulerService {
 
 			dmsItemCollection.replaceItemValue("type", DMS_TYPE);
 			dmsItemCollection.replaceItemValue("txtname", importFile.getName());
-			dmsItemCollection.addFile(bytes, importFile.getName(),
-					new MimetypesFileTypeMap().getContentType(importFile));
+			
+			FileData fd=new FileData(importFile.getName(), bytes, new MimetypesFileTypeMap().getContentType(importFile), null);
+			dmsItemCollection.addFileData(fd);
 			dmsItemCollection.replaceItemValue("$writeAccess",
 					"org.imixs.ACCESSLEVEL.MANAGERACCESS");
 			dmsItemCollection.replaceItemValue("$readAccess",

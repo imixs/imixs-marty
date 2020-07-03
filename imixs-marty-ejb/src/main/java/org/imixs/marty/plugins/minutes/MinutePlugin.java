@@ -14,7 +14,6 @@ import org.imixs.workflow.PluginDependency;
 import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
-import org.imixs.workflow.engine.plugins.AccessPlugin;
 import org.imixs.workflow.exceptions.PluginException;
 
 /**
@@ -123,7 +122,7 @@ public class MinutePlugin extends AbstractPlugin implements PluginDependency {
 				logger.fine("reset itemvalue $CREATED for new version...");
 				documentContext.removeItem("$created");
 
-				ItemCollection evalResult = this.getWorkflowService().evalWorkflowResult(documentActivity,
+				ItemCollection evalResult = this.getWorkflowService().evalWorkflowResult(documentActivity,"item",
 						documentContext);
 				if (evalResult != null && evalResult.getItemValueBoolean(RESET_MINUTE_VERSION_HISTORY)) {
 					logger.fine("reset version history....");
@@ -247,7 +246,6 @@ public class MinutePlugin extends AbstractPlugin implements PluginDependency {
 	public List<String> dependsOn() {
 		List<String> dependencies = new ArrayList<>();
 		dependencies.add(TeamPlugin.class.getName());
-		dependencies.add(AccessPlugin.class.getName());
 		return dependencies;
 	}
 }
