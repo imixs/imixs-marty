@@ -93,20 +93,28 @@ public class ReportController implements Serializable {
 			// provide old param setting with ?
 			// parse query
 			i = 0;
+			boolean found=false;
 			while ((i = query.indexOf('?', i)) > -1) {
 				String sTest = query.substring(i + 1);
 				// cut next space or ' or " or ] or :
 				for (int j = 0; j < sTest.length(); j++) {
 					char c = sTest.charAt(j);
-					if (c == '\'' || c == '"' || c == ']' || c == ':' || c == ' ') {
+					if (c == '\'' || c == '"' || c == ']' || c == ':' || c == ' '  || c == ')') {
 						// cut here!
 						String sKey = query.substring(i + 1, i + j + 1);
 						logger.warning("...detected old report param format. Replace ?xxx with {xxx}");
 						params.put(sKey, "");
 						i++;
+						found=true;
 						break;
 					}
+				} 
+				// we did not found a parameter end char!
+				if (!found) {
+				    logger.warning("...unable to parse report param format. Replace ?xxx with {xxx}");
+				    break;
 				}
+				
 			}
 
 		}
