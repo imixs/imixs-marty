@@ -83,6 +83,11 @@ public class ProfileService {
 
     private static Logger logger = Logger.getLogger(ProfileService.class.getName());
 
+	@Inject
+	@ConfigProperty(name = "security.userid.input.mode", defaultValue = "LOWERCASE")
+	String userInputMode;
+
+	
     @EJB
     private DocumentService documentService;
 
@@ -156,6 +161,15 @@ public class ProfileService {
         if (userid == null || userid.isEmpty()) {
             return null;
         }
+        
+    	// userid inputmode?
+    	if ("UPPERCASE".equalsIgnoreCase(userInputMode)) {
+    		userid = userid.toUpperCase();
+		}
+		if ("LOWERCASE".equalsIgnoreCase(userInputMode)) {
+			userid = userid.toLowerCase();
+		}
+  
 
         // try to get name out from cache
         ItemCollection userProfile = null;
@@ -210,6 +224,15 @@ public class ProfileService {
             return null;
         }
 
+    	// userid inputmode?
+    	if ("UPPERCASE".equalsIgnoreCase(userInputMode)) {
+    		userid = userid.toUpperCase();
+		}
+		if ("LOWERCASE".equalsIgnoreCase(userInputMode)) {
+			userid = userid.toLowerCase();
+		}
+        
+        
         // try to get name out from cache
         ItemCollection userProfile = null;
 
@@ -341,6 +364,16 @@ public class ProfileService {
      */
     public ItemCollection createProfile(String userid, String locale)
             throws AccessDeniedException, ProcessingErrorException, PluginException, ModelException {
+    	
+    	
+    	// userid inputmode?
+    	if ("UPPERCASE".equalsIgnoreCase(userInputMode)) {
+    		userid = userid.toUpperCase();
+		}
+		if ("LOWERCASE".equalsIgnoreCase(userInputMode)) {
+			userid = userid.toLowerCase();
+		}
+    	
         logger.info("create new profile for userid '" + userid + "'.... ");
         // create new Profile for current user
         ItemCollection profile = new ItemCollection();
