@@ -43,7 +43,9 @@ import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.SessionContext;
 import javax.ejb.Singleton;
+import javax.inject.Inject;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.PropertyService;
@@ -82,6 +84,11 @@ public class ProfileService {
 
 	private static Logger logger = Logger.getLogger(ProfileService.class.getName());
 
+
+	@Inject
+	@ConfigProperty(name = "security.userid.input.mode", defaultValue = "LOWERCASE")
+	String userInputMode;
+	
 	@EJB
 	private DocumentService documentService;
 
@@ -157,6 +164,14 @@ public class ProfileService {
 		if (userid == null || userid.isEmpty()) {
 			return null;
 		}
+		
+		// userid inputmode?
+    	if ("UPPERCASE".equalsIgnoreCase(userInputMode)) {
+    		userid = userid.toUpperCase();
+		}
+		if ("LOWERCASE".equalsIgnoreCase(userInputMode)) {
+			userid = userid.toLowerCase();
+		}
 
 		// try to get name out from cache
 		ItemCollection userProfile = null;
@@ -211,6 +226,15 @@ public class ProfileService {
 			return null;
 		}
 
+
+    	// userid inputmode?
+    	if ("UPPERCASE".equalsIgnoreCase(userInputMode)) {
+    		userid = userid.toUpperCase();
+		}
+		if ("LOWERCASE".equalsIgnoreCase(userInputMode)) {
+			userid = userid.toLowerCase();
+		}
+		
 		// try to get name out from cache
 		ItemCollection userProfile = null;
 
@@ -317,6 +341,16 @@ public class ProfileService {
 	 */
 	public ItemCollection createProfile(String userid, String locale)
 			throws AccessDeniedException, ProcessingErrorException, PluginException, ModelException {
+		
+		
+    	// userid inputmode?
+    	if ("UPPERCASE".equalsIgnoreCase(userInputMode)) {
+    		userid = userid.toUpperCase();
+		}
+		if ("LOWERCASE".equalsIgnoreCase(userInputMode)) {
+			userid = userid.toLowerCase();
+		}
+		
 		logger.info("create new profile for userid '" + userid + "'.... ");
 		// create new Profile for current user
 		ItemCollection profile = new ItemCollection();
