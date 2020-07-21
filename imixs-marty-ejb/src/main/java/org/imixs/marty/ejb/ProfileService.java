@@ -426,9 +426,7 @@ public class ProfileService {
         // process new profile...
         profile.setEventID(CREATE_PROFILE_ACTIVITY_ID);
 
-        profile = workflowService.processWorkItem(profile);
-
-        // fire ProfileEvent so that a client can intercept....
+         // fire ProfileEvent so that a client can intercept....
         if (profileEvents != null) {
             ProfileEvent event = new ProfileEvent(userid, profile, ProfileEvent.ON_PROFILE_CREATE);
             profileEvents.fire(event);
@@ -437,6 +435,11 @@ public class ProfileService {
             logger.warning("CDI Support is missing - ProfileEvent wil not be fired");
         }
 
+        
+        profile = workflowService.processWorkItem(profile);
+
+
+        
         logger.finest("......new profile created for userid '" + userid + "'");
 
         return profile;
