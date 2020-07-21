@@ -68,7 +68,7 @@ public class ApproverPlugin extends AbstractPlugin {
 		boolean refresh = false;
 		boolean reset = false;
 
-		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity, workitem);
+		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity,"item", workitem);
 
 		// test for items with name 'approvedby'
 		if (evalItemCollection != null && evalItemCollection.hasItem(APPROVEDBY)) {
