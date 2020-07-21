@@ -138,7 +138,7 @@ public class UserController implements Serializable {
 
 			// try to load the profile for the current user
 			ItemCollection profile = profileService.lookupProfileById(loginController.getUserPrincipal());
-			if (profile == null) {
+			if (profile == null || profile.getModelVersion().isEmpty()) {
 				try {
 					profile = profileService.createProfile(loginController.getUserPrincipal(), getLocale().toString());
 				} catch (RuntimeException | PluginException | ModelException e) {
