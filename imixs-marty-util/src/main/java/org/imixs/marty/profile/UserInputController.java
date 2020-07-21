@@ -74,6 +74,9 @@ public class UserInputController implements Serializable {
 
 	@EJB
 	protected WorkflowService workflowService;
+	
+	@EJB
+	protected ProfileService profileService;
 
 	private List<ItemCollection> searchResult = null;
 
@@ -178,7 +181,7 @@ public class UserInputController implements Serializable {
 
 		if (col != null) {
 			for (ItemCollection profile : col) {
-				searchResult.add(ProfileService.cloneWorkitem(profile));
+				searchResult.add(profileService.cloneWorkitem(profile));
 			}
 			// sort by username..
 			Collections.sort(searchResult, new ItemCollectionComparator("txtusername", true));
