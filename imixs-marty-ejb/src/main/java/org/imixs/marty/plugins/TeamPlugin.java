@@ -263,7 +263,7 @@ public class TeamPlugin extends AbstractPlugin {
          * 
          * '<item name="process">...</item>' '<item name="space">...</item>'
          */
-        ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity, workItem);
+        ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity,"item", workItem);
         if (evalItemCollection != null) {
             String sRef = fetchRefFromActivity("process", evalItemCollection);
             if (sRef != null && !sRef.isEmpty()) {
@@ -500,7 +500,8 @@ public class TeamPlugin extends AbstractPlugin {
             return null;
         }
         // String sQuery = "(type:\"" + type + "\" AND txtname:\"" + aName + "\")";
-        String sQuery = "((type:\"" + type + "\" OR type:\"" + type + "archive\") AND txtname:\"" + aName + "\")";
+        //String sQuery = "((type:\"" + type + "\" OR type:\"" + type + "archive\") AND txtname:\"" + aName + "\")";
+        String sQuery = "(type:\"" + type + "\" OR type:\"" + type + "archive\") AND (name:\"" + aName + "\" OR txtname:\"" + aName + "\")";
 
         // because of the fact that spaces can be ordered in a hirachical order
         // we need to be a little more tricky if we seach for spaces....
