@@ -50,38 +50,38 @@ import org.imixs.workflow.exceptions.QueryException;
  * space.ref which containing only uniqueIDs of the corresponding entity type.
  * The properties process.ref and space.ref can be modified by an application to
  * reassign the workitem.
- * 
+ * <p>
  * This plug-in supports also additional workflow properties for further
  * processing. The method computes the team members and the name of the assigned
  * process and space.
- * 
  * <p>
  * The TeamPlugin updates the following properties:
  * <ul>
- * <li>namSpaceTeam
- * <li>namSpaceManager
- * <li>namSpaceAssist
- * <li>namSpaceName
+ * <li>space.team
+ * <li>space.Manager
+ * <li>space.Assist
+ * <li>space.Name
  * <li>space.ref
- * <li>namProcessTeam
- * <li>namProcessManager
- * <li>namProcessAssist
- * <li>txtProcessName
+ * <li>process.Team
+ * <li>process.Manager
+ * <li>process.Assist
+ * <li>process.name
  * <li>process.ref
- * 
+ * </ul>
+ * <p>
  * The name properties are used in security and mail plug-ins.
- * 
+ * <p>
  * The properties 'process.ref' and 'space.ref' are optional and can provide the
  * current $uniqueIDs for referenced space or process entities. The Plug-in
  * updates the $UniqueIDRef property if these properties are filled.
- * 
+ * <p>
  * If the workItem is a child to another workItem (ChildWorkitem) the
  * information is fetched from the parent workItem.
- * 
+ * <p>
  * If the workflowresultmessage of the ActivityEntity contains a space or
  * process reference the plug-in will update the reference in the property
  * $uniqueIdRef.
- * 
+ * <p>
  * Example:
  * 
  * <code>
@@ -91,9 +91,18 @@ import org.imixs.workflow.exceptions.QueryException;
  * 
  * The Plug-in should run before Access-, Application- and Mail-Plug-in.
  * 
- * 
- * Model: default
- * 
+ * Note: the deprecated item names are still supported:
+ * <ul>
+ * <li>namSpaceTeam
+ * <li>namSpaceManager
+ * <li>namSpaceAssist
+ * <li>namSpaceName
+ * <li>namProcessTeam
+ * <li>namProcessManager
+ * <li>namProcessAssist
+ * <li>txtSpaceName
+ * <li>txtProcessName
+ * </ul>
  * @author rsoika
  * @version 2.0
  */
@@ -263,7 +272,8 @@ public class TeamPlugin extends AbstractPlugin {
          * 
          * '<item name="process">...</item>' '<item name="space">...</item>'
          */
-        ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity,"item", workItem);
+        ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity, "item",
+                workItem);
         if (evalItemCollection != null) {
             String sRef = fetchRefFromActivity("process", evalItemCollection);
             if (sRef != null && !sRef.isEmpty()) {
@@ -326,18 +336,7 @@ public class TeamPlugin extends AbstractPlugin {
         logger.fine("Updated $UniqueIdRef: " + newUnqiueIDRefList);
 
         // 6.) Now the team lists will be updated depending of the current
-        // $uniqueidref
-//		List vSpaceTeam = new ArrayList<String>();
-//		List vSpaceManager = new ArrayList<String>();
-//		List vSpaceAssist = new ArrayList<String>();
-//		List vProcessTeam = new ArrayList<String>();
-//		List vProcessManager = new ArrayList<String>();
-//		List vProcessAssist = new ArrayList<String>();
-//		List<String> spaceNames = new ArrayList<String>();
-//        List<String> processNames = new ArrayList<String>();
-        // String sSpaceNameNode = "";
-
-        // interate over all refs if defined
+        // $uniqueidref - iterate over all refs if defined
         for (String aUnqiueID : newUnqiueIDRefList) {
 
             ItemCollection entity = findEntity(aUnqiueID);
@@ -356,12 +355,6 @@ public class TeamPlugin extends AbstractPlugin {
                             entity.getItemValue("process.manager.label"));
 
                     workItem.appendItemValueUnique("process.name", entity.getItemValue("process.name"));
-
-//					vProcessTeam.addAll(entity.getItemValue("process.team"));
-//					vProcessManager.addAll(entity.getItemValue("process.manager"));
-//					vProcessAssist.addAll(entity.getItemValue("process.assist"));
-//					processNames.add(entity.getItemValueString("process.name"));
-
                 }
                 if ("space".equals(parentType) || "spacearchive".equals(parentType)) {
                     workItem.appendItemValueUnique("space.assist", entity.getItemValue("space.assist"));
@@ -374,38 +367,12 @@ public class TeamPlugin extends AbstractPlugin {
 
                     workItem.appendItemValueUnique("space.name", entity.getItemValue("space.name"));
 
-//					vSpaceTeam.addAll(entity.getItemValue("space.team"));
-//					vSpaceManager.addAll(entity.getItemValue("space.manager"));
-//					vSpaceAssist.addAll(entity.getItemValue("space.assist"));
-//					spaceNames.add(entity.getItemValueString("space.name"));
                 }
 
             }
         }
 
         // update properties
-//        workItem.replaceItemValue("space.name", spaceNames);
-//		workItem.replaceItemValue("space.team", vSpaceTeam);
-//		workItem.replaceItemValue("space.manager", vSpaceManager);
-//		workItem.replaceItemValue("space.assist", vSpaceAssist);
-//
-//        workItem.replaceItemValue("process.name", processNames);
-//        workItem.replaceItemValue("process.team", vProcessTeam);
-//		workItem.replaceItemValue("process.manager", vProcessManager);
-//		workItem.replaceItemValue("process.assist", vProcessAssist);
-
-        // removed duplicates...
-//		uniqueElements(workItem, "$UniqueIdRef");
-//		uniqueElements(workItem, "txtProcessRef");
-//		uniqueElements(workItem, "txtSpaceRef");
-
-//		uniqueElements(workItem, "space.team");
-//		uniqueElements(workItem, "space.manager");
-//		uniqueElements(workItem, "space.assist");
-//		uniqueElements(workItem, "process.team");
-//		uniqueElements(workItem, "process.manager");
-//		uniqueElements(workItem, "process.assist");
-
         // support deprecated item names... Issue #325
         workItem.replaceItemValue("namSpaceTeam", workItem.getItemValue("space.team"));
         workItem.replaceItemValue("namSpaceManager", workItem.getItemValue("space.manager"));
@@ -500,8 +467,12 @@ public class TeamPlugin extends AbstractPlugin {
             return null;
         }
         // String sQuery = "(type:\"" + type + "\" AND txtname:\"" + aName + "\")";
-        //String sQuery = "((type:\"" + type + "\" OR type:\"" + type + "archive\") AND txtname:\"" + aName + "\")";
-        String sQuery = "(type:\"" + type + "\" OR type:\"" + type + "archive\") AND (name:\"" + aName + "\" OR txtname:\"" + aName + "\")";
+        // String sQuery = "((type:\"" + type + "\" OR type:\"" + type + "archive\") AND
+        // txtname:\"" + aName + "\")";
+        // We need to ensure that the old deprecated item name 'txtname' is still
+        // supported by the query.
+        String sQuery = "(type:\"" + type + "\" OR type:\"" + type + "archive\") AND (name:\"" + aName
+                + "\" OR txtname:\"" + aName + "\")";
 
         // because of the fact that spaces can be ordered in a hirachical order
         // we need to be a little more tricky if we seach for spaces....
@@ -531,25 +502,5 @@ public class TeamPlugin extends AbstractPlugin {
         // no match
         return null;
     }
-
-    /**
-     * This method will remove empty or duplicate values from a list
-     * 
-     * @param target
-     * @param source
-     * @return
-     */
-//	private void uniqueElements(ItemCollection entity, String field) {
-//		List<String> target = new ArrayList<String>();
-//		@SuppressWarnings("unchecked")
-//		List<String> source = entity.getItemValue(field);
-//
-//		for (String entry : source) {
-//			if (entry != null && !entry.isEmpty() && !target.contains(entry))
-//				target.add(entry);
-//		}
-//		entity.replaceItemValue(field, target);
-//	}
-//	
 
 }
