@@ -51,125 +51,129 @@ import org.imixs.workflow.exceptions.PluginException;
  */
 public class ApproverPlugin extends AbstractPlugin {
 
-	private static Logger logger = Logger.getLogger(ApproverPlugin.class.getName());
+    private static Logger logger = Logger.getLogger(ApproverPlugin.class.getName());
 
-	public static String APPROVEDBY = "approvedby";
+    public static String APPROVEDBY = "approvedby";
 
-	/**
-	 * computes the approvedBy and appovers name fields.
-	 * 
-	 * 
-	 * @throws PluginException
-	 * 
-	 **/
-	@SuppressWarnings("unchecked")
-	@Override
-	public ItemCollection run(ItemCollection workitem, ItemCollection documentActivity) throws PluginException {
-		boolean refresh = false;
-		boolean reset = false;
+    /**
+     * computes the approvedBy and appovers name fields.
+     * 
+     * 
+     * @throws PluginException
+     * 
+     **/
+    @SuppressWarnings("unchecked")
+    @Override
+    @Deprecated
+    public ItemCollection run(ItemCollection workitem, ItemCollection documentActivity) throws PluginException {
+        boolean refresh = false;
+        boolean reset = false;
 
-		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity,"item", workitem);
+        ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity, "item",
+                workitem);
 
-		// test for items with name 'approvedby'
-		if (evalItemCollection != null && evalItemCollection.hasItem(APPROVEDBY)) {
+        // test for items with name 'approvedby'
+        if (evalItemCollection != null && evalItemCollection.hasItem(APPROVEDBY)) {
+            logger.warning(
+                    "The plugin org.imixs.marty.plugins.ApproverPlugin is deprecated and should be replaced with org.imixs.workflow.engine.plugins.ApproverPlugin");
 
-			// test refresh
-			refresh = true;
-			if ("false".equals(evalItemCollection.getItemValueString(APPROVEDBY + ".refresh"))) {
-				refresh = false;
-			}
-			logger.fine("refresh=" + refresh);
+            // test refresh
+            refresh = true;
+            if ("false".equals(evalItemCollection.getItemValueString(APPROVEDBY + ".refresh"))) {
+                refresh = false;
+            }
+            logger.fine("refresh=" + refresh);
 
-			// test reset
-			reset = false;
-			if ("true".equals(evalItemCollection.getItemValueString(APPROVEDBY + ".reset"))) {
-				reset = true;
-			}
-			logger.fine("reset=" + reset);
+            // test reset
+            reset = false;
+            if ("true".equals(evalItemCollection.getItemValueString(APPROVEDBY + ".reset"))) {
+                reset = true;
+            }
+            logger.fine("reset=" + reset);
 
-			// 1.) extract the groups definitions
-			List<String> groups = evalItemCollection.getItemValue(APPROVEDBY);
+            // 1.) extract the groups definitions
+            List<String> groups = evalItemCollection.getItemValue(APPROVEDBY);
 
-			// 2.) iterate over all definitions
-			for (String aGroup : groups) {
+            // 2.) iterate over all definitions
+            for (String aGroup : groups) {
 
-				// fetch name list...
-				List<String> nameList = workitem.getItemValue("nam" + aGroup);
-				// remove empty entries...
-				nameList.removeIf(item -> item == null || "".equals(item));
-				// create a new instance of a Vector to avoid setting the
-				// same vector as reference! We also distinct the List here.
-				List<String> newAppoverList = nameList.stream().distinct().collect(Collectors.toList());
+                // fetch name list...
+                List<String> nameList = workitem.getItemValue("nam" + aGroup);
+                // remove empty entries...
+                nameList.removeIf(item -> item == null || "".equals(item));
+                // create a new instance of a Vector to avoid setting the
+                // same vector as reference! We also distinct the List here.
+                List<String> newAppoverList = nameList.stream().distinct().collect(Collectors.toList());
 
-				if (!workitem.hasItem("nam" + aGroup + "Approvers") || reset) {
-					logger.fine("creating new approver list: " + aGroup + "=" + newAppoverList);
-					workitem.replaceItemValue("nam" + aGroup + "Approvers", newAppoverList);
-					workitem.removeItem("nam" + aGroup + "ApprovedBy");
-				} else {
+                if (!workitem.hasItem("nam" + aGroup + "Approvers") || reset) {
+                    logger.fine("creating new approver list: " + aGroup + "=" + newAppoverList);
+                    workitem.replaceItemValue("nam" + aGroup + "Approvers", newAppoverList);
+                    workitem.removeItem("nam" + aGroup + "ApprovedBy");
+                } else {
 
-					// refresh approver list.....
-					if (refresh) {
-						refreshApprovers(workitem, aGroup);
-					}
+                    // refresh approver list.....
+                    if (refresh) {
+                        refreshApprovers(workitem, aGroup);
+                    }
 
-					// 2.) add current approver to approvedBy.....
-					String currentAppover = getWorkflowService().getUserName();
-					List<String> listApprovedBy = workitem.getItemValue("nam" + aGroup + "ApprovedBy");
-					List<String> listApprovers = workitem.getItemValue("nam" + aGroup + "Approvers");
+                    // 2.) add current approver to approvedBy.....
+                    String currentAppover = getWorkflowService().getUserName();
+                    List<String> listApprovedBy = workitem.getItemValue("nam" + aGroup + "ApprovedBy");
+                    List<String> listApprovers = workitem.getItemValue("nam" + aGroup + "Approvers");
 
-					logger.fine("approved by:  " + currentAppover);
-					if (listApprovers.contains(currentAppover) && !listApprovedBy.contains(currentAppover)) {
-						listApprovers.remove(currentAppover);
-						listApprovedBy.add(currentAppover);
-						// remove empty entries...
-						listApprovers.removeIf(item -> item == null || "".equals(item));
-						listApprovedBy.removeIf(item -> item == null || "".equals(item));
-						workitem.replaceItemValue("nam" + aGroup + "Approvers", listApprovers);
-						workitem.replaceItemValue("nam" + aGroup + "ApprovedBy", listApprovedBy);
-						logger.fine("new list of approvedby: " + aGroup + "=" + listApprovedBy);
-					}
-				}
-			}
+                    logger.fine("approved by:  " + currentAppover);
+                    if (listApprovers.contains(currentAppover) && !listApprovedBy.contains(currentAppover)) {
+                        listApprovers.remove(currentAppover);
+                        listApprovedBy.add(currentAppover);
+                        // remove empty entries...
+                        listApprovers.removeIf(item -> item == null || "".equals(item));
+                        listApprovedBy.removeIf(item -> item == null || "".equals(item));
+                        workitem.replaceItemValue("nam" + aGroup + "Approvers", listApprovers);
+                        workitem.replaceItemValue("nam" + aGroup + "ApprovedBy", listApprovedBy);
+                        logger.fine("new list of approvedby: " + aGroup + "=" + listApprovedBy);
+                    }
+                }
+            }
 
-		}
+        }
 
-		return workitem;
-	}
+        return workitem;
+    }
 
-	/**
-	 * This method verify if a new member of the existing approvers is available and
-	 * adds new member into the field 'nam" + aGroup + "Approvers'. (issue #150)
-	 */
-	@SuppressWarnings("unchecked")
-	void refreshApprovers(ItemCollection workitem, String aGroup) {
-		List<String> nameList = workitem.getItemValue("nam" + aGroup);
-		// remove empty entries...
-		nameList.removeIf(item -> item == null || "".equals(item));
+    /**
+     * This method verify if a new member of the existing approvers is available and
+     * adds new member into the field 'nam" + aGroup + "Approvers'. (issue #150)
+     */
+    @SuppressWarnings("unchecked")
+    void refreshApprovers(ItemCollection workitem, String aGroup) {
+        List<String> nameList = workitem.getItemValue("nam" + aGroup);
+        // remove empty entries...
+        nameList.removeIf(item -> item == null || "".equals(item));
 
-		// create a new instance of a Vector to avoid setting the
-		// same vector as reference! We also distinct the List here.
-		List<String> newAppoverList = nameList.stream().distinct().collect(Collectors.toList());
+        // create a new instance of a Vector to avoid setting the
+        // same vector as reference! We also distinct the List here.
+        List<String> newAppoverList = nameList.stream().distinct().collect(Collectors.toList());
 
-		// verify if a new member of the existing approvers is available...
-		// (issue #150)
-		List<String> listApprovedBy = workitem.getItemValue("nam" + aGroup + "ApprovedBy");
-		List<String> listApprovers = workitem.getItemValue("nam" + aGroup + "Approvers");
-		boolean update = false;
-		for (String approver : newAppoverList) {
-			if (!listApprovedBy.contains(approver) && !listApprovers.contains(approver)) {
-				// add the new member to the existing approver list
-				logger.fine("adding new approver to list 'nam" + aGroup + "Approvers'");
-				listApprovers.add(approver);
-				// remove empty entries...
-				listApprovers.removeIf(item -> item == null || "".equals(item));
+        // verify if a new member of the existing approvers is available...
+        // (issue #150)
+        List<String> listApprovedBy = workitem.getItemValue("nam" + aGroup + "ApprovedBy");
+        List<String> listApprovers = workitem.getItemValue("nam" + aGroup + "Approvers");
+        boolean update = false;
+        for (String approver : newAppoverList) {
+            if (!listApprovedBy.contains(approver) && !listApprovers.contains(approver)) {
+                // add the new member to the existing approver list
+                logger.fine("adding new approver to list 'nam" + aGroup + "Approvers'");
+                listApprovers.add(approver);
+                // remove empty entries...
+                listApprovers.removeIf(item -> item == null || "".equals(item));
 
-				update = true;
-			}
-		}
-		if (update) {
-			logger.fine("updating approver list 'nam" + aGroup + "Approvers'");
-			workitem.replaceItemValue("nam" + aGroup + "Approvers", listApprovers);
-		}
-	}
+                update = true;
+            }
+        }
+        if (update) {
+            logger.fine("updating approver list 'nam" + aGroup + "Approvers'");
+            workitem.replaceItemValue("nam" + aGroup + "Approvers", listApprovers);
+        }
+    }
 
 }

@@ -97,7 +97,7 @@ public class DMSSplitPlugin extends AbstractPlugin {
 	public ItemCollection run(ItemCollection adocumentContext, ItemCollection adocumentActivity)
 			throws PluginException {
 
-		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(adocumentActivity,
+		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(adocumentActivity,"item",
 				adocumentContext);
 
 		if (evalItemCollection == null)

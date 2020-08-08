@@ -53,7 +53,7 @@ public class GDPRErasurePlugin extends AbstractPlugin {
 	public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
 
 		// do we have a gdpr-erasure case?
-		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity,
+		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity,"item",
 				documentContext);
 		// find the gdpr item description
 		if (evalItemCollection != null && evalItemCollection.hasItem("gdpr-erasure")) {
