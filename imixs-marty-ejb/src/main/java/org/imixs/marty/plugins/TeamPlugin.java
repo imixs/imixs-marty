@@ -353,8 +353,7 @@ public class TeamPlugin extends AbstractPlugin {
                     workItem.appendItemValueUnique("process.team.label", entity.getItemValue("process.team.label"));
                     workItem.appendItemValueUnique("process.manager.label",
                             entity.getItemValue("process.manager.label"));
-
-                    workItem.appendItemValueUnique("process.name", entity.getItemValue("process.name"));
+                    workItem.appendItemValueUnique("process.name", entity.getItemValue("name"));
                 }
                 if ("space".equals(parentType) || "spacearchive".equals(parentType)) {
                     workItem.appendItemValueUnique("space.assist", entity.getItemValue("space.assist"));

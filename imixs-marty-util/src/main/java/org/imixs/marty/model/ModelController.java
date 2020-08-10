@@ -340,7 +340,9 @@ public class ModelController implements Serializable {
 		if (pe == null) {
 			return "";
 		}
-		String desc = pe.getItemValueString("rtfdescription");
+		//String desc = pe.getItemValueString("rtfdescription");
+		String desc = pe.getItemValueString(BPMNModel.TASK_ITEM_DOCUMENTATION);
+      
 
 		try {
 			desc = workflowService.adaptText(desc, documentContext);
