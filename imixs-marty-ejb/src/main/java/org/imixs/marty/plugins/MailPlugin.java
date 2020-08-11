@@ -273,7 +273,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
             ItemCollection snapshotWorkitem = this.getWorkflowService().getDocumentService()
                     .load(attachmentContext.getItemValueString(SNAPSHOTID));
             if (snapshotWorkitem != null) {
-                attachmentContext = snapshotWorkitem;
+              //  attachmentContext = snapshotWorkitem;
             }
 
             // get the value of attachments
@@ -299,6 +299,18 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
                     // fetch the file
                     FileData fileData = attachmentContext.getFileData(aFileName);
                     if (fileData != null) {
+                        
+                        // it might be that the content of the file is already part of the snapshot
+                        if (fileData.getContent().length<4) {
+                            // no content - so we can try the snapshot
+                            if (snapshotWorkitem != null) {
+                                fileData = snapshotWorkitem.getFileData(aFileName);
+                                if (fileData==null) {
+                                    continue;
+                                }
+                            }
+                        }
+                        
                         logger.finest("......MailPlugin - attach : " + aFileName);
                         // get Mulitpart Message
                         Multipart multipart = super.getMultipart();
