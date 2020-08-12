@@ -543,7 +543,11 @@ public class TeamController implements Serializable {
             if (WorkflowEvent.WORKITEM_CREATED == workflowEvent.getEventType()) {
                 String processRef = workflowEvent.getWorkitem().getItemValueString(WorkflowService.UNIQUEIDREF);
                 ItemCollection process = getProcessById(processRef);
-                if (process != null) {
+                if (process != null) {                    
+                    workflowEvent.getWorkitem().replaceItemValue("process.Name", process.getItemValueString("name"));
+                    workflowEvent.getWorkitem().replaceItemValue("process.Ref",
+                            process.getItemValueString(WorkflowKernel.UNIQUEID));
+                    // support deprecated fields
                     workflowEvent.getWorkitem().replaceItemValue("txtProcessName", process.getItemValueString("name"));
                     workflowEvent.getWorkitem().replaceItemValue("txtProcessRef",
                             process.getItemValueString(WorkflowKernel.UNIQUEID));
