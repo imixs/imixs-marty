@@ -80,6 +80,8 @@ public class CommentPlugin extends AbstractPlugin {
 			// test ignore
 			if ("true".equals(evalItemCollection.getItemValueString("comment.ignore"))) {
 				logger.fine("ignore=true - skipping txtCommentLog");
+				// save last comment in any case!
+				 documentContext.replaceItemValue("txtLastComment", documentContext.getItemValueString("txtComment"));
 				return documentContext;
 			}
 		}
@@ -100,13 +102,13 @@ public class CommentPlugin extends AbstractPlugin {
 			sComment = documentContext.getItemValueString("txtComment");
 			// clear comment
 			documentContext.replaceItemValue("txtComment", "");
-			// save last comment
-			documentContext.replaceItemValue("txtLastComment", sComment);
 		}
+
 		if (sComment != null && !sComment.isEmpty()) {
-			log.put("txtcomment", sComment);
+		    log.put("txtcomment", sComment);
 			vCommentList.add(0, log);
 			documentContext.replaceItemValue("txtcommentLog", vCommentList);
+            documentContext.replaceItemValue("txtLastComment", sComment);
 		}
 
 		documentContext.removeItem("comment");
