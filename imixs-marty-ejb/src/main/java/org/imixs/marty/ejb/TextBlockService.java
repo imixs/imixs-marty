@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Priority;
 import javax.annotation.Resource;
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
@@ -43,6 +44,7 @@ import javax.ejb.EJB;
 import javax.ejb.SessionContext;
 import javax.ejb.Singleton;
 import javax.enterprise.event.Observes;
+import javax.interceptor.Interceptor;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentEvent;
@@ -50,6 +52,7 @@ import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.TextEvent;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.QueryException;
 import org.imixs.workflow.util.XMLParser;
 
@@ -227,10 +230,13 @@ public class TextBlockService {
 	 * This method reacts on CDI events of the type TextEvent and parses a string
 	 * for xml tag <textblock>. Those tags will be replaced with the corresponding
 	 * system property value.
-	 * 
+	 * <p>
+     * The priority of the CDI event is set to (APPLICATION+10) to ensure that the
+     * textblock adapter is triggered after the TextItemValueAdapter
+     * 
 	 * 
 	 */
-	public void onTextEvent(@Observes TextEvent event) {
+	public void onTextEvent(@Observes @Priority(Interceptor.Priority.APPLICATION + 600) TextEvent event) {
 		String text = event.getText();
 
 		// lower case <textBlock> into <textblock>
@@ -273,6 +279,14 @@ public class TextBlockService {
 				int iStartPos = text.indexOf(tag);
 				int iEndPos = text.indexOf(tag) + tag.length();
 
+				// adapt the textblock value !
+			    try {
+			        sValue = workflowService.adaptText(sValue, event.getDocument());
+		        } catch (PluginException e) {
+		            logger.warning("Unable to adapt text within textblock '" + sTextBlockKey+ "' : " + e.getMessage());
+		        }
+
+			    
 				// now replace the tag with the result string
 				text = text.substring(0, iStartPos) + sValue + text.substring(iEndPos);
 
