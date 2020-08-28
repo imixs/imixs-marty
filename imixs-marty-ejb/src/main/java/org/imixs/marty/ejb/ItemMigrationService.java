@@ -56,7 +56,7 @@ public class ItemMigrationService {
                 migrate(documentEvent.getDocument(), "namteam", "process.team");
                 migrate(documentEvent.getDocument(), "namassist", "process.assist");
                 migrate(documentEvent.getDocument(), "txtname", "name");
-                migrate(documentEvent.getDocument(), "txtname", "process.name");
+                // issue #351 - migrate(documentEvent.getDocument(), "txtname", "process.name");
                 migrate(documentEvent.getDocument(), "txtprocessref", "process.ref");
             }
 
