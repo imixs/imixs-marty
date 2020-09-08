@@ -225,7 +225,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
      * @throws MessagingException
      */
     private String attachFiles(ItemCollection workitem, String content) throws MessagingException {
-
+    	logger.finest("......attaching files");
         ItemCollection attachmentContext = null;
 
         if (content == null || content.isEmpty())
@@ -236,11 +236,11 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 
         for (String _tag : tags) {
             attachmentContext = null;
-
+            logger.finest("......attachments tag=" + _tag);
             // check if the tag contains a textblock attribute.
             if (_tag.contains("textblock")) {
                 String textblockName = XMLParser.findAttribute(_tag, "textblock");
-
+                logger.finest("......attaching textblock " + textblockName);
                 // <attachments textblock="my_block" />
                 if (textblockName != null && !textblockName.isEmpty()) {
                     // it's a textblock file
@@ -289,25 +289,26 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
             if (!sFilePattern.isEmpty()) {
                 pattern = Pattern.compile(sFilePattern);
             }
-
+            logger.finest("......total count of file="+fileNames.size());
             // iterate over all files ....
             for (String aFileName : fileNames) {
-
                 // test if aFilename matches the pattern or the pattern is null
                 if (pattern == null || pattern.matcher(aFileName).find()) {
 
                     // fetch the file
                     FileData fileData = attachmentContext.getFileData(aFileName);
-                    if (fileData != null) {
-                        
+                    if (fileData != null) {                      
                         // it might be that the content of the file is already part of the snapshot
                         if (fileData.getContent().length<4) {
+                        	logger.finest("......file found, but we need a snapshot....");                         	
                             // no content - so we can try the snapshot
                             if (snapshotWorkitem != null) {
                                 fileData = snapshotWorkitem.getFileData(aFileName);
                                 if (fileData==null) {
                                     continue;
                                 }
+                            } else {
+                            	logger.warning("Snapshot is missing - can not attache file!!");                             	
                             }
                         }
                         
