@@ -105,7 +105,7 @@ public class TestCommentPlugin {
 		String currentComment = documentContext.getItemValueString("txtComment");
 		Assert.assertEquals(0, commentList.size());
 		Assert.assertEquals("Some Comment", currentComment);
-		Assert.assertTrue(lastComment.isEmpty());
+		Assert.assertFalse(lastComment.isEmpty());
 	}
 
 	/**
@@ -136,7 +136,7 @@ public class TestCommentPlugin {
 		String currentComment = documentContext.getItemValueString("txtComment");
 		Assert.assertEquals(1, commentList.size());
 		Assert.assertEquals("My Comment", ((Map) commentList.get(0)).get("txtcomment"));
-		Assert.assertEquals("", lastComment);
+		Assert.assertEquals("My Comment", lastComment);
 		Assert.assertEquals("Some Comment", currentComment);
 	}
 
