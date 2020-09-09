@@ -27,7 +27,6 @@
 
 package org.imixs.marty.plugins;
 
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,7 @@ import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.PluginException;
 
 /**
- * This plugin suports a commment feature. Comments entered by a user into the
+ * This plugin supports a comment feature. Comments entered by a user into the
  * field 'txtComment' are stored in the list property 'txtCommentList' which
  * contains a map for each comment. The map stores the username, the timestamp
  * and the comment. The plugin also stores the last comment in the field
@@ -57,66 +56,65 @@ import org.imixs.workflow.exceptions.PluginException;
  * 
  */
 public class CommentPlugin extends AbstractPlugin {
-	ItemCollection documentContext;
+    ItemCollection documentContext;
 
-	private static Logger logger = Logger.getLogger(CommentPlugin.class.getName());
+    private static Logger logger = Logger.getLogger(CommentPlugin.class.getName());
 
-	/**
-	 * This method updates the comment list. There for the method copies the
-	 * txtComment into the txtCommentList and clears the txtComment field
-	 * 
-	 * @param workflowEvent
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	public ItemCollection run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
+    /**
+     * This method updates the comment list. There for the method copies the
+     * txtComment into the txtCommentList and clears the txtComment field
+     * 
+     * @param workflowEvent
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public ItemCollection run(ItemCollection adocumentContext, ItemCollection documentActivity) throws PluginException {
 
-		documentContext = adocumentContext;
-	
-		ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity,"item", adocumentContext);
+        documentContext = adocumentContext;
 
-		// test if comment is defined in model
-		if (evalItemCollection != null) {
-			// test ignore
-			if ("true".equals(evalItemCollection.getItemValueString("comment.ignore"))) {
-				logger.fine("ignore=true - skipping txtCommentLog");
-				// save last comment in any case!
-				 documentContext.replaceItemValue("txtLastComment", documentContext.getItemValueString("txtComment"));
-				return documentContext;
-			}
-		}
+        ItemCollection evalItemCollection = this.getWorkflowService().evalWorkflowResult(documentActivity, "item",
+                adocumentContext);
 
-		// create new Comment data - important: property names in lower
-		// case
-		List<Map<String, Object>> vCommentList = documentContext.getItemValue("txtCommentLog");
-		Map<String, Object> log = new HashMap<String, Object>();
-		String remoteUser = this.getWorkflowService().getUserName();
-		log.put("datcomment", documentContext.getItemValueDate(WorkflowKernel.LASTEVENTDATE));
-		log.put("nameditor", remoteUser);
+        // test if comment is defined in model
+        if (evalItemCollection != null) {
+            // test ignore
+            if ("true".equals(evalItemCollection.getItemValueString("comment.ignore"))) {
+                logger.fine("ignore=true - skipping txtCommentLog");
+                // save last comment in any case!
+                documentContext.replaceItemValue("txtLastComment", documentContext.getItemValueString("txtComment"));
+                return documentContext;
+            }
+        }
 
-		// test for fixed comment
-		String sComment = null;
-		if (evalItemCollection != null && evalItemCollection.hasItem("comment")) {
-			sComment = evalItemCollection.getItemValueString("comment");
-		} else {
-			sComment = documentContext.getItemValueString("txtComment");
-			// clear comment
-			documentContext.replaceItemValue("txtComment", "");
-		}
+        // create new Comment data - important: property names in lower
+        // case
+        List<Map<String, Object>> vCommentList = documentContext.getItemValue("txtCommentLog");
+        Map<String, Object> log = new HashMap<String, Object>();
+        String remoteUser = this.getWorkflowService().getUserName();
+        log.put("datcomment", documentContext.getItemValueDate(WorkflowKernel.LASTEVENTDATE));
+        log.put("nameditor", remoteUser);
 
-		if (sComment != null && !sComment.isEmpty()) {
-		    log.put("txtcomment", sComment);
-			vCommentList.add(0, log);
-			documentContext.replaceItemValue("txtcommentLog", vCommentList);
+        // test for fixed comment
+        String sComment = null;
+        if (evalItemCollection != null && evalItemCollection.hasItem("comment")) {
+            sComment = evalItemCollection.getItemValueString("comment");
+        } else {
+            sComment = documentContext.getItemValueString("txtComment");
+            // clear comment
+            documentContext.replaceItemValue("txtComment", "");
+        }
+
+        if (sComment != null && !sComment.isEmpty()) {
+            log.put("txtcomment", sComment);
+            vCommentList.add(0, log);
+            documentContext.replaceItemValue("txtcommentLog", vCommentList);
             documentContext.replaceItemValue("txtLastComment", sComment);
-		}
+        }
 
-		documentContext.removeItem("comment");
-		documentContext.removeItem("comment.ignore");
-		return documentContext;
+        documentContext.removeItem("comment");
+        documentContext.removeItem("comment.ignore");
+        return documentContext;
 
-	}
-
-	
+    }
 
 }
