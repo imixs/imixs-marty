@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.ejb.EJB;
 
@@ -143,16 +144,18 @@ public class DeputyPlugin extends AbstractPlugin {
     public boolean ignoreItem(String itemName) {
         if (itemName == null)
             return true;
-
+        
         // contained in support list?
         for (String pattern : this.supportList) {
-            if (itemName.toLowerCase().matches(pattern)) {
+            Pattern p = Pattern.compile(pattern);
+            if (p.matcher(itemName.toLowerCase()).find()) {
                 return false;
             }
         }
         // contained in ignore list?
         for (String pattern : this.ignoreList) {
-            if (itemName.toLowerCase().matches(pattern)) {
+            Pattern p = Pattern.compile(pattern);
+            if (p.matcher(itemName.toLowerCase()).find()) {
                 return true;
             }
         }
