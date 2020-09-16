@@ -4,6 +4,12 @@
 [![License](https://img.shields.io/aur/license/yaourt.svg?maxAge=2592000)](https://github.com/imixs/imixs-marty/blob/master/LICENSE)
 
 
+# NOTE:
+
+This is a patch version related to Issue 355 only!
+
+
+
 'imixs-marty' is a sub project of '[Imixs Workflow](https://github.com/imixs/imixs-workflow)'. The project provides several artefacts to build business process management solutions on the Java EE stack. The goal of this project is to simplify the development of workflow management applications by providing a robust and flexible application framework with a set of Java Enterprise components. 
 
 The project is split in the following modules

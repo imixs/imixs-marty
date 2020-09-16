@@ -17,12 +17,12 @@
  *  License at http://www.gnu.org/licenses/gpl.html
  *  
  *  Project: 
- *  	http://www.imixs.org
- *  	http://java.net/projects/imixs-workflow
+ *      http://www.imixs.org
+ *      http://java.net/projects/imixs-workflow
  *  
  *  Contributors:  
- *  	Imixs Software Solutions GmbH - initial API and implementation
- *  	Ralph Soika - Software Developer
+ *      Imixs Software Solutions GmbH - initial API and implementation
+ *      Ralph Soika - Software Developer
  *******************************************************************************/
 
 package org.imixs.marty.ejb;
@@ -32,7 +32,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -44,10 +43,7 @@ import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.SessionContext;
 import javax.ejb.Singleton;
-import javax.enterprise.event.Event;
-import javax.inject.Inject;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.PropertyService;
@@ -86,10 +82,6 @@ public class ProfileService {
 
     private static Logger logger = Logger.getLogger(ProfileService.class.getName());
 
-    @Inject
-    @ConfigProperty(name = "security.userid.input.mode", defaultValue = "LOWERCASE")
-    String userInputMode;
-
     @EJB
     private DocumentService documentService;
 
@@ -98,9 +90,6 @@ public class ProfileService {
 
     @EJB
     protected WorkflowService workflowService;
-
-    @Inject
-    protected Event<ProfileEvent> profileEvents;
 
     @Resource
     private SessionContext ctx;
@@ -135,7 +124,8 @@ public class ProfileService {
      * be processed or updated. Use lookupProfile to get the full entity of a
      * profile.
      * 
-     * @param userid - the profile id
+     * @param userid
+     *            - the profile id
      * @return cloned workitem
      */
     public ItemCollection findProfileById(String userid) {
@@ -156,23 +146,16 @@ public class ProfileService {
      * If the boolean 'refresh' is true the method lookup the user in any case with
      * a search query and updates the cache.
      * 
-     * @param userid  - the profile id
-     * @param refresh - boolean indicates if the internal cache should be used
+     * @param userid
+     *            - the profile id
+     * @param refresh
+     *            - boolean indicates if the internal cache should be used
      * @return cloned workitem
      */
     public ItemCollection findProfileById(String userid, boolean refresh) {
-        boolean debug = logger.isLoggable(Level.FINE);
 
         if (userid == null || userid.isEmpty()) {
             return null;
-        }
-
-        // userid inputmode?
-        if ("UPPERCASE".equalsIgnoreCase(userInputMode)) {
-            userid = userid.toUpperCase();
-        }
-        if ("LOWERCASE".equalsIgnoreCase(userInputMode)) {
-            userid = userid.toLowerCase();
         }
 
         // try to get name out from cache
@@ -180,15 +163,11 @@ public class ProfileService {
 
         // use cache?
         if (!refresh) {
-            if (debug) {
-                logger.info("......lookup profile '" + userid + "' from cache...");
-            }
+            logger.finest("......lookup profile '" + userid + "' from cache...");
             Map<String, List<Object>> profileMap = cache.get(userid);
             if (profileMap != null) {
                 userProfile = new ItemCollection(profileMap);
-                if (debug) {
-                    logger.info("......return profile '" + userid + "' from cache");
-                }
+                logger.finest("......return profile '" + userid + "' from cache");
                 return userProfile;
             }
         }
@@ -198,20 +177,15 @@ public class ProfileService {
             // clone workitem....
             userProfile = cloneWorkitem(userProfile);
         } else {
-            if (debug) {
-                logger.info("......profile '" + userid + "' not found, create a 'default' profile...");
-            }
+            logger.finest("......profile '" + userid + "' not found, create a 'default' profile...");
             // put dummy entry into cache to avoid next lookup!
             userProfile = new ItemCollection();
             userProfile.replaceItemValue("txtname", userid);
             userProfile.replaceItemValue("txtusername", userid);
-            computeInitials(userProfile);
         }
 
         // cache profile
-        if (debug) {
-            logger.info("......put profile '" + userid + "' into cache");
-        }
+        logger.finest("......put profile '" + userid + "' into cache");
         cache.put(userid, userProfile.getAllItems());
 
         return userProfile;
@@ -221,45 +195,30 @@ public class ProfileService {
     /**
      * This method returns a profile by its id. In different to the findProfileById
      * method this method lookups the profile and returns the full entity. The
-     * returned workItem can be processed. The userId is case sensitive.
-     * <p>
+     * returned workItem can be processed. THe userid is case sensitive.
+     * 
      * Use findProfileById to work with the internal cache if there is no need to
      * update the profile.
-     * <p>
-     * The method also fires a ProfileEvent which can be observed by clients to
-     * provide a different behavior. For example a LDAPService can lookup the data
-     * in a LDAP directory if a local profile was not found (see issue #343)
      * 
-     * @param userid - the profile id
+     * @param userid
+     *            - the profile id
      * @return profile workitem
      */
     public ItemCollection lookupProfileById(String userid) {
-        boolean debug = logger.isLoggable(Level.FINE);
 
         if (userid == null || userid.isEmpty()) {
             logger.warning("lookupProfileById - no id provided!");
             return null;
         }
 
-        // userid inputmode?
-        if ("UPPERCASE".equalsIgnoreCase(userInputMode)) {
-            userid = userid.toUpperCase();
-        }
-        if ("LOWERCASE".equalsIgnoreCase(userInputMode)) {
-            userid = userid.toLowerCase();
-        }
-
         // try to get name out from cache
         ItemCollection userProfile = null;
 
-        if (debug) {
-            logger.info("......lookupProfileById '" + userid + "'");
-        }
+        logger.finest("......lookupProfileById '" + userid + "'");
         // lookup user profile....
         String sQuery = "(type:\"profile\" AND txtname:\"" + userid + "\")";
-        if (debug) {
-            logger.info("......search: " + sQuery);
-        }
+        logger.finest("......search: " + sQuery);
+
         Collection<ItemCollection> col;
         try {
             col = documentService.find(sQuery, 1, 0);
@@ -270,24 +229,7 @@ public class ProfileService {
         if (col.size() > 0) {
             userProfile = col.iterator().next();
         } else {
-            if (debug) {
-                logger.finest("......no profile '" + userid + "' found, fire ProfileEvent LOOKUP...");
-            }
-            // fire ProfileEvent so that a client can intercept....
-            if (profileEvents != null) {
-
-                ProfileEvent event = new ProfileEvent(userid, null, ProfileEvent.ON_PROFILE_LOOKUP);
-                profileEvents.fire(event);
-                userProfile = event.getProfile();
-                if (userProfile == null) {
-                    if (debug) {
-                        logger.warning("ProfileEvent returned a null object for '" + userid + "'");
-                    }
-                }
-
-            } else {
-                logger.warning("CDI Support is missing - ProfileEvent wil not be fired");
-            }
+            logger.finest("......lookup profile '" + userid + "' failed");
         }
         return userProfile;
     }
@@ -308,7 +250,7 @@ public class ProfileService {
      * @param aWorkitem
      * @return
      */
-    public ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
+    public static ItemCollection cloneWorkitem(ItemCollection aWorkitem) {
         ItemCollection clone = new ItemCollection();
 
         // clone the standard WorkItem properties
@@ -319,19 +261,13 @@ public class ProfileService {
         clone.replaceItemValue("$Created", aWorkitem.getItemValue("$Created"));
         clone.replaceItemValue("$Modified", aWorkitem.getItemValue("$Modified"));
         clone.replaceItemValue("$isAuthor", aWorkitem.getItemValue("$isAuthor"));
-        clone.replaceItemValue("$WorkflowStatus", aWorkitem.getItemValue("$WorkflowStatus"));
-        clone.replaceItemValue("$WorkflowSummary", aWorkitem.getItemValue("$WorkflowSummary"));
-        clone.replaceItemValue("$WorkflowAbstract", aWorkitem.getItemValue("$WorkflowAbstract"));
 
-        clone.replaceItemValue("txtEmail", aWorkitem.getItemValue("txtEmail"));
-        clone.replaceItemValue("namdeputy", aWorkitem.getItemValue("namdeputy"));
-        clone.replaceItemValue("txtusericon", aWorkitem.getItemValue("txtusericon"));
-        clone.replaceItemValue("txtinitials", aWorkitem.getItemValue("txtinitials"));
-
-        // deprecated fields
         clone.replaceItemValue("txtWorkflowStatus", aWorkitem.getItemValue("txtWorkflowStatus"));
         clone.replaceItemValue("txtWorkflowSummary", aWorkitem.getItemValue("txtWorkflowSummary"));
         clone.replaceItemValue("txtWorkflowAbstract", aWorkitem.getItemValue("txtWorkflowAbstract"));
+        clone.replaceItemValue("txtEmail", aWorkitem.getItemValue("txtEmail"));
+        clone.replaceItemValue("namdeputy", aWorkitem.getItemValue("namdeputy"));
+        clone.replaceItemValue("txtusericon", aWorkitem.getItemValue("txtusericon"));
 
         // get accountName
         String sAccountName = aWorkitem.getItemValueString("txtName");
@@ -347,44 +283,26 @@ public class ProfileService {
         }
 
         // construct initials (2 digits)
-        computeInitials(clone);
-
-        return clone;
-    }
-
-    /**
-     * Helper method to compute the user initials if no txtinitials exist.
-     * <p>
-     * The initials are computed by the 1st char of the first-last name
-     * <p>
-     * The initials are uppercased.
-     * 
-     * @param profile
-     */
-    private static void computeInitials(ItemCollection profile) {
-        // construct initials (2 digits)
-        if (profile.getItemValueString("txtinitials").isEmpty()) {
-            String sAccountName = profile.getItemValueString("txtName");
-            String sUserName = profile.getItemValueString("txtUserName");
+        String sInitials = aWorkitem.getItemValueString("txtinitials");
+        if (sInitials.isEmpty()) {
             // default
-            String sInitials = "-";
+            sInitials = "NO";
             if (!sUserName.isEmpty() && sUserName.length() > 2) {
                 int iPos = sUserName.indexOf(' ');
                 if (iPos > -1) {
                     sInitials = sUserName.substring(0, 1);
                     sInitials = sInitials + sUserName.substring(iPos + 1, iPos + 2);
                 } else {
-                    sInitials = sUserName.substring(0, 1);
+                    sInitials = sUserName.substring(0, 2);
                 }
             } else {
-                // if we do not have a initials, than we take the first letter of the account
-                // name
-                if (sAccountName != null && sAccountName.length() > 0) {
-                    sInitials = sAccountName.substring(0, 1);
-                }
+                sInitials = sAccountName;
             }
-            profile.replaceItemValue("txtinitials", sInitials.toUpperCase());
+            clone.replaceItemValue("txtinitials", sInitials);
+        } else {
+            clone.replaceItemValue("txtinitials", sInitials);
         }
+        return clone;
     }
 
     /**
@@ -399,15 +317,6 @@ public class ProfileService {
      */
     public ItemCollection createProfile(String userid, String locale)
             throws AccessDeniedException, ProcessingErrorException, PluginException, ModelException {
-
-        // userid inputmode?
-        if ("UPPERCASE".equalsIgnoreCase(userInputMode)) {
-            userid = userid.toUpperCase();
-        }
-        if ("LOWERCASE".equalsIgnoreCase(userInputMode)) {
-            userid = userid.toLowerCase();
-        }
-
         logger.info("create new profile for userid '" + userid + "'.... ");
         // create new Profile for current user
         ItemCollection profile = new ItemCollection();
@@ -425,20 +334,8 @@ public class ProfileService {
         // process new profile...
         profile.setEventID(CREATE_PROFILE_ACTIVITY_ID);
 
-         // fire ProfileEvent so that a client can intercept....
-        if (profileEvents != null) {
-            ProfileEvent event = new ProfileEvent(userid, profile, ProfileEvent.ON_PROFILE_CREATE);
-            profileEvents.fire(event);
-            profile = event.getProfile();
-        } else {
-            logger.warning("CDI Support is missing - ProfileEvent wil not be fired");
-        }
-
-        
         profile = workflowService.processWorkItem(profile);
 
-
-        
         logger.finest("......new profile created for userid '" + userid + "'");
 
         return profile;
