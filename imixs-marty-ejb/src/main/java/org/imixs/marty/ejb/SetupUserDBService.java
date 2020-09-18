@@ -22,6 +22,7 @@
  *******************************************************************************/
 package org.imixs.marty.ejb;
 
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import javax.annotation.security.DeclareRoles;
@@ -76,7 +77,7 @@ public class SetupUserDBService {
 
 	@Inject
 	@ConfigProperty(name = "setup.system.model", defaultValue = "")
-	String systemModelVersion;
+	Optional<String> systemModelVersion;
 
 	
 	private static Logger logger = Logger.getLogger(SetupUserDBService.class.getName());
@@ -130,12 +131,12 @@ public class SetupUserDBService {
 		
 		
 		// test systemModelVersion
-		if (systemModelVersion.isEmpty()) {
+		if (!systemModelVersion.isPresent() || systemModelVersion.get().isEmpty()) {
 			logger.warning("Missing imixs.property named 'setup.system.model' - system model can not be validated!");
 		} else {
 			// try to load system model
 			try {
-				modelService.getModel(systemModelVersion);
+				modelService.getModel(systemModelVersion.get());
 				logger.info("...System Model '" + systemModelVersion + "' OK");
 			} catch (ModelException e) {
 				// no model found!
