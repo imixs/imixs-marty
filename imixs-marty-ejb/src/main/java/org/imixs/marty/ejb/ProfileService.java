@@ -418,12 +418,13 @@ public class ProfileService {
         
         if (modelVersion.isPresent()) {
             profile.replaceItemValue("$modelversion", modelVersion.get());
+            logger.info("...creating profile based on modelversion = " + modelVersion.get());
         } else {
             throw new ModelException(ModelException.UNDEFINED_MODEL_VERSION,
                     "System Model version is missing - verify property 'setup.system.model'");
         }
 
-        logger.info("...creating profile based on modelversion = " + modelVersion);
+        
 
         // the workflow group can not be guessed here...
         // profile.replaceItemValue("$workflowgroup", "Profil");
