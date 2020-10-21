@@ -414,9 +414,16 @@ public class ProfileService {
         ItemCollection profile = new ItemCollection();
         profile.replaceItemValue("type", "profile");
         profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
-        profile.replaceItemValue("$modelversion", modelVersion);
+        
+        
+        if (modelVersion.isPresent()) {
+            profile.replaceItemValue("$modelversion", modelVersion.get());
+        } else {
+            throw new ModelException(ModelException.UNDEFINED_MODEL_VERSION,
+                    "System Model version is missing - verify property 'setup.system.model'");
+        }
 
-        logger.info("..createing profile based on modelversion = " + modelVersion);
+        logger.info("...creating profile based on modelversion = " + modelVersion);
 
         // the workflow group can not be guessed here...
         // profile.replaceItemValue("$workflowgroup", "Profil");
