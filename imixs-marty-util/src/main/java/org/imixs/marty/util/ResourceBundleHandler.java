@@ -10,11 +10,22 @@ import javax.faces.context.FacesContext;
 import javax.inject.Named;
 
 /**
- * The ResourceBundleHandler provides helper method to lookup a lable in the app
- * or message bundle
+ * The ResourceBundleHandler provides helper method to lookup a label in the app
+ * or message bundle. This simplifies the front end implementation as the client
+ * does not have to know the bundle a specific resource is located:
+ * <p>
+ * {@code
+ * <h1>#{resourceBundleHandler.findMessage('app.application_title')}</h1>}
+ * <p>
+ * The ResourceBundleHandler load the bundles based on the current user locale.
+ * <p>
+ * Resource bundle instances created by the getBundle factory methods are cached
+ * by default, and the factory methods return the same resource bundle instance
+ * multiple times if it has been cached. For that reason a RequestScoped bean is
+ * used here.
  * 
  * @author rsoika
- *
+ * @version 1.0
  */
 @Named
 @RequestScoped
@@ -31,10 +42,12 @@ public class ResourceBundleHandler {
      */
     @PostConstruct
     public void init() {
+        long l=System.currentTimeMillis();
         browserLocale = FacesContext.getCurrentInstance().getViewRoot().getLocale();
         messagesBundle = ResourceBundle.getBundle("bundle.messages", browserLocale);
         appBundle = ResourceBundle.getBundle("bundle.app", browserLocale);
         customBundle = ResourceBundle.getBundle("bundle.custom", browserLocale);
+        System.out.println(" .............init in " + (System.currentTimeMillis() -l) + "ms");
     }
 
     public Locale getBrowserLocale() {
@@ -53,6 +66,15 @@ public class ResourceBundleHandler {
         return customBundle;
     }
 
+    
+    /**
+     * Default getter method
+     * @param key
+     * @return
+     */
+    public String get(String key) {
+        return findMessage(key);
+    }
     /**
      * This helper method findes a message by key searching all bundles.
      * 
