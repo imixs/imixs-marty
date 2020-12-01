@@ -82,6 +82,9 @@ import org.imixs.workflow.faces.util.LoginController;
 @SessionScoped
 public class UserController implements Serializable {
 
+    public static final String LINK_PROPERTY = "$workitemref";
+    public static final String LINK_PROPERTY_DEPRECATED = "txtworkitemref";
+
 	public final static int MAX_PRIMARY_ENTRIES = 5;
 	public final static int UPDATE_PROJECT_ACTIVITY_ID = 10;
 	public final static String DEFAULT_LOCALE = "de_DE";
@@ -423,7 +426,15 @@ public class UserController implements Serializable {
 	public List<String> getFavoriteIds() {
 		if (getWorkitem() == null)
 			return new ArrayList<String>();
-		return getWorkitem().getItemValue("txtWorkitemRef");
+		
+		  //  support deprecated ref field
+        if (!workflowController.getWorkitem().hasItem(LINK_PROPERTY) 
+                 && workflowController.getWorkitem().hasItem(LINK_PROPERTY_DEPRECATED)) {
+            return workflowController.getWorkitem().getItemValue(LINK_PROPERTY_DEPRECATED);
+        } else {
+            return workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
+        }
+        
 	}
 
 	public void addFavorite(String id) {
@@ -435,7 +446,7 @@ public class UserController implements Serializable {
 		if (!list.contains(id)) {
 			logger.finest("......add WorkitemRef:" + id);
 			list.add(id);
-			workitem.replaceItemValue("txtWorkitemRef", list);
+			workitem.replaceItemValue(LINK_PROPERTY, list);
 			workitem = workflowService.getDocumentService().save(workitem);
 		}
 	}
@@ -449,7 +460,7 @@ public class UserController implements Serializable {
 		if (list.contains(id)) {
 			logger.finest("......remove WorkitemRef:" + id);
 			list.remove(id);
-			workitem.replaceItemValue("txtWorkitemRef", list);
+			workitem.replaceItemValue(LINK_PROPERTY, list);
 			workitem = workflowService.getDocumentService().save(workitem);
 		}
 	}

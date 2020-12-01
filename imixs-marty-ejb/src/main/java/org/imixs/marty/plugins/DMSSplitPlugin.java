@@ -62,7 +62,7 @@ import org.imixs.workflow.util.XMLParser;
  * 
  * A subprocess will contain the $UniqueID of the origin process stored in the
  * property $uniqueidRef. The origin process will contain a link to the
- * subprocess stored in the property txtworkitemRef. So both workitems are
+ * subprocess stored in the property $workitemRef. So both workitems are
  * linked together.
  * 
  * The list of attachments will be taken from the BlobWorkitem.
@@ -76,7 +76,7 @@ import org.imixs.workflow.util.XMLParser;
 public class DMSSplitPlugin extends AbstractPlugin {
 
 	public static String SNAPSHOTID = "$snapshotid";
-	public static final String LINK_PROPERTY = "txtworkitemref";
+	public static final String LINK_PROPERTY = "$workitemref";
 	public static final String DMS_SUBPROCESS_CREATE = "dms_subprocess_create";
 
 	private static Logger logger = Logger.getLogger(DMSSplitPlugin.class.getName());
@@ -143,7 +143,7 @@ public class DMSSplitPlugin extends AbstractPlugin {
 	/**
 	 * This method expects a of DMS-Subprocess definition and creates for each
 	 * attachment a new subprocess. The reference of the created subprocess will be
-	 * stored in the property txtworkitemRef of the origin workitem. The method will
+	 * stored in the property $workitemRef of the origin workitem. The method will
 	 * remove attachments form the originWorkitem in case the tag
 	 * <remove>true</remove> is found.
 	 * 

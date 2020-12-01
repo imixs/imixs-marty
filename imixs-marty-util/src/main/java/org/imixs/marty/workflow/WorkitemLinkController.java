@@ -63,7 +63,8 @@ import org.imixs.workflow.faces.data.WorkflowController;
 @ViewScoped
 public class WorkitemLinkController implements Serializable {
 
-	public static final String LINK_PROPERTY = "txtworkitemref";
+    public static final String LINK_PROPERTY = "$workitemref";
+	public static final String LINK_PROPERTY_DEPRECATED = "txtworkitemref";
 	public static final int MAX_SEARCH_RESULT = 20;
 	public static Logger logger = Logger.getLogger(WorkitemLinkController.class.getName());
 
@@ -190,13 +191,18 @@ public class WorkitemLinkController implements Serializable {
 	/**
 	 * This methods adds a new workItem reference
 	 */
-	public void add(String aUniqueID) {
-
+	@SuppressWarnings("unchecked")
+    public void add(String aUniqueID) {
 		logger.fine("LinkController add workitem reference: " + aUniqueID);
-
-		@SuppressWarnings("unchecked")
-		List<String> refList = workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
-
+		List<String> refList=null;
+		//  support deprecated ref field
+		if (!workflowController.getWorkitem().hasItem(LINK_PROPERTY) 
+		         && workflowController.getWorkitem().hasItem(LINK_PROPERTY_DEPRECATED)) {
+		    refList = workflowController.getWorkitem().getItemValue(LINK_PROPERTY_DEPRECATED);
+		} else {
+		    refList = workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
+		}
+		
 		// clear empty entry if set
 		if (refList.size() == 1 && "".equals(refList.get(0)))
 			refList.remove(0);
@@ -214,13 +220,19 @@ public class WorkitemLinkController implements Serializable {
 	/**
 	 * This methods removes a workItem reference
 	 */
-	public void remove(String aUniqueID) {
+	@SuppressWarnings("unchecked")
+    public void remove(String aUniqueID) {
 
 		logger.fine("LinkController remove workitem reference: " + aUniqueID);
-
-		@SuppressWarnings("unchecked")
-		List<String> refList = workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
-
+		List<String> refList =null;
+		//  support deprecated ref field
+        if (!workflowController.getWorkitem().hasItem(LINK_PROPERTY) 
+                 && workflowController.getWorkitem().hasItem(LINK_PROPERTY_DEPRECATED)) {
+            refList = workflowController.getWorkitem().getItemValue(LINK_PROPERTY_DEPRECATED);
+        } else {
+            refList = workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
+        }
+        
 		// test if a member of
 		if (refList.indexOf(aUniqueID) > -1) {
 			refList.remove(aUniqueID);
@@ -243,7 +255,7 @@ public class WorkitemLinkController implements Serializable {
 
 	/**
 	 * This method returns a list of ItemCollections referred by the current
-	 * workItem (txtWorkitemRef).
+	 * workItem ($WorkitemRef).
 	 * <p>
 	 * The filter will be applied to the result list. So each WorkItem will be
 	 * tested if it matches the filter expression.
@@ -264,7 +276,17 @@ public class WorkitemLinkController implements Serializable {
 		logger.finest("......lookup references for: " + filter);
 
 		// lookup the references...
-		List<String> refList = workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
+		List<String> refList = null;
+		
+		//  support deprecated ref field
+        if (!workflowController.getWorkitem().hasItem(LINK_PROPERTY) 
+                 && workflowController.getWorkitem().hasItem(LINK_PROPERTY_DEPRECATED)) {
+            refList = workflowController.getWorkitem().getItemValue(LINK_PROPERTY_DEPRECATED);
+        } else {
+            refList = workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
+        }
+        
+		
 		if (refList != null && !refList.isEmpty()) {
 			// select all references.....
 			String sQuery = "(";
@@ -345,7 +367,7 @@ public class WorkitemLinkController implements Serializable {
 
 		// select all references.....
 		String sQuery = "(";
-		sQuery = " (type:\"workitem\" OR type:\"workitemarchive\") AND (" + LINK_PROPERTY + ":\"" + uniqueid + "\")";
+		sQuery = " (type:\"workitem\" OR type:\"workitemarchive\") AND (" + LINK_PROPERTY + ":\"" + uniqueid + "\"  OR " + LINK_PROPERTY_DEPRECATED + ":\"" + uniqueid + "\")";
 
 		List<ItemCollection> workitems = null;
 

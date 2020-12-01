@@ -164,7 +164,7 @@ public class UserRestService implements Serializable {
 		}
 		if (profile == null)
 			return new ArrayList<String>();
-		return profile.getItemValue("txtWorkitemRef");
+		return profile.getItemValue("$WorkitemRef");
 	}
 
 	
