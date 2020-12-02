@@ -345,7 +345,6 @@ public class UserController implements Serializable {
 		String file = workflowController.getWorkitem().getItemValueString("txtusericon");
 		workflowController.getWorkitem().removeFile(file);
 		workflowController.getWorkitem().replaceItemValue("txtusericon", "");
-
 	}
 
 	/**
@@ -428,11 +427,11 @@ public class UserController implements Serializable {
 			return new ArrayList<String>();
 		
 		  //  support deprecated ref field
-        if (!workflowController.getWorkitem().hasItem(LINK_PROPERTY) 
-                 && workflowController.getWorkitem().hasItem(LINK_PROPERTY_DEPRECATED)) {
-            return workflowController.getWorkitem().getItemValue(LINK_PROPERTY_DEPRECATED);
+        if (!workitem.hasItem(LINK_PROPERTY) 
+                 && workitem.hasItem(LINK_PROPERTY_DEPRECATED)) {
+            return workitem.getItemValue(LINK_PROPERTY_DEPRECATED);
         } else {
-            return workflowController.getWorkitem().getItemValue(LINK_PROPERTY);
+            return workitem.getItemValue(LINK_PROPERTY);
         }
         
 	}
