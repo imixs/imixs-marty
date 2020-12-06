@@ -28,8 +28,13 @@
 package org.imixs.marty.profile;
 
 import java.io.Serializable;
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
@@ -85,437 +90,558 @@ public class UserController implements Serializable {
     public static final String LINK_PROPERTY = "$workitemref";
     public static final String LINK_PROPERTY_DEPRECATED = "txtworkitemref";
 
-	public final static int MAX_PRIMARY_ENTRIES = 5;
-	public final static int UPDATE_PROJECT_ACTIVITY_ID = 10;
-	public final static String DEFAULT_LOCALE = "de_DE";
-	public final static String COOKIE_LOCALE = "imixs.workflow.locale";
+    public final static String ITEM_USER_ICON = "user.icon";
+    public final static String ITEM_SIGNATURE_IMAGE = "signature.image";
 
-	@EJB
-	protected ProfileService profileService;
+    public final static int MAX_PRIMARY_ENTRIES = 5;
+    public final static int UPDATE_PROJECT_ACTIVITY_ID = 10;
+    public final static String DEFAULT_LOCALE = "de_DE";
+    public final static String COOKIE_LOCALE = "imixs.workflow.locale";
 
-	@EJB
-	protected UserGroupService userGroupService;
+    @EJB
+    protected ProfileService profileService;
 
-	@EJB
-	protected WorkflowService workflowService;
+    @EJB
+    protected UserGroupService userGroupService;
 
-	@Inject
-	protected LoginController loginController;
+    @EJB
+    protected WorkflowService workflowService;
 
-	@Inject
-	@ConfigProperty(name = "profile.login.event", defaultValue = "0")
-	int profileLoginEvent;
+    @Inject
+    protected LoginController loginController;
 
-	@Inject
-	protected WorkflowController workflowController;
+    @Inject
+    @ConfigProperty(name = "profile.login.event", defaultValue = "0")
+    int profileLoginEvent;
 
-	private static final long serialVersionUID = 1L;
-	private ItemCollection workitem = null;
-	private boolean profileLoaded = false;
-	private Locale locale;
+    @Inject
+    protected WorkflowController workflowController;
 
-	private static Logger logger = Logger.getLogger(UserController.class.getName());
+    private static final long serialVersionUID = 1L;
+    private ItemCollection workitem = null;
+    private boolean profileLoaded = false;
+    private Locale locale;
 
-	public UserController() {
-		super();
-	}
+    private static Logger logger = Logger.getLogger(UserController.class.getName());
 
-	/**
-	 * The init method is used to load a user profile or automatically create a new
-	 * one if no profile for the user is available. A new Profile will be filled
-	 * with default values.
-	 * 
-	 * This method did not use the internal cache of the ProfileService to lookup
-	 * the user profile, to make sure that the entity is uptodate when a user logs
-	 * in.
-	 * 
-	 * @throws ProcessingErrorException
-	 * @throws AccessDeniedException
-	 */
-	@PostConstruct
-	public void init() throws AccessDeniedException, ProcessingErrorException {
+    public UserController() {
+        super();
+    }
 
-		// test user is logged-in and automatically create profile if no profile
-		// exists yet
-		if (this.loginController.isAuthenticated() && !profileLoaded) {
+    /**
+     * The init method is used to load a user profile or automatically create a new
+     * one if no profile for the user is available. A new Profile will be filled
+     * with default values.
+     * 
+     * This method did not use the internal cache of the ProfileService to lookup
+     * the user profile, to make sure that the entity is uptodate when a user logs
+     * in.
+     * 
+     * @throws ProcessingErrorException
+     * @throws AccessDeniedException
+     */
+    @PostConstruct
+    public void init() throws AccessDeniedException, ProcessingErrorException {
 
-			// try to load the profile for the current user
-			ItemCollection profile = profileService.lookupProfileById(loginController.getUserPrincipal());
-			if (profile == null || profile.getModelVersion().isEmpty()) {
-				try {
-					profile = profileService.createProfile(loginController.getUserPrincipal(), getLocale().toString());
-				} catch (RuntimeException | PluginException | ModelException e) {
-					logger.severe("unable to create profile for userid '" + loginController.getUserPrincipal() + "': "
-							+ e.getMessage());
-					// logout user!!
-					logger.severe("logout current userid '" + loginController.getUserPrincipal() + "'...");
-					loginController.doLogout(null);
-					throw new ProcessingErrorException(UserController.class.getName(),
-							ProcessingErrorException.INVALID_WORKITEM, " unable to create profile!", e);
-				}
-			} else {
-				// check if profile.login.event is defined
-				logger.fine("profile.login.event=" + profileLoginEvent);
-				if (profileLoginEvent > 0) {
-					profile.setEventID(profileLoginEvent);
-					try {
-						profile = workflowService.processWorkItem(profile);
-					} catch (PluginException | ModelException | ProcessingErrorException | EJBException  e) {
-						logger.warning("Unable to process profile.login.event=" + profileLoginEvent + " - please check configuration!");
-					}
-				}
+        // test user is logged-in and automatically create profile if no profile
+        // exists yet
+        if (this.loginController.isAuthenticated() && !profileLoaded) {
 
-			}
+            // try to load the profile for the current user
+            ItemCollection profile = profileService.lookupProfileById(loginController.getUserPrincipal());
+            if (profile == null || profile.getModelVersion().isEmpty()) {
+                try {
+                    profile = profileService.createProfile(loginController.getUserPrincipal(), getLocale().toString());
+                } catch (RuntimeException | PluginException | ModelException e) {
+                    logger.severe("unable to create profile for userid '" + loginController.getUserPrincipal() + "': "
+                            + e.getMessage());
+                    // logout user!!
+                    logger.severe("logout current userid '" + loginController.getUserPrincipal() + "'...");
+                    loginController.doLogout(null);
+                    throw new ProcessingErrorException(UserController.class.getName(),
+                            ProcessingErrorException.INVALID_WORKITEM, " unable to create profile!", e);
+                }
+            } else {
+                // check if profile.login.event is defined
+                logger.fine("profile.login.event=" + profileLoginEvent);
+                if (profileLoginEvent > 0) {
+                    profile.setEventID(profileLoginEvent);
+                    try {
+                        profile = workflowService.processWorkItem(profile);
+                    } catch (PluginException | ModelException | ProcessingErrorException | EJBException e) {
+                        logger.warning("Unable to process profile.login.event=" + profileLoginEvent
+                                + " - please check configuration!");
+                    }
+                }
 
-			this.setWorkitem(profile);
-			profileLoaded = true;
+            }
 
-			// Now reset current locale based on the profile information
-			updateLocaleFromProfile();
-			logger.info("profile '" + loginController.getUserPrincipal() + "' initialized.");
-		}
+            this.setWorkitem(profile);
+            profileLoaded = true;
 
-	}
+            // Now reset current locale based on the profile information
+            updateLocaleFromProfile();
+            logger.info("profile '" + loginController.getUserPrincipal() + "' initialized.");
+        }
 
-	/**
-	 * This method returns the current users userprofile entity. The method verifies
-	 * if the profile was yet loaded. if not the method tries to initiate the
-	 * profile - see method init();
-	 * 
-	 * @return
-	 * @throws ProcessingErrorException
-	 * @throws AccessDeniedException
-	 */
-	public ItemCollection getWorkitem() throws AccessDeniedException, ProcessingErrorException {
-		// test if current users profile was loaded
-		if (!profileLoaded)
-			init();
-		if (workitem == null)
-			workitem = new ItemCollection();
-		return workitem;
-	}
+    }
 
-	public void setWorkitem(ItemCollection aworkitem) {
-		this.workitem = aworkitem;
-	}
+    /**
+     * This method returns the current users userprofile entity. The method verifies
+     * if the profile was yet loaded. if not the method tries to initiate the
+     * profile - see method init();
+     * 
+     * @return
+     * @throws ProcessingErrorException
+     * @throws AccessDeniedException
+     */
+    public ItemCollection getWorkitem() throws AccessDeniedException, ProcessingErrorException {
+        // test if current users profile was loaded
+        if (!profileLoaded)
+            init();
+        if (workitem == null)
+            workitem = new ItemCollection();
+        return workitem;
+    }
 
-	/**
-	 * This method returns the current user locale. If the user is not logged in the
-	 * method try to get the locale out from the cookie. If no cockie is set the
-	 * method defaults to "de_DE"
-	 * 
-	 * @return - ISO Locale format
-	 */
-	public Locale getLocale() {
-		// if no locale is set try to get it from cookie or set default
-		if (locale == null) {
-			FacesContext facesContext = FacesContext.getCurrentInstance();
-			HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
-					.getRequest();
+    public void setWorkitem(ItemCollection aworkitem) {
+        this.workitem = aworkitem;
+    }
 
-			String cookieName = null;
+    /**
+     * This method returns the current user locale. If the user is not logged in the
+     * method try to get the locale out from the cookie. If no cockie is set the
+     * method defaults to "de_DE"
+     * 
+     * @return - ISO Locale format
+     */
+    public Locale getLocale() {
+        // if no locale is set try to get it from cookie or set default
+        if (locale == null) {
+            FacesContext facesContext = FacesContext.getCurrentInstance();
+            HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
+                    .getRequest();
 
-			Cookie cookie[] = ((HttpServletRequest) facesContext.getExternalContext().getRequest()).getCookies();
-			if (cookie != null && cookie.length > 0) {
-				for (int i = 0; i < cookie.length; i++) {
-					cookieName = cookie[i].getName();
-					if (cookieName.equals(COOKIE_LOCALE)) {
-						String sLocale = cookie[i].getValue();
-						if (sLocale != null && !"".equals(sLocale)) {
+            String cookieName = null;
 
-							// split locale
-							StringTokenizer stLocale = new StringTokenizer(sLocale, "_");
-							if (stLocale.countTokens() == 1) {
-								// only language variant
-								String sLang = stLocale.nextToken();
-								String sCount = sLang.toUpperCase();
-								locale = new Locale(sLang, sCount);
-							} else {
-								// language and country
-								String sLang = stLocale.nextToken();
-								String sCount = stLocale.nextToken();
-								locale = new Locale(sLang, sCount);
-							}
+            Cookie cookie[] = ((HttpServletRequest) facesContext.getExternalContext().getRequest()).getCookies();
+            if (cookie != null && cookie.length > 0) {
+                for (int i = 0; i < cookie.length; i++) {
+                    cookieName = cookie[i].getName();
+                    if (cookieName.equals(COOKIE_LOCALE)) {
+                        String sLocale = cookie[i].getValue();
+                        if (sLocale != null && !"".equals(sLocale)) {
 
-						}
-						break;
-					}
+                            // split locale
+                            StringTokenizer stLocale = new StringTokenizer(sLocale, "_");
+                            if (stLocale.countTokens() == 1) {
+                                // only language variant
+                                String sLang = stLocale.nextToken();
+                                String sCount = sLang.toUpperCase();
+                                locale = new Locale(sLang, sCount);
+                            } else {
+                                // language and country
+                                String sLang = stLocale.nextToken();
+                                String sCount = stLocale.nextToken();
+                                locale = new Locale(sLang, sCount);
+                            }
 
-				}
-			}
+                        }
+                        break;
+                    }
 
-			// still no value found? - default to "en"
-			if (locale == null || "".equals(locale.getLanguage())) {
-				Locale ldefault = request.getLocale();
-				if (ldefault != null) {
-					locale = ldefault;
-				} else {
-					locale = new Locale(DEFAULT_LOCALE);
-				}
-			}
+                }
+            }
 
-		}
-		return locale;
-	}
+            // still no value found? - default to "en"
+            if (locale == null || "".equals(locale.getLanguage())) {
+                Locale ldefault = request.getLocale();
+                if (ldefault != null) {
+                    locale = ldefault;
+                } else {
+                    locale = new Locale(DEFAULT_LOCALE);
+                }
+            }
 
-	public void setLocale(Locale alocale) {
-		if (alocale == null || "".equals(alocale))
-			locale = new Locale(DEFAULT_LOCALE);
-		else
-			this.locale = alocale;
+        }
+        return locale;
+    }
 
-		// update cookie
-		HttpServletResponse response = (HttpServletResponse) FacesContext.getCurrentInstance().getExternalContext()
-				.getResponse();
-		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
-				.getRequest();
-		Cookie cookieLocale = new Cookie(COOKIE_LOCALE, locale.toString());
-		if (request.getContextPath().isEmpty()) {
-			cookieLocale.setPath("/");
-		} else {
-			cookieLocale.setPath(request.getContextPath());
-		}
-		// 30 days
-		cookieLocale.setMaxAge(2592000);
-		response.addCookie(cookieLocale);
+    public void setLocale(Locale alocale) {
+        if (alocale == null || "".equals(alocale))
+            locale = new Locale(DEFAULT_LOCALE);
+        else
+            this.locale = alocale;
 
-	}
+        // update cookie
+        HttpServletResponse response = (HttpServletResponse) FacesContext.getCurrentInstance().getExternalContext()
+                .getResponse();
+        HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
+                .getRequest();
+        Cookie cookieLocale = new Cookie(COOKIE_LOCALE, locale.toString());
+        if (request.getContextPath().isEmpty()) {
+            cookieLocale.setPath("/");
+        } else {
+            cookieLocale.setPath(request.getContextPath());
+        }
+        // 30 days
+        cookieLocale.setMaxAge(2592000);
+        response.addCookie(cookieLocale);
 
-	/**
-	 * returns the user language
-	 * 
-	 * @return
-	 */
-	public String getLanguage() {
-		return getLocale().getLanguage();
-	}
+    }
 
-	/**
-	 * This method returns a cached cloned version of a user profile for a given
-	 * useraccount. The profile is cached in the current user session
-	 * 
-	 * @param aName
-	 * @return
-	 */
-	public ItemCollection getProfile(String aAccount) {
-		return profileService.findProfileById(aAccount);
-	}
+    /**
+     * returns the user language
+     * 
+     * @return
+     */
+    public String getLanguage() {
+        return getLocale().getLanguage();
+    }
 
-	/**
-	 * This method returns the username (displayname) for a useraccount. If no
-	 * Username is set in the profile then we return the useraccount.
-	 * 
-	 * @param aName
-	 * @return
-	 */
-	public String getUserName(String aAccount) {
-		// use internal cache
-		ItemCollection profile = getProfile(aAccount);
-		if (profile == null) {
-			return null;
-		} else {
-			return profile.getItemValueString("txtuserName");
-		}
-	}
+    /**
+     * This method returns a cached cloned version of a user profile for a given
+     * useraccount. The profile is cached in the current user session
+     * 
+     * @param aName
+     * @return
+     */
+    public ItemCollection getProfile(String aAccount) {
+        return profileService.findProfileById(aAccount);
+    }
 
-	/**
-	 * This method returns the email for a useraccount
-	 * 
-	 * @param aName
-	 * @return
-	 */
-	public String getEmail(String aAccount) {
-		// use internal cache
-		ItemCollection profile = getProfile(aAccount);
-		if (profile == null) {
-			return null;
-		} else {
-			return profile.getItemValueString("txtemail");
-		}
-	}
+    /**
+     * This method returns the username (displayname) for a useraccount. If no
+     * Username is set in the profile then we return the useraccount.
+     * 
+     * @param aName
+     * @return
+     */
+    public String getUserName(String aAccount) {
+        // use internal cache
+        ItemCollection profile = getProfile(aAccount);
+        if (profile == null) {
+            return null;
+        } else {
+            return profile.getItemValueString("txtuserName");
+        }
+    }
 
-	/**
-	 * remmoves the current user icon
-	 * 
-	 * @param event
-	 * @throws AccessDeniedException
-	 * @throws ProcessingErrorException
-	 */
-	public void removeUserIcon() {
-		String file = workflowController.getWorkitem().getItemValueString("txtusericon");
-		workflowController.getWorkitem().removeFile(file);
-		workflowController.getWorkitem().replaceItemValue("txtusericon", "");
-	}
+    /**
+     * This method returns the email for a useraccount
+     * 
+     * @param aName
+     * @return
+     */
+    public String getEmail(String aAccount) {
+        // use internal cache
+        ItemCollection profile = getProfile(aAccount);
+        if (profile == null) {
+            return null;
+        } else {
+            return profile.getItemValueString("txtemail");
+        }
+    }
 
-	/**
-	 * WorkflowEvent listener listens to WORKITEM events to reset the current
-	 * username workitem if processed. The method also updates the user Locale
-	 * 
-	 * @param workflowEvent
-	 * 
-	 **/
-	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
-		if (workflowEvent == null || workflowEvent.getWorkitem() == null) {
-			return;
-		}
+    /**
+     * removes the current user icon
+     * 
+     */
+    public void removeUserIcon() {
+        String userIcon = workflowController.getWorkitem().getItemValueString(ITEM_USER_ICON);
+        // support deprecated user icon item name
+        if (userIcon.isEmpty() && !"".equals(workflowController.getWorkitem().getItemValueString("txtusericon"))) {
+            userIcon = workflowController.getWorkitem().getItemValueString("txtusericon");
 
-		String sType = workflowEvent.getWorkitem().getItemValueString("type");
+        }
+        workflowController.getWorkitem().removeFile(userIcon);
+        workflowController.getWorkitem().replaceItemValue("txtusericon", "");
+        workflowController.getWorkitem().replaceItemValue(ITEM_USER_ICON, "");
+    }
 
-		// skip if not a profile...
-		if (!sType.startsWith("profile"))
-			return;
+    /**
+     * removes the current user signature
+     * 
+     */
+    public void removeSignature() {
+        String userSignature = workflowController.getWorkitem().getItemValueString(ITEM_SIGNATURE_IMAGE);
+        workflowController.getWorkitem().removeFile(userSignature);
+        workflowController.getWorkitem().replaceItemValue(ITEM_SIGNATURE_IMAGE, "");
+    }
 
-		// Update usericon and initials
-		// test icon upload
-		if ("profile".equals(sType) && WorkflowEvent.WORKITEM_BEFORE_PROCESS == workflowEvent.getEventType()) {
+    /**
+     * WorkflowEvent listener listens to WORKITEM events to reset the current
+     * username workitem if processed.
+     * <p>
+     * The method also updates the user Locale
+     * <p>
+     * In case a new image is uplaoded the method set the item user.icon. The
+     * deprecated item name 'txtusericon' is still supported..
+     * <p>
+     * Optional Signature images can be uploaded if the file name starts with
+     * 'signatrue.'. If a signature image exists the item 'signature.image' is set
+     * <p>
+     * A profile can hole one user.icon and one signature.image. Deprecated images
+     * will be removed by this method automatically.
+     * 
+     * @param workflowEvent
+     * 
+     **/
+    public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
+        String userID = null;
+        String userIcon = null;
+        String signatureImage = null;
 
-			List<FileData> fileList = workflowEvent.getWorkitem().getFileData();
-			if (fileList != null && fileList.size() > 0) {
-				while (fileList.size() > 1) {
-					fileList.remove(0);
-				}
-				// we take the first element
-				FileData file = fileList.get(0);
+        if (workflowEvent == null || workflowEvent.getWorkitem() == null) {
+            return;
+        }
 
-				String filenametest = file.getName().toLowerCase();
-				if (filenametest.endsWith(".png") || filenametest.endsWith(".gif") || filenametest.endsWith(".jpg")) {
-					logger.finest("......UserController Icon Upload started: " + file.getName());
-					workflowEvent.getWorkitem().replaceItemValue("txtusericon", file.getName());
-				} else {
-					fileList.remove(0);
-					logger.warning("UserController Icon Upload not supported for file: " + file.getName());
-				}
-			}
+        String sType = workflowEvent.getWorkitem().getItemValueString("type");
 
-		}
+        // skip if not a profile...
+        if (!sType.startsWith("profile"))
+            return;
 
-		// discared cached user profile and update locale
-		if ("profile".equals(sType) && WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
+        // Update usericon, signature image imformation
+        if ("profile".equals(sType) && WorkflowEvent.WORKITEM_BEFORE_PROCESS == workflowEvent.getEventType()) {
 
-			// check if current user profile was processed....
-			String sName = workflowEvent.getWorkitem().getItemValueString("txtName");
-			if (sName.equals(this.getWorkitem().getItemValueString("txtName"))) {
-				logger.finest("......reload current user profile");
-				setWorkitem(workflowEvent.getWorkitem());
+            userID = workflowEvent.getWorkitem().getItemValueString("txtname");
 
-				// update locale
-				updateLocaleFromProfile();
-			}
+            userIcon = getWorkitem().getItemValueString(ITEM_USER_ICON);
+            // support deprecated user icon item name
+            if (userIcon.isEmpty() && !"".equals(getWorkitem().getItemValueString("txtusericon"))) {
+                userIcon = getWorkitem().getItemValueString("txtusericon");
+                getWorkitem().replaceItemValue(ITEM_USER_ICON, userIcon);
+            }
 
-		}
+            signatureImage = workflowEvent.getWorkitem().getItemValueString(ITEM_SIGNATURE_IMAGE);
 
-	}
+            /*
+             * Test new uploaded images. we support two images, a user icon and a signature
+             * image. The method removes deprecated entries.
+             */
+            List<FileData> fileDataList = workflowEvent.getWorkitem().getFileData();
+            // reverse list - newest first
+            Collections.sort(fileDataList, new FileDataComparator());
+            boolean signatureFound = false;
+            boolean usericonFound = false;
+            for (FileData fileData : fileDataList) {
+                String filenametest = fileData.getName().toLowerCase();
 
-	/**
-	 * Returns true if the uniqueid is stored in the profile favorites
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public boolean isFavorite(String id) {
-		return getFavoriteIds().contains(id);
-	}
+                // test if the image is a signature.image...
+                if (filenametest.startsWith("signature.") && signatureFound == false) {
+                    signatureFound = true;
+                    if (!signatureImage.equals(fileData.getName())) {
+                        signatureImage = fileData.getName();
+                        workflowEvent.getWorkitem().replaceItemValue(ITEM_SIGNATURE_IMAGE, signatureImage);
+                        logger.info("... '" + userID + "' new signature image upload: " + signatureImage);
+                    }
+                }
 
-	/**
-	 * Returns a list with all uniqueids stored in the profile favorites
-	 * 
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public List<String> getFavoriteIds() {
-		if (getWorkitem() == null)
-			return new ArrayList<String>();
-		
-		  //  support deprecated ref field
-        if (!workitem.hasItem(LINK_PROPERTY) 
-                 && workitem.hasItem(LINK_PROPERTY_DEPRECATED)) {
+                // test if the image is a user.icon...
+                if (!filenametest.startsWith("signature.") && (filenametest.endsWith(".png")
+                        || filenametest.endsWith(".gif") || filenametest.endsWith(".jpg")) && usericonFound == false) {
+                    usericonFound = true;
+                    if (!userIcon.equals(fileData.getName())) {
+                        userIcon = fileData.getName();
+                        workflowEvent.getWorkitem().replaceItemValue(ITEM_USER_ICON, userIcon);
+                        logger.info("... '" + userID + "' new user icon upload: " + userIcon);
+                        // support deprecated image
+                        workflowEvent.getWorkitem().replaceItemValue("txtusericon", userIcon);
+                    }
+                }
+
+            }
+
+            // remove deprecated images files which are not user.icon or signature.image
+            ListIterator<FileData> iter = fileDataList.listIterator();
+            while (iter.hasNext()) {
+
+                FileData fileData = iter.next();
+                String fileName = fileData.getName();
+
+                if (fileName.startsWith("signature.") && !fileName.equals(signatureImage)) {
+                    // iter.remove();
+                    workflowEvent.getWorkitem().removeFile(fileName);
+                }
+                if (!fileName.startsWith("signature.") && !fileName.equals(userIcon)) {
+                    // iter.remove();
+                    workflowEvent.getWorkitem().removeFile(fileName);
+                }
+            }
+
+        }
+
+        // discard cached user profile and update locale
+        if ("profile".equals(sType) && WorkflowEvent.WORKITEM_AFTER_PROCESS == workflowEvent.getEventType()) {
+
+            // check if current user profile was processed....
+            String sName = workflowEvent.getWorkitem().getItemValueString("txtName");
+            if (sName.equals(this.getWorkitem().getItemValueString("txtName"))) {
+                logger.finest("......reload current user profile");
+                setWorkitem(workflowEvent.getWorkitem());
+                // update locale
+                updateLocaleFromProfile();
+            }
+
+        }
+
+    }
+
+    /**
+     * Returns true if the uniqueid is stored in the profile favorites
+     * 
+     * @param id
+     * @return
+     */
+    public boolean isFavorite(String id) {
+        return getFavoriteIds().contains(id);
+    }
+
+    /**
+     * Returns a list with all uniqueids stored in the profile favorites
+     * 
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> getFavoriteIds() {
+        if (getWorkitem() == null)
+            return new ArrayList<String>();
+
+        // support deprecated ref field
+        if (!workitem.hasItem(LINK_PROPERTY) && workitem.hasItem(LINK_PROPERTY_DEPRECATED)) {
             return workitem.getItemValue(LINK_PROPERTY_DEPRECATED);
         } else {
             return workitem.getItemValue(LINK_PROPERTY);
         }
-        
-	}
 
-	public void addFavorite(String id) {
-		if (getWorkitem() == null)
-			return;
+    }
 
-		List<String> list = getFavoriteIds();
-		// we expect that the id is in the list-..
-		if (!list.contains(id)) {
-			logger.finest("......add WorkitemRef:" + id);
-			list.add(id);
-			workitem.replaceItemValue(LINK_PROPERTY, list);
-			workitem = workflowService.getDocumentService().save(workitem);
-		}
-	}
+    public void addFavorite(String id) {
+        if (getWorkitem() == null)
+            return;
 
-	public void removeFavorite(String id) {
-		if (getWorkitem() == null)
-			return;
+        List<String> list = getFavoriteIds();
+        // we expect that the id is in the list-..
+        if (!list.contains(id)) {
+            logger.finest("......add WorkitemRef:" + id);
+            list.add(id);
+            workitem.replaceItemValue(LINK_PROPERTY, list);
+            workitem = workflowService.getDocumentService().save(workitem);
+        }
+    }
 
-		List<String> list = getFavoriteIds();
-		// we expect that the id is in the list-..
-		if (list.contains(id)) {
-			logger.finest("......remove WorkitemRef:" + id);
-			list.remove(id);
-			workitem.replaceItemValue(LINK_PROPERTY, list);
-			workitem = workflowService.getDocumentService().save(workitem);
-		}
-	}
+    public void removeFavorite(String id) {
+        if (getWorkitem() == null)
+            return;
 
-	/**
-	 * This method returns true if the user may be using a mobile device
-	 * 
-	 * @return
-	 */
-	public boolean isMobileUser() {
-		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
-				.getRequest();
-		String userAgent = request.getHeader("user-agent").toLowerCase();
-		return (userAgent.indexOf("mobile") > -1);
+        List<String> list = getFavoriteIds();
+        // we expect that the id is in the list-..
+        if (list.contains(id)) {
+            logger.finest("......remove WorkitemRef:" + id);
+            list.remove(id);
+            workitem.replaceItemValue(LINK_PROPERTY, list);
+            workitem = workflowService.getDocumentService().save(workitem);
+        }
+    }
 
-	}
+    /**
+     * This method returns true if the user may be using a mobile device
+     * 
+     * @return
+     */
+    public boolean isMobileUser() {
+        HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
+                .getRequest();
+        String userAgent = request.getHeader("user-agent").toLowerCase();
+        return (userAgent.indexOf("mobile") > -1);
 
-	/*
-	 * HELPER METHODS
-	 */
+    }
 
-	/**
-	 * This method updates user locale stored in the user profile entity to the
-	 * faces context.
-	 * 
-	 * @throws ProcessingErrorException
-	 * @throws AccessDeniedException
-	 * 
-	 */
-	private void updateLocaleFromProfile() throws AccessDeniedException, ProcessingErrorException {
+    /*
+     * HELPER METHODS
+     */
 
-		Locale profileLocale = null;
+    /**
+     * This method updates user locale stored in the user profile entity to the
+     * faces context.
+     * 
+     * @throws ProcessingErrorException
+     * @throws AccessDeniedException
+     * 
+     */
+    private void updateLocaleFromProfile() throws AccessDeniedException, ProcessingErrorException {
 
-		// Verify if Locale is available in profile
-		String sLocale = getWorkitem().getItemValueString("txtLocale");
-		if ("".equals(sLocale)) {
-			// get default value
-			profileLocale = getLocale();
-			getWorkitem().replaceItemValue("txtLocale", profileLocale.toString());
-		} else {
+        Locale profileLocale = null;
 
-			if (sLocale.indexOf('_') > -1) {
-				String language = sLocale.substring(0, sLocale.indexOf('_'));
-				String country = sLocale.substring(sLocale.indexOf('_') + 1);
-				profileLocale = new Locale(language, country);
-			} else {
-				profileLocale = new Locale(sLocale);
-			}
-		}
+        // Verify if Locale is available in profile
+        String sLocale = getWorkitem().getItemValueString("txtLocale");
+        if ("".equals(sLocale)) {
+            // get default value
+            profileLocale = getLocale();
+            getWorkitem().replaceItemValue("txtLocale", profileLocale.toString());
+        } else {
 
-		logger.fine("update user locale: " + profileLocale);
-		// reset locale to update cookie
-		setLocale(profileLocale);
-		// set locale for context
-		FacesContext.getCurrentInstance().getViewRoot().setLocale(profileLocale);
+            if (sLocale.indexOf('_') > -1) {
+                String language = sLocale.substring(0, sLocale.indexOf('_'));
+                String country = sLocale.substring(sLocale.indexOf('_') + 1);
+                profileLocale = new Locale(language, country);
+            } else {
+                profileLocale = new Locale(sLocale);
+            }
+        }
 
-	}
+        logger.fine("update user locale: " + profileLocale);
+        // reset locale to update cookie
+        setLocale(profileLocale);
+        // set locale for context
+        FacesContext.getCurrentInstance().getViewRoot().setLocale(profileLocale);
+
+    }
+
+    /**
+     * Compares two Filedata by its creation date value. This functionality should
+     * be covered by the ItemCollection.
+     * 
+     * @author rsoika
+     * 
+     */
+    class FileDataComparator implements Comparator<FileData> {
+        @SuppressWarnings("unused")
+        private final Collator collator;
+
+        public FileDataComparator() {
+            this.collator = Collator.getInstance(Locale.getDefault());
+        }
+
+        @SuppressWarnings("rawtypes")
+        public int compare(FileData a, FileData b) {
+            Date dateA = null;
+            Date dateB = null;
+            List la = (List) a.getAttribute("$created");
+            if (la != null && la.size() > 0) {
+                dateA = (Date) la.get(0);
+            }
+            List lb = (List) b.getAttribute("$created");
+            if (lb != null && lb.size() > 0) {
+                dateB = (Date) lb.get(0);
+            }
+            if (dateB == null && dateA != null) {
+                return 1;
+            }
+            if (dateA == null && dateB != null) {
+                return -1;
+            }
+            if (dateA == null && dateB == null) {
+                return 0;
+            }
+
+            int result = dateA.compareTo(dateB);
+
+            return result;
+
+        }
+
+    }
 
 }
