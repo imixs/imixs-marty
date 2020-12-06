@@ -42,12 +42,10 @@ public class ResourceBundleHandler {
      */
     @PostConstruct
     public void init() {
-        long l=System.currentTimeMillis();
         browserLocale = FacesContext.getCurrentInstance().getViewRoot().getLocale();
         messagesBundle = ResourceBundle.getBundle("bundle.messages", browserLocale);
         appBundle = ResourceBundle.getBundle("bundle.app", browserLocale);
         customBundle = ResourceBundle.getBundle("bundle.custom", browserLocale);
-        System.out.println(" .............init in " + (System.currentTimeMillis() -l) + "ms");
     }
 
     public Locale getBrowserLocale() {
