@@ -4,7 +4,7 @@
 	<artifactId>imixs-marty</artifactId>
 	<packaging>pom</packaging>
 	<name>Imixs Workflow - Marty</name>
-	<version>3.4.6-patch-355</version>
+	<version>3.4.6-patch-355-rc1-SNAPSHOT</version>
 
 	<modules>
 		<module>imixs-marty-ejb</module>
