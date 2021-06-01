@@ -47,6 +47,7 @@ import javax.enterprise.event.Observes;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -112,7 +113,7 @@ public class UserController implements Serializable {
 
     @Inject
     @ConfigProperty(name = "profile.login.event", defaultValue = "0")
-    int profileLoginEvent;
+    private Provider<Integer> profileLoginEvent;
 
     @Inject
     protected WorkflowController workflowController;
@@ -164,8 +165,8 @@ public class UserController implements Serializable {
             } else {
                 // check if profile.login.event is defined
                 logger.fine("profile.login.event=" + profileLoginEvent);
-                if (profileLoginEvent > 0) {
-                    profile.setEventID(profileLoginEvent);
+                if (profileLoginEvent.get() > 0) {
+                    profile.setEventID(profileLoginEvent.get());
                     try {
                         profile = workflowService.processWorkItem(profile);
                     } catch (PluginException | ModelException | ProcessingErrorException | EJBException e) {
