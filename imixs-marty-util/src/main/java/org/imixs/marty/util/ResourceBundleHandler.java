@@ -15,7 +15,7 @@ import javax.inject.Named;
  * does not have to know the bundle a specific resource is located:
  * <p>
  * {@code
- * <h1>#{resourceBundleHandler.findMessage('app.application_title')}</h1>}
+ * <h1>#{resourceBundleHandler.findMessage('application_title')}</h1>}
  * <p>
  * The ResourceBundleHandler load the bundles based on the current user locale.
  * <p>
