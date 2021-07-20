@@ -182,7 +182,6 @@ public class TeamController implements Serializable {
     public List<ItemCollection> getSpaces() {
         if (spaces == null) {
             spaces = teamService.getSpaces();
-            new ArrayList<ItemCollection>();
         }
         return spaces;
     }
@@ -249,7 +248,8 @@ public class TeamController implements Serializable {
             // iterate over all processes and compare the txtname
             List<ItemCollection> list = getProcessList();
             for (ItemCollection process : list) {
-                if (name.equals(process.getItemValueString("txtName"))) {
+                if (name.equals(process.getItemValueString("name"))
+                        || name.equals(process.getItemValueString("txtName"))) {
                     return process;
                 }
             }
@@ -269,9 +269,9 @@ public class TeamController implements Serializable {
         if (name != null && !name.isEmpty()) {
             // iterate over all processes and compare the txtname
             List<ItemCollection> list = getSpaces();
-            for (ItemCollection process : list) {
-                if (name.equals(process.getItemValueString("txtName"))) {
-                    return process;
+            for (ItemCollection space : list) {
+                if (name.equals(space.getItemValueString("name")) || name.equals(space.getItemValueString("txtName"))) {
+                    return space;
                 }
             }
         }
@@ -543,7 +543,7 @@ public class TeamController implements Serializable {
             if (WorkflowEvent.WORKITEM_CREATED == workflowEvent.getEventType()) {
                 String processRef = workflowEvent.getWorkitem().getItemValueString(WorkflowService.UNIQUEIDREF);
                 ItemCollection process = getProcessById(processRef);
-                if (process != null) {                    
+                if (process != null) {
                     workflowEvent.getWorkitem().replaceItemValue("process.Name", process.getItemValueString("name"));
                     workflowEvent.getWorkitem().replaceItemValue("process.Ref",
                             process.getItemValueString(WorkflowKernel.UNIQUEID));
