@@ -58,6 +58,7 @@ public class TextUsernameAdapter {
 		ItemCollection documentContext = event.getDocument();
 
 		String sSeparator = " ";
+		String sItem;
 		if (text == null)
 			return;
 
@@ -75,7 +76,10 @@ public class TextUsernameAdapter {
 
 			// next we check if the start tag contains a 'separator' attribute
 			sSeparator = XMLParser.findAttribute(tag, "separator");
-
+            sItem = XMLParser.findAttribute(tag, "item");
+            if (sItem==null || sItem.isEmpty()) {
+                sItem="txtUserName";
+            }
 			// extract Item Value
 			String sItemValue = XMLParser.findTagValue(tag, "username");
 
@@ -86,7 +90,7 @@ public class TextUsernameAdapter {
 			for (int i = 0; i < vUserIDs.size(); i++) {
 				ItemCollection profile = profileService.findProfileById(vUserIDs.get(i));
 				if (profile != null) {
-					vUserIDs.set(i, profile.getItemValueString("txtUserName"));
+					vUserIDs.set(i, profile.getItemValueString(sItem));
 				}
 			}
 
