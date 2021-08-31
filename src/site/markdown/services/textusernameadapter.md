@@ -20,3 +20,12 @@ Example:
 	Team List: <username separator="<br />">txtTeam</username>
 
 The TextUsernameAdapter works on all text fragments defined by a BPMN model. See the section [AdaptText](http://www.imixs.org/doc/engine/adapttext.html) for more details.
+
+## Optional Profile Item Values
+
+With the optional attribute 'item' a different itemvalue can be fetched from a user profile. 
+
+	E-Mail Addres: <username item="txtemail">$editor</username>
+	
+In this example the Email address will be fetched from the corresponding profile workitem.
+
