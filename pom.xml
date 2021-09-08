@@ -1,19 +1,15 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.imixs.marty</groupId>
+	<groupId>org.imixs.workflow</groupId>
 	<artifactId>imixs-marty</artifactId>
-	<packaging>pom</packaging>
 	<name>Imixs Workflow - Marty</name>
-	<version>4.1.14-SNAPSHOT</version>
-
-	<modules>
-		<module>imixs-marty-ejb</module>
-		<module>imixs-marty-util</module>
-	</modules>
+	<version>4.2.0-SNAPSHOT</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<org.imixs.workflow.version>5.2.7</org.imixs.workflow.version>
+		<org.imixs.workflow.version>5.2.13-SNAPSHOT</org.imixs.workflow.version>
 		<org.imixs.mock.version>5.2.0</org.imixs.mock.version>
 		<microprofile.version>3.0</microprofile.version>
 	</properties>
@@ -69,7 +65,7 @@
 		<url>https://github.com/imixs/imixs-marty/</url>
 		<tag>HEAD</tag>
 	</scm>
-	
+
 	<issueManagement>
 		<system>GitHub</system>
 		<url>https://github.com/imixs/imixs-marty/issues</url>
@@ -235,34 +231,7 @@
 		</profile>
 	</profiles>
 
-	<dependencyManagement>
-		<dependencies>
-			<!-- WORKFLOW -->
-			<dependency>
-				<groupId>org.imixs.workflow</groupId>
-				<artifactId>imixs-workflow-core</artifactId>
-				<version>${org.imixs.workflow.version}</version>
-				<scope>provided</scope>
-				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
-			</dependency>
 
-			<dependency>
-				<groupId>org.imixs.workflow</groupId>
-				<artifactId>imixs-workflow-engine</artifactId>
-				<version>${org.imixs.workflow.version}</version>
-				<scope>provided</scope>
-				<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
-			</dependency>
-
-			<dependency>
-				<groupId>org.imixs.workflow</groupId>
-				<artifactId>imixs-workflow-faces</artifactId>
-				<version>${org.imixs.workflow.version}</version>
-				<scope>provided</scope>
-			</dependency>
-
-		</dependencies>
-	</dependencyManagement>
 	<dependencies>
 		<!-- JEE Dependencies -->
 		<dependency>
@@ -271,8 +240,8 @@
 			<version>8.0</version>
 			<scope>provided</scope>
 		</dependency>
-		
-		
+
+
 		<!-- Microprofile -->
 		<dependency>
 			<groupId>org.eclipse.microprofile</groupId>
@@ -281,7 +250,32 @@
 			<type>pom</type>
 			<scope>provided</scope>
 		</dependency>
-		
+
+		<!-- WORKFLOW -->
+		<dependency>
+			<groupId>org.imixs.workflow</groupId>
+			<artifactId>imixs-workflow-core</artifactId>
+			<version>${org.imixs.workflow.version}</version>
+			<scope>provided</scope>
+			<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
+		</dependency>
+
+		<dependency>
+			<groupId>org.imixs.workflow</groupId>
+			<artifactId>imixs-workflow-engine</artifactId>
+			<version>${org.imixs.workflow.version}</version>
+			<scope>provided</scope>
+			<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
+		</dependency>
+
+		<dependency>
+			<groupId>org.imixs.workflow</groupId>
+			<artifactId>imixs-workflow-faces</artifactId>
+			<version>${org.imixs.workflow.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+
 		<!-- Testing -->
 		<dependency>
 			<groupId>junit</groupId>
