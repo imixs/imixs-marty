@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
+import javax.faces.context.FacesContext;
 import javax.faces.event.AjaxBehaviorEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -45,6 +46,7 @@ import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.index.SchemaService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.QueryException;
 import org.imixs.workflow.faces.data.WorkflowEvent;
 
 /**
@@ -348,4 +350,62 @@ public class UserInputController implements Serializable {
 		return valueList;
 	}
 
+	
+	
+	
+	
+    /**
+     * This method searches a text phrase within the user profile objects (type=profile).
+     * <p>
+     * JSF Integration:
+     * 
+     * {@code 
+     * 
+     * <h:commandScript name="imixsOfficeWorkflow.mlSearch" action=
+     * "#{cargosoftController.search()}" rendered="#{cargosoftController!=null}" render=
+     * "cargosoft-results" /> }
+     * 
+     * <p>
+     * JavaScript Example:
+     * 
+     * <pre>
+     * {@code
+     *  imixsOfficeWorkflow.cargosoftSearch({ item: '_invoicenumber' })
+     *  }
+     * </pre>
+     * 
+     */
+    public void searchUser() {
+
+        searchResult = new ArrayList<ItemCollection>();
+        // get the param from faces context....
+        FacesContext fc = FacesContext.getCurrentInstance();
+        String phrase = fc.getExternalContext().getRequestParameterMap().get("phrase");
+        if (phrase==null) {
+            return;
+        }
+       
+        logger.info("user search prase '" + phrase + "'");
+
+     
+        List<ItemCollection> result = searchResult = searchProfile(phrase);
+         
+        if (result!=null && result.size()>0) {
+            logger.info("found " + result.size() + " user profiles...");
+            for (ItemCollection profile: result) {
+                
+             //   String cdtrNo=profile.getItemValueString("_VENDOR_NUM");
+              //  searchResult.add(cdtrNo + " - "+cdtr.getItemValueString("_VENDOR_Name"));
+                searchResult.add(profile);
+                //logger.finest("...add: " + cdtr.getItemValueString("_VENDOR_NUM") + " - "+cdtr.getItemValueString("_VENDOR_Name"));
+            }
+        }
+        
+      
+
+    }
+	
+	
+	
+	
 }
