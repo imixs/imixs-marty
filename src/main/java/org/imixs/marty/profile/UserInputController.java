@@ -388,23 +388,30 @@ public class UserInputController implements Serializable {
         logger.info("user search prase '" + phrase + "'");
 
      
-        List<ItemCollection> result = searchResult = searchProfile(phrase);
+       searchResult = searchProfile(phrase);
          
-        if (result!=null && result.size()>0) {
-            logger.info("found " + result.size() + " user profiles...");
-            for (ItemCollection profile: result) {
-                
-             //   String cdtrNo=profile.getItemValueString("_VENDOR_NUM");
-              //  searchResult.add(cdtrNo + " - "+cdtr.getItemValueString("_VENDOR_Name"));
-                searchResult.add(profile);
-                //logger.finest("...add: " + cdtr.getItemValueString("_VENDOR_NUM") + " - "+cdtr.getItemValueString("_VENDOR_Name"));
-            }
+        if (searchResult!=null ) {
+            logger.info("found " + searchResult.size() + " user profiles...");
         }
         
       
 
     }
 	
+    /**
+     * Returns the username to a given userid
+     * @param userid
+     * @return
+     */
+    public String getUserName(String userid) {
+        ItemCollection profile = userController.getProfile(userid);
+        if (profile != null) {
+            return profile.getItemValueString("txtusername");
+        } else {
+            // not found
+           return userid;
+        }
+    }
 	
 	
 	
