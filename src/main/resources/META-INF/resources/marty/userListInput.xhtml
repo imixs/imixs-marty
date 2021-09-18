@@ -5,6 +5,7 @@
 	xmlns:h="http://xmlns.jcp.org/jsf/html"
 	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
 	xmlns:cc="http://xmlns.jcp.org/jsf/composite">
 
 <cc:interface>
@@ -15,79 +16,46 @@
 
 <cc:implementation>
 
-	<div class="marty-userlistinput #{!cc.attrs.editmode?'marty-userlistinput-read':''}">
-		<!-- Input Field -->
-		<h:panelGroup id="input_box" layout="block"
-			class="marty-userlistinput-inputbox" rendered="#{cc.attrs.editmode}">
-			<h:inputText value="#{userInputController.input}" class="imixs-usergroup">
-				<f:ajax event="keyup" render="suggest_box" delay="600"
-					listener="#{userInputController.search}" />
-				<f:ajax event="blur" render="suggest_box"
-					listener="#{userInputController.reset}" />
-			</h:inputText>
-
-			<h:commandLink id="input_add" style="margin-left:5px;" styleClass="imixs-no-print" 
-				actionListener="#{userInputController.add(userInputController.input,cc.attrs.value)}"
-				value=""><f:ajax render="suggest_box datalist input_add :#{cc.attrs.render}" /><span class="typcn typcn-plus"></span>
-			</h:commandLink>
-
-			<h:panelGroup id="suggest_box">
-				<h:panelGroup id="suggest_resultlist" layout="block"
-					style="width:100%;margin-top:15px;"
-					class="marty-userlistinput-suggestresultlist"
-					rendered="#{! empty userInputController.searchResult}">
-					<c:forEach var="suggest"
-						items="#{userInputController.searchResult}">
-						<div class="marty-userlistinput-suggestresultlist-entry"
-							style="width: 100%;">
-							<h:commandLink
-								actionListener="#{userInputController.add(suggest.item['txtName'],cc.attrs.value)}">
-								<h:outputText style="font-weight: bold;"
-									value="#{suggest.item['txtUserName']}" escape="false" />
-								<h:outputText style="font-weight: bold;margin-left:16px;"
-									value="#{suggest.item['txtEmail']}" escape="false" />
-								<f:ajax render="suggest_box datalist :#{cc.attrs.render}" />
-							</h:commandLink>
-
-						</div>
-					</c:forEach>
-
-				</h:panelGroup>
-			</h:panelGroup>
+	<ui:remove>
+	<!-- Matry Single User Input with autocomplete function 
+	
+	     The component uses the marty-user-search component to display the search result.
+	     The second input filed is just used for java script and holds no value.
+	 -->
+	 </ui:remove>
+	 
+	
+	 
+	<h:inputTextarea style="display:none;" pt:data-item="marty.user.input" value="#{cc.attrs.value}" converter="org.imixs.VectorConverter" >
+		<f:ajax  render="datalist"></f:ajax>
+	</h:inputTextarea>
+	<h:inputText styleClass="marty-userinput" />
+		
+	<!-- User name data table -->
+	<h:panelGroup id="datalist">
 
 
-		</h:panelGroup>
-
-		<!-- User name data table -->
-		<h:panelGroup id="datalist" layout="block"
-			class="marty-userlistinput-list">
-
-			<h:dataTable columns="2"
-				value="#{userInputController.getSortedProfilelist(cc.attrs.value)}"
-				var="record">
-				<h:column>
-					<h:outputText value="#{record.item['txtUserName']}" title="#{record.item['txtEmail']}"
-						rendered="#{! empty record.item['txtUserName']}" />
-					<h:outputText value="#{record.item['txtName']}"  title="#{record.item['txtEmail']}"
-						rendered="#{empty record.item['txtUserName']}" />
-				</h:column>
-				<!-- Delete member -->
-				<h:column>
-					<h:commandLink value="" id="remove_owner_link_id" rendered="#{cc.attrs.editmode}"
-						styleClass="imixs-no-print" style="margin-left:5px;"
-						actionListener="#{userInputController.remove(record.item['txtName'],cc.attrs.value)}">
-						<f:ajax render=":#{component.parent.parent.parent.clientId} :#{cc.attrs.render}" />
-						<span class="typcn typcn-times"></span>
-					</h:commandLink>
-				</h:column>
-			</h:dataTable>
-
-
-
-
-		</h:panelGroup>
-	</div>
-
+		<table class="marty-usergrouptable" >
+			<ui:repeat var="record" value="#{userInputController.getSortedProfilelist(cc.attrs.value)}">
+				<tr>
+					<td style="width:100%;"><h:outputText value="#{record.item['txtUserName']}" title="#{record.item['txtEmail']}"
+							rendered="#{! empty record.item['txtUserName']}" />
+						<h:outputText value="#{record.item['txtName']}"  title="#{record.item['txtEmail']}"
+							rendered="#{empty record.item['txtUserName']}" />
+					</td>
+					<!-- Delete member -->
+					<td>
+						<a href="javascript:void();" onclick="imixsMarty.deleteUserID(this)" tabindex="-1"
+						    data-userid="#{record.item['txtName']}" 
+							class="imixs-no-print" style="margin-left:5px;">
+							<span class="typcn typcn-times"></span>
+						</a>
+					</td>
+				</tr>
+			</ui:repeat>
+		</table>
+					
+	</h:panelGroup>	
 
 </cc:implementation>
 

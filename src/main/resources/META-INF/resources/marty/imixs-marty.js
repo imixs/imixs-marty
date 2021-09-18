@@ -1,193 +1,321 @@
-/* This script initialize the marty input widgets with specific behavior.
- * 
- * The Suggest Input widgets are provided by a special delay function during the blur event.
- * This is for to delay the blue event for SuggestInput fields a little bit, 
- * so the command link event can be fired before. 
- * This method is used by the worktiemLink.xhtml and userinputx.html
- * See: http://stackoverflow.com/questions/12677179/delay-a-jsf-ajax-listener-for-checkbox-group 
- * 
- * The method also clears the input value on blur event.
- */
-$(document).ready(function() {
+"use strict";
+
+// workitem scripts
+
+IMIXS.namespace("org.imixs.marty");
+
+var autocompleteInputID;
+var autcompleteSelectedElement;
+var autocompleteSearchReady=false;
+var currentSelectCallback;
+
+
+
+
+
+// define core module
+IMIXS.org.imixs.marty = (function() {
 	
-	// this is the support for the marty input widgets
-	initWorkitemLinkInput(document.body);
-	initUserListInput(document.body);
-	initUserInput(document.body);
-	initSuggestInput(document.body);
 
-});
+	// init user input fields...
+	$(document).ready(function() {
 
-/* 
- * Helper Function for onBlur delay event for suggest lists
- */
-var delayEvent = (function() {
+		// add autocomplete feature to all user inputs...
+		var userInputField= $("input[data-item='marty.user.input']");
+		$(userInputField).each(function() {
+			imixsMarty.userInputInit(this,martyUserSearch,'marty-userinput-resultlist'); // optional callback method allowed here!
+		});
+		
+		var userGroupInputField= $("textarea[data-item='marty.user.input']");
+		$(userGroupInputField).each(function() {
+			imixsMarty.userInputInit(this,martyUserSearch,'marty-userinput-resultlist'); // optional callback method allowed here!
+		});
+		
+	
+	});
 
-	var timer = 0;
-	return function(callback, timeout) {
-		clearTimeout(timer);
-		timer = setTimeout(callback, timeout);
+
+
+
+
+	
+	/*
+	 * initializes an input element for autocompletion. 
+	 * the param 'resultlistid' is optional and defines the element 
+	 * containing the search result.
+	 * The selectCallback method is optional and triggered when a new element was selected 
+	 * from the suggest list
+	 */
+	var userInputInit = function(inputElement, searchCallback, resultlistId, selectCallback) {
+		
+		// should be hindden
+		$(inputElement).hide();
+		
+		// set id for result list element
+		if (!resultlistId || resultlistId==='') {
+			resultlistId='autocomplete-resultlist'; // default name
+		} 
+		
+		
+		
+		// now we can select the new element with the next method
+		var searchInputElement=$(inputElement).next();		
+		$(searchInputElement).attr('data-resultlist', resultlistId);
+		
+		// single user 
+		if (searchInputElement.is("input")) {
+			var username=$(searchInputElement).data('username') 
+			$(searchInputElement).val(username);
+		}
+		
+		
+		// add a input event handler with delay to serach for suggestions....
+		$(searchInputElement).on('input', delay(function() {
+			if (!autocompleteSearchReady) {
+				return; // start only after first key down! (see below)
+			}
+			// store the current input name
+			autocompleteInputID = $(this).attr('name');
+			
+			//alert(autocompleteInputID);
+			currentSelectCallback=selectCallback;
+			searchCallback({ phrase: this.value });
+		}, 500)).trigger('input');
+	
+	
+		// hide the suggest list on blur event
+		$(searchInputElement).on("blur", delay(function(event) {
+			$("[id$=" + $(this).data('resultlist')  + "]").hide();
+			
+			// if single input than reset value...
+			var username=$(searchInputElement).data('username');
+			$(searchInputElement).val(username);
+			
+		}, 200));
+	
+	
+		/*execute a function presses a key on the keyboard:*/
+		$(searchInputElement).keydown(function(e) {
+			
+			autocompleteSearchReady=true; // init serach mode
+			if (e.keyCode == 40) {
+		        /*If the arrow DOWN key is pressed,
+		        increase the currentFocus variable:*/
+				autocompleteSelectNextElement(this);
+			} else if (e.keyCode == 38) { //up
+		        /*If the arrow UP key is pressed,
+		        decrease the currentFocus variable:*/
+				autocompleteSelectPrevElement(this);
+			} else if (e.keyCode == 13) {
+				/*If the ENTER key is pressed, prevent the form from being submitted,*/
+				e.preventDefault();
+				selectActiveElement(this);			
+			}
+		});
+		
+		/* delete single input entry on '' */
+		$(searchInputElement ).on( "change", function() {
+		 	var value=$(this).val();
+		    if (value=="") {
+				// clear value
+				var inputField = $(searchInputElement ).prev();
+				inputField.val('');
+				$(searchInputElement ).val('');
+		
+		
+				$(searchInputElement).data('username','');
+				//$("[id$=" + $(searchInputElement).data('resultlist')  + "]").hide();
+			}
+		});
+		
+	
+		// turn autocomplete of
+		$(searchInputElement).attr('autocomplete', 'off');
+	},
+
+
+	/**
+	 * This mehtod shows the search result panel and places it below the current input element
+	 */
+	userSearchShowResult = function(data) {
+		autcompleteSelectedElement = -1;
+		var status = data.status;
+		if (status === "success") {
+			// select the inital input element by its name...
+			var inputElement = $('input[name ="' + autocompleteInputID + '"]');
+			
+			
+			// now we pull the result html list to this input field.....
+			$("[id$=" +  inputElement.data('resultlist')  + "]").insertAfter(inputElement).show();
+		}
+	},
+
+	/* Helper method to select the current element in the result list */
+	selectActiveElement = function(inputElement) {
+		var id=$(inputElement).data('resultlist');
+		var parent=$( "div[id$='" + id +"']" );
+		var resultElementListActive = $(".marty-userinput-resultlist-element.active",parent);
+		$("a",resultElementListActive).click();
+		$(parent).hide();
+	},
+	
+	
+	/* Helper method to highligt the current element in the result list */
+	autocompleteSelectNextElement = function(inputElement) {
+		var id=$(inputElement).data('resultlist');
+		var parent=$( "div[id$='" + id +"']" );
+		var resultElementList = $(".marty-userinput-resultlist-element",parent);
+		// remove acitve if set	
+		$(resultElementList).removeClass("active");
+		// next element...?
+		autcompleteSelectedElement++;
+		if (autcompleteSelectedElement >= resultElementList.length) {
+			// reset if overflow...
+			autcompleteSelectedElement = 0;
+		} 
+		// set new active
+		$(resultElementList[autcompleteSelectedElement]).addClass("active");
+	},
+	
+	
+	autocompleteSelectPrevElement = function(inputElement) {
+		var id=$(inputElement).data('resultlist');
+		var parent=$( "div[id$='" + id +"']" );
+		var resultElementList = $(".marty-userinput-resultlist-element",parent);
+		// remove acitve if set	
+		$(resultElementList).removeClass("active");
+		autcompleteSelectedElement--;
+		// next element...?
+		if (autcompleteSelectedElement < 0) {
+			autcompleteSelectedElement = resultElementList.length - 1;
+		}
+		// set new active
+		$(resultElementList[autcompleteSelectedElement]).addClass("active");
+	},
+
+
+
+
+
+	selectUserID = function(userid,username) {
+		// find the value field and the search field
+		var inputSearchField = $('input[name ="' + autocompleteInputID + '"]');
+		var inputField = $(inputSearchField ).prev();
+		
+		// single user 
+		if (inputField.is("input")) {
+			// show the username in the serach field..
+			inputSearchField.val(username);
+			inputField.val(userid);
+			
+			// update data 
+			inputSearchField.data('username',username);
+		}
+		// user list 
+		if (inputField.is("textarea")) {
+			var list= inputField.val();
+			
+			var list=inputField.val().split(/\r?\n/);
+			var newList= new Array();
+			$.each(list, function( key, value ) {
+				if (value!='') {
+					if (!newList.includes(value)) {
+						newList.push(value);
+					}  
+				}
+			});
+			if (!newList.includes(userid)) {
+				newList.push(userid);
+			}  
+
+			var newValue="";
+			$.each(newList, function( key, value ) {
+				if (key==0) {
+					newValue=newValue+value;
+				} else {
+					newValue=newValue + "\n"+value;
+				}
+			});
+
+			inputField.val(newValue);
+			// trigger on change event
+			inputField.trigger('change');
+			// clear input
+			inputSearchField.val('');			
+		}
+		
+	},
+	
+	
+	/* Deletes a given user id form a usergroup list */
+	deleteUserID = function(link) {
+		// find the value field based on the given link.
+		var parent=$(link).closest( "span[id$='datalist']" );
+		var inputField=$(parent).prevAll('textarea');
+		
+		var userid=$(link).data('userid');
+		
+		// only user list is supported 
+		if (inputField.is("textarea")) {
+			var list=inputField.val().split(/\r?\n/);
+			var newList= new Array();
+			$.each(list, function( key, value ) {
+				if (value!='' && value!=userid) {
+					if (!newList.includes(value)) {
+						newList.push(value);
+					}  
+				}
+			});
+			
+			var newValue="";
+			$.each(newList, function( key, value ) {
+				if (key==0) {
+					newValue=newValue+value;
+				} else {
+					newValue=newValue + "\n"+value;
+				}
+			});
+
+			inputField.val(newValue);
+			// trigger on change event
+			inputField.trigger('change');
+				
+		}
+		
+		
+	},
+
+
+
+	/*
+	 * delay function
+	 * see: https://stackoverflow.com/questions/1909441/how-to-delay-the-keyup-handler-until-the-user-stops-typing
+	 */
+	delay = function(callback, ms) {
+		var timer = 0;
+		return function() {
+			var context = this, args = arguments;
+			clearTimeout(timer);
+			timer = setTimeout(function() {
+				callback.apply(context, args);
+			}, ms || 0);
+		};
 	};
-})();
-
-/*
- * This method initializes all marty userInput widgets. The method can also be
- * used in ajax events to refresh a specific form section.
- * 
- * @param context
- */
-function initUserInput(context) {
 	
-	// clear all display values first....
-	$(".marty-userinput-inputbox [id$=\\:username_input]",context).val('');
-	// this is the support for the marty userinput widget
-	$(".marty-userinput-inputbox [id$=\\:username_input]", context).each(
-			function(index, input) {
 
-				// id
-				var inputfield_id = $(this).next('input');
-				var inputfield_display = $(this).next('input').next('input');
+	// public API
+	return {
+		
+		userInputInit : userInputInit,
+		userSearchShowResult : userSearchShowResult,
+		deleteUserID: deleteUserID,
+		selectUserID : selectUserID
+	};
 
-				var onblur = input.onblur;
-				input.onblur = null;
-				// reset the username and userId input on blur event
-				$(input).on("blur", function(event) {
-
-					// reset userid to '' ?
-					if ($(this).val() == '')
-						inputfield_id.val('');
-					else {
-						// if userid selected then display the user display name
-						if (!inputfield_id.val() == '')
-							$(this).val(inputfield_display.val());
-						else
-							$(this).val('');
-					}
-					delayEvent(function() {
-						onblur.call(input, event);
-					}, 300);
-
-				});
-				// turn autocomplete of
-				$(this).attr('autocomplete', 'off');
-
-				// initialize input field with current display name
-				if (!inputfield_id.val() == '')
-					$(this).val(inputfield_display.val());
-
-				// hide id input field
-				inputfield_id.hide();
-				inputfield_display.hide();
-			});
-
-}
-
-
-
-/*
- * This method initializes all marty suggestInput widgets. The method can also be
- * used in ajax events to refresh a specific form section.
- * 
- * @param context
- */
-function initSuggestInput(context) {
-	// this is the support for the marty suggestinput widget
-	$(".marty-suggestinput-inputbox [id$=\\:suggest_input]", context).each(
-			function(index, input) {
-				var onblur = input.onblur;
-				input.onblur = null;
-				// reset the suggest input on blur event
-				$(input).on("blur", function(event) {
-					delayEvent(function() {
-						onblur.call(input, event);
-					}, 300);
-
-				});
-				// turn autocomplete of
-				$(this).attr('autocomplete', 'off');
-
-			});
-
-}
-
-
-
-/*
- * This method initializes all marty userListInput widgets. The method can also
- * be used in ajax events to refresh a specific form section.
- * 
- * @param context
- */
-function initUserListInput(context) {
-	// this is the support for the marty userinput widget
-	$(".marty-userlistinput-inputbox input", context).each(
-			function(index, input) {
-				var onblur = input.onblur;
-				input.onblur = null;
-				$(input).on("blur", function(event) {
-					// clear the input on blur
-					$(this).val('');
-					delayEvent(function() {
-						onblur.call(input, event);
-					}, 300);
-				});
-
-				// turn autocomplete of
-				$(this).attr('autocomplete', 'off');
-			});
-}
-
-/*
- * This method initializes all marty workitemLinkInput widgets. The method can
- * also be used in ajax events to refresh a specific form section.
- * 
- * @param context
- */
-function initWorkitemLinkInput(context) {
-	// this is the support for the marty userinput widget
-	$(".marty-workitemlink-inputbox input", context).each(
-			function(index, input) {
-
-				var onblur = input.onblur;
-				input.onblur = null;
-				$(input).on("blur", function(event) {
-					// clear the input on blur
-					$(this).val('');
-					delayEvent(function() {
-						onblur.call(input, event);
-					}, 300);
-				});
-
-				// turn autocomplete of
-				$(this).attr('autocomplete', 'off');
-			});
-
-}
-
-/*
- * This method updates the hidden input fields for the mary userinput widget.
- * The method expects the jquery object of the user input box and the userid and
- * displayname to upate. The method finds the input fields and updates the
- * values.
- */
-function updateUserID(inputBox, id, displayname) {
-	var inputfield_name = $(inputBox).find('[id$=\\:username_input]');
-	var inputfield_id = $(inputBox).find('[id$=\\:userid_input]');
-	var inputfield_display = $(inputfield_id).next();
-	inputfield_id.val(id);
-	inputfield_name.val(displayname);
-	inputfield_display.val(displayname);
-}
-
-
-/*
- * This method updates the suggest input field for the mary suggest widget.
- * The method expects the jquery object of the user input box and the value to  
- * update. The method finds the input fields and updates the
- * values.
- */
-function updateSuggestID(inputBox, name) {
-	var inputfield_id = $(inputBox).find('[id$=\\:suggest_input]');
-	inputfield_id.val(name);
-}
-
+}());	
+	
+// Define public namespace
+var imixsMarty = IMIXS.org.imixs.marty;	
+			
+	
+	
