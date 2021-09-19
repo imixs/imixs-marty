@@ -2,6 +2,13 @@
 
 Imixs Marty provides jsf custom input widgets for UserIds or list of UserIds.  These widgets allow the user to search for UserIds in the internal profile list and store the result into a workitem.
 
+## Installation
+
+To activate the feature you need at least place the following fragment in a UIForm element:
+
+	<marty:userSearch />
+
+
 ## UserListInput widget
 
 The custom widget '_userListInput_' handles list of UserIds. The widget provides a suggest input field for user profiles. See the following example:
