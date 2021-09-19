@@ -28,17 +28,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
-import javax.enterprise.context.SessionScoped;
-import javax.enterprise.event.Observes;
 import javax.faces.context.FacesContext;
-import javax.faces.event.AjaxBehaviorEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -46,9 +42,6 @@ import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.index.SchemaService;
-import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.exceptions.QueryException;
-import org.imixs.workflow.faces.data.WorkflowEvent;
 
 /**
  * The UserInputController provides suggest-box behavior based on the JSF 2.0
@@ -68,7 +61,6 @@ import org.imixs.workflow.faces.data.WorkflowEvent;
  */
 
 @Named("userInputController")
-//@SessionScoped
 @RequestScoped
 public class UserInputController implements Serializable {
 
@@ -86,6 +78,7 @@ public class UserInputController implements Serializable {
 	
 
 	private List<ItemCollection> searchResult = null;
+	private static int MAX_SEARCH_RESULT=100;
 
 	
 	private static final long serialVersionUID = 1L;
@@ -111,9 +104,6 @@ public class UserInputController implements Serializable {
 	 * @return - list of matching profiles
 	 */
 	public List<ItemCollection> searchProfile(String phrase) {
-
-	    
-	    logger.info("-----starte searchProfile - sollte nicht zu oft vorkommen");
 		List<ItemCollection> searchResult = new ArrayList<ItemCollection>();
 
 		if (phrase == null || phrase.isEmpty())
@@ -134,7 +124,7 @@ public class UserInputController implements Serializable {
 			logger.finest("searchprofile: " + sQuery);
 
 			logger.fine("searchWorkitems: " + sQuery);
-			col = workflowService.getDocumentService().find(sQuery, 0, 100);
+			col = workflowService.getDocumentService().find(sQuery, MAX_SEARCH_RESULT, 0);
 		} catch (Exception e) {
 			logger.warning("Lucene error error: " + e.getMessage());
 		}
