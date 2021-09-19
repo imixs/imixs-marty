@@ -1,7 +1,7 @@
 /* --- marty-userinput   ---------------------------- */
  
 .marty-userinput, .marty-userinput:focus {
-	background-position: 5px 8px; 
+	background-position: 5px 5px; 
 	background-image: url('./usergroup.png') !important;
     background-repeat: no-repeat;
 	padding-left: 25px;

@@ -34,6 +34,7 @@ import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
+import javax.enterprise.context.RequestScoped;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
 import javax.faces.context.FacesContext;
@@ -67,7 +68,8 @@ import org.imixs.workflow.faces.data.WorkflowEvent;
  */
 
 @Named("userInputController")
-@SessionScoped
+//@SessionScoped
+@RequestScoped
 public class UserInputController implements Serializable {
 
 	@Inject
@@ -85,9 +87,9 @@ public class UserInputController implements Serializable {
 
 	private List<ItemCollection> searchResult = null;
 
-	private String input = null;
+	
 	private static final long serialVersionUID = 1L;
-	private int maxSearchCount = 30;
+	
 	private static Logger logger = Logger.getLogger(UserInputController.class.getName());
 
 	public UserInputController() {
@@ -95,58 +97,9 @@ public class UserInputController implements Serializable {
 		searchResult = new ArrayList<ItemCollection>();
 	}
 
-	public String getInput() {
-		return input;
-	}
 
-	public void setInput(String input) {
-		this.input = input;
-	}
+	
 
-	public int getMaxSearchCount() {
-		return maxSearchCount;
-	}
-
-	/**
-	 * Set the maximum length of a search result
-	 * 
-	 * @param maxSearchCount
-	 */
-	public void setMaxSearchCount(int maxSearchCount) {
-		this.maxSearchCount = maxSearchCount;
-	}
-
-	/**
-	 * This method reset the search and input state.
-	 */
-	public void reset() {
-		searchResult = new ArrayList<ItemCollection>();
-		input = "";
-		logger.fine("userInputController reset");
-	}
-
-	/**
-	 * This ajax event method reset the search and input state.
-	 * 
-	 * @param event
-	 */
-	public void reset(AjaxBehaviorEvent event) {
-		reset();
-	}
-
-	/**
-	 * This method initializes a JPQL search. The method is triggered by ajax events
-	 * from the userInput.xhtml page. The minimum length of a given input search
-	 * phrase have to be at least 2 characters
-	 * 
-	 */
-	public void search() {
-		if (input == null || input.length() < 2)
-			return;
-		logger.fine("userInputController search for=" + input);
-		searchResult = searchProfile(input);
-
-	}
 
 	/**
 	 * This method returns a list of profile ItemCollections matching the search
@@ -159,6 +112,8 @@ public class UserInputController implements Serializable {
 	 */
 	public List<ItemCollection> searchProfile(String phrase) {
 
+	    
+	    logger.info("-----starte searchProfile - sollte nicht zu oft vorkommen");
 		List<ItemCollection> searchResult = new ArrayList<ItemCollection>();
 
 		if (phrase == null || phrase.isEmpty())
@@ -179,7 +134,7 @@ public class UserInputController implements Serializable {
 			logger.finest("searchprofile: " + sQuery);
 
 			logger.fine("searchWorkitems: " + sQuery);
-			col = workflowService.getDocumentService().find(sQuery, 0, -1);
+			col = workflowService.getDocumentService().find(sQuery, 0, 100);
 		} catch (Exception e) {
 			logger.warning("Lucene error error: " + e.getMessage());
 		}
@@ -199,33 +154,6 @@ public class UserInputController implements Serializable {
 		return searchResult;
 	}
 
-	/**
-	 * This methods adds a new name to a userid list
-	 * 
-	 */
-	public void add(String aName, List<Object> aList) {
-		if (aList == null || aName == null || aName.isEmpty())
-			return;
-		// trim
-		aName = aName.trim();
-
-		if (!aList.contains(aName)) {
-			logger.fine("userInputController add '" + aName + "' from list.");
-			aList.add(aName);
-		}
-
-		// remove empty entries.....
-		Iterator<Object> i = aList.iterator();
-		while (i.hasNext()) {
-			Object oentry = i.next();
-			if (oentry == null || oentry.toString().isEmpty()) {
-				i.remove();
-			}
-		}
-		
-		// remove empty strings.
-		uniqueList(aList);
-	}
 
 	/**
 	 * This method tests if a given string is a defined Access Role.
@@ -246,36 +174,7 @@ public class UserInputController implements Serializable {
 		}
 	}
 
-	/**
-	 * This methods removes a name from the userid list
-	 */
-	public void remove(String aName, List<Object> aList) {
-		if (aList == null || aName == null)
-			return;
-		logger.fine("userInputController remove '" + aName + "' from list.");
-
-		// in some cases the username can be stored in wrong upper/lower case.
-		// This is the reason for a special double check
-		if (aList.contains(aName)) {
-			aList.remove(aName);
-		} else {
-			// here we try to find the entry ignoring upper/lower case ....
-			for (Object aEntry : aList) {
-				if (aEntry != null) {
-					String aValue = aEntry.toString().toLowerCase();
-					if (aValue.equals(aName.toLowerCase())) {
-						logger.warning(
-								"userInputController remove '" + aName + "' from list ignoring upper/lower case!");
-						aList.remove(aEntry);
-						break;
-					}
-				}
-			}
-		}
-		
-		// remove empty strings.
-		uniqueList(aList);
-	}
+	
 
 	/**
 	 * This method returns a sorted list of profiles for a given userId list
@@ -312,18 +211,7 @@ public class UserInputController implements Serializable {
 		return profiles;
 	}
 
-	/**
-	 * WorkflowEvent listener to reset state
-	 * 
-	 * @param workflowEvent
-	 * @throws AccessDeniedException
-	 */
-	public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) throws AccessDeniedException {
-
-		// reset state
-		reset();
-
-	}
+	
 	/**
 	 * This method removes duplicates and null values from a vector.
 	 * 

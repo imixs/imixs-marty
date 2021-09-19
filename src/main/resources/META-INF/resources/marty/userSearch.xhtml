@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:cc="http://xmlns.jcp.org/jsf/composite">
+
+<cc:interface>
+
+</cc:interface>
+
+<cc:implementation>
+
+
+	<ui:remove>
+		<!-- Matry User Search integration 
+	
+	     The component provides the search result widget and need to be placece once in a page
+	-->
+	</ui:remove>
+
+	<h:commandScript name="martyUserSearch"
+		action="#{userInputController.searchUser()}"
+		render="marty-userinput-resultlist"
+		onevent="imixsMarty.userSearchShowResult" />
+
+	<h:panelGroup id="marty-userinput-resultlist" layout="block"
+		class="marty-userinput-resultlist">
+		<ui:param name="suggestList"
+			value="#{userInputController.searchResult}"></ui:param>
+		<ui:fragment rendered="#{! empty suggestList}">
+			<ui:repeat var="suggest" value="#{userInputController.searchResult}">
+				<div class="marty-userinput-resultlist-element"
+					onclick="imixsMarty.selectUserID('#{suggest.item['txtname']}','#{suggest.item['txtusername']}')">
+					<a href="#"> <h:outputText
+							value="#{suggest.item['txtusername']}" escape="false" />
+					</a>
+				</div>
+			</ui:repeat>
+		</ui:fragment>
+	</h:panelGroup>
+
+</cc:implementation>
+</html>
+
+
