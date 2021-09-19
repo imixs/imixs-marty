@@ -64,184 +64,168 @@ import org.imixs.workflow.engine.index.SchemaService;
 @RequestScoped
 public class UserInputController implements Serializable {
 
-	@Inject
-	protected UserController userController;
+    @Inject
+    protected UserController userController;
 
-	@EJB
-	protected WorkflowService workflowService;
- 
-	@EJB
-	protected SchemaService schemaService;
-	
-	@EJB
-	protected ProfileService profileService;
-	
+    @EJB
+    protected WorkflowService workflowService;
 
-	private List<ItemCollection> searchResult = null;
-	private static int MAX_SEARCH_RESULT=100;
+    @EJB
+    protected SchemaService schemaService;
 
-	
-	private static final long serialVersionUID = 1L;
-	
-	private static Logger logger = Logger.getLogger(UserInputController.class.getName());
+    @EJB
+    protected ProfileService profileService;
 
-	public UserInputController() {
-		super();
-		searchResult = new ArrayList<ItemCollection>();
-	}
+    private List<ItemCollection> searchResult = null;
+    private static int MAX_SEARCH_RESULT = 100;
 
+    private static final long serialVersionUID = 1L;
 
-	
+    private static Logger logger = Logger.getLogger(UserInputController.class.getName());
 
+    public UserInputController() {
+        super();
+        searchResult = new ArrayList<ItemCollection>();
+    }
 
-	/**
-	 * This method returns a list of profile ItemCollections matching the search
-	 * phrase. The search statement includes the items 'txtName', 'txtEmail' and
-	 * 'txtUserName'. The result list is sorted by txtUserName
-	 * 
-	 * @param phrase
-	 *            - search phrase
-	 * @return - list of matching profiles
-	 */
-	public List<ItemCollection> searchProfile(String phrase) {
-		List<ItemCollection> searchResult = new ArrayList<ItemCollection>();
-
-		if (phrase == null || phrase.isEmpty())
-			return searchResult;
-
-		// start lucene search
-		Collection<ItemCollection> col = null;
-
-		try {
-			phrase = phrase.trim().toLowerCase();
-			phrase = schemaService.escapeSearchTerm(phrase);
-			// issue #170
-			phrase = schemaService.normalizeSearchTerm(phrase);
-
-			String sQuery = "(type:profile) AND ($processid:[210 TO 249]) AND  ((txtname:" + phrase
-					+ "*) OR (txtusername:" + phrase + "*) OR (txtemail:" + phrase + "*))";
-
-			logger.finest("searchprofile: " + sQuery);
-
-			logger.fine("searchWorkitems: " + sQuery);
-			col = workflowService.getDocumentService().find(sQuery, MAX_SEARCH_RESULT, 0);
-		} catch (Exception e) {
-			logger.warning("Lucene error error: " + e.getMessage());
-		}
-
-		if (col != null) {
-			for (ItemCollection profile : col) {
-				searchResult.add(profileService.cloneWorkitem(profile));
-			}
-			// sort by username..
-			Collections.sort(searchResult, new ItemCollectionComparator("txtusername", true));
-		}
-		return searchResult;
-
-	}
-
-	public List<ItemCollection> getSearchResult() {
-		return searchResult;
-	}
-
-
-	/**
-	 * This method tests if a given string is a defined Access Role.
-	 * 
-	 * @param aName
-	 * @return true if the name is a access role
-	 * @see DocumentService.getAccessRoles()
-	 */
-	public boolean isRole(String aName) {
-		String accessRoles = workflowService.getDocumentService().getAccessRoles();
-		String roleList = "org.imixs.ACCESSLEVEL.READERACCESS,org.imixs.ACCESSLEVEL.AUTHORACCESS,org.imixs.ACCESSLEVEL.EDITORACCESS,org.imixs.ACCESSLEVEL.MANAGERACCESS,"
-				+ accessRoles;
-		List<String> roles = Arrays.asList(roleList.split("\\s*,\\s*"));
-		if (roles.stream().anyMatch(aName::equalsIgnoreCase)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	
-
-	/**
-	 * This method returns a sorted list of profiles for a given userId list
-	 * 
-	 * @param aNameList
-	 *            - string list with user ids
-	 * @return - list of profiles
-	 */
-	public List<ItemCollection> getSortedProfilelist(List<Object> aNameList) {
-		List<ItemCollection> profiles = new ArrayList<ItemCollection>();
-
-		if (aNameList == null)
-			return profiles;
-
-		// add all profile objects....
-		for (Object aentry : aNameList) {
-			if (aentry != null && !aentry.toString().isEmpty()) {
-				ItemCollection profile = userController.getProfile(aentry.toString());
-				if (profile != null) {
-					profiles.add(profile);
-				} else {
-					// create a dummy entry
-					profile = new ItemCollection();
-					profile.replaceItemValue("txtName", aentry.toString());
-					profile.replaceItemValue("txtUserName", aentry.toString());
-					profiles.add(profile);
-				}
-			}
-		}
-
-		// sort by username..
-		Collections.sort(profiles, new ItemCollectionComparator("txtUserName", true));
-
-		return profiles;
-	}
-
-	
-	/**
-	 * This method removes duplicates and null values from a vector.
-	 * 
-	 * @param valueList
-	 *            - list of elements
-	 */
-	public List<?> uniqueList(List<Object> valueList) {
-		int iVectorSize = valueList.size();
-		Vector<Object> cleanedVector = new Vector<Object>();
-
-		for (int i = 0; i < iVectorSize; i++) {
-			Object o = valueList.get(i);
-			if (o == null || cleanedVector.indexOf(o) > -1 || "".equals(o.toString()))
-				continue;
-
-			// add unique object
-			cleanedVector.add(o);
-		}
-		valueList = cleanedVector;
-		// do not work with empty vectors....
-		if (valueList.size() == 0)
-			valueList.add("");
-
-		return valueList;
-	}
-
-	
-	
-	
-	
     /**
-     * This method searches a text phrase within the user profile objects (type=profile).
+     * This method returns a list of profile ItemCollections matching the search
+     * phrase. The search statement includes the items 'txtName', 'txtEmail' and
+     * 'txtUserName'. The result list is sorted by txtUserName
+     * 
+     * @param phrase - search phrase
+     * @return - list of matching profiles
+     */
+    public List<ItemCollection> searchProfile(String phrase) {
+        List<ItemCollection> searchResult = new ArrayList<ItemCollection>();
+
+        if (phrase == null || phrase.isEmpty())
+            return searchResult;
+
+        // start lucene search
+        Collection<ItemCollection> col = null;
+
+        try {
+            phrase = phrase.trim().toLowerCase();
+            phrase = schemaService.escapeSearchTerm(phrase);
+            // issue #170
+            phrase = schemaService.normalizeSearchTerm(phrase);
+
+            String sQuery = "(type:profile) AND ($processid:[210 TO 249]) AND  ((txtname:" + phrase
+                    + "*) OR (txtusername:" + phrase + "*) OR (txtemail:" + phrase + "*))";
+
+            logger.finest("searchprofile: " + sQuery);
+
+            logger.fine("searchWorkitems: " + sQuery);
+            col = workflowService.getDocumentService().find(sQuery, MAX_SEARCH_RESULT, 0);
+        } catch (Exception e) {
+            logger.warning("Lucene error error: " + e.getMessage());
+        }
+
+        if (col != null) {
+            for (ItemCollection profile : col) {
+                searchResult.add(profileService.cloneWorkitem(profile));
+            }
+            // sort by username..
+            Collections.sort(searchResult, new ItemCollectionComparator("txtusername", true));
+        }
+        return searchResult;
+
+    }
+
+    public List<ItemCollection> getSearchResult() {
+        return searchResult;
+    }
+
+    /**
+     * This method tests if a given string is a defined Access Role.
+     * 
+     * @param aName
+     * @return true if the name is a access role
+     * @see DocumentService.getAccessRoles()
+     */
+    public boolean isRole(String aName) {
+        String accessRoles = workflowService.getDocumentService().getAccessRoles();
+        String roleList = "org.imixs.ACCESSLEVEL.READERACCESS,org.imixs.ACCESSLEVEL.AUTHORACCESS,org.imixs.ACCESSLEVEL.EDITORACCESS,org.imixs.ACCESSLEVEL.MANAGERACCESS,"
+                + accessRoles;
+        List<String> roles = Arrays.asList(roleList.split("\\s*,\\s*"));
+        if (roles.stream().anyMatch(aName::equalsIgnoreCase)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * This method returns a sorted list of profiles for a given userId list
+     * 
+     * @param aNameList - string list with user ids
+     * @return - list of profiles
+     */
+    public List<ItemCollection> getSortedProfilelist(List<Object> aNameList) {
+        List<ItemCollection> profiles = new ArrayList<ItemCollection>();
+
+        if (aNameList == null)
+            return profiles;
+
+        // add all profile objects....
+        for (Object aentry : aNameList) {
+            if (aentry != null && !aentry.toString().isEmpty()) {
+                ItemCollection profile = userController.getProfile(aentry.toString());
+                if (profile != null) {
+                    profiles.add(profile);
+                } else {
+                    // create a dummy entry
+                    profile = new ItemCollection();
+                    profile.replaceItemValue("txtName", aentry.toString());
+                    profile.replaceItemValue("txtUserName", aentry.toString());
+                    profiles.add(profile);
+                }
+            }
+        }
+
+        // sort by username..
+        Collections.sort(profiles, new ItemCollectionComparator("txtUserName", true));
+
+        return profiles;
+    }
+
+    /**
+     * This method removes duplicates and null values from a vector.
+     * 
+     * @param valueList - list of elements
+     */
+    public List<?> uniqueList(List<Object> valueList) {
+        int iVectorSize = valueList.size();
+        Vector<Object> cleanedVector = new Vector<Object>();
+
+        for (int i = 0; i < iVectorSize; i++) {
+            Object o = valueList.get(i);
+            if (o == null || cleanedVector.indexOf(o) > -1 || "".equals(o.toString()))
+                continue;
+
+            // add unique object
+            cleanedVector.add(o);
+        }
+        valueList = cleanedVector;
+        // do not work with empty vectors....
+        if (valueList.size() == 0)
+            valueList.add("");
+
+        return valueList;
+    }
+
+    /**
+     * This method searches a text phrase within the user profile objects
+     * (type=profile).
      * <p>
      * JSF Integration:
      * 
      * {@code 
      * 
      * <h:commandScript name="imixsOfficeWorkflow.mlSearch" action=
-     * "#{cargosoftController.search()}" rendered="#{cargosoftController!=null}" render=
-     * "cargosoft-results" /> }
+     * "#{cargosoftController.search()}" rendered="#{cargosoftController!=null}"
+     * render= "cargosoft-results" /> }
      * 
      * <p>
      * JavaScript Example:
@@ -259,25 +243,22 @@ public class UserInputController implements Serializable {
         // get the param from faces context....
         FacesContext fc = FacesContext.getCurrentInstance();
         String phrase = fc.getExternalContext().getRequestParameterMap().get("phrase");
-        if (phrase==null) {
+        if (phrase == null) {
             return;
         }
-       
-        logger.info("user search prase '" + phrase + "'");
 
-     
-       searchResult = searchProfile(phrase);
-         
-        if (searchResult!=null ) {
-            logger.info("found " + searchResult.size() + " user profiles...");
+        logger.finest("......user search prase '" + phrase + "'");
+        searchResult = searchProfile(phrase);
+
+        if (searchResult != null) {
+            logger.finest("found " + searchResult.size() + " user profiles...");
         }
-        
-      
 
     }
-	
+
     /**
      * Returns the username to a given userid
+     * 
      * @param userid
      * @return
      */
@@ -287,10 +268,8 @@ public class UserInputController implements Serializable {
             return profile.getItemValueString("txtusername");
         } else {
             // not found
-           return userid;
+            return userid;
         }
     }
-	
-	
-	
+
 }
