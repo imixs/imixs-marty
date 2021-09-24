@@ -1,35 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"   
-      xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-	  xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
-      xmlns:composite="http://java.sun.com/jsf/composite"
-      >
-    
-    <composite:interface>
-    	<composite:attribute name="value" />
-		<composite:attribute name="editmode" default="true" type="java.lang.Boolean"></composite:attribute>
-		<composite:attribute name="render"></composite:attribute>
-    </composite:interface>
-	
-    <composite:implementation>
-    
-	<ui:remove>
-	<!-- Matry Single User Input with autocomplete function 
-	
-	     The component uses the marty-user-search component to display the search result.
-	     The second input filed is just used for java script and holds no value.
-	 -->
-	 </ui:remove>
-	 
-	<h:inputText style="display:none;" pt:data-item="marty.user.input" value="#{cc.attrs.value}" />
-	<h:inputText styleClass="marty-userinput"
-		pt:data-username="#{userInputController.getUserName(cc.attrs.value)}" />
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
+	xmlns:composite="http://java.sun.com/jsf/composite">
 
-	</composite:implementation>
+<composite:interface>
+	<composite:attribute name="value" />
+	<composite:attribute name="editmode" default="true"
+		type="java.lang.Boolean"></composite:attribute>
+	<composite:attribute name="render"></composite:attribute>
+</composite:interface>
+
+<composite:implementation>
+
+	<ui:remove>
+		<!-- Matry Single User Input with autocomplete function 
+		
+		     The component uses the marty-user-search component to display the search result.
+		     The second input filed is just used for java script and holds no value.
+		 -->
+	</ui:remove>
+
+	<ui:fragment rendered="#{cc.attrs.editmode}">
+		<h:inputText style="display:none;" pt:data-item="marty.user.input"
+			value="#{cc.attrs.value}" />
+		<h:inputText styleClass="marty-userinput"
+			pt:data-username="#{userInputController.getUserName(cc.attrs.value)}" />
+	</ui:fragment>
+	<ui:fragment rendered="#{!cc.attrs.editmode}">
+		<h:outputText value="#{userInputController.getUserName(cc.attrs.value)}"></h:outputText>	
+	</ui:fragment>
+
+</composite:implementation>
 
 </html>
 
