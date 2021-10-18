@@ -40,9 +40,8 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.imixs.marty.ejb.TeamService;
 import org.imixs.marty.ejb.ProfileService;
-import org.imixs.marty.util.ResourceBundleHandler;
+import org.imixs.marty.ejb.TeamService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
 import org.imixs.workflow.WorkflowKernel;
@@ -50,6 +49,7 @@ import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.faces.data.WorkflowEvent;
 import org.imixs.workflow.faces.util.LoginController;
+import org.imixs.workflow.faces.util.ResourceBundleHandler;
 
 /**
  * The ProcessController provides informations about the process and space
