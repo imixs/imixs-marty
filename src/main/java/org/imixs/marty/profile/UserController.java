@@ -79,9 +79,11 @@ import org.imixs.workflow.faces.util.LoginController;
  * 
  * With the methods mark() and unmark() workitems can be added into the users
  * profile favorite list.
+ * <p>
+ * The controller allows to store up to 50 favorite workitem IDs in the profile.
  * 
+ *  
  * @author rsoika
- * 
  */
 @Named("userController")
 @SessionScoped
@@ -92,8 +94,7 @@ public class UserController implements Serializable {
 
     public final static String ITEM_USER_ICON = "user.icon";
     public final static String ITEM_SIGNATURE_IMAGE = "signature.image";
-
-    public final static int MAX_PRIMARY_ENTRIES = 5;
+    public final static int MAX_FAVORITE_ENTRIES = 50;
     public final static int UPDATE_PROJECT_ACTIVITY_ID = 10;
     public final static String DEFAULT_LOCALE = "de_DE";
     public final static String COOKIE_LOCALE = "imixs.workflow.locale";
@@ -527,6 +528,12 @@ public class UserController implements Serializable {
             logger.finest("......add WorkitemRef:" + id);
             list.add(id);
             workitem.replaceItemValue(LINK_PROPERTY, list);
+            
+            // allow maximum 100 entries !!!
+            while (list.size()>MAX_FAVORITE_ENTRIES) {
+                list.remove(0);
+            }
+            
             workitem = workflowService.getDocumentService().save(workitem);
         }
     }
