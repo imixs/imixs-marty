@@ -531,7 +531,7 @@ public class TeamController implements Serializable {
      * @param workflowEvent
      */
     public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
-        if (workflowEvent == null) {
+        if (workflowEvent == null || workflowEvent.getWorkitem()==null) {
             return;
         }
 
