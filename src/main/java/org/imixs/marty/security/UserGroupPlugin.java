@@ -27,6 +27,7 @@
 
 package org.imixs.marty.security;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -74,6 +75,7 @@ public class UserGroupPlugin extends AbstractPlugin {
      * @return
      * @throws PluginException
      */
+    @SuppressWarnings("unchecked")
     @Override
     public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
 
@@ -92,7 +94,7 @@ public class UserGroupPlugin extends AbstractPlugin {
         if (!isUserDBEnabled()) {
             return documentContext;
         }
-        
+
         // if processid=210 and activity=20 - delete all groups
         int iProcessID = workitem.getItemValueInteger("$ProcessID");
         int iActivityID = documentActivity.getItemValueInteger("numActivityID");
@@ -109,12 +111,12 @@ public class UserGroupPlugin extends AbstractPlugin {
 
         // check if we have deprecated roles
         // issue #373
-        @SuppressWarnings("unchecked")
-        List<String> groupNames = workitem.getItemValue("txtGroups");
+        List<String> clonedGoupNames = new ArrayList<String>();// clone list
+        clonedGoupNames.addAll(workitem.getItemValue("txtGroups"));
         List<String> deprecatedCoreGrouplist = Arrays.asList(UserGroupService.DEPRECATED_CORE_GROUPS);
-        for (String aGroup : groupNames) {
+        for (String aGroup : clonedGoupNames) {
             if (deprecatedCoreGrouplist.contains(aGroup)
-                    && !groupNames.contains(userGroupService.getCoreGroupName(aGroup))) {
+                    && !clonedGoupNames.contains(userGroupService.getCoreGroupName(aGroup))) {
                 String newGroup = userGroupService.getCoreGroupName(aGroup);
                 logger.warning(
                         "...Your Application provides deprecated userroles! This should not happen - check your application!!");
@@ -123,9 +125,7 @@ public class UserGroupPlugin extends AbstractPlugin {
                 logger.warning("... Group will be automatically migrated to " + newGroup);
                 workitem.appendItemValueUnique("txtGroups", newGroup);
             }
-
         }
-
         userGroupService.updateUser(workitem);
 
         return documentContext;

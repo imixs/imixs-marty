@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
@@ -96,12 +97,14 @@ public class UserGroupService {
      * NOTE: this method did not change a userid. To do this use the method
      * changeUser!
      * <p>
-     * The Method also verifies deprecated role names, fix it and prints out a warning in such a case. 
+     * The Method also verifies deprecated role names, fix it and prints out a
+     * warning in such a case.
      * 
      * @param profile
      */
     @SuppressWarnings("unchecked")
     public void updateUser(ItemCollection profile) {
+        boolean debug = logger.isLoggable(Level.FINE);
 
         String sType = profile.getItemValueString("Type");
         if (!("profile".equals(sType)))
@@ -110,7 +113,6 @@ public class UserGroupService {
         String sID = profile.getItemValueString("txtName");
         String sPassword = profile.getItemValueString("txtPassword");
         Collection<String> groups = profile.getItemValue("txtGroups");
-        
 
         UserId user = null;
         user = manager.find(UserId.class, sID);
@@ -155,14 +157,14 @@ public class UserGroupService {
             }
             groupList.add(noAccessGroup);
         }
-
         // update groups
         user.setUserGroups(groupList);
 
-        // create Log
-        logger.info("updateUser '" + sID + "' by '" + ctx.getCallerPrincipal().getName() + "', GroupList=");
-        groups.forEach(n -> logger.info(n));
-
+        // log debug messages
+        if (debug) {
+            logger.fine("...update '" + sID + "'  Groups: ");
+            groups.forEach(n -> logger.fine("...       '" + n + "'"));
+        }
     }
 
     /**
@@ -333,9 +335,9 @@ public class UserGroupService {
         }
 
         // start migration
-        int count = 0;
         logger.info("*************************************************");
-        logger.info("...System contains deprecated userGroups - migration to new Imixs core user groups starting....");
+        logger.info("...System contains deprecated userGroups!");
+        logger.info("...migration to new Imixs core user groups starting....");
         logger.info("*************************************************");
         // first create missing core user groups
         for (String aGroup : CORE_GROUPS) {
@@ -347,9 +349,9 @@ public class UserGroupService {
         }
         // migrate existing user profiles and userGroup objects...
         migrateExistingProfileData();
-        
+
         logger.info("*************************************************");
-        logger.info("...migration to new Imixs core user groups finished - " + count + " updates....");
+        logger.info("...migration to new Imixs core user groups finished successful.");
         logger.info("*************************************************");
 
     }
@@ -429,6 +431,7 @@ public class UserGroupService {
      */
     @SuppressWarnings("unchecked")
     private void migrateExistingProfileData() {
+        int count = 0;
         List<String> deprecatedCoreGrouplist = Arrays.asList(DEPRECATED_CORE_GROUPS);
         logger.info("migrate deprecated profile data...");
         List<ItemCollection> profiles = documentService.getDocumentsByType("profile");
@@ -455,33 +458,32 @@ public class UserGroupService {
                     }
 
                 }
-                // update groups ?
-                if (newGroupNames.size() != groupNames.size()) {
-                    logger.info("...Updating UserGroup objects....");
-                    Set<UserGroup> groupList = new HashSet<UserGroup>();
-                    for (String aGroup : newGroupNames) {
-                        // we do not except empty groupnames here!
-                        if (aGroup != null && !aGroup.isEmpty()) {
-                            UserGroup group = manager.find(UserGroup.class, aGroup);
-                            // if group dos not exist - create it...
-                            if (group == null) {
-                                group = new UserGroup(aGroup);
-                                manager.persist(group);
-                            }
-                            groupList.add(group);
+                // update group object in any case!
+                logger.info("...Updating UserGroup objects....");
+                Set<UserGroup> groupList = new HashSet<UserGroup>();
+                for (String aGroup : newGroupNames) {
+                    // we do not except empty groupnames here!
+                    if (aGroup != null && !aGroup.isEmpty()) {
+                        UserGroup group = manager.find(UserGroup.class, aGroup);
+                        // if group dos not exist - create it...
+                        if (group == null) {
+                            group = new UserGroup(aGroup);
+                            manager.persist(group);
                         }
+                        groupList.add(group);
                     }
-                    // update groups
-                    user.setUserGroups(groupList);
-                    
-                    profile.setItemValue("txtGroups",newGroupNames);
-                    documentService.save(profile);
                 }
-               
+                user.setUserGroups(groupList);
+
+                // update also profile?
+                if (newGroupNames.size() != groupNames.size()) {
+                    profile.setItemValue("txtGroups", newGroupNames);
+                    documentService.save(profile);
+                    count++;
+                }
             }
-
         }
-
+        logger.info("... " + count + " user profiles updated....");
     }
 
     /**
@@ -499,7 +501,7 @@ public class UserGroupService {
     public String getDeprecatedGroupName(String newGroupName) {
         List<String> grouplist = Arrays.asList(CORE_GROUPS);
         int pos = grouplist.indexOf(newGroupName);
-        if (pos > 0) {
+        if (pos >= 0) {
             return DEPRECATED_CORE_GROUPS[pos];
         }
         return null;
@@ -507,13 +509,14 @@ public class UserGroupService {
 
     /**
      * Returns the core group name for a given deprecated group name
+     * 
      * @param deprecatedGroupName
      * @return
      */
     public String getCoreGroupName(String deprecatedGroupName) {
         List<String> grouplist = Arrays.asList(DEPRECATED_CORE_GROUPS);
         int pos = grouplist.indexOf(deprecatedGroupName);
-        if (pos > 0) {
+        if (pos >= 0) {
             return CORE_GROUPS[pos];
         }
         return null;
