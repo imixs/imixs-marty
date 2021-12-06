@@ -27,7 +27,9 @@
 
 package org.imixs.marty.security;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
@@ -87,9 +89,10 @@ public class UserGroupPlugin extends AbstractPlugin {
             return documentContext;
 
         // skip if userDB support is not enabled
-        if (!isUserDBEnabled())
+        if (!isUserDBEnabled()) {
             return documentContext;
-
+        }
+        
         // if processid=210 and activity=20 - delete all groups
         int iProcessID = workitem.getItemValueInteger("$ProcessID");
         int iActivityID = documentActivity.getItemValueInteger("numActivityID");
@@ -102,7 +105,27 @@ public class UserGroupPlugin extends AbstractPlugin {
             }
         }
 
-        logger.fine("[UserGroupPlugin] update profile '" + workitem.getItemValueString("txtname") + "'....");
+        logger.fine("......update profile '" + workitem.getItemValueString("txtname") + "'....");
+
+        // check if we have deprecated roles
+        // issue #373
+        @SuppressWarnings("unchecked")
+        List<String> groupNames = workitem.getItemValue("txtGroups");
+        List<String> deprecatedCoreGrouplist = Arrays.asList(UserGroupService.DEPRECATED_CORE_GROUPS);
+        for (String aGroup : groupNames) {
+            if (deprecatedCoreGrouplist.contains(aGroup)
+                    && !groupNames.contains(userGroupService.getCoreGroupName(aGroup))) {
+                String newGroup = userGroupService.getCoreGroupName(aGroup);
+                logger.warning(
+                        "...Your Application provides deprecated userroles! This should not happen - check your application!!");
+                logger.warning(
+                        "..." + workitem.getItemValueString("txtname") + " contains depreacted userrole " + aGroup);
+                logger.warning("... Group will be automatically migrated to " + newGroup);
+                workitem.appendItemValueUnique("txtGroups", newGroup);
+            }
+
+        }
+
         userGroupService.updateUser(workitem);
 
         return documentContext;

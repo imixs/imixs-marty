@@ -59,97 +59,90 @@ import org.imixs.workflow.exceptions.ModelException;
 @Singleton
 public class SetupUserDBService {
 
-	public static String USERDB_OK = "USERDB_OK";
-	public static String USERDB_DISABLED = "USERDB_DISABLED";
+    public static String USERDB_OK = "USERDB_OK";
+    public static String USERDB_DISABLED = "USERDB_DISABLED";
 
-	
-	@EJB
-	private UserGroupService userGroupService;
-	
-	@EJB
-	private ModelService modelService;
+    @EJB
+    private UserGroupService userGroupService;
 
+    @EJB
+    private ModelService modelService;
 
-	@Inject
-	@ConfigProperty(name = "setup.mode", defaultValue = "auto")
-	String setupMode;
+    @Inject
+    @ConfigProperty(name = "setup.mode", defaultValue = "auto")
+    String setupMode;
 
-	@Inject
-	@ConfigProperty(name = "setup.system.model", defaultValue = "")
-	Optional<String> systemModelVersion;
+    @Inject
+    @ConfigProperty(name = "setup.system.model", defaultValue = "")
+    Optional<String> systemModelVersion;
 
-	
-	private static Logger logger = Logger.getLogger(SetupUserDBService.class.getName());
+    private static Logger logger = Logger.getLogger(SetupUserDBService.class.getName());
 
-	/**
-	 * This method start the system setup during deployment
-	 * 
-	 * @throws AccessDeniedException
-	 */	
-	public void onSetupEvent(@Observes SetupEvent setupEvent) throws AccessDeniedException {
-		init();
-	}
-	
-	
+    /**
+     * This method start the system setup during deployment
+     * 
+     * @throws AccessDeniedException
+     */
+    public void onSetupEvent(@Observes SetupEvent setupEvent) throws AccessDeniedException {
+        init();
+    }
 
-	/**
-	 * This method performs the system setup. After the setup is completed the CDI
-	 * event 'SetupEvent' will be fired. An observer of this CDI event can extend
-	 * the setup process.
-	 * 
-	 * @return
-	 */
-	@GET
-	public String init() {
-		String result = "";
-		logger.info("...starting UserDB Setup...");
+    /**
+     * This method performs the system setup. After the setup is completed the CDI
+     * event 'SetupEvent' will be fired. An observer of this CDI event can extend
+     * the setup process.
+     * 
+     * @return
+     */
+    @GET
+    public String init() {
+        String result = "";
+        logger.info("...starting UserDB Setup...");
 
-		// read setup mode...
-		logger.info("...setup.mode = " + setupMode);
-		logger.info("...setup.system.model = " + systemModelVersion);
+        // read setup mode...
+        logger.info("...setup.mode = " + setupMode);
+        logger.info("...setup.system.model = " + systemModelVersion);
 
-		// init userIDs for user db?
-		if ("auto".equalsIgnoreCase(setupMode)) {
-			try {
-				if (userGroupService != null) {
-					userGroupService.initUserIDs();
-					logger.info("...UserDB OK");
-					result = USERDB_OK;
-				} else {
-					logger.warning("userGroupService not initialized!");
-				}
-			} catch (Exception e) {
-				logger.warning("Error during initializing UserDB: " + e.getMessage());
-			}
+        // init userIDs for user db?
+        if ("auto".equalsIgnoreCase(setupMode)) {
+            try {
+                if (userGroupService != null) {
+                    userGroupService.initUserIDs();
+                    logger.info("...UserDB OK");
+                    result = USERDB_OK;
+                } else {
+                    logger.warning("userGroupService not initialized!");
+                }
+            } catch (Exception e) {
+                logger.warning("Error during initializing UserDB: " + e.getMessage());
+            }
 
-		} else {
-			result = USERDB_DISABLED;
-			logger.finest("......UserDB is disabled.");
-		}
+        } else {
+            result = USERDB_DISABLED;
+            logger.finest("......UserDB is disabled.");
+        }
 
-		
-		
-		// test systemModelVersion
-		if (!systemModelVersion.isPresent() || systemModelVersion.get().isEmpty()) {
-			logger.warning("Missing imixs.property named 'setup.system.model' - system model can not be validated!");
-		} else {
-			// try to load system model
-			try {
-				modelService.getModel(systemModelVersion.get());
-				logger.info("...System Model '" + systemModelVersion + "' OK");
-			} catch (ModelException e) {
-				// no model found!
-				logger.warning("Missing system model - please upload the system model version '" + systemModelVersion +"'");
-			}
-			
-		}
+        // test systemModelVersion
+        if (!systemModelVersion.isPresent() || systemModelVersion.get().isEmpty()) {
+            logger.warning("Missing imixs.property named 'setup.system.model' - system model can not be validated!");
+        } else {
+            // try to load system model
+            try {
+                modelService.getModel(systemModelVersion.get());
+                logger.info("...System Model '" + systemModelVersion + "' OK");
+            } catch (ModelException e) {
+                // no model found!
+                logger.warning(
+                        "Missing system model - please upload the system model version '" + systemModelVersion + "'");
+            }
 
-		logger.info("...SystemSetup: " + result);
-		return result;
+        }
 
-	}
+        logger.info("...SystemSetup: " + result);
+        return result;
 
+    }
 
-
+   
 
 }
