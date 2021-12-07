@@ -1,6 +1,6 @@
 # Image Interceptor
 
-The org.imixs.marty.ej.ImageIntercepter class provides a mechanism to resize new uploaded 
+The org.imixs.marty.util.ImageIntercepter class provides a mechanism to resize new uploaded 
  images. The behavior can be configured through the imixs.property file.
 
 
