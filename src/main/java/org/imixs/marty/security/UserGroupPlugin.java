@@ -29,18 +29,17 @@ package org.imixs.marty.security;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
+import javax.inject.Inject;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
-import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * This Plugin updates the userId and password for a user profile. The Update
@@ -65,6 +64,11 @@ public class UserGroupPlugin extends AbstractPlugin {
     @EJB
     UserGroupService userGroupService = null;;
 
+    @Inject
+    @ConfigProperty(name = "setup.mode", defaultValue = "auto")
+    String setupMode;
+
+    
     int sequenceNumber = -1;
     ItemCollection workitem = null;
     private static Logger logger = Logger.getLogger(UserGroupPlugin.class.getName());
@@ -75,7 +79,6 @@ public class UserGroupPlugin extends AbstractPlugin {
      * @return
      * @throws PluginException
      */
-    @SuppressWarnings("unchecked")
     @Override
     public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
 
@@ -90,8 +93,8 @@ public class UserGroupPlugin extends AbstractPlugin {
         if (!("profile".equals(sType)))
             return documentContext;
 
-        // skip if userDB support is not enabled
-        if (!isUserDBEnabled()) {
+        // skip if userDB is not enabled
+        if (!"auto".equalsIgnoreCase(setupMode)) {
             return documentContext;
         }
 
@@ -109,15 +112,30 @@ public class UserGroupPlugin extends AbstractPlugin {
 
         logger.fine("......update profile '" + workitem.getItemValueString("txtname") + "'....");
 
-        // check if we have deprecated roles
-        // issue #373
+        // check if we have deprecated roles (issue #373)
+        migrateDeprecatedUserRoles();
+        
+        userGroupService.updateUser(workitem);
+
+        return documentContext;
+    }
+
+    /**
+     * This method verifies if the workitem contains deprecated user roles
+     * (txtgroups) and automatially fixes this situation. Also the method prints out
+     * a warning message that the application should no longer use those role names.
+     * 
+     * @see issue #373
+     */
+    @SuppressWarnings("unchecked")
+    private void migrateDeprecatedUserRoles() {
         List<String> clonedGoupNames = new ArrayList<String>();// clone list
         clonedGoupNames.addAll(workitem.getItemValue("txtGroups"));
         List<String> deprecatedCoreGrouplist = Arrays.asList(UserGroupService.DEPRECATED_CORE_GROUPS);
         for (String aGroup : clonedGoupNames) {
             if (deprecatedCoreGrouplist.contains(aGroup)
-                    && !clonedGoupNames.contains(userGroupService.getCoreGroupName(aGroup))) {
-                String newGroup = userGroupService.getCoreGroupName(aGroup);
+                    && !clonedGoupNames.contains(UserGroupService.getCoreGroupName(aGroup))) {
+                String newGroup = UserGroupService.getCoreGroupName(aGroup);
                 logger.warning(
                         "...Your Application provides deprecated userroles! This should not happen - check your application!!");
                 logger.warning(
@@ -126,31 +144,6 @@ public class UserGroupPlugin extends AbstractPlugin {
                 workitem.appendItemValueUnique("txtGroups", newGroup);
             }
         }
-        userGroupService.updateUser(workitem);
-
-        return documentContext;
     }
-
-    /**
-     * Returns true if the flag keyEnableUserDB is set to true.
-     * 
-     * @return
-     */
-    private boolean isUserDBEnabled() {
-        String searchterm = "(type:\"configuration\" AND txtname:\"BASIC\")";
-        Collection<ItemCollection> col;
-        try {
-            col = documentService.find(searchterm, 1, 0);
-        } catch (QueryException e) {
-            throw new InvalidAccessException(InvalidAccessException.INVALID_ID, e.getMessage(), e);
-        }
-
-        if (col.size() > 0) {
-            ItemCollection config = col.iterator().next();
-            return config.getItemValueBoolean("keyEnableUserDB");
-        }
-
-        return false;
-    }
-
+  
 }

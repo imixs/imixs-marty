@@ -81,10 +81,6 @@ public class UserGroupService {
     DocumentService documentService;
 
     @Inject
-    @ConfigProperty(name = "setup.mode", defaultValue = "auto")
-    String setupMode;
-
-    @Inject
     @ConfigProperty(name = "security.userid.input.mode", defaultValue = "LOWERCASE")
     String userInputMode;
 
@@ -236,13 +232,6 @@ public class UserGroupService {
      */
     @SuppressWarnings("unchecked")
     public void initUserIDs() {
-
-        if (!"auto".equalsIgnoreCase(setupMode)) {
-            // init userdb is disabled
-            logger.finest("...... initUserIDs is disabled");
-            return;
-        }
-
         logger.finest("......init UserIDs...");
 
         // verfiy existing profiles
@@ -450,8 +439,8 @@ public class UserGroupService {
                 newGroupNames.addAll(groupNames);
                 for (String aGroup : groupNames) {
                     if (deprecatedCoreGrouplist.contains(aGroup)
-                            && !groupNames.contains(this.getCoreGroupName(aGroup))) {
-                        String newGroup = this.getCoreGroupName(aGroup);
+                            && !groupNames.contains(UserGroupService.getCoreGroupName(aGroup))) {
+                        String newGroup = UserGroupService.getCoreGroupName(aGroup);
                         logger.info("..." + id + " contains depreacted userrole " + aGroup);
                         logger.info("... Group will be automatically migrated to " + newGroup);
                         newGroupNames.add(newGroup);
@@ -498,7 +487,7 @@ public class UserGroupService {
      * @param newGroupName
      * @return
      */
-    public String getDeprecatedGroupName(String newGroupName) {
+    public static String getDeprecatedGroupName(String newGroupName) {
         List<String> grouplist = Arrays.asList(CORE_GROUPS);
         int pos = grouplist.indexOf(newGroupName);
         if (pos >= 0) {
@@ -513,7 +502,7 @@ public class UserGroupService {
      * @param deprecatedGroupName
      * @return
      */
-    public String getCoreGroupName(String deprecatedGroupName) {
+    public static String getCoreGroupName(String deprecatedGroupName) {
         List<String> grouplist = Arrays.asList(DEPRECATED_CORE_GROUPS);
         int pos = grouplist.indexOf(deprecatedGroupName);
         if (pos >= 0) {
