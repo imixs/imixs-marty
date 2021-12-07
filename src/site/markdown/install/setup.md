@@ -1,11 +1,11 @@
 # Initial Setup User DB
 
 Imixs-Marty provides a SetupUserDBService to initialize the user db. The Service can be controlled by the 
-imixs.property 'setup.mode':
+imixs.property `security.setup.mode`:
 
 
 | mode  		| Description                               						|
-|---------------------------------------------------------------------------|
+|-----------------------------------------------------------------------------------|
 |auto (default)	| initializes the userDb default user and uploads the default models|
 |none			| no action 														|
 

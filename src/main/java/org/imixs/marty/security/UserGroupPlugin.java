@@ -65,7 +65,7 @@ public class UserGroupPlugin extends AbstractPlugin {
     UserGroupService userGroupService = null;;
 
     @Inject
-    @ConfigProperty(name = "setup.mode", defaultValue = "auto")
+    @ConfigProperty(name = "security.setup.mode", defaultValue = "auto")
     String setupMode;
 
     

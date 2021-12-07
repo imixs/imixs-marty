@@ -22,7 +22,6 @@
  *******************************************************************************/
 package org.imixs.marty.security;
 
-import java.util.Optional;
 import java.util.logging.Logger;
 
 import javax.annotation.security.DeclareRoles;
@@ -40,7 +39,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.imixs.workflow.engine.ModelService;
 import org.imixs.workflow.engine.SetupEvent;
 import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.exceptions.ModelException;
 
 /**
  * The SetupService EJB initializes the system settings by its method 'init()'.
@@ -69,12 +67,8 @@ public class SetupUserDBService {
     private ModelService modelService;
 
     @Inject
-    @ConfigProperty(name = "setup.mode", defaultValue = "auto")
+    @ConfigProperty(name = "security.setup.mode", defaultValue = "auto")
     String setupMode;
-
-    @Inject
-    @ConfigProperty(name = "setup.system.model", defaultValue = "")
-    Optional<String> systemModelVersion;
 
     private static Logger logger = Logger.getLogger(SetupUserDBService.class.getName());
 
@@ -101,7 +95,6 @@ public class SetupUserDBService {
 
         // read setup mode...
         logger.info("...setup.mode = " + setupMode);
-        logger.info("...setup.system.model = " + systemModelVersion);
 
         // init userIDs for user db?
         if ("auto".equalsIgnoreCase(setupMode)) {
@@ -122,27 +115,9 @@ public class SetupUserDBService {
             logger.finest("......UserDB is disabled.");
         }
 
-        // test systemModelVersion
-        if (!systemModelVersion.isPresent() || systemModelVersion.get().isEmpty()) {
-            logger.warning("Missing imixs.property named 'setup.system.model' - system model can not be validated!");
-        } else {
-            // try to load system model
-            try {
-                modelService.getModel(systemModelVersion.get());
-                logger.info("...System Model '" + systemModelVersion + "' OK");
-            } catch (ModelException e) {
-                // no model found!
-                logger.warning(
-                        "Missing system model - please upload the system model version '" + systemModelVersion + "'");
-            }
-
-        }
-
         logger.info("...SystemSetup: " + result);
         return result;
 
     }
-
-   
 
 }
