@@ -439,8 +439,8 @@ public class UserGroupService {
                 newGroupNames.addAll(groupNames);
                 for (String aGroup : groupNames) {
                     if (deprecatedCoreGrouplist.contains(aGroup)
-                            && !groupNames.contains(UserGroupService.getCoreGroupName(aGroup))) {
-                        String newGroup = UserGroupService.getCoreGroupName(aGroup);
+                            && !groupNames.contains(getCoreGroupName(aGroup))) {
+                        String newGroup = getCoreGroupName(aGroup);
                         logger.info("..." + id + " contains depreacted userrole " + aGroup);
                         logger.info("... Group will be automatically migrated to " + newGroup);
                         newGroupNames.add(newGroup);
@@ -487,7 +487,7 @@ public class UserGroupService {
      * @param newGroupName
      * @return
      */
-    public static String getDeprecatedGroupName(String newGroupName) {
+    public String getDeprecatedGroupName(String newGroupName) {
         List<String> grouplist = Arrays.asList(CORE_GROUPS);
         int pos = grouplist.indexOf(newGroupName);
         if (pos >= 0) {
@@ -502,7 +502,7 @@ public class UserGroupService {
      * @param deprecatedGroupName
      * @return
      */
-    public static String getCoreGroupName(String deprecatedGroupName) {
+    public String getCoreGroupName(String deprecatedGroupName) {
         List<String> grouplist = Arrays.asList(DEPRECATED_CORE_GROUPS);
         int pos = grouplist.indexOf(deprecatedGroupName);
         if (pos >= 0) {

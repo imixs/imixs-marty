@@ -134,8 +134,8 @@ public class UserGroupPlugin extends AbstractPlugin {
         List<String> deprecatedCoreGrouplist = Arrays.asList(UserGroupService.DEPRECATED_CORE_GROUPS);
         for (String aGroup : clonedGoupNames) {
             if (deprecatedCoreGrouplist.contains(aGroup)
-                    && !clonedGoupNames.contains(UserGroupService.getCoreGroupName(aGroup))) {
-                String newGroup = UserGroupService.getCoreGroupName(aGroup);
+                    && !clonedGoupNames.contains(userGroupService.getCoreGroupName(aGroup))) {
+                String newGroup = userGroupService.getCoreGroupName(aGroup);
                 logger.warning(
                         "...Your Application provides deprecated userroles! This should not happen - check your application!!");
                 logger.warning(
