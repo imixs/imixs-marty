@@ -130,6 +130,9 @@ public class UserGroupService {
             profile.removeItem("txtPassword");
             logger.info("password change for userid '" + sID + "' by '" + ctx.getCallerPrincipal().getName() + "'");
             profile.replaceItemValue("txtpasswordhash", sEncryptedPasswort);
+        } else {
+            // if user object does no have a password set then we genreate a random password (issue 373)
+            user.setPassword(WorkflowKernel.generateUniqueID());
         }
 
         // find group relation ships
