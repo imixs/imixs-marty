@@ -132,7 +132,7 @@ public class UserGroupService {
             profile.replaceItemValue("txtpasswordhash", sEncryptedPasswort);
         } else {
             // if user object does no have a password set then we genreate a random password (issue 373)
-            user.setPassword(WorkflowKernel.generateUniqueID());
+            user.setPassword(Crypter.crypt(WorkflowKernel.generateUniqueID()));
         }
 
         // find group relation ships
@@ -470,6 +470,13 @@ public class UserGroupService {
                     }
                 }
                 user.setUserGroups(groupList);
+                
+                // if the user object contains an empty password we set a new encrypted random password!
+                if (user.getPassword()==null || user.getPassword().isEmpty()) {
+                    // #issue 373
+                    logger.info("..." + id + " contains empty password - set random password...");
+                    user.setPassword(Crypter.crypt(WorkflowKernel.generateUniqueID()));
+                }
 
                 // update also profile?
                 if (newGroupNames.size() != groupNames.size()) {
