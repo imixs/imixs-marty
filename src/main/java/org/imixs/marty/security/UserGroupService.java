@@ -45,6 +45,7 @@ import javax.persistence.Query;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.WorkflowKernel;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.exceptions.AccessDeniedException;
 
@@ -95,6 +96,9 @@ public class UserGroupService {
      * <p>
      * The Method also verifies deprecated role names, fix it and prints out a
      * warning in such a case.
+     * <p>
+     * If a new userId entity is generated but no password is provided, the method
+     * generates an encrypted random password
      * 
      * @param profile
      */
@@ -113,7 +117,8 @@ public class UserGroupService {
         UserId user = null;
         user = manager.find(UserId.class, sID);
         if (user == null) {
-            user = new UserId(sID);
+            user = new UserId(sID, Crypter.crypt(WorkflowKernel.generateUniqueID())); // generate default random
+                                                                                      // password
             manager.persist(user);
         }
 
@@ -438,8 +443,7 @@ public class UserGroupService {
                 List<String> newGroupNames = new ArrayList<String>();
                 newGroupNames.addAll(groupNames);
                 for (String aGroup : groupNames) {
-                    if (deprecatedCoreGrouplist.contains(aGroup)
-                            && !groupNames.contains(getCoreGroupName(aGroup))) {
+                    if (deprecatedCoreGrouplist.contains(aGroup) && !groupNames.contains(getCoreGroupName(aGroup))) {
                         String newGroup = getCoreGroupName(aGroup);
                         logger.info("..." + id + " contains depreacted userrole " + aGroup);
                         logger.info("... Group will be automatically migrated to " + newGroup);

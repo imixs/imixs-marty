@@ -34,7 +34,14 @@ public class UserId implements java.io.Serializable {
 	 * A User will be automatically initialized with an id and password
 	 */
 	public UserId(String aid) {
+		super();
 		this.id = aid;
+	}
+
+	public UserId(String id, String password) {
+		super();
+		this.id = id;
+		this.password = password;
 	}
 
 	/**
@@ -55,6 +62,10 @@ public class UserId implements java.io.Serializable {
 		return password;
 	}
 
+	/**
+	 * Set the password.
+	 * @param password
+	 */
 	public void setPassword(String password) {
 		this.password = password;
 	}
