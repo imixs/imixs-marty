@@ -362,7 +362,7 @@ public class UserGroupService {
      */
     @SuppressWarnings("unchecked")
     private void verifyExistingProfileData() {
-        logger.info("Verify existing profile data...");
+        logger.info("...verify existing profile data...");
         List<ItemCollection> profiles = documentService.getDocumentsByType("profile");
         for (ItemCollection profile : profiles) {
 
