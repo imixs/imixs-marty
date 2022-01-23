@@ -117,8 +117,7 @@ public class UserGroupService {
         UserId user = null;
         user = manager.find(UserId.class, sID);
         if (user == null) {
-            user = new UserId(sID, Crypter.crypt(WorkflowKernel.generateUniqueID())); // generate default random
-                                                                                      // password
+            user = new UserId(sID);
             manager.persist(user);
         }
 
@@ -130,8 +129,11 @@ public class UserGroupService {
             profile.removeItem("txtPassword");
             logger.info("password change for userid '" + sID + "' by '" + ctx.getCallerPrincipal().getName() + "'");
             profile.replaceItemValue("txtpasswordhash", sEncryptedPasswort);
-        } else {
-            // if user object does no have a password set then we genreate a random password (issue 373)
+        }
+
+        // if user object does no have a password set then we genreate a random password
+        // (issue 373)
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
             user.setPassword(Crypter.crypt(WorkflowKernel.generateUniqueID()));
         }
 
@@ -470,9 +472,10 @@ public class UserGroupService {
                     }
                 }
                 user.setUserGroups(groupList);
-                
-                // if the user object contains an empty password we set a new encrypted random password!
-                if (user.getPassword()==null || user.getPassword().isEmpty()) {
+
+                // if the user object contains an empty password we set a new encrypted random
+                // password!
+                if (user.getPassword() == null || user.getPassword().isEmpty()) {
                     // #issue 373
                     logger.info("..." + id + " contains empty password - set random password...");
                     user.setPassword(Crypter.crypt(WorkflowKernel.generateUniqueID()));

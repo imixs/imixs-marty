@@ -24,10 +24,9 @@ public class UserGroup implements java.io.Serializable {
 	}
 
 	/**
-	 * A User will be automatically initialized with an id and password
+	 * A User will be initialized with an id
 	 */
 	public UserGroup(String aid) {
-		// Initialize time objects
 		this.id = aid;
 	}
 
@@ -45,7 +44,5 @@ public class UserGroup implements java.io.Serializable {
 		id = aID;
 	}
 
-	
-	
 	
 }
