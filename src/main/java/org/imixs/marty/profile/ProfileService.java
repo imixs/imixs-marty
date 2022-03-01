@@ -430,8 +430,8 @@ public class ProfileService {
         // profile.replaceItemValue("$workflowgroup", "Profil");
         profile.replaceItemValue("txtName", userid);
         profile.replaceItemValue("txtLocale", locale);
-        // set default group
-        profile.replaceItemValue("txtgroups", "IMIXS-WORKFLOW-Author");
+        // set default group (fixed deprecated role name 'IMIXS-WORKFLOW-Author'  issue #378
+        profile.replaceItemValue("txtgroups", "org.imixs.ACCESSLEVEL.AUTHORACCESS");
         // process new profile...
         profile.setEventID(CREATE_PROFILE_ACTIVITY_ID);
 
