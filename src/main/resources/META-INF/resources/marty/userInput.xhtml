@@ -27,8 +27,8 @@
 
 	<ui:fragment rendered="#{cc.attrs.editmode}">
 		<h:inputText style="display:none;" pt:data-item="marty.user.input"
-			value="#{cc.attrs.value}" />
-		<h:inputText styleClass="marty-userinput"
+			value="#{cc.attrs.value}"/>
+		<h:inputText styleClass="marty-userinput" title="#{userController.getEmail(cc.attrs.value)}"
 			pt:data-username="#{userInputController.getUserName(cc.attrs.value)}" />
 	</ui:fragment>
 	<ui:fragment rendered="#{!cc.attrs.editmode}">

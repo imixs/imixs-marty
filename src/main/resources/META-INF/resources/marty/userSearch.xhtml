@@ -36,7 +36,8 @@
 				<div class="marty-userinput-resultlist-element"
 					onclick="imixsMarty.selectUserID('#{suggest.item['txtname']}','#{suggest.item['txtusername']}')">
 					<a href="#"> <h:outputText
-							value="#{suggest.item['txtusername']}" escape="false" />
+							value="#{suggest.item['txtusername']}" escape="false" /><h:outputText rendered="#{! empty suggest.item['txtemail']}"
+							value=" (#{suggest.item['txtemail']})" escape="false" />
 					</a>
 				</div>
 			</ui:repeat>

@@ -43,10 +43,10 @@
 				<tr>
 					<td style="width: 100%;"><h:outputText
 							value="#{record.item['txtUserName']}"
-							title="#{record.item['txtEmail']}"
+							title="#{record.item['txtName']} - #{record.item['txtEmail']}"
 							rendered="#{! empty record.item['txtUserName']}" /> <h:outputText
 							value="#{record.item['txtName']}"
-							title="#{record.item['txtEmail']}"
+							title="#{record.item['txtName']}"
 							rendered="#{empty record.item['txtUserName']}" /></td>
 					<!-- Delete member (only in edit mode) -->
 					<ui:fragment rendered="#{cc.attrs.editmode}">
