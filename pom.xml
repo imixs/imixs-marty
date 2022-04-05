@@ -4,7 +4,7 @@
 	<artifactId>imixs-marty</artifactId>
 	<packaging>pom</packaging>
 	<name>Imixs Workflow - Marty</name>
-	<version>4.1.17</version>
+	<version>4.1.18-SNAPSHOT</version>
 
 	<modules>
 		<module>imixs-marty-ejb</module>
@@ -67,7 +67,7 @@
 		<connection>scm:git:git@github.com:imixs/imixs-marty.git</connection>
 		<developerConnection>scm:git:git@github.com:imixs/imixs-marty.git</developerConnection>
 		<url>https://github.com/imixs/imixs-marty/</url>
-		<tag>imixs-marty-4.1.17</tag>
+		<tag>imixs-marty-4.1.13</tag>
 	</scm>
 	
 	<issueManagement>
