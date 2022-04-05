@@ -200,6 +200,8 @@ public class ConfigController implements Serializable {
 		} catch (Exception e) {
 			System.out.println("...Failed to save configuration " + this.getName() + " : " + e.getMessage() + " - reloading config!");
 			configItemCollection = configService.loadConfiguration(getName(), true);
+			// force throwing exception
+			throw e;
 		}
 	}
 
