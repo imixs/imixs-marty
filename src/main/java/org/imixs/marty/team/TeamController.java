@@ -494,7 +494,7 @@ public class TeamController implements Serializable {
      * 
      * @return
      */
-    public boolean isAssitOf(String aUniqueID) {
+    public boolean isAssistOf(String aUniqueID) {
         // find orgunit...
         ItemCollection entity = getEntityById(aUniqueID);
         if (entity != null) {
