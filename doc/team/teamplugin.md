@@ -3,35 +3,35 @@
 The Marty TeamPlugin organizes the hierarchical order of a workitem between
 processes, spaces and workitems and computes the users associated with an orgunit.  
  
-     org.imixs.marty.plugins.TeamPlugin
+     org.imixs.marty.team.TeamPlugin
 
 
-A WorkItem is typically assigned to one or more orgunits. These references are stored in the item _$UniqueIDRef_. 
+A WorkItem is typically assigned to one or more orgunits. These references are stored in the item `$UniqueIDRef`. 
 TeamPlugin automatically computes the references and stores the information into the items 
-_txtProcessRef_ and _txtSpaceRef_ which containing only uniqueIDs of the corresponding orgunit type.
+`process.ref` and `space.ref` which containing only uniqueIDs of the corresponding orgunit type.
 
-The items _txtProcessRef_ and _txtSpaceRef_ can also be modified by the workflow model or a custom business logic.
+The items `process.ref` and `space.ref` can also be modified by the workflow model or a custom business logic.
  
 The Marty TeamPlugin computes additional workflow properties:
 
   
 | Item       		| Type      | Description                               						|
 |-------------------|-----------|-------------------------------------------------------------------|
-|namSpaceTeam   	| names		| current team members of an associated space orgunit. 				|
-|namSpaceManager	| names   	|current managers of an associated space orgunit.					|
-|namSpaceAssist		| names   	|current assists of an associated space orgunit. 					|
-|namSpaceName		| text		|name of  an associated space orgunit. 								| 
-|txtSpaceRef		| text		|$uniqueID  of an associated space orgunit. 						| 
-|namProcessTeam		| names		|current team members of an associated process orgunit. 			| 
-|namProcessManager	| names		|current managers of an associated process orgunit. 				| 
-|namProcessAssist	| names		|current assists of an associated process orgunit. 					| 
-|namProcessName		| text		|name of  an associated process orgunit. 							| 
-|txtProcessRef		| text		|$uniqueID  of an associated process orgunit.						| 
+|space.team   		| names		| current team members of an associated space orgunit. 				|
+|space.manager		| names   	|current managers of an associated space orgunit.					|
+|space.assist		| names   	|current assists of an associated space orgunit. 					|
+|space.name			| text		|name of  an associated space orgunit. 								| 
+|space.rref			| text		|$uniqueID  of an associated space orgunit. 						| 
+|process.team		| names		|current team members of an associated process orgunit. 			| 
+|process.manager	| names		|current managers of an associated process orgunit. 				| 
+|process.assist		| names		|current assists of an associated process orgunit. 					| 
+|process.name		| text		|name of  an associated process orgunit. 							| 
+|process.ref		| text		|$uniqueID  of an associated process orgunit.						| 
  
 The name items can be used in ACL settings or mail settings.
  
-The item '_txtProcessRef_' and '_txtSpaceRef_' are optional and can update the current $uniqueIDs for referenced orgunits. 
-The Plug-in updates the item _$UniqueIDRef_ automatically if these properties are filled.
+The item `process.ref`  and `space.ref` are optional and can update the current $uniqueIDs for referenced orgunits. 
+The Plug-in updates the item `$UniqueIDRef` automatically if these properties are filled.
 
 ### Evaluate a Orgunit
 
