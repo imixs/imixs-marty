@@ -50,7 +50,7 @@ The custom orgunit role names can be used in a BPMN 2.0 model.
 
 In this example the read access for a task is extended to the orgunit role '{process:Finance:assist}'.
 
-In combination with the [TeamRoleWildcardAdapter](../services/teamrolewildcardadapter.html) the orgunit role can be also computed automatically. There for the wildcard '?' can be used. 
+In combination with the [TeamRoleWildcardAdapter](./teamrolewildcardadapter.md) the orgunit role can be also computed automatically. There for the wildcard '?' can be used. 
 
 <img src="../images/acl002.png" style="width: 75%;"/>
 

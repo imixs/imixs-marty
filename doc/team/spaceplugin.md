@@ -6,7 +6,7 @@ The plugin computes and updates the attributes of a space with in a hierarchical
 
     org.imixs.marty.team.SpacePlugin
 
-The hierarchical order of a space is defined by the property "$uniqueidref" which is optional and pointing to a parent space entity. 
+The hierarchical order of a space is defined by the property `$uniqueidref` which is optional and pointing to a parent space entity. 
 The plugin updates the following properties of a space entity:
 
 
@@ -16,7 +16,7 @@ The plugin updates the following properties of a space entity:
 
 ## Unique Name
 
-A process or a space has a unique name attribute 'txtname'. If the name provided by the user is already taken the plugin throws a PluginException. 
+A process or a space has a unique name attribute `name`. If the name provided by the user is already taken the plugin throws a PluginException. 
 
 ## Archived Spaces
 

@@ -51,4 +51,4 @@ Spaces can optional be archived. Archived spaces can be still managed by the org
 <img src="../images/teamplugin-model.png" style="width: 75%;"/>
 
 
-The teamlist of an archived space is still updated into the workitem. But the [Team Interceptor](../concepts/teaminterceptor.html) will ignore archived spaces.  
+The teamlist of an archived space is still updated into the workitem. But the [Team Interceptor](./teaminterceptor.md) will ignore archived spaces.  
