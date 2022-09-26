@@ -111,8 +111,11 @@ public class UserInputController implements Serializable {
             // issue #170
             phrase = schemaService.normalizeSearchTerm(phrase);
 
-            String sQuery = "(type:profile) AND ($processid:[210 TO 249]) AND  ((txtname:" + phrase
-                    + "*) OR (txtusername:" + phrase + "*) OR (txtemail:" + phrase + "*))";
+//            String sQuery = "(type:profile) AND ($processid:[210 TO 249]) AND  ((txtname:" + phrase
+//                    + "*) OR (txtusername:" + phrase + "*) OR (txtemail:" + phrase + "*))";
+
+            // Issue #384
+            String sQuery = "(type:profile) AND ($processid:[210 TO 249]) AND " + phrase + "*";
 
             logger.finest("searchprofile: " + sQuery);
 
