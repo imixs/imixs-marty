@@ -3,7 +3,7 @@
 	<groupId>org.imixs.workflow</groupId>
 	<artifactId>imixs-marty</artifactId>
 	<name>Imixs Workflow - Marty</name>
-	<version>4.2.3</version>
+	<version>4.2.4-SNAPSHOT</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -61,7 +61,7 @@
 		<connection>scm:git:git@github.com:imixs/imixs-marty.git</connection>
 		<developerConnection>scm:git:git@github.com:imixs/imixs-marty.git</developerConnection>
 		<url>https://github.com/imixs/imixs-marty/</url>
-		<tag>imixs-marty-4.2.3</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<issueManagement>
