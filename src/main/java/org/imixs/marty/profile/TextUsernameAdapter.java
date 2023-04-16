@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Vector;
 import java.util.logging.Logger;
 
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.enterprise.event.Observes;
+import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
+import jakarta.enterprise.event.Observes;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.TextEvent;

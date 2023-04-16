@@ -6,12 +6,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
-import javax.annotation.Resource;
-import javax.ejb.EJB;
-import javax.ejb.LocalBean;
-import javax.ejb.SessionContext;
-import javax.ejb.Stateless;
-import javax.enterprise.event.Observes;
+import jakarta.annotation.Resource;
+import jakarta.ejb.EJB;
+import jakarta.ejb.LocalBean;
+import jakarta.ejb.SessionContext;
+import jakarta.ejb.Stateless;
+import jakarta.enterprise.event.Observes;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentEvent;

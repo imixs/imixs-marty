@@ -3,11 +3,12 @@
 	<groupId>org.imixs.workflow</groupId>
 	<artifactId>imixs-marty</artifactId>
 	<name>Imixs Workflow - Marty</name>
-	<version>4.2.4-SNAPSHOT</version>
+	<version>5.0.0-SNAPSHOT</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<org.imixs.workflow.version>5.2.16</org.imixs.workflow.version>
+		<jakarta.version>10.0.0</jakarta.version>
+		<org.imixs.workflow.version>6.0.3-SNAPSHOT</org.imixs.workflow.version>
 		<org.imixs.mock.version>5.2.0</org.imixs.mock.version>
 		<microprofile.version>3.0</microprofile.version>
 	</properties>
@@ -91,8 +92,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.1</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>11</source>
+					<target>11</target>
 				</configuration>
 			</plugin>
 
@@ -231,14 +232,14 @@
 
 
 	<dependencies>
-		<!-- JEE Dependencies -->
-		<dependency>
-			<groupId>javax</groupId>
-			<artifactId>javaee-api</artifactId>
-			<version>8.0</version>
-			<scope>provided</scope>
-		</dependency>
 
+		<!-- Jakarta EE -->
+		<dependency>
+		    <groupId>jakarta.platform</groupId>
+		    <artifactId>jakarta.jakartaee-api</artifactId>
+		    <version>${jakarta.version}</version>
+		    <scope>provided</scope>
+		</dependency>
 
 		<!-- Microprofile -->
 		<dependency>
@@ -271,6 +272,7 @@
 			<artifactId>imixs-workflow-faces</artifactId>
 			<version>${org.imixs.workflow.version}</version>
 			<scope>provided</scope>
+			<!-- excluded from manifest classpath, and excluded from WEB-INF/lib -->
 		</dependency>
 
 

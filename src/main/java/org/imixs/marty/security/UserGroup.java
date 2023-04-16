@@ -1,6 +1,6 @@
 package org.imixs.marty.security;
 
-import javax.persistence.Id;
+import jakarta.persistence.Id;
 
 /**
  * User object to provide a database for username/password/groups. The user
@@ -9,7 +9,7 @@ import javax.persistence.Id;
  * @author rsoika
  * 
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class UserGroup implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;

@@ -2,11 +2,11 @@ package org.imixs.marty.security;
 
 import java.util.Set;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 
 /**
  * User object to provide a database for username/password/groups. The user
@@ -15,7 +15,7 @@ import javax.persistence.ManyToMany;
  * @author rsoika
  *  
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class UserId implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;

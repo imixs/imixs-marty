@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import javax.ejb.Stateless;
-import javax.enterprise.event.Observes;
+import jakarta.ejb.Stateless;
+import jakarta.enterprise.event.Observes;
 
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.TextEvent;
