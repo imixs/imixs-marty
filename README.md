@@ -1,6 +1,6 @@
 # Imixs-Marty
-[![Join the chat at https://gitter.im/imixs/imixs-workflow](https://badges.gitter.im/imixs/imixs-workflow.svg)](https://gitter.im/imixs/imixs-workflow?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build Status](https://travis-ci.org/imixs/imixs-marty.svg?branch=master)](https://travis-ci.org/imixs/imixs-marty)
+[![Java CI with Maven](https://github.com/imixs/imixs-marty/actions/workflows/maven.yml/badge.svg)](https://github.com/imixs/imixs-marty/actions/workflows/maven.yml)
+[![Join a discussion](https://img.shields.io/badge/discuss-on%20github-4CB697)](https://github.com/imixs/imixs-workflow/discussions)
 [![License](https://img.shields.io/badge/license-GPL-blue.svg)](https://github.com/imixs/imixs-marty/blob/master/LICENSE)
 
 
