@@ -127,6 +127,7 @@ public class UserGroupService {
             user.setPassword(sEncryptedPasswort);
             // remove password....
             profile.removeItem("txtPassword");
+            profile.removeItem("txtPassword2");
             logger.info("password change for userid '" + sID + "' by '" + ctx.getCallerPrincipal().getName() + "'");
             profile.replaceItemValue("txtpasswordhash", sEncryptedPasswort);
         }
