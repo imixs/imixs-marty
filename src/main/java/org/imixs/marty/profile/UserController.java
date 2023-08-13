@@ -43,6 +43,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.ejb.EJB;
 import jakarta.ejb.EJBException;
 import jakarta.enterprise.context.SessionScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.enterprise.event.Observes;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
@@ -118,6 +119,10 @@ public class UserController implements Serializable {
     @Inject
     protected WorkflowController workflowController;
 
+     @Inject
+    protected Event<ProfileEvent> profileEvents;
+
+
     private static final long serialVersionUID = 1L;
     private ItemCollection workitem = null;
     private boolean profileLoaded = false;
@@ -162,10 +167,19 @@ public class UserController implements Serializable {
                     throw new ProcessingErrorException(UserController.class.getName(),
                             ProcessingErrorException.INVALID_WORKITEM, " unable to create profile!", e);
                 }
-            } else {
+            } else {                
                 // check if profile.login.event is defined
                 logger.fine("profile.login.event=" + profileLoginEvent);
                 if (profileLoginEvent.get() > 0) {
+                    // fire ProfileEvent on login so that a client can intercept....
+                    if (profileEvents != null) {
+                        ProfileEvent event = new ProfileEvent(loginController.getUserPrincipal(), profile, ProfileEvent.ON_PROFILE_LOGIN);
+                        profileEvents.fire(event);
+                        profile = event.getProfile();
+                    } else {
+                        logger.warning("CDI Support is missing - ProfileEvent will not be fired");
+                    }
+                    // process profile...
                     profile.setEventID(profileLoginEvent.get());
                     try {
                         profile = workflowService.processWorkItem(profile);

@@ -50,6 +50,7 @@ public class ProfileEvent {
 
     public static final int ON_PROFILE_LOOKUP = 1;
     public static final int ON_PROFILE_CREATE = 2;
+    public static final int ON_PROFILE_LOGIN = 3;
 
     private int eventType;
     private ItemCollection profile;
