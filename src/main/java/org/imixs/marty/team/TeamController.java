@@ -33,13 +33,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.ejb.EJB;
-import jakarta.enterprise.context.SessionScoped;
-import jakarta.enterprise.event.Observes;
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-
 import org.imixs.marty.profile.ProfileService;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.ItemCollectionComparator;
@@ -49,6 +42,13 @@ import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.faces.data.WorkflowEvent;
 import org.imixs.workflow.faces.util.LoginController;
 import org.imixs.workflow.faces.util.ResourceBundleHandler;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.ejb.EJB;
+import jakarta.enterprise.context.SessionScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 /**
  * The ProcessController provides informations about the process and space
@@ -531,7 +531,7 @@ public class TeamController implements Serializable {
      * @param workflowEvent
      */
     public void onWorkflowEvent(@Observes WorkflowEvent workflowEvent) {
-        if (workflowEvent == null || workflowEvent.getWorkitem()==null) {
+        if (workflowEvent == null || workflowEvent.getWorkitem() == null) {
             return;
         }
 
@@ -638,4 +638,70 @@ public class TeamController implements Serializable {
         return resultList;
     }
 
+    /**
+     * This method updates the space.ref item with the first space ID the current
+     * user is member of.
+     * The method can be used as a default selector as in the Imixs-Office-Workflwo
+     * form part 'spaceref.xhtml'
+     * 
+     * The method updates the items space.ref and space.name and returns the
+     * space.ref
+     */
+    public String setDefaultSpace(ItemCollection workitem) {
+        // If the current workitem is assigned to a process then first resolve all
+        // spaces assigned to this process...
+        ItemCollection defaultSpace = null;
+        List<ItemCollection> _spaceList = getSpacesByProcessId(workitem.getItemValueString("process.Ref"));
+        if (_spaceList != null) {
+            for (ItemCollection space : _spaceList) {
+                if (space.getItemValueBoolean("isMember")) {
+                    defaultSpace = space;
+                    break;
+                }
+            }
+        }
+        // we did not yet find a matching space in the process list.
+        // so we iterate over all spaces
+        if (defaultSpace == null) {
+            _spaceList = getSpaces();
+            if (_spaceList != null) {
+                for (ItemCollection space : _spaceList) {
+                    if (space.getItemValueBoolean("isMember")) {
+                        defaultSpace = space;
+                        break;
+                    }
+                }
+            }
+        }
+        // do we have a match?
+        if (defaultSpace != null) {
+            workitem.setItemValue("space.ref", defaultSpace.getUniqueID());
+            workitem.setItemValue("space.name", defaultSpace.getItemValueString("name"));
+            return defaultSpace.getUniqueID();
+        }
+
+        // no match !
+        return "";
+
+    }
+
+    /**
+     * This method resolves the field 'process.default.ref'.
+     * This fields holds the first space ID the current user is member of.
+     * 
+     */
+    public String resolveDefaultProcessRef(ItemCollection workitem) {
+        // iterate over all processes
+        List<ItemCollection> _processList = getProcessList();
+        if (_processList != null) {
+            for (ItemCollection _process : _processList) {
+                if (_process.getItemValueBoolean("isMember")) {
+                    return _process.getUniqueID();
+                }
+            }
+        }
+        // no match !
+        return null;
+
+    }
 }

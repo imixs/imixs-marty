@@ -103,6 +103,7 @@ import org.imixs.workflow.exceptions.QueryException;
  * <li>txtSpaceName
  * <li>txtProcessName
  * </ul>
+ * 
  * @author rsoika
  * @version 2.0
  */
@@ -365,6 +366,7 @@ public class TeamPlugin extends AbstractPlugin {
                     workItem.appendItemValueUnique("space.manager.label", entity.getItemValue("space.manager.label"));
 
                     workItem.appendItemValueUnique("space.name", entity.getItemValue("space.name"));
+                    workItem.appendItemValueUnique("space.parent.name", entity.getItemValue("space.parent.name"));
 
                 }
 
