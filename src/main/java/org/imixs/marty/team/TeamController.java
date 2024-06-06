@@ -639,53 +639,6 @@ public class TeamController implements Serializable {
     }
 
     /**
-     * This method updates the space.ref item with the first space ID the current
-     * user is member of.
-     * The method can be used as a default selector as in the Imixs-Office-Workflwo
-     * form part 'spaceref.xhtml'
-     * 
-     * The method updates the items space.ref and space.name and returns the
-     * space.ref
-     */
-    public String setDefaultSpace(ItemCollection workitem) {
-        // If the current workitem is assigned to a process then first resolve all
-        // spaces assigned to this process...
-        ItemCollection defaultSpace = null;
-        List<ItemCollection> _spaceList = getSpacesByProcessId(workitem.getItemValueString("process.Ref"));
-        if (_spaceList != null) {
-            for (ItemCollection space : _spaceList) {
-                if (space.getItemValueBoolean("isMember")) {
-                    defaultSpace = space;
-                    break;
-                }
-            }
-        }
-        // we did not yet find a matching space in the process list.
-        // so we iterate over all spaces
-        if (defaultSpace == null) {
-            _spaceList = getSpaces();
-            if (_spaceList != null) {
-                for (ItemCollection space : _spaceList) {
-                    if (space.getItemValueBoolean("isMember")) {
-                        defaultSpace = space;
-                        break;
-                    }
-                }
-            }
-        }
-        // do we have a match?
-        if (defaultSpace != null) {
-            workitem.setItemValue("space.ref", defaultSpace.getUniqueID());
-            workitem.setItemValue("space.name", defaultSpace.getItemValueString("name"));
-            return defaultSpace.getUniqueID();
-        }
-
-        // no match !
-        return "";
-
-    }
-
-    /**
      * This method resolves the field 'process.default.ref'.
      * This fields holds the first space ID the current user is member of.
      * 
