@@ -36,6 +36,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.exceptions.AccessDeniedException;
+import org.imixs.workflow.exceptions.InvalidAccessException;
+import org.imixs.workflow.exceptions.ModelException;
+import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.exceptions.ProcessingErrorException;
+import org.imixs.workflow.exceptions.QueryException;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.annotation.security.DeclareRoles;
@@ -47,17 +58,6 @@ import jakarta.ejb.SessionContext;
 import jakarta.ejb.Singleton;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.engine.DocumentService;
-import org.imixs.workflow.engine.WorkflowService;
-import org.imixs.workflow.exceptions.AccessDeniedException;
-import org.imixs.workflow.exceptions.InvalidAccessException;
-import org.imixs.workflow.exceptions.ModelException;
-import org.imixs.workflow.exceptions.PluginException;
-import org.imixs.workflow.exceptions.ProcessingErrorException;
-import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * The Marty ProfileService is a sigelton EJB providing user attributes like the
@@ -358,7 +358,7 @@ public class ProfileService {
      * <p>
      * The initials are computed by the 1st char of the first-last name
      * <p>
-     * The initials are uppercased.
+     * The initials are uppercase.
      * 
      * @param profile
      */
@@ -369,18 +369,21 @@ public class ProfileService {
             String sUserName = profile.getItemValueString("txtUserName");
             // default
             String sInitials = "-";
+
             if (!sUserName.isEmpty() && sUserName.length() > 2) {
                 int iPos = sUserName.indexOf(' ');
-                if (iPos > -1) {
+                if (iPos > -1 && iPos + 1 < sUserName.length()) { // test for space
                     sInitials = sUserName.substring(0, 1);
-                    sInitials = sInitials + sUserName.substring(iPos + 1, iPos + 2);
+                    // test length after space
+                    if (iPos + 2 <= sUserName.length()) {
+                        sInitials = sInitials + sUserName.substring(iPos + 1, iPos + 2);
+                    }
                 } else {
                     sInitials = sUserName.substring(0, 1);
                 }
             } else {
-                // if we do not have a initials, than we take the first letter of the account
-                // name
-                if (sAccountName != null && sAccountName.length() > 0) {
+                // if we do not have initials, then we take the first letter of the account name
+                if (sAccountName != null && !sAccountName.isEmpty()) {
                     sInitials = sAccountName.substring(0, 1);
                 }
             }
@@ -414,8 +417,7 @@ public class ProfileService {
         ItemCollection profile = new ItemCollection();
         profile.replaceItemValue("type", "profile");
         profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
-        
-        
+
         if (modelVersion.isPresent()) {
             profile.replaceItemValue("$modelversion", modelVersion.get());
             logger.info("...creating profile based on modelversion = " + modelVersion.get());
@@ -424,18 +426,17 @@ public class ProfileService {
                     "System Model version is missing - verify property 'setup.system.model'");
         }
 
-        
-
         // the workflow group can not be guessed here...
         // profile.replaceItemValue("$workflowgroup", "Profil");
         profile.replaceItemValue("txtName", userid);
         profile.replaceItemValue("txtLocale", locale);
-        // set default group (fixed deprecated role name 'IMIXS-WORKFLOW-Author'  issue #378
+        // set default group (fixed deprecated role name 'IMIXS-WORKFLOW-Author' issue
+        // #378
         profile.replaceItemValue("txtgroups", "org.imixs.ACCESSLEVEL.AUTHORACCESS");
         // process new profile...
         profile.setEventID(CREATE_PROFILE_ACTIVITY_ID);
 
-         // fire ProfileEvent so that a client can intercept....
+        // fire ProfileEvent so that a client can intercept....
         if (profileEvents != null) {
             ProfileEvent event = new ProfileEvent(userid, profile, ProfileEvent.ON_PROFILE_CREATE);
             profileEvents.fire(event);
@@ -444,11 +445,8 @@ public class ProfileService {
             logger.warning("CDI Support is missing - ProfileEvent wil not be fired");
         }
 
-        
         profile = workflowService.processWorkItem(profile);
 
-
-        
         logger.finest("......new profile created for userid '" + userid + "'");
 
         return profile;
