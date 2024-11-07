@@ -30,13 +30,13 @@ package org.imixs.marty.team;
 import java.util.List;
 import java.util.logging.Logger;
 
-import jakarta.ejb.EJB;
-
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.InvalidAccessException;
 import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.QueryException;
+
+import jakarta.ejb.EJB;
 
 /**
  * This system model plug-in supports additional business logic for space and
@@ -80,28 +80,32 @@ public class SpacePlugin extends AbstractPlugin {
         // verify type 'spacedeleted'
         // in case of a deletion we test if subspaces still exist! In this case
         // deletion is not allowed
-        if ("spacedeleted".equals(type)) {
-            List<ItemCollection> subspaces = spaceService.findAllSubSpaces(documentContext.getUniqueID(), "space",
-                    "spacearchive");
-            // if a parentSpace exist - stop deletion!
-            if (subspaces != null && subspaces.size() > 0) {
-                throw new PluginException(SpacePlugin.class.getName(), SPACE_DELETE_ERROR,
-                        "Space object can not be deleted, because descendant space object(s) exist!");
-            }
-            return documentContext;
-        }
+        // if ("spacedeleted".equals(type)) {
+        // List<ItemCollection> subspaces =
+        // spaceService.findAllSubSpaces(documentContext.getUniqueID(), "space",
+        // "spacearchive");
+        // // if a parentSpace exist - stop deletion!
+        // if (subspaces != null && subspaces.size() > 0) {
+        // throw new PluginException(SpacePlugin.class.getName(), SPACE_DELETE_ERROR,
+        // "Space object can not be deleted, because descendant space object(s)
+        // exist!");
+        // }
+        // return documentContext;
+        // }
 
         // verify type 'spacearchive'
         // in this case we test if subspaces still exist! In this case
         // archive is not allowed
-        if ("spacearchive".equals(type)) {
-            List<ItemCollection> subspaces = spaceService.findAllSubSpaces(documentContext.getUniqueID(), "space");
-            // if a parentSpace exist - stop deletion!
-            if (subspaces != null && subspaces.size() > 0) {
-                throw new PluginException(SpacePlugin.class.getName(), SPACE_ARCHIVE_ERROR,
-                        "Space object can not be archived, because active descendant space object(s) exist!");
-            }
-        }
+        // if ("spacearchive".equals(type)) {
+        // List<ItemCollection> subspaces =
+        // spaceService.findAllSubSpaces(documentContext.getUniqueID(), "space");
+        // // if a parentSpace exist - stop deletion!
+        // if (subspaces != null && subspaces.size() > 0) {
+        // throw new PluginException(SpacePlugin.class.getName(), SPACE_ARCHIVE_ERROR,
+        // "Space object can not be archived, because active descendant space object(s)
+        // exist!");
+        // }
+        // }
 
         // verify if the space name and sub-spaces need to be updated...
         if ("space".equals(type) || "spacearchive".equals(type)) {
