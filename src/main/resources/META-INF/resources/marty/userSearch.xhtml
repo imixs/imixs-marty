@@ -1,18 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"   
-      xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-	  xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
-      xmlns:composite="http://java.sun.com/jsf/composite"
-      >
-    
-    <composite:interface>
-    </composite:interface>
-	
-    <composite:implementation>
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
+	xmlns:composite="http://java.sun.com/jsf/composite">
+
+<composite:interface>
+</composite:interface>
+
+<composite:implementation>
 
 
 	<ui:remove>
@@ -22,21 +18,18 @@
 	-->
 	</ui:remove>
 
-	<h:commandScript name="martyUserSearch"
-		action="#{userInputController.searchUser()}"
-		render="marty-userinput-resultlist"
-		onevent="imixsMarty.userSearchShowResult" />
-
-	<h:panelGroup id="marty-userinput-resultlist" layout="block"
-		class="marty-userinput-resultlist">
-		<ui:param name="suggestList"
-			value="#{userInputController.searchResult}"></ui:param>
+	<h:commandScript name="martyUserSearch" action="#{userInputController.searchUser()}"
+		render="marty-userinput-resultlist" onevent="imixsMarty.userSearchShowResult" />
+	<span id="marty-userinput-resultlist-defaultpos">default pos</span>
+	<h:panelGroup id="marty-userinput-resultlist" layout="block" class="marty-userinput-resultlist">
+		<ui:param name="suggestList" value="#{userInputController.searchResult}"></ui:param>
 		<ui:fragment rendered="#{! empty suggestList}">
 			<ui:repeat var="suggest" value="#{userInputController.searchResult}">
 				<div class="marty-userinput-resultlist-element"
 					onclick="imixsMarty.selectUserID('#{suggest.item['txtname']}','#{suggest.item['txtusername']}')">
-					<a href="#"> <h:outputText
-							value="#{suggest.item['txtusername']}" escape="false" /><h:outputText rendered="#{! empty suggest.item['txtemail']}"
+					<a href="#">
+						<h:outputText value="#{suggest.item['txtusername']}" escape="false" />
+						<h:outputText rendered="#{! empty suggest.item['txtemail']}"
 							value=" (#{suggest.item['txtemail']})" escape="false" />
 					</a>
 				</div>
@@ -44,7 +37,6 @@
 		</ui:fragment>
 	</h:panelGroup>
 
-	</composite:implementation>
+</composite:implementation>
+
 </html>
-
-
