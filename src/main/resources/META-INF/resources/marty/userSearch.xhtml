@@ -20,7 +20,7 @@
 
 	<h:commandScript name="martyUserSearch" action="#{userInputController.searchUser()}"
 		render="marty-userinput-resultlist" onevent="imixsMarty.userSearchShowResult" />
-	<span id="marty-userinput-resultlist-defaultpos">default pos</span>
+	<span id="marty-userinput-resultlist-defaultpos"></span>
 	<h:panelGroup id="marty-userinput-resultlist" layout="block" class="marty-userinput-resultlist">
 		<ui:param name="suggestList" value="#{userInputController.searchResult}"></ui:param>
 		<ui:fragment rendered="#{! empty suggestList}">

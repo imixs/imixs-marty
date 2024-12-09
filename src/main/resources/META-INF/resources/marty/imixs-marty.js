@@ -19,25 +19,12 @@ IMIXS.org.imixs.marty = (function () {
 
 	// init user input fields...
 	$(document).ready(function () {
-
 		// add autocomplete feature to all user inputs...
-		// var userInputField = $("input[data-item='marty.user.input']");
-		// $(userInputField).each(function () {
-		// 	console.log('---------___> Init userinput');
-		// 	imixsMarty.userInputInit(this, martyUserSearch, 'marty-userinput-resultlist'); // optional callback method allowed here!
-		// });
-
 		var userGroupInputField = $("textarea[data-item='marty.user.input']");
 		$(userGroupInputField).each(function () {
 			imixsMarty.userInputInit(this, martyUserSearch, 'marty-userinput-resultlist'); // optional callback method allowed here!
 		});
-
-
 	});
-
-
-
-
 
 
 	/*
@@ -48,12 +35,10 @@ IMIXS.org.imixs.marty = (function () {
 	 * from the suggest list
 	 */
 	var userInputInit = function (inputElement, searchCallback, resultlistId, selectCallback) {
-
 		// should be hidden
 		$(inputElement).hide();
 		hideResultList(inputElement);
 		autocompleteSearchReady = false;
-
 		// set id for result list element
 		if (!resultlistId || resultlistId === '') {
 			resultlistId = 'autocomplete-resultlist'; // default name
@@ -147,7 +132,12 @@ IMIXS.org.imixs.marty = (function () {
 			var id = $(inputElement).data('resultlist');
 			var parent = $("[id$='" + id + "']");
 			var resultElementListActive = $(".marty-userinput-resultlist-element.active", parent);
-			$("a", resultElementListActive).click();
+			if (resultElementListActive.length > 0) {
+				$("a", resultElementListActive).click();
+			} else {
+				// special use case overtake current input
+				selectUserID($(inputElement).val(), $(inputElement).val());
+			}
 			hideResultList(inputElement);
 		},
 
@@ -197,10 +187,6 @@ IMIXS.org.imixs.marty = (function () {
 			$(resultElementList[autcompleteSelectedElement]).addClass("active");
 		},
 
-
-
-
-
 		selectUserID = function (userid, username) {
 			// find the value field and the search field
 			var inputSearchField = $('input[name ="' + autocompleteInputID + '"]');
@@ -247,9 +233,7 @@ IMIXS.org.imixs.marty = (function () {
 				// clear input
 				inputSearchField.val('');
 			}
-
 		},
-
 
 		/* Deletes a given user id form a usergroup list */
 		deleteUserID = function (link) {
@@ -283,13 +267,8 @@ IMIXS.org.imixs.marty = (function () {
 				inputField.val(newValue);
 				// trigger on change event
 				inputField.trigger('change');
-
 			}
-
-
 		},
-
-
 
 		/*
 		 * delay function
@@ -320,5 +299,3 @@ IMIXS.org.imixs.marty = (function () {
 
 // Define public namespace
 var imixsMarty = IMIXS.org.imixs.marty;
-
-
