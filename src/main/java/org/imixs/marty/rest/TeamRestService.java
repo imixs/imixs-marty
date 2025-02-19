@@ -31,15 +31,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
-
-import jakarta.ejb.EJB;
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Named;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
 
 import org.imixs.marty.team.TeamService;
 import org.imixs.workflow.ItemCollection;
@@ -48,6 +41,15 @@ import org.imixs.workflow.engine.ModelService;
 import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.xml.XMLDataCollection;
 import org.imixs.workflow.xml.XMLDataCollectionAdapter;
+import org.openbpmn.bpmn.BPMNModel;
+
+import jakarta.ejb.EJB;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Named;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * The TeamRestService provides methods to access the marty process and space
@@ -67,7 +69,6 @@ public class TeamRestService implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private static Logger logger = Logger.getLogger(TeamRestService.class.getSimpleName());
-
 
 	@EJB
 	DocumentService entityService;
@@ -172,24 +173,26 @@ public class TeamRestService implements Serializable {
 	 * Returns a string list of all workflow groups
 	 * 
 	 * @return
-	 * @throws ModelException 
+	 * @throws ModelException
 	 */
 	@GET
 	@Path("/workflowgroups.json")
 	@Produces(MediaType.APPLICATION_JSON)
-	public  XMLDataCollection getWorkflowGroupsJSON() throws ModelException {
-		List<ItemCollection> col=new ArrayList<ItemCollection>();
+	public XMLDataCollection getWorkflowGroupsJSON() throws ModelException {
+		List<ItemCollection> col = new ArrayList<ItemCollection>();
 		List<String> result = new ArrayList<String>();
-		List<String> modelVersions = modelService.getVersions();
+
+		List<String> modelVersions = modelService.getModelManager().getVersions();
 		for (String modelVersion : modelVersions) {
 			// if not a system model
 			if (!modelVersion.startsWith("system")) {
-				List<String> groups = modelService.getModel(modelVersion).getGroups();
+				BPMNModel model = modelService.getModelManager().getModel(modelVersion);
+				Set<String> groups = modelService.getModelManager().findAllGroupsByModel(model);
 
 				for (String group : groups) {
 					if (!result.contains(group)) {
 						result.add(group);
-						ItemCollection itemCol=new ItemCollection();
+						ItemCollection itemCol = new ItemCollection();
 						itemCol.replaceItemValue("$WorkflowGroup", group);
 						itemCol.replaceItemValue("txtName", group);
 						col.add(itemCol);
@@ -199,17 +202,14 @@ public class TeamRestService implements Serializable {
 
 		}
 
-	
-		
 		try {
 			return XMLDataCollectionAdapter.getDataCollection(col);
 		} catch (Exception e) {
-			
+
 			e.printStackTrace();
 		}
-		
+
 		return new XMLDataCollection();
 	}
-
 
 }
