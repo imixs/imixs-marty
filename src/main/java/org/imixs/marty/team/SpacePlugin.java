@@ -31,18 +31,26 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.engine.WorkflowService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.exceptions.AccessDeniedException;
 import org.imixs.workflow.exceptions.InvalidAccessException;
+import org.imixs.workflow.exceptions.ModelException;
 import org.imixs.workflow.exceptions.PluginException;
+import org.imixs.workflow.exceptions.ProcessingErrorException;
 import org.imixs.workflow.exceptions.QueryException;
 
-import jakarta.ejb.EJB;
+import jakarta.inject.Inject;
 
 /**
  * This system model plug-in supports additional business logic for space and
- * process entities. The case of a 'space' the plug-in updates the properties
- * txtName and txtSpaceName. It also compute the parent team members and the
- * team members of subspaces.
+ * process entities. The plugin verifies the uniqueness of a object name.
+ * 
+ * The case of a 'space' the plug-in updates also the properties
+ * 'space.name' and 'space.parent.name'.
+ * 
+ * In case a space has sub spaces the method also tries to process the subspaces
+ * with the same event.
  * 
  * Model: system
  * 
@@ -56,67 +64,61 @@ public class SpacePlugin extends AbstractPlugin {
     public static String ORGUNIT_NAME_ERROR = "ORGUNIT_NAME_ERROR";
 
     private static Logger logger = Logger.getLogger(SpacePlugin.class.getName());
-    private ItemCollection space = null;
 
-    @EJB
-    TeamCache teamCache;
-
-    @EJB
+    @Inject
     SpaceService spaceService;
+
+    @Inject
+    WorkflowService workflowService;
 
     /**
      * If a 'space' is processed, the method verifies if the space Information need
      * to be updated to the parent and subSpaces.
-     * 
-     * If a 'spacedeleted' is processed, the method verifies if a deletion is
-     * allowed. This is not the case if subspaces exist!
-     * 
+     *
+     * The method also tries to update the workflow status of all subspaces
      **/
     @Override
     public ItemCollection run(ItemCollection documentContext, ItemCollection event) throws PluginException {
-        space = null;
         String type = documentContext.getType();
 
-        // verify type 'spacedeleted'
-        // in case of a deletion we test if subspaces still exist! In this case
-        // deletion is not allowed
-        // if ("spacedeleted".equals(type)) {
-        // List<ItemCollection> subspaces =
-        // spaceService.findAllSubSpaces(documentContext.getUniqueID(), "space",
-        // "spacearchive");
-        // // if a parentSpace exist - stop deletion!
-        // if (subspaces != null && subspaces.size() > 0) {
-        // throw new PluginException(SpacePlugin.class.getName(), SPACE_DELETE_ERROR,
-        // "Space object can not be deleted, because descendant space object(s)
-        // exist!");
-        // }
-        // return documentContext;
-        // }
+        // verify space and sub spaces...
+        if (type.startsWith("space")) {
 
-        // verify type 'spacearchive'
-        // in this case we test if subspaces still exist! In this case
-        // archive is not allowed
-        // if ("spacearchive".equals(type)) {
-        // List<ItemCollection> subspaces =
-        // spaceService.findAllSubSpaces(documentContext.getUniqueID(), "space");
-        // // if a parentSpace exist - stop deletion!
-        // if (subspaces != null && subspaces.size() > 0) {
-        // throw new PluginException(SpacePlugin.class.getName(), SPACE_ARCHIVE_ERROR,
-        // "Space object can not be archived, because active descendant space object(s)
-        // exist!");
-        // }
-        // }
+            if (documentContext.getItemValueBoolean("$$ignoreNameUpdate")) {
+                documentContext.removeItem("$$ignoreNameUpdate");
+            } else {
+                inheritParentSpaceProperties(documentContext);
+                // spaceService.updateSubSpaces(documentContext);
+                // verify name if still unique....
+                validateUniqueOrgunitName(documentContext, "space");
+            }
 
-        // verify if the space name and sub-spaces need to be updated...
-        if ("space".equals(type) || "spacearchive".equals(type)) {
-            space = documentContext;
-            inheritParentSpaceProperties();
-            // verify txtname if still unique....
-            validateUniqueOrgunitName(space, "space");
-            spaceService.updateSubSpaces(space);
+            // try to process all sub spaces....
+            List<ItemCollection> subSpaces = spaceService.findAllSubSpaces(documentContext.getUniqueID(), type);
+            // now we can trigger the same workflow event for all subspaces
+            for (ItemCollection subSpace : subSpaces) {
+                try {
+                    // Update parent name
+                    String sParentSpaceName = documentContext.getItemValueString("name");
+                    subSpace.replaceItemValue("space.parent.name", sParentSpaceName);
+                    subSpace.replaceItemValue("name",
+                            sParentSpaceName + "." + subSpace.getItemValueString("space.name"));
+                    // deprecated item name
+                    subSpace.replaceItemValue("txtparentname", sParentSpaceName);
+                    // Process subspace
+                    subSpace.event(documentContext.getEventID());
+                    subSpace.setItemValue("$$ignoreNameUpdate", true);
+                    workflowService.processWorkItem(subSpace);
+                } catch (PluginException | AccessDeniedException | ProcessingErrorException | ModelException e) {
+                    logger.warning("Unable to process subspace '" +
+                            subSpace.getItemValueString("name") + "' : "
+                            + e.getMessage());
+                }
+            }
+
         }
 
-        // verify if the space name and sub-spaces need to be updated...
+        // verify unique process name ...
         if ("process".equals(type)) {
             // verify txtname if still unique....
             validateUniqueOrgunitName(documentContext, "process");
@@ -134,33 +136,20 @@ public class SpacePlugin extends AbstractPlugin {
      * @throws PluginException
      * 
      */
-    private void inheritParentSpaceProperties() throws PluginException {
-        ItemCollection parentProject = null;
-        // test if the project has a subproject..
-        String sParentProjectID = space.getItemValueString("$uniqueidRef");
+    private void inheritParentSpaceProperties(ItemCollection space) throws PluginException {
+        // test if the Space has a parent..
+        ItemCollection parentSpace = spaceService.loadParentSpace(space);
+        if (parentSpace != null) {
+            logger.fine("Updating Parent Space Information for '" + space.getUniqueID() + "'");
+            String sParentName = parentSpace.getItemValueString("name");
 
-        if (!sParentProjectID.isEmpty())
-            parentProject = getWorkflowService().getDocumentService().load(sParentProjectID);
-
-        if (parentProject != null) {
-            if ("space".equals(parentProject.getType())) {
-                logger.fine("Updating Parent Project Informations for '" + sParentProjectID + "'");
-
-                String sName = space.getItemValueString("space.name");
-                String sParentName = parentProject.getItemValueString("name");
-
-                space.replaceItemValue("name", sParentName + "." + sName);
-                space.replaceItemValue("space.parent.name", sParentName);
-
-            } else {
-                throw new PluginException(SpacePlugin.class.getName(), SPACE_ARCHIVE_ERROR,
-                        "Space object can not be updated, because parent space object is archived!");
-            }
+            space.replaceItemValue("name", sParentName + "." + space.getItemValueString("space.name"));
+            space.replaceItemValue("space.parent.name", sParentName);
         } else {
             // root space - update name
             space.replaceItemValue("name", space.getItemValueString("space.name"));
-
         }
+
     }
 
     /**

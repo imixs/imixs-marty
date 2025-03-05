@@ -31,28 +31,30 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.exceptions.InvalidAccessException;
+import org.imixs.workflow.exceptions.QueryException;
+
 import jakarta.annotation.security.DeclareRoles;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.annotation.security.RunAs;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Singleton;
 
-import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.ItemCollectionComparator;
-import org.imixs.workflow.engine.DocumentService;
-import org.imixs.workflow.exceptions.InvalidAccessException;
-import org.imixs.workflow.exceptions.QueryException;
-
 /**
- * The SpaceService provides a business logic to update sub spaces. For this feature the 
- * service runs with Manager access to ensure spaces are in a consistent status 
+ * The SpaceService provides a business logic to update sub spaces. For this
+ * feature the
+ * service runs with Manager access to ensure spaces are in a consistent status
  * even if the caller has no write access for a subspace.
  * 
  * See issue #290.
  * <p>
  *
  * @author rsoika
- *  
+ * 
  */
 
 @DeclareRoles({ "org.imixs.ACCESSLEVEL.NOACCESS", "org.imixs.ACCESSLEVEL.READERACCESS",
@@ -67,38 +69,24 @@ public class SpaceService {
 
 	private static Logger logger = Logger.getLogger(SpaceService.class.getName());
 
-	
 	@EJB
 	DocumentService documentService;
-	
+
 	/**
-	 * This method updates the parentName and the parent team properties for all
-	 * sub-spaces. This is only necessary if sub-spaces are found.
+	 * Load the parent space for a given space.
+	 * If the space is a root space, the method returns null
 	 * 
 	 * @param space
+	 * @return parent space or null if the given space is a root space
 	 */
-	public void updateSubSpaces(ItemCollection parentSpace) {
-		logger.finest("......updating sub-space data for '" + parentSpace.getItemValueString("$Uniqueid") + "'");
-		List<ItemCollection> subSpaceList = findAllSubSpaces(parentSpace.getItemValueString("$Uniqueid"), "space",
-				"spacearchive");
-		String sParentSpaceName = parentSpace.getItemValueString("name");
-		for (ItemCollection aSubSpace : subSpaceList) {
-
-		    aSubSpace.replaceItemValue("space.parent.name", sParentSpaceName);
-		    
-			aSubSpace.replaceItemValue("name",
-					sParentSpaceName + "." + aSubSpace.getItemValueString("space.name"));
-
-
-	         // deprecated item name
-            aSubSpace.replaceItemValue("txtparentname", sParentSpaceName);
-
-			aSubSpace =documentService.save(aSubSpace);
-			// call recursive....
-			updateSubSpaces(aSubSpace);
+	public ItemCollection loadParentSpace(ItemCollection space) {
+		String ref = space.getItemValueString(WorkflowService.UNIQUEIDREF);
+		if (!ref.isEmpty()) {
+			// lookup parent...
+			return documentService.load(ref);
 		}
+		return null;
 	}
-	
 
 	/**
 	 * Helper method to find all sub-spaces for a given uniqueID.
