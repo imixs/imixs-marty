@@ -464,12 +464,10 @@ public class TeamPlugin extends AbstractPlugin {
      */
     private ItemCollection findRefByName(String aName, String type) {
 
-        if (type == null || aName == null) {
+        if (type == null || aName == null || aName.isEmpty() || aName.trim().equals("-")) {
             return null;
         }
-        // String sQuery = "(type:\"" + type + "\" AND txtname:\"" + aName + "\")";
-        // String sQuery = "((type:\"" + type + "\" OR type:\"" + type + "archive\") AND
-        // txtname:\"" + aName + "\")";
+
         // We need to ensure that the old deprecated item name 'txtname' is still
         // supported by the query.
         String sQuery = "(type:\"" + type + "\" OR type:\"" + type + "archive\") AND (name:\"" + aName
@@ -494,7 +492,6 @@ public class TeamPlugin extends AbstractPlugin {
                     entityCache.put(entity.getItemValueString(WorkflowKernel.UNIQUEID), entity);
                     return entity;
                 }
-
             }
         } catch (QueryException e) {
             logger.warning("findRefByName - invalid query: " + e.getMessage());
