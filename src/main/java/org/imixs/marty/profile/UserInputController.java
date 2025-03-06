@@ -32,16 +32,16 @@ import java.util.List;
 import java.util.Vector;
 import java.util.logging.Logger;
 
+import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.engine.WorkflowService;
+import org.imixs.workflow.engine.index.SchemaService;
+
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-
-import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.ItemCollectionComparator;
-import org.imixs.workflow.engine.WorkflowService;
-import org.imixs.workflow.engine.index.SchemaService;
 
 /**
  * The UserInputController provides suggest-box behavior based on the JSF 2.0
@@ -111,15 +111,13 @@ public class UserInputController implements Serializable {
             // issue #170
             phrase = schemaService.normalizeSearchTerm(phrase);
 
-//            String sQuery = "(type:profile) AND ($processid:[210 TO 249]) AND  ((txtname:" + phrase
-//                    + "*) OR (txtusername:" + phrase + "*) OR (txtemail:" + phrase + "*))";
-
             // Issue #384
-            String sQuery = "(type:profile) AND ($processid:[210 TO 249]) AND " + phrase + "*";
+            // String sQuery = "(type:profile) AND " + phrase + "*";
+            String sQuery = "(type:profile) AND  ((txtname:" + phrase
+                    + "*) OR (txtusername:" + phrase + "*) OR (txtemail:" + phrase + "*))";
 
-            logger.finest("searchprofile: " + sQuery);
+            logger.info("searchprofile: " + sQuery);
 
-            logger.fine("searchWorkitems: " + sQuery);
             col = workflowService.getDocumentService().find(sQuery, MAX_SEARCH_RESULT, 0);
         } catch (Exception e) {
             logger.warning("Lucene error error: " + e.getMessage());

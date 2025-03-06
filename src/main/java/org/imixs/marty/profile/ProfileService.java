@@ -316,7 +316,7 @@ public class ProfileService {
         clone.replaceItemValue("Type", aWorkitem.getItemValue("Type"));
         clone.replaceItemValue("$UniqueID", aWorkitem.getItemValue("$UniqueID"));
         clone.replaceItemValue("$ModelVersion", aWorkitem.getItemValue("$ModelVersion"));
-        clone.replaceItemValue("$ProcessID", aWorkitem.getItemValue("$ProcessID"));
+        clone.replaceItemValue("$taskID", aWorkitem.getItemValue("$taskID"));
         clone.replaceItemValue("$Created", aWorkitem.getItemValue("$Created"));
         clone.replaceItemValue("$Modified", aWorkitem.getItemValue("$Modified"));
         clone.replaceItemValue("$isAuthor", aWorkitem.getItemValue("$isAuthor"));
@@ -328,11 +328,6 @@ public class ProfileService {
         clone.replaceItemValue("namdeputy", aWorkitem.getItemValue("namdeputy"));
         clone.replaceItemValue("txtusericon", aWorkitem.getItemValue("txtusericon"));
         clone.replaceItemValue("txtinitials", aWorkitem.getItemValue("txtinitials"));
-
-        // deprecated fields
-        clone.replaceItemValue("txtWorkflowStatus", aWorkitem.getItemValue("txtWorkflowStatus"));
-        clone.replaceItemValue("txtWorkflowSummary", aWorkitem.getItemValue("txtWorkflowSummary"));
-        clone.replaceItemValue("txtWorkflowAbstract", aWorkitem.getItemValue("txtWorkflowAbstract"));
 
         // get accountName
         String sAccountName = aWorkitem.getItemValueString("txtName");
@@ -415,11 +410,11 @@ public class ProfileService {
         logger.info("create new profile for userid '" + userid + "'.... ");
         // create new Profile for current user
         ItemCollection profile = new ItemCollection();
-        profile.replaceItemValue("type", "profile");
-        profile.replaceItemValue("$processID", START_PROFILE_PROCESS_ID);
+        profile.setType("profile");
+        profile.task(START_PROFILE_PROCESS_ID);
 
         if (modelVersion.isPresent()) {
-            profile.replaceItemValue("$modelversion", modelVersion.get());
+            profile.model(modelVersion.get());
             logger.info("...creating profile based on modelversion = " + modelVersion.get());
         } else {
             throw new ModelException(ModelException.UNDEFINED_MODEL_VERSION,

@@ -31,6 +31,12 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.WorkflowKernel;
+import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.exceptions.AccessDeniedException;
+
 import jakarta.annotation.Resource;
 import jakarta.annotation.security.DeclareRoles;
 import jakarta.annotation.security.RunAs;
@@ -42,12 +48,6 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.WorkflowKernel;
-import org.imixs.workflow.engine.DocumentService;
-import org.imixs.workflow.exceptions.AccessDeniedException;
 
 /**
  * user Group service to provide method for managing user and groups settings.
@@ -279,10 +279,9 @@ public class UserGroupService {
             profile.replaceItemValue("txtGroups", "IMIXS-WORKFLOW-Manager"); // deprecated
             profile.appendItemValue("txtGroups", "org.imixs.ACCESSLEVEL.MANAGERACCESS");
 
-            // hard coded version nummer!
-            profile.replaceItemValue("$modelversion", "system-de-0.0.1");
+            // hard coded version number!
+            profile.model("system-de-0.0.1").task(210);
             profile.replaceItemValue("$workflowgroup", "Profil");
-            profile.replaceItemValue("$processid", 210);
 
             try {
                 updateUser(profile);

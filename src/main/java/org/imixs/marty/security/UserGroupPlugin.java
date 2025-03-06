@@ -32,14 +32,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import jakarta.ejb.EJB;
-import jakarta.inject.Inject;
-
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
 import org.imixs.workflow.engine.plugins.AbstractPlugin;
 import org.imixs.workflow.exceptions.PluginException;
+
+import jakarta.ejb.EJB;
+import jakarta.inject.Inject;
 
 /**
  * This Plugin updates the userId and password for a user profile. The Update
@@ -68,7 +68,6 @@ public class UserGroupPlugin extends AbstractPlugin {
     @ConfigProperty(name = "security.setup.mode", defaultValue = "auto")
     String setupMode;
 
-    
     int sequenceNumber = -1;
     ItemCollection workitem = null;
     private static Logger logger = Logger.getLogger(UserGroupPlugin.class.getName());
@@ -80,7 +79,7 @@ public class UserGroupPlugin extends AbstractPlugin {
      * @throws PluginException
      */
     @Override
-    public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
+    public ItemCollection run(ItemCollection documentContext, ItemCollection event) throws PluginException {
 
         // skip if no userGroupService found
         if (userGroupService == null)
@@ -98,13 +97,12 @@ public class UserGroupPlugin extends AbstractPlugin {
             return documentContext;
         }
 
-        // if processid=210 and activity=20 - delete all groups
-        int iProcessID = workitem.getItemValueInteger("$ProcessID");
-        int iActivityID = documentActivity.getItemValueInteger("numActivityID");
+        int iTaskID = workitem.getItemValueInteger("$taskID");
+        int iEventID = event.getItemValueInteger("numActivityID");
 
         // we do not clear roles for 'admin' profile!
         if (!"admin".equalsIgnoreCase(workitem.getItemValueString("txtname"))) {
-            if (iProcessID >= TASK_PPROFILE_ACTIVE && iActivityID == EVENT_PROFILE_LOCK) {
+            if (iTaskID >= TASK_PPROFILE_ACTIVE && iEventID == EVENT_PROFILE_LOCK) {
                 logger.info("Lock profile '" + workitem.getItemValueString("txtname") + "'");
                 workitem.replaceItemValue("txtGroups", UserGroupService.ACCESSLEVEL_NOACCESS);
             }
@@ -114,7 +112,7 @@ public class UserGroupPlugin extends AbstractPlugin {
 
         // check if we have deprecated roles (issue #373)
         migrateDeprecatedUserRoles();
-        
+
         userGroupService.updateUser(workitem);
 
         return documentContext;
@@ -145,5 +143,5 @@ public class UserGroupPlugin extends AbstractPlugin {
             }
         }
     }
-  
+
 }

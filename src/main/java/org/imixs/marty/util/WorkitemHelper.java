@@ -35,7 +35,7 @@ public class WorkitemHelper {
 		clone.replaceItemValue("$isAuthor", aWorkitem.getItemValue("$isAuthor"));
 		clone.replaceItemValue("$creator", aWorkitem.getItemValue("$creator"));
 		clone.replaceItemValue("$editor", aWorkitem.getItemValue("$editor"));
-		
+
 		clone.replaceItemValue("$TaskID", aWorkitem.getItemValue("$TaskID"));
 		clone.replaceItemValue("$EventID", aWorkitem.getItemValue("$EventID"));
 		clone.replaceItemValue("$workflowGroup", aWorkitem.getItemValue("$workflowGroup"));
@@ -46,11 +46,10 @@ public class WorkitemHelper {
 		clone.replaceItemValue("$eventLog", aWorkitem.getItemValue("$eventLog"));
 		clone.replaceItemValue("$lasteditor", aWorkitem.getItemValue("$lasteditor"));
 
-
 		clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
 
-        clone.replaceItemValue("$WorkflowStatus", aWorkitem.getItemValue("$WorkflowStatus"));
-        clone.replaceItemValue("$WorkflowGroup", aWorkitem.getItemValue("$WorkflowGroup"));
+		clone.replaceItemValue("$WorkflowStatus", aWorkitem.getItemValue("$WorkflowStatus"));
+		clone.replaceItemValue("$WorkflowGroup", aWorkitem.getItemValue("$WorkflowGroup"));
 		clone.replaceItemValue("namCreator", aWorkitem.getItemValue("namCreator"));
 		clone.replaceItemValue("namCurrentEditor", aWorkitem.getItemValue("namCurrentEditor"));
 		clone.replaceItemValue("$Owner", aWorkitem.getItemValue("$Owner"));
@@ -58,16 +57,16 @@ public class WorkitemHelper {
 		clone.replaceItemValue("namTeam", aWorkitem.getItemValue("namTeam"));
 		clone.replaceItemValue("namManager", aWorkitem.getItemValue("namManager"));
 		clone.replaceItemValue("namassist", aWorkitem.getItemValue("namassist"));
-		
-        // deprecated fields
-        clone.replaceItemValue("txtWorkflowStatus", aWorkitem.getItemValue("txtWorkflowStatus"));
-        clone.replaceItemValue("txtWorkflowGroup", aWorkitem.getItemValue("txtWorkflowGroup"));
+
+		// deprecated fields
+		clone.replaceItemValue("txtWorkflowStatus", aWorkitem.getItemValue("txtWorkflowStatus"));
+		clone.replaceItemValue("txtWorkflowGroup", aWorkitem.getItemValue("txtWorkflowGroup"));
 		if (aWorkitem.getType().startsWith("space")) {
-		    cloneByPraefix("space",aWorkitem,clone);
+			cloneByPraefix("space", aWorkitem, clone);
 		}
 		if (aWorkitem.getType().startsWith("process")) {
-            cloneByPraefix("process",aWorkitem,clone);
-        }
+			cloneByPraefix("process", aWorkitem, clone);
+		}
 
 		clone.replaceItemValue("$workflowsummary", aWorkitem.getItemValue("$workflowsummary"));
 		clone.replaceItemValue("$WorkflowAbstract", aWorkitem.getItemValue("$WorkflowAbstract"));
@@ -78,8 +77,8 @@ public class WorkitemHelper {
 		// clone the marty WorkItem properties....
 		if (aWorkitem.hasItem("txtName"))
 			clone.replaceItemValue("txtName", aWorkitem.getItemValue("txtName"));
-        if (aWorkitem.hasItem("Name"))
-            clone.replaceItemValue("Name", aWorkitem.getItemValue("Name"));
+		if (aWorkitem.hasItem("Name"))
+			clone.replaceItemValue("Name", aWorkitem.getItemValue("Name"));
 
 		if (aWorkitem.hasItem("txtProcessName"))
 			clone.replaceItemValue("txtProcessName", aWorkitem.getItemValue("txtProcessName"));
@@ -100,28 +99,24 @@ public class WorkitemHelper {
 		return clone;
 
 	}
-	
-	
-	
+
 	/**
 	 * Clones all items by a given praefix
+	 * 
 	 * @param string
 	 * @param aWorkitem
 	 * @param clone
 	 */
 	private static void cloneByPraefix(String praefix, ItemCollection aWorkitem, ItemCollection clone) {
-	    List<String> itemNames = aWorkitem.getItemNames();
-	    String itempraefix=praefix+".";
-	    for (String itemName: itemNames) {
-	        if (itemName.startsWith(itempraefix)) {
-	            clone.replaceItemValue(itemName, aWorkitem.getItemValue(itemName));
-	        }
-	    }
-        
-    }
+		List<String> itemNames = aWorkitem.getItemNames();
+		String itempraefix = praefix + ".";
+		for (String itemName : itemNames) {
+			if (itemName.startsWith(itempraefix)) {
+				clone.replaceItemValue(itemName, aWorkitem.getItemValue(itemName));
+			}
+		}
 
-
-
+	}
 
 	/**
 	 * This method tests if a given WorkItem matches a filter expression. The
@@ -151,7 +146,7 @@ public class WorkitemHelper {
 			if (regEx.indexOf(':') > -1) {
 				regEx = regEx.trim();
 				// test if regEx contains "
-				regEx=regEx.replace("\"", "");
+				regEx = regEx.replace("\"", "");
 				String itemName = regEx.substring(0, regEx.indexOf(':'));
 				regEx = regEx.substring(regEx.indexOf(':') + 1);
 				@SuppressWarnings("unchecked")
