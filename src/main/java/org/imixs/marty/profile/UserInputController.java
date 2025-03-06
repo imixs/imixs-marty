@@ -114,9 +114,8 @@ public class UserInputController implements Serializable {
             // Issue #384
             // String sQuery = "(type:profile) AND " + phrase + "*";
             String sQuery = "(type:profile) AND  ((txtname:" + phrase
-                    + "*) OR (txtusername:" + phrase + "*) OR (txtemail:" + phrase + "*))";
-
-            logger.info("searchprofile: " + sQuery);
+                    + "*) OR (txtusername:*" + phrase + "*) OR (txtemail:*" + phrase + "*))";
+            logger.fine("searchprofile: " + sQuery);
 
             col = workflowService.getDocumentService().find(sQuery, MAX_SEARCH_RESULT, 0);
         } catch (Exception e) {
