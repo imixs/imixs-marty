@@ -30,7 +30,9 @@ package org.imixs.marty.team;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.imixs.marty.profile.ProfileService;
@@ -72,6 +74,13 @@ public class TeamController implements Serializable {
     private List<ItemCollection> processList = null;
     private ItemCollection process = null;
 
+    // Cache for spaces by reference
+    private Map<String, List<ItemCollection>> spacesByRefCache = null;
+    // Cache for root spaces
+    private List<ItemCollection> rootSpacesCache = null;
+    // Cache for spaces by process
+    private Map<String, List<ItemCollection>> spacesByProcessCache = null;
+
     @Inject
     protected LoginController loginController = null;
 
@@ -97,6 +106,9 @@ public class TeamController implements Serializable {
         spaces = null;
         processList = null;
         process = null;
+        spacesByRefCache = null;
+        rootSpacesCache = null;
+        spacesByProcessCache = null;
     }
 
     /**
@@ -284,12 +296,27 @@ public class TeamController implements Serializable {
      * @return
      */
     public List<ItemCollection> getSpacesByProcessId(String uniqueId) {
-        List<ItemCollection> result = new ArrayList<ItemCollection>();
-        if (uniqueId != null && !uniqueId.isEmpty()) {
-            // find project
-            ItemCollection process = getProcessById(uniqueId);
-            result = getSpacesByProcess(process);
+        if (uniqueId == null || uniqueId.isEmpty()) {
+            return new ArrayList<ItemCollection>();
         }
+
+        // Initialize cache if null
+        if (spacesByProcessCache == null) {
+            spacesByProcessCache = new HashMap<String, List<ItemCollection>>();
+        }
+
+        // Check if result is already cached
+        if (spacesByProcessCache.containsKey(uniqueId)) {
+            return spacesByProcessCache.get(uniqueId);
+        }
+
+        // find project
+        ItemCollection process = getProcessById(uniqueId);
+        List<ItemCollection> result = getSpacesByProcess(process);
+
+        // Cache the result
+        spacesByProcessCache.put(uniqueId, result);
+
         return result;
     }
 
@@ -303,16 +330,32 @@ public class TeamController implements Serializable {
     public List<ItemCollection> getSpacesByProcess(ItemCollection process) {
         List<ItemCollection> result = new ArrayList<ItemCollection>();
         if (process != null) {
+            String processId = process.getItemValueString(WorkflowKernel.UNIQUEID);
+
+            // Initialize cache if null
+            if (spacesByProcessCache == null) {
+                spacesByProcessCache = new HashMap<String, List<ItemCollection>>();
+            }
+
+            // Check if result is already cached
+            if (!processId.isEmpty() && spacesByProcessCache.containsKey(processId)) {
+                return spacesByProcessCache.get(processId);
+            }
+
             List<String> refs = process.getItemValue(WorkflowService.UNIQUEIDREF);
             if (refs != null && !refs.isEmpty()) {
                 // iterate over all spaces and compare the $UniqueIDRef
                 List<ItemCollection> list = getSpaces();
                 for (ItemCollection space : list) {
-
                     if (refs.contains(space.getItemValueString(WorkflowKernel.UNIQUEID))) {
                         result.add(space);
                     }
                 }
+            }
+
+            // Cache the result if we have a valid process ID
+            if (!processId.isEmpty()) {
+                spacesByProcessCache.put(processId, result);
             }
         }
         return result;
@@ -320,47 +363,70 @@ public class TeamController implements Serializable {
 
     /**
      * Returns a list of all spaces which are siblings to a given UniqueID.
+     * Uses a cache to improve performance for repeated calls.
      * 
      * @param uniqueId
      * @return
      */
     public List<ItemCollection> getSpacesByRef(String uniqueId) {
+        if (uniqueId == null || uniqueId.isEmpty()) {
+            return new ArrayList<ItemCollection>();
+        }
+
+        // Initialize cache if null
+        if (spacesByRefCache == null) {
+            spacesByRefCache = new HashMap<String, List<ItemCollection>>();
+        }
+
+        // Check if result is already cached
+        if (spacesByRefCache.containsKey(uniqueId)) {
+            return spacesByRefCache.get(uniqueId);
+        }
 
         List<ItemCollection> result = new ArrayList<ItemCollection>();
 
-        if (uniqueId != null && !uniqueId.isEmpty()) {
-            // iterate over all spaces and compare the $UniqueIDRef
-            List<ItemCollection> list = getSpaces();
-            for (ItemCollection space : list) {
-                logger.fine("Spacename= " + space.getItemValueString("Name") + " uniquidref= "
-                        + space.getItemValueString(WorkflowService.UNIQUEIDREF));
-                if (uniqueId.equals(space.getItemValueString(WorkflowService.UNIQUEIDREF))) {
-                    result.add(space);
-                }
+        // iterate over all spaces and compare the $UniqueIDRef
+        List<ItemCollection> list = getSpaces();
+        for (ItemCollection space : list) {
+            logger.fine("getSpacesByRef Spacename= " + space.getItemValueString("Name") + " uniquidref= "
+                    + space.getItemValueString(WorkflowService.UNIQUEIDREF));
+            if (uniqueId.equals(space.getItemValueString(WorkflowService.UNIQUEIDREF))) {
+                result.add(space);
             }
         }
+
+        // Cache the result
+        spacesByRefCache.put(uniqueId, result);
+
         return result;
     }
 
     /**
      * Returns a list of all spaces on the root level.
+     * Uses a cache to improve performance for repeated calls.
      * 
-     * @param uniqueId
      * @return
      */
     public List<ItemCollection> getRootSpaces() {
+        // Check if result is already cached
+        if (rootSpacesCache != null) {
+            return rootSpacesCache;
+        }
 
         List<ItemCollection> result = new ArrayList<ItemCollection>();
 
         // iterate over all spaces and select those without a $UniqueIDRef
         List<ItemCollection> list = getSpaces();
         for (ItemCollection space : list) {
-            logger.fine("Spacename= " + space.getItemValueString("txtName") + " uniquidref= "
+            logger.fine("getRootSpaces Spacename= " + space.getItemValueString("txtName") + " uniquidref= "
                     + space.getItemValueString(WorkflowService.UNIQUEIDREF));
             if (space.getItemValueString(WorkflowService.UNIQUEIDREF).isEmpty()) {
                 result.add(space);
             }
         }
+
+        // Cache the result
+        rootSpacesCache = result;
 
         return result;
     }

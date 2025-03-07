@@ -181,15 +181,9 @@ public class ProfileService {
 
         // use cache?
         if (!refresh) {
-            if (debug) {
-                logger.info("......lookup profile '" + userid + "' from cache...");
-            }
             Map<String, List<Object>> profileMap = cache.get(userid);
             if (profileMap != null) {
                 userProfile = new ItemCollection(profileMap);
-                if (debug) {
-                    logger.info("......return profile '" + userid + "' from cache");
-                }
                 return userProfile;
             }
         }

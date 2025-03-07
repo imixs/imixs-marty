@@ -33,6 +33,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.imixs.marty.util.WorkitemHelper;
+import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.ItemCollectionComparator;
+import org.imixs.workflow.engine.DocumentService;
+import org.imixs.workflow.exceptions.QueryException;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.annotation.security.DeclareRoles;
@@ -41,12 +47,6 @@ import jakarta.ejb.EJB;
 import jakarta.ejb.LocalBean;
 import jakarta.ejb.SessionContext;
 import jakarta.ejb.Stateless;
-
-import org.imixs.marty.util.WorkitemHelper;
-import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.ItemCollectionComparator;
-import org.imixs.workflow.engine.DocumentService;
-import org.imixs.workflow.exceptions.QueryException;
 
 /**
  * The Marty TeamService provides access to the mary process and space entities.
@@ -118,6 +118,7 @@ public class TeamService {
      */
     public List<ItemCollection> getSpaces() {
         List<ItemCollection> spaces = new ArrayList<ItemCollection>();
+        logger.fine("lookup spaces by type...");
         Collection<ItemCollection> col = documentService.getDocumentsByType("space");
 
         // create optimized list
@@ -138,6 +139,7 @@ public class TeamService {
      *         id exists
      */
     public ItemCollection getSpaceByName(String name) {
+        logger.fine("get space by name '" + name + "'...");
         String query = "type:\"space\" AND (txtname:\"" + name + "\" OR name:\"" + name + "\")";
         List<ItemCollection> spaces;
         try {
