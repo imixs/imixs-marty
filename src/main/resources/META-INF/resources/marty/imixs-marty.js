@@ -241,29 +241,18 @@ IMIXS.org.imixs.marty = (function () {
 			var parent = $(link).closest("span[id$='datalist']");
 			var inputField = $(parent).prevAll('textarea');
 
-			var userid = $(link).data('userid');
+			var userid = $(link).data('userid').trim();
 
-			// only user list is supported 
+			// only user list is supported
 			if (inputField.is("textarea")) {
-				var list = inputField.val().split(/\r?\n/);
+				var list = inputField.val().split(/\r?\n/).map(item => item.trim());
 				var newList = new Array();
 				$.each(list, function (key, value) {
-					if (value != '' && value != userid) {
-						if (!newList.includes(value)) {
-							newList.push(value);
-						}
+					if (value !== userid) {
+						newList.push(value);
 					}
 				});
-
-				var newValue = "";
-				$.each(newList, function (key, value) {
-					if (key == 0) {
-						newValue = newValue + value;
-					} else {
-						newValue = newValue + "\n" + value;
-					}
-				});
-
+				var newValue = newList.join("\n");
 				inputField.val(newValue);
 				// trigger on change event
 				inputField.trigger('change');
