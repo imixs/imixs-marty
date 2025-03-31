@@ -248,7 +248,7 @@ IMIXS.org.imixs.marty = (function () {
 				var list = inputField.val().split(/\r?\n/).map(item => item.trim());
 				var newList = new Array();
 				$.each(list, function (key, value) {
-					if (value !== userid) {
+					if (value.toLowerCase()!== userid.toLowerCase()) {
 						newList.push(value);
 					}
 				});
