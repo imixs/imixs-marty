@@ -173,6 +173,7 @@ public class UserInputController implements Serializable {
             if (aentry != null && !aentry.toString().isEmpty()) {
                 ItemCollection profile = userController.getProfile(aentry.toString());
                 if (profile != null) {
+                    profile.setItemValue("txtname", aentry.toString());
                     profiles.add(profile);
                 } else {
                     // create a dummy entry
