@@ -1,20 +1,39 @@
 # Imixs-Marty
+
 [![Java CI with Maven](https://github.com/imixs/imixs-marty/actions/workflows/maven.yml/badge.svg)](https://github.com/imixs/imixs-marty/actions/workflows/maven.yml)
 [![Join a discussion](https://img.shields.io/badge/discuss-on%20github-4CB697)](https://github.com/imixs/imixs-workflow/discussions)
 [![License](https://img.shields.io/badge/license-GPL-blue.svg)](https://github.com/imixs/imixs-marty/blob/master/LICENSE)
 
+'imixs-marty' is a sub project of '[Imixs Workflow](https://github.com/imixs/imixs-workflow)'. The project provides several artifacts to build business process management solutions on the Jakarta EE stack. The goal of this project is to simplify the development of workflow management applications by providing a robust and flexible application framework with a set of Java Enterprise components.
 
-'imixs-marty' is a sub project of '[Imixs Workflow](https://github.com/imixs/imixs-workflow)'. The project provides several artefacts to build business process management solutions on the Java EE stack. The goal of this project is to simplify the development of workflow management applications by providing a robust and flexible application framework with a set of Java Enterprise components. 
+The project supports the following components
 
-The project is split in the following modules
+- User Management
+- Team Management
+- UI Integration
 
- * imixs-marty-ejb - provides service EJBs to access the backend data
- * imixs-marty-util - contains utility classes and CDI beans
- * imixs-marty-ui (draft) - contains JSF specific UI classes
+## BUild
 
+To add the library just extend you maven dependencies:
 
-Imixs-Marty is also the base component library for the BPM Workflow Suite [Imixs-Office-Workflow](https://github.com/imixs/imixs-office-workflow)
+```xml
+		<dependency>
+			<groupId>org.imixs.workflow</groupId>
+			<artifactId>imixs-marty</artifactId>
+			<version>${org.imixs.marty.version}</version>
+		</dependency>
+```
 
-All the results of this project are subject to the GPL licensing model.
+Make sure that your persistence.xml file includes both entity libraries 'imixs-workflow' and 'imixs-marty'
 
-You can find further information on the [project home](http://www.imixs.org/marty).
+```xml
+
+                <jar-file>lib/imixs-workflow-engine-${org.imixs.workflow.version}.jar</jar-file>
+                <jar-file>lib/imixs-marty-${org.imixs.marty.version}.jar</jar-file>
+```
+
+The marty library will add the database entities for the user and usergroup objects into your database.
+
+## User Management
+
+The Marty Module provides Jakrta EE components for a user management which can be extended by project needs
