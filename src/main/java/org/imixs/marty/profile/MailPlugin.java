@@ -28,23 +28,16 @@
 package org.imixs.marty.profile;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import jakarta.activation.DataHandler;
-import jakarta.activation.DataSource;
-import jakarta.ejb.EJB;
-import jakarta.mail.MessagingException;
-import jakarta.mail.Multipart;
-import jakarta.mail.internet.AddressException;
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeBodyPart;
-import jakarta.mail.internet.MimeMessage;
-import jakarta.mail.util.ByteArrayDataSource;
 import javax.naming.NamingException;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.imixs.workflow.FileData;
 import org.imixs.workflow.ItemCollection;
 import org.imixs.workflow.engine.DocumentService;
@@ -52,11 +45,26 @@ import org.imixs.workflow.exceptions.PluginException;
 import org.imixs.workflow.exceptions.QueryException;
 import org.imixs.workflow.util.XMLParser;
 
+import jakarta.activation.DataHandler;
+import jakarta.activation.DataSource;
+import jakarta.inject.Inject;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
+
 /**
  * This Plugin extends the Imixs Workflow MailPlugin.
  * <p>
  * The Plugin translates recipient addresses with the mail address stored in the
- * users profile
+ * users profile.
+ * <p>
+ * The Plugin also supports the environment variable 'mail.authenticatedSender'
+ * that can be used to send out mails with a from address in the format:
+ * "COMPANY - {username} <webmaster@info.com>"
  * <p>
  * In addition this plugin adds the attachments from a snapshot workItem into
  * the mail body if the tag <attachment/> was found. A attachment can be named:
@@ -86,66 +94,142 @@ import org.imixs.workflow.util.XMLParser;
  */
 public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 
-    public static String SNAPSHOTID = "$snapshotid";
+    public static String SNAPSHOTID = "";
     public static String PROFILESERVICE_NOT_BOUND = "PROFILESERVICE_NOT_BOUND";
     public static String PROPERTYSERVICE_NOT_BOUND = "PROPERTYSERVICE_NOT_BOUND";
     public static String INVALID_EMAIL = "INVALID_EMAIL";
 
     private static Logger logger = Logger.getLogger(MailPlugin.class.getName());
 
-    @EJB
-    DocumentService documentService;
+    @Inject
+    @ConfigProperty(name = "mail.authenticatedSender")
+    Optional<String> mailAuthenticatedSender;
 
-    @EJB
+    @Inject
     ProfileService profileService;
+
+    @Inject
+    DocumentService documentService;
 
     /**
      * This method adds the attachments of the blob workitem to the MimeMessage
      */
     @Override
-    public ItemCollection run(ItemCollection documentContext, ItemCollection documentActivity) throws PluginException {
+    public ItemCollection run(ItemCollection workitem, ItemCollection event) throws PluginException {
         // run default functionality
-        ItemCollection result = super.run(documentContext, documentActivity);
+        ItemCollection result = super.run(workitem, event);
 
         // now get the Mail Session object
         MimeMessage mailMessage = (MimeMessage) super.getMailMessage();
         if (mailMessage != null) {
-
-            // run only if we have a message body with a <attachment tag....
-            String content = null;
-            MimeBodyPart messagePart = null;
-            // did we have a message body?
-            Multipart multipart = super.getMultipart();
             try {
-                messagePart = (MimeBodyPart) multipart.getBodyPart(0);
-                content = (String) messagePart.getContent();
-            } catch (MessagingException | ArrayIndexOutOfBoundsException | IOException e) {
-                logger.warning("Unable to parse tag 'attachments' !");
-                e.printStackTrace();
-                return null;
-            }
-
-            // did our message body contain a <attachments .....?
-            if (content != null && content.toLowerCase().indexOf("<attachments") != -1) {
-                // we can add the attachment
-                try {
-                    content = attachFiles(documentContext, content);
-                } catch (MessagingException e) {
-                    logger.warning("unable to attach files!");
-                    e.printStackTrace();
+                if (mailAuthenticatedSender.isPresent()) {
+                    sendFromAuthenticatedSender(workitem, event, mailMessage);
                 }
 
-                // update mail body
+                String content = null;
+                MimeBodyPart messagePart = null;
+                // did we have a message body?
+                Multipart multipart = super.getMultipart();
                 try {
-                    messagePart.setContent(content, this.getContentType());
-                } catch (MessagingException e) {
+                    messagePart = (MimeBodyPart) multipart.getBodyPart(0);
+                    content = (String) messagePart.getContent();
+                } catch (MessagingException | ArrayIndexOutOfBoundsException | IOException e) {
                     logger.warning("Unable to parse tag 'attachments' !");
                     e.printStackTrace();
+                    return null;
                 }
+                // did our message body contain a <attachments .....?
+                if (content != null && content.toLowerCase().indexOf("<attachments") != -1) {
+                    // we can add the attachment
+                    try {
+                        content = attachFiles(workitem, content);
+                    } catch (MessagingException e) {
+                        logger.warning("unable to attach files!");
+                        e.printStackTrace();
+                    }
 
+                    // update mail body
+                    try {
+                        messagePart.setContent(content, this.getContentType());
+                    } catch (MessagingException e) {
+                        logger.warning("Unable to parse tag 'attachments' !");
+                        e.printStackTrace();
+                    }
+
+                }
+            } catch (MessagingException | UnsupportedEncodingException e) {
+                throw new PluginException(MailPlugin.class.getSimpleName(),
+                        ERROR_MAIL_MESSAGE, e.getMessage(), e);
             }
         }
         return result;
+    }
+
+    /**
+     * This helper method builds a from address in the format
+     * "COMPANY - {username} <webmaster@info.com>"
+     * and set the sender to the given mail address.
+     * This ensures that the mail is not rejected by DKIM, SPF, DMARK rules.
+     *
+     * @param workitem
+     * @param event
+     * @param mailMessage
+     * @throws MessagingException
+     * @throws UnsupportedEncodingException
+     */
+    private void sendFromAuthenticatedSender(ItemCollection workitem, ItemCollection event, MimeMessage mailMessage)
+            throws MessagingException, UnsupportedEncodingException {
+        logger.info("├── 📭 set authenticated sender...");
+        InternetAddress adr = getInternetAddress(getFrom(workitem, event));
+        String mailDefaultPattern = mailAuthenticatedSender.get();
+        String sender = mailDefaultPattern;
+        // Expected format "COMPANY - {username} <webmaster@info.com>"
+        int start = mailDefaultPattern.lastIndexOf('<');
+        int end = mailDefaultPattern.lastIndexOf('>');
+        if (start >= 0 && end >= 0) {
+            String senderDisplayName = mailDefaultPattern.substring(0, start);
+            sender = mailDefaultPattern.substring(start + 1, end);
+            logger.info("│  ├── sender='" + sender + "'");
+            mailMessage.setHeader("Sender", sender);
+
+            // create custom from...
+            String userName = this.getWorkflowService().getUserName();
+            String userDisplayName = userName;
+            String userEmail = userName;
+            ItemCollection profile = profileService.findProfileById(userName);
+            if (profile != null) {
+                userDisplayName = profile.getItemValueString("txtuserName");
+                userEmail = profile.getItemValueString("txtemail");
+                senderDisplayName = senderDisplayName.replace("{username}", userDisplayName);
+            } else {
+                logger.warning(
+                        "├── ⚠️ no matching user profile found for " + userName);
+            }
+            InternetAddress fromAddress = new InternetAddress(sender, senderDisplayName);
+            mailMessage.setFrom(fromAddress);
+            logger.info(
+                    "│  ├── from:" + fromAddress.getPersonal() + "<" + fromAddress.getAddress() + ">");
+            logger.info("│  ├── replyTo:" + userEmail);
+            InternetAddress[] replyToAddressList = new InternetAddress[1];
+            replyToAddressList[0] = getInternetAddress(userEmail);
+            mailMessage.setReplyTo(replyToAddressList);
+
+        } else {
+            // default behavior - set sender and reply only
+            logger.info("│  ├── sender='" + sender + "'");
+            mailMessage.setHeader("Sender", sender);
+            // Dow we have a replay to?
+            String sReplyTo = getReplyTo(workitem, event);
+            if ((sReplyTo == null) || (sReplyTo.isEmpty())) {
+                sReplyTo = adr.getAddress();
+            }
+            logger.info("│  ├── replyTo:" + sReplyTo);
+            InternetAddress[] resplysAdrs = new InternetAddress[1];
+            resplysAdrs[0] = getInternetAddress(sReplyTo);
+            mailMessage.setReplyTo(resplysAdrs);
+
+        }
     }
 
     /**
