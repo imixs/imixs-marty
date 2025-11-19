@@ -8,7 +8,7 @@
 <composite:interface>
 	<composite:attribute name="value" />
 	<composite:attribute name="editmode" default="true" type="java.lang.Boolean"></composite:attribute>
-	<composite:attribute name="required" default="true" type="java.lang.Boolean"></composite:attribute>
+	<composite:attribute name="required" default="false" type="java.lang.Boolean"></composite:attribute>
 	<composite:attribute name="render"></composite:attribute>
 </composite:interface>
 
@@ -22,7 +22,6 @@
 	 -->
 	</ui:remove>
 
-
 	<ui:fragment rendered="#{cc.attrs.editmode}">
 		<h:inputTextarea style="display:none;" pt:data-item="marty.user.input" value="#{cc.attrs.value}"
 			converter="org.imixs.VectorConverter" required="#{cc.attrs.required}">
@@ -32,8 +31,6 @@
 	</ui:fragment>
 	<!-- User name data table -->
 	<h:panelGroup id="datalist">
-
-
 		<table class="marty-usergrouptable">
 			<ui:repeat var="record" value="#{userInputController.getSortedProfilelist(cc.attrs.value)}">
 				<tr>
@@ -54,7 +51,6 @@
 				</tr>
 			</ui:repeat>
 		</table>
-
 	</h:panelGroup>
 
 </composite:implementation>
