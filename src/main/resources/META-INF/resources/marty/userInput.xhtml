@@ -9,6 +9,7 @@
 	<composite:attribute name="value" />
 	<composite:attribute name="editmode" default="true" type="java.lang.Boolean"></composite:attribute>
 	<composite:attribute name="render"></composite:attribute>
+	<composite:attribute name="required" default="true" type="java.lang.Boolean"></composite:attribute>
 </composite:interface>
 
 <composite:implementation>
@@ -22,7 +23,8 @@
 	</ui:remove>
 
 	<ui:fragment rendered="#{cc.attrs.editmode}">
-		<h:inputText style="display:none;" pt:data-item="marty.user.input" value="#{cc.attrs.value}" />
+		<h:inputText style="display:none;" pt:data-item="marty.user.input" value="#{cc.attrs.value}"
+			required="#{cc.attrs.required}" />
 		<h:inputText styleClass="marty-userinput" title="#{userController.getEmail(cc.attrs.value)}"
 			pt:data-username="#{userInputController.getUserName(cc.attrs.value)}" />
 		<script type="text/javascript">
