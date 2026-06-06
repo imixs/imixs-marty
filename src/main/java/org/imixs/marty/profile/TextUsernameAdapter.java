@@ -4,15 +4,15 @@ import java.util.List;
 import java.util.Vector;
 import java.util.logging.Logger;
 
+import org.imixs.workflow.ItemCollection;
+import org.imixs.workflow.engine.TextEvent;
+import org.imixs.workflow.engine.handler.TextItemValueAdapter;
+import org.imixs.workflow.engine.plugins.AbstractPlugin;
+import org.imixs.workflow.util.XMLParser;
+
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.enterprise.event.Observes;
-
-import org.imixs.workflow.ItemCollection;
-import org.imixs.workflow.engine.TextEvent;
-import org.imixs.workflow.engine.TextItemValueAdapter;
-import org.imixs.workflow.engine.plugins.AbstractPlugin;
-import org.imixs.workflow.util.XMLParser;
 
 /**
  * The TextUsernameAdapter replaces text fragments with the tag
@@ -76,10 +76,10 @@ public class TextUsernameAdapter {
 
 			// next we check if the start tag contains a 'separator' attribute
 			sSeparator = XMLParser.findAttribute(tag, "separator");
-            sItem = XMLParser.findAttribute(tag, "item");
-            if (sItem==null || sItem.isEmpty()) {
-                sItem="txtUserName";
-            }
+			sItem = XMLParser.findAttribute(tag, "item");
+			if (sItem == null || sItem.isEmpty()) {
+				sItem = "txtUserName";
+			}
 			// extract Item Value
 			String sItemValue = XMLParser.findTagValue(tag, "username");
 
@@ -95,7 +95,7 @@ public class TextUsernameAdapter {
 			}
 
 			// format field value
-			TextItemValueAdapter textItemValueAdapter=new TextItemValueAdapter();
+			TextItemValueAdapter textItemValueAdapter = new TextItemValueAdapter();
 			String sResult = textItemValueAdapter.formatItemValues(vUserIDs, sSeparator, "");
 
 			// now replace the tag with the result string
