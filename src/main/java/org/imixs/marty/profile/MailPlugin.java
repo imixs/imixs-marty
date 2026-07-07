@@ -94,7 +94,7 @@ import jakarta.mail.util.ByteArrayDataSource;
  */
 public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
 
-    public static String SNAPSHOTID = "";
+    public static String SNAPSHOTID = "$snapshotid";
     public static String PROFILESERVICE_NOT_BOUND = "PROFILESERVICE_NOT_BOUND";
     public static String PROPERTYSERVICE_NOT_BOUND = "PROPERTYSERVICE_NOT_BOUND";
     public static String INVALID_EMAIL = "INVALID_EMAIL";
