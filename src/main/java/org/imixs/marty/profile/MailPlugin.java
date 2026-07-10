@@ -184,6 +184,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
         InternetAddress adr = getInternetAddress(getFrom(workitem, event));
         String mailDefaultPattern = mailAuthenticatedSender.get();
         String sender = mailDefaultPattern;
+        String sReplyTo = "";
         // Expected format "COMPANY - {username} <webmaster@info.com>"
         int start = mailDefaultPattern.lastIndexOf('<');
         int end = mailDefaultPattern.lastIndexOf('>');
@@ -196,23 +197,28 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
             // create custom from...
             String userName = this.getWorkflowService().getUserName();
             String userDisplayName = userName;
-            String userEmail = userName;
             ItemCollection profile = profileService.findProfileById(userName);
             if (profile != null) {
                 userDisplayName = profile.getItemValueString("txtuserName");
-                userEmail = profile.getItemValueString("txtemail");
+                sReplyTo = profile.getItemValueString("txtemail");
                 senderDisplayName = senderDisplayName.replace("{username}", userDisplayName);
-            } else {
+            }
+
+            if (sReplyTo == null || sReplyTo.isBlank()) {
                 logger.warning(
-                        "├── ⚠️ no matching user profile found for " + userName);
+                        "├── ⚠️ no matching user profile found for " + userName + " - switch to default");
+                sReplyTo = getReplyTo(workitem, event);
+                if ((sReplyTo == null) || (sReplyTo.isEmpty())) {
+                    sReplyTo = adr.getAddress();
+                }
             }
             InternetAddress fromAddress = new InternetAddress(sender, senderDisplayName);
             mailMessage.setFrom(fromAddress);
             logger.info(
                     "│  ├── from:" + fromAddress.getPersonal() + "<" + fromAddress.getAddress() + ">");
-            logger.info("│  ├── replyTo:" + userEmail);
+            logger.info("│  ├── replyTo:" + sReplyTo);
             InternetAddress[] replyToAddressList = new InternetAddress[1];
-            replyToAddressList[0] = getInternetAddress(userEmail);
+            replyToAddressList[0] = getInternetAddress(sReplyTo);
             mailMessage.setReplyTo(replyToAddressList);
 
         } else {
@@ -220,7 +226,7 @@ public class MailPlugin extends org.imixs.workflow.engine.plugins.MailPlugin {
             logger.info("│  ├── sender='" + sender + "'");
             mailMessage.setHeader("Sender", sender);
             // Dow we have a replay to?
-            String sReplyTo = getReplyTo(workitem, event);
+            sReplyTo = getReplyTo(workitem, event);
             if ((sReplyTo == null) || (sReplyTo.isEmpty())) {
                 sReplyTo = adr.getAddress();
             }
